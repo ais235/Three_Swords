@@ -136,6 +136,33 @@
     .line-v { border-left: 2px solid var(--border); margin-left: 8px; padding-left: 8px; }
     #victory-screen h2 { color: var(--accent-green); }
     .item-card { display: inline-block; margin: 4px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; font-size: 11px; width: 220px; vertical-align: top; }
+    #inventory-layout { display: flex; gap: 10px; }
+    #inv-left { width: 180px; }
+    #inv-right { flex: 1; }
+    .hero-tab { width: 100%; text-align: left; }
+    .equip-slot { padding: 6px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; cursor: pointer; }
+    .equip-slot.empty { color: var(--text-dim); font-style: italic; }
+    #bag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    .bag-item { border: 1px solid var(--border); border-radius: 6px; padding: 6px; cursor: pointer; }
+    .bag-item.active { outline: 2px solid var(--accent-gold); }
+    #inv-detail { min-height: 120px; }
+    .bonus { color: var(--accent-green); }
+    #party-strip { display: flex; gap: 8px; margin-bottom: 8px; }
+    .party-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 11px; }
+    .eq-mini { font-size: 10px; opacity: 0.9; margin-left: 3px; }
+    @media (max-width: 768px) {
+      #topbar-title { display: none; }
+      #inventory-layout { flex-direction: column; }
+      #inv-left { width: 100%; }
+      #battle-wrap { width: 100%; overflow: auto; }
+      #battle-canvas { width: 336px; height: 336px; }
+    }
+    @media (max-width: 480px) {
+      #battle-canvas { width: 288px; height: 288px; }
+      body { font-size: 12px; }
+      .btn { padding: 6px 8px; }
+      .map-node { width: 56px; height: 56px; font-size: 1rem; }
+    }
   </style>
   <script src="https://yandex.ru/games/sdk/v2"></script>
 </head>
@@ -166,6 +193,7 @@
 
     <div id="map-screen" class="screen hidden">
       <p class="stats-line">Проведите отряд через 3 региона и уничтожьте Тёмного Лорда.</p>
+      <div id="party-strip"></div>
       <div id="world-panel" class="panel">
         <div id="map-nodes" class="node-grid"></div>
       </div>
@@ -206,7 +234,19 @@
 
     <div id="inventory-screen" class="screen hidden">
       <h2>Рюкзак</h2>
-      <div id="inventory-list" class="panel"></div>
+      <div id="inventory-layout">
+        <div id="inv-left" class="panel">
+          <button class="btn hero-tab" data-hero-tab="garet">⚔ Гарет</button>
+          <button class="btn hero-tab" data-hero-tab="alira">🏹 Алира</button>
+          <button class="btn hero-tab" data-hero-tab="seris">🔮 Сэрис</button>
+          <div id="inv-hero-card"></div>
+          <div id="inv-equip-slots"></div>
+        </div>
+        <div id="inv-right">
+          <div id="bag-grid" class="panel"></div>
+          <div id="inv-detail" class="panel">Выберите предмет справа.</div>
+        </div>
+      </div>
       <button class="btn" id="btn-close-inv">Закрыть</button>
     </div>
 
@@ -460,6 +500,11 @@
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(snap));
       localStorage.setItem('save', JSON.stringify(snap));
+      const bestRaw = localStorage.getItem('threeBladesBest');
+      const best = bestRaw ? JSON.parse(bestRaw) : { gold: 0, kills: 0 };
+      if ((GameState.gold || 0) > (best.gold || 0) || (GameState.stats?.kills || 0) > (best.kills || 0)) {
+        localStorage.setItem('threeBladesBest', JSON.stringify({ gold: GameState.gold || 0, kills: GameState.stats?.kills || 0 }));
+      }
     } catch (e) { console.warn(e); }
   }
   function loadGame() {
@@ -1002,6 +1047,10 @@
         if (u.activeStatuses && u.activeStatuses.length) {
           const ic = u.activeStatuses.map(s => s.type === STATUS.FREEZE ? '🧊' : s.type === STATUS.POISON ? '☠' : s.type === STATUS.WEB ? '🕸' : '·').join('');
           ctx.fillText(ic, px + CELL / 2, py + 12);
+        }
+        if (u.isHero) {
+          const hh = GameState.heroes.find(h => h.id === u.heroId);
+          if (hh) ctx.fillText(heroEquipIcons(hh), px + CELL / 2, py + CELL - 18);
         }
       }
     });
@@ -1554,6 +1603,7 @@
     });
   }
   function itemById(id) { return ITEM_POOL.find(i => i.id === id); }
+  let InvState = { activeHeroId: 'garet', selectedItemId: null };
   function randomItem(region, minRarity) {
     const rarOrder = { common: 1, rare: 2, epic: 3 };
     const min = rarOrder[minRarity || 'common'];
@@ -1578,6 +1628,128 @@
       hero.hp = Math.min(hero.maxHp, hero.hp + item.mods.maxHp);
     }
     equipItem(hero, item);
+  }
+  function resetHeroBaseStats(hero) {
+    const base = baseHeroTemplate().find(h => h.id === hero.id);
+    if (!base) return;
+    hero.maxHp = base.maxHp + ((hero.maxHp || base.maxHp) - (hero.baseMaxHp || base.maxHp));
+    hero.attack = base.attack;
+    hero.armor = base.armor;
+    hero.range = base.range;
+    hero.move = base.move;
+    hero.maxMana = base.maxMana;
+    hero.mana = Math.min(hero.mana || hero.maxMana, hero.maxMana);
+  }
+  function recalcHeroFromEquipment(hero) {
+    resetHeroBaseStats(hero);
+    hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
+    ['weapon', 'armor', 'artifact'].forEach(slot => {
+      const id = hero.equipment[slot];
+      const it = itemById(id);
+      if (it) applyItemToHero(hero, it);
+    });
+  }
+  function heroEquipIcons(hero) {
+    hero.equipment = hero.equipment || {};
+    return ['weapon', 'armor', 'artifact']
+      .map(s => hero.equipment[s] ? (itemById(hero.equipment[s])?.name.split(' ')[0] || '•') : '·')
+      .join(' ');
+  }
+  function renderPartyStrip() {
+    const root = document.getElementById('party-strip');
+    if (!root) return;
+    root.innerHTML = GameState.heroes.map(h => `<div class="party-card">${h.emoji} ${h.name}<div class="eq-mini">${heroEquipIcons(h)}</div></div>`).join('');
+  }
+  function inventoryItemFitsHero(item, hero) {
+    if (!item) return false;
+    if (item.id.includes('bow') && hero.role !== 'archer') return false;
+    if (item.id.includes('staff') && hero.role !== 'mage') return false;
+    if (item.id.includes('wand') && hero.role !== 'mage') return false;
+    if (item.id.includes('sword') && hero.role !== 'warrior') return false;
+    if (item.id.includes('hammer') && hero.role !== 'warrior') return false;
+    return true;
+  }
+  function renderInventoryScreen() {
+    const hero = GameState.heroes.find(h => h.id === InvState.activeHeroId) || GameState.heroes[0];
+    if (!hero) return;
+    recalcHeroFromEquipment(hero);
+    const card = document.getElementById('inv-hero-card');
+    card.innerHTML = `<div style="font-size:30px">${hero.emoji}</div>
+      <div>Атака: ${hero.attack}</div><div>Броня: ${hero.armor}</div><div>HP: ${hero.hp}/${hero.maxHp}</div><div>Скорость: ${hero.speed || 10}</div>`;
+    const slots = document.getElementById('inv-equip-slots');
+    hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
+    const names = { weapon: 'Оружие', armor: 'Броня', artifact: 'Артефакт' };
+    slots.innerHTML = ['weapon', 'armor', 'artifact'].map(slot => {
+      const id = hero.equipment[slot];
+      const it = itemById(id);
+      return `<div class="equip-slot ${it ? '' : 'empty'}" data-slot="${slot}">
+        <b>${names[slot]}:</b> ${it ? `<span class="rarity-${it.rarity}">${it.name}</span>` : '— нет'}
+      </div>`;
+    }).join('');
+    slots.querySelectorAll('.equip-slot').forEach(el => {
+      el.onclick = () => {
+        const slot = el.getAttribute('data-slot');
+        const id = hero.equipment[slot];
+        if (!id) return;
+        hero.equipment[slot] = null;
+        GameState.inventory.push(id);
+        recalcHeroFromEquipment(hero);
+        saveGame();
+        renderInventoryScreen();
+      };
+    });
+    const bag = document.getElementById('bag-grid');
+    bag.innerHTML = (GameState.inventory || []).map(id => {
+      const it = itemById(id);
+      if (!it) return '';
+      const active = id === InvState.selectedItemId ? 'active' : '';
+      return `<div class="bag-item ${active} rarity-${it.rarity}" data-item="${id}">${it.name}<br><small>${it.slot}</small></div>`;
+    }).join('');
+    bag.querySelectorAll('.bag-item').forEach(el => {
+      el.onclick = () => { InvState.selectedItemId = el.getAttribute('data-item'); renderInventoryScreen(); };
+    });
+    const detail = document.getElementById('inv-detail');
+    const sel = itemById(InvState.selectedItemId);
+    if (!sel) { detail.textContent = 'Выберите предмет справа.'; return; }
+    detail.innerHTML = `<div class="rarity-${sel.rarity}"><b>${sel.name}</b> (${sel.slot})</div>
+      <div>Для: ${sel.id.includes('bow') ? 'Лучник' : sel.id.includes('staff') || sel.id.includes('wand') ? 'Маг' : sel.id.includes('sword') || sel.id.includes('hammer') ? 'Воин' : 'Все'}</div>
+      <div class="bonus">${Object.entries(sel.mods).filter(([k,v]) => typeof v === 'number' && v > 0).map(([k,v]) => `${k} +${v}`).join(', ') || 'особый эффект'}</div>
+      <div class="stats-line">Описание: предмет повышает боевую эффективность.</div>
+      <button class="btn" id="inv-equip-btn">Надеть</button>
+      <button class="btn" id="inv-transfer-btn">Передать</button>
+      <button class="btn" id="inv-drop-btn">✕ Выбросить</button>`;
+    const equipBtn = document.getElementById('inv-equip-btn');
+    equipBtn.onclick = () => {
+      if (!inventoryItemFitsHero(sel, hero)) { alert('Предмет не подходит герою.'); return; }
+      const old = hero.equipment[sel.slot];
+      if (old) {
+        if (!confirm(`Заменить ${itemById(old)?.name || old}?`)) return;
+        GameState.inventory.push(old);
+      }
+      const idx = GameState.inventory.indexOf(sel.id);
+      if (idx >= 0) GameState.inventory.splice(idx, 1);
+      hero.equipment[sel.slot] = sel.id;
+      recalcHeroFromEquipment(hero);
+      InvState.selectedItemId = null;
+      saveGame();
+      renderInventoryScreen();
+      renderPartyStrip();
+    };
+    document.getElementById('inv-transfer-btn').onclick = () => {
+      const others = GameState.heroes.filter(h => h.id !== hero.id);
+      const target = others[0];
+      if (!target) return;
+      InvState.activeHeroId = target.id;
+      renderInventoryScreen();
+    };
+    document.getElementById('inv-drop-btn').onclick = () => {
+      if (!confirm('Выбросить предмет?')) return;
+      const idx = GameState.inventory.indexOf(sel.id);
+      if (idx >= 0) GameState.inventory.splice(idx, 1);
+      InvState.selectedItemId = null;
+      saveGame();
+      renderInventoryScreen();
+    };
   }
   function generateShopStock(region) {
     const stock = [];
@@ -1664,7 +1836,7 @@
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById('main-menu').classList.add('hidden');
-    document.getElementById('hud-top').classList.toggle('hidden', name === 'menu');
+    document.getElementById('hud-top').classList.remove('hidden');
     if (name === 'menu') document.getElementById('main-menu').classList.remove('hidden');
     if (name === 'map') document.getElementById('map-screen').classList.remove('hidden');
     if (name === 'city') document.getElementById('city-screen').classList.remove('hidden');
@@ -1683,9 +1855,31 @@
   function closeGameMenu() {
     document.getElementById('game-menu-overlay').classList.remove('show');
   }
+  function updateMenuMeta() {
+    const menu = document.querySelector('#main-menu .panel');
+    if (!menu) return;
+    const last = localStorage.getItem(SAVE_KEY) || localStorage.getItem('save');
+    const bestRaw = localStorage.getItem('threeBladesBest');
+    const best = bestRaw ? JSON.parse(bestRaw) : { gold: 0, kills: 0 };
+    let meta = document.getElementById('menu-meta');
+    if (!meta) {
+      meta = document.createElement('div');
+      meta.id = 'menu-meta';
+      menu.appendChild(meta);
+    }
+    let lastText = 'Последняя игра: нет';
+    if (last) {
+      try {
+        const s = JSON.parse(last);
+        lastText = `Последняя игра: Регион ${s.region || 1} · Ход ${s.turn || 1} · ${s.gold || 0}g золота`;
+      } catch (_) {}
+    }
+    meta.innerHTML = `<div class="stats-line">${lastText}</div><div class="stats-line">Лучший результат: ${best.gold || 0}g · ${best.kills || 0} убийств</div>`;
+  }
   function renderMap() {
     const root = document.getElementById('map-nodes');
     root.innerHTML = '';
+    renderPartyStrip();
     GameState.mapGrid.forEach(node => {
       const el = document.createElement('div');
       el.className = 'map-node';
@@ -1876,6 +2070,18 @@
     const gy = Math.floor((e.clientY - r.top) / CELL);
     canvasBattleClick(gx, gy);
   });
+  function handleTouch(ev) {
+    const b = GameState.currentBattle;
+    if (!b) return;
+    const t = ev.touches[0];
+    if (!t) return;
+    const r = canvas.getBoundingClientRect();
+    const gx = Math.floor((t.clientX - r.left) / (r.width / GRID));
+    const gy = Math.floor((t.clientY - r.top) / (r.height / GRID));
+    canvasBattleClick(gx, gy);
+    ev.preventDefault();
+  }
+  canvas.addEventListener('touchstart', handleTouch, { passive: false });
 
   //══════════ INIT ══════════
   function init() {
@@ -1902,6 +2108,7 @@
       saveGame();
       showScreen('map');
       renderMap();
+      updateMenuMeta();
     };
     document.getElementById('btn-new-game').onclick = mk;
     document.getElementById('btn-continue').onclick = () => {
@@ -1909,14 +2116,10 @@
       loadGame();
       showScreen('map');
       renderMap();
+      updateMenuMeta();
     };
     document.getElementById('btn-inventory-map').onclick = () => {
-      document.getElementById('inventory-list').innerHTML = (GameState.inventory || []).length
-        ? GameState.inventory.map(id => {
-          const it = itemById(id);
-          return `<div class="rarity-${it?.rarity || 'common'}">${it ? it.name : id}</div>`;
-        }).join('')
-        : '<div>Пусто. Купите зелья в городе.</div>';
+      renderInventoryScreen();
       showScreen('inventory');
     };
     document.getElementById('btn-close-inv').onclick = () => { showScreen('map'); renderMap(); };
@@ -1963,21 +2166,30 @@
       mk();
     };
     document.getElementById('btn-ending-ok').onclick = () => { showScreen('map'); renderMap(); };
+    document.querySelectorAll('[data-hero-tab]').forEach(btn => {
+      btn.onclick = () => {
+        InvState.activeHeroId = btn.getAttribute('data-hero-tab');
+        renderInventoryScreen();
+      };
+    });
     document.getElementById('btn-open-menu').onclick = openGameMenu;
     document.getElementById('btn-menu-continue').onclick = closeGameMenu;
     document.getElementById('btn-menu-save-exit').onclick = () => {
       saveGame();
       closeGameMenu();
       showScreen('menu');
+      updateMenuMeta();
     };
     document.getElementById('btn-menu-exit').onclick = () => {
       closeGameMenu();
       showScreen('menu');
+      updateMenuMeta();
     };
     if (!window.ysdk) {
       const adBtn = document.getElementById('btn-ad-revive');
       if (adBtn) adBtn.classList.add('hidden');
     }
+    updateMenuMeta();
   }
   if (typeof YaGames !== 'undefined') YaGames.init().then(sdk => {
     window.ysdk = sdk;
