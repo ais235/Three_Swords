@@ -1381,49 +1381,154 @@
     if (!b || b.phase !== 'combat') return;
     const u = getActiveUnit();
     if (!u || u.isHero || u.hp <= 0) { endUnitTurn(); return; }
-    const heroes = b.units.filter(h => h.isHero && h.hp > 0);
-    if (!heroes.length) { endUnitTurn(); return; }
-    let nearest = null;
-    let bestPath = null;
-    for (const h of heroes) {
-      const p = astar(
-        b.grid,
-        { x: u.x, y: u.y },
-        { x: h.x, y: h.y },
-        (x, y) => enemyPassable(b, x, y, u) || (x === h.x && y === h.y),
-        (x, y) => tileMoveCost(b.grid[y][x], u)
-      );
-      if (p && (!bestPath || p.length < bestPath.length)) {
-        bestPath = p;
-        nearest = h;
+
+    // Special AI for specific enemy types
+    if (u.enemyId === ENEMY_IDS.DARK_LORD) { darkLordAi(u); endUnitTurn(); return; }
+    if (u.enemyId === ENEMY_IDS.FIRE_TITAN) { fireTitanAi(u); endUnitTurn(); return; }
+    if (u.enemyId === ENEMY_IDS.SUICIDE) { bomberAi(u); endUnitTurn(); return; }
+
+    // Shaman: heal lowest HP ally every other turn
+    if (u.enemyId === ENEMY_IDS.SHAMAN) {
+      u.aiVar = u.aiVar || {};
+      u.aiVar.healCd = (u.aiVar.healCd || 0) - 1;
+      if (u.aiVar.healCd <= 0) {
+        const wounded = b.units.filter(x => !x.isHero && x.hp > 0 && x.hp < x.maxHp)
+          .sort((a, z) => a.hp - z.hp)[0];
+        if (wounded) {
+          const heal = Math.floor(wounded.maxHp * 0.3);
+          wounded.hp = Math.min(wounded.maxHp, wounded.hp + heal);
+          pushBattleLog(`🧙 ${u.name} исцеляет ${wounded.emoji} ${wounded.name} на ${heal}`, 'enemy');
+          u.aiVar.healCd = 2;
+          endUnitTurn(); return;
+        }
       }
     }
-    if (!nearest) { endUnitTurn(); return; }
-    const inRange = (att, tgt) => {
-      const d = Math.abs(att.x - tgt.x) + Math.abs(att.y - tgt.y);
-      return d <= att.range && (att.range === 1 || !rangedBlocked(att.x, att.y, tgt.x, tgt.y, b.grid, false));
+
+    const heroes = b.units.filter(h => h.isHero && h.hp > 0);
+    if (!heroes.length) { endUnitTurn(); return; }
+
+    // Goblin Archer: retreat if hero is adjacent (< 2 tiles)
+    if (u.enemyId === ENEMY_IDS.GOBLIN_ARCHER) {
+      const tooClose = heroes.filter(h => Math.abs(h.x - u.x) + Math.abs(h.y - u.y) <= 1);
+      if (tooClose.length > 0) {
+        // Move away from nearest threat
+        const threat = tooClose[0];
+        const dirs = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }];
+        let bestDir = null, bestDist = -1;
+        for (const d of dirs) {
+          const nx = u.x + d.x, ny = u.y + d.y;
+          if (!inBounds(nx, ny) || !enemyPassable(b, nx, ny, u)) continue;
+          const dist = Math.abs(nx - threat.x) + Math.abs(ny - threat.y);
+          if (dist > bestDist) { bestDist = dist; bestDir = { x: nx, y: ny }; }
+        }
+        if (bestDir) { u.x = bestDir.x; u.y = bestDir.y; }
+        endUnitTurn(); return;
+      }
+    }
+
+    const inRange = (ax, ay, tgt) => {
+      const d = Math.abs(ax - tgt.x) + Math.abs(ay - tgt.y);
+      return d > 0 && d <= u.range && (u.range === 1 || !rangedBlocked(ax, ay, tgt.x, tgt.y, b.grid, false));
     };
-    const doEnemyAttack = (att, tgt) => {
-      const dmg = Math.max(1, att.attack - tgt.armor);
-      tgt.hp -= dmg;
-      pushBattleLog(`[${att.emoji} ${att.name}] атакует [${tgt.emoji} ${tgt.name}] → ${dmg} урона`, 'enemy');
-      spawnDamageFx(tgt.x, tgt.y, dmg);
-      if (tgt.hp <= 0) onUnitDeath(tgt);
+
+    const doEnemyAttack = (tgt) => {
+      aiAttack(u, tgt);
     };
-    if (inRange(u, nearest)) {
-      doEnemyAttack(u, nearest);
+
+    // Choose target: priority first, fallback nearest
+    const target = aiChooseTarget(b, u);
+
+    // If already in range — attack immediately
+    if (inRange(u.x, u.y, target)) {
+      doEnemyAttack(target);
       endUnitTurn();
       return;
     }
-    if (bestPath && bestPath.length > 1) {
-      const step = bestPath[1];
-      if (enemyPassable(b, step.x, step.y, u)) {
+
+    // Movement: move up to getMovePoints(u) steps along A* path
+    const movePoints = getMovePoints(u, b);
+    if (movePoints > 0) {
+      // Build path to each hero, pick closest reachable target
+      let bestPath = null;
+      let bestTarget = null;
+      for (const h of heroes) {
+        const p = astar(
+          b.grid,
+          { x: u.x, y: u.y },
+          { x: h.x, y: h.y },
+          (x, y) => enemyPassable(b, x, y, u) || (x === h.x && y === h.y),
+          (x, y) => tileMoveCost(b.grid[y][x], u)
+        );
+        if (p && p.length > 1 && (!bestPath || p.length < bestPath.length)) {
+          bestPath = p;
+          bestTarget = h;
+        }
+      }
+
+      if (bestPath && bestPath.length > 1) {
+        // Walk along path spending movement points
+        let spent = 0;
+        for (let i = 1; i < bestPath.length; i++) {
+          const step = bestPath[i];
+          // Stop before occupying a hero's tile
+          if (b.units.some(h => h.isHero && h.hp > 0 && h.x === step.x && h.y === step.y)) break;
+          if (!enemyPassable(b, step.x, step.y, u)) break;
+          const cost = tileMoveCost(b.grid[step.y][step.x], u);
+          if (spent + cost > movePoints) break;
+          spent += cost;
+          u.x = step.x;
+          u.y = step.y;
+          // Stop as soon as we are in attack range
+          if (bestTarget && inRange(u.x, u.y, bestTarget)) break;
+        }
+      }
+    }
+
+    // After moving, try to attack
+    const tgtAfterMove = aiChooseTarget(b, u);
+    if (tgtAfterMove && tgtAfterMove.hp > 0 && inRange(u.x, u.y, tgtAfterMove)) {
+      doEnemyAttack(tgtAfterMove);
+    }
+    endUnitTurn();
+  }
+
+  function bomberAi(u) {
+    const b = GameState.currentBattle;
+    const heroes = b.units.filter(h => h.isHero && h.hp > 0);
+    if (!heroes.length) return;
+    let nearest = heroes[0];
+    let bd = 999;
+    for (const h of heroes) {
+      const d = Math.abs(h.x - u.x) + Math.abs(h.y - u.y);
+      if (d < bd) { bd = d; nearest = h; }
+    }
+    if (bd <= 1) {
+      // Explode!
+      for (const h of heroes) {
+        if (Math.abs(h.x - u.x) + Math.abs(h.y - u.y) <= 1) dealDamage(u, h, 20, { blockIgnore: true });
+      }
+      pushBattleLog(`💥 ${u.name} взрывается!`, 'enemy');
+      u.hp = 0;
+      onUnitDeath(u);
+      return;
+    }
+    const movePoints = getMovePoints(u, b);
+    const path = astar(b.grid, { x: u.x, y: u.y }, { x: nearest.x, y: nearest.y },
+      (x, y) => enemyPassable(b, x, y, u) || (x === nearest.x && y === nearest.y),
+      (x, y) => tileMoveCost(b.grid[y][x], u));
+    if (path && path.length > 1) {
+      let spent = 0;
+      for (let i = 1; i < path.length; i++) {
+        const step = path[i];
+        if (b.units.some(h => h.isHero && h.hp > 0 && h.x === step.x && h.y === step.y)) break;
+        if (!enemyPassable(b, step.x, step.y, u)) break;
+        const cost = tileMoveCost(b.grid[step.y][step.x], u);
+        if (spent + cost > movePoints) break;
+        spent += cost;
         u.x = step.x;
         u.y = step.y;
       }
     }
-    if (nearest.hp > 0 && inRange(u, nearest)) doEnemyAttack(u, nearest);
-    endUnitTurn();
   }
 
   function aiAttack(attacker, target) {
@@ -1511,7 +1616,28 @@
       });
     }
     const tgt = priorityTarget(b);
-    if (tgt && Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= 1) aiAttack(u, tgt);
+    if (tgt) {
+      if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) {
+        aiAttack(u, tgt);
+      } else {
+        const path = astar(b.grid, { x: u.x, y: u.y }, { x: tgt.x, y: tgt.y },
+          (x, y) => enemyPassable(b, x, y, u) || (x === tgt.x && y === tgt.y),
+          (x, y) => tileMoveCost(b.grid[y][x], u));
+        if (path && path.length > 1) {
+          let spent = 0;
+          for (let i = 1; i < path.length; i++) {
+            const step = path[i];
+            if (b.units.some(h => h.isHero && h.hp > 0 && h.x === step.x && h.y === step.y)) break;
+            if (!enemyPassable(b, step.x, step.y, u)) break;
+            const cost = tileMoveCost(b.grid[step.y][step.x], u);
+            if (spent + cost > u.move) break;
+            spent += cost;
+            u.x = step.x; u.y = step.y;
+          }
+          if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) aiAttack(u, tgt);
+        }
+      }
+    }
   }
 
   //══════════ Hero UI & actions ══════════
