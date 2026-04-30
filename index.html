@@ -1361,6 +1361,8 @@
       hu.y = slot.y;
       used.add(slot.x + ',' + slot.y);
     });
+    // Heroes must exist in battle units immediately (for sidebar + board visibility).
+    units.push(...heroes);
     const wave = node.enemyWave || [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON];
     const rightXs = [GRID - 2, GRID - 1];
     let ei = 0;
