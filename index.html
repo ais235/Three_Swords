@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Три Героя — Three Heroes</title>
+  <style>
+    :root {
+      --bg-dark: #0d0d1a;
+      --bg-panel: #1a1a2e;
+      --bg-card: #16213e;
+      --accent-gold: #f0a500;
+      --accent-blue: #4a9eff;
+      --accent-red: #e74c3c;
+      --accent-green: #2ecc71;
+      --text-main: #e8e8f0;
+      --text-dim: #8888aa;
+      --border: #2a2a4a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      overflow-x: auto;
+    }
+    #game-container { max-width: 1200px; margin: 0 auto; padding: 12px; }
+    h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 8px; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+    #battle-wrap { display: flex; gap: 0; align-items: stretch; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; }
+    #battle-canvas {
+      display: block;
+      background: #111;
+      cursor: crosshair;
+      image-rendering: pixelated;
+    }
+    #battle-log {
+      width: 200px;
+      height: 512px;
+      background: var(--bg-panel);
+      border-left: 2px solid var(--border);
+      overflow-y: auto;
+      font-size: 11px;
+      padding: 8px;
+      line-height: 1.35;
+    }
+    #battle-log .l-hero { color: var(--accent-blue); }
+    #battle-log .l-enemy { color: var(--accent-red); }
+    #battle-log .l-status { color: #f1c40f; }
+    #initiative-bar {
+      display: flex; gap: 4px; flex-wrap: wrap; padding: 8px;
+      background: var(--bg-card); border-radius: 6px; margin-bottom: 8px; min-height: 40px; align-items: center;
+    }
+    .init-slot { font-size: 1.4rem; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); background: #0a0a14; }
+    .init-slot.active { outline: 2px solid var(--accent-gold); box-shadow: 0 0 8px rgba(240,165,0,.5); }
+    #ui-overlay { flex: 1; min-width: 280px; }
+    .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+    .stats-line { font-size: 12px; color: var(--text-dim); margin: 4px 0; }
+    .btn {
+      background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border);
+      padding: 8px 12px; margin: 4px 4px 4px 0; cursor: pointer; border-radius: 6px; font-family: inherit;
+    }
+    .btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: #1e3a5f; border-color: var(--accent-blue); }
+    .hidden { display: none !important; }
+    #map-screen .node-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .map-node {
+      min-width: 100px; padding: 10px; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer; text-align: center;
+    }
+    .map-node:hover { border-color: var(--accent-gold); }
+    .map-node.done { opacity: 0.5; }
+    .map-node.locked { opacity: 0.35; pointer-events: none; }
+    #tooltip {
+      position: fixed; z-index: 1000; pointer-events: none;
+      background: var(--bg-card); border: 1px solid var(--accent-gold); padding: 8px; border-radius: 6px;
+      max-width: 220px; font-size: 11px; display: none;
+    }
+    .fx-dmg {
+      position: absolute; font-weight: bold; text-shadow: 0 0 4px #000; pointer-events: none;
+      animation: fxUp 0.9s ease-out forwards;
+    }
+    @keyframes fxUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-40px); }
+    }
+    #perk-modal, #confirm-modal { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    .modal-box { background: var(--bg-panel); border: 2px solid var(--border); border-radius: 10px; padding: 20px; max-width: 520px; max-height: 90vh; overflow: auto; }
+    .perk-tree { display: flex; flex-direction: column; gap: 12px; }
+    .perk-row { display: flex; gap: 12px; align-items: stretch; }
+    .perk-branch { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 8px; position: relative; }
+    .perk-branch h4 { margin: 0 0 8px; font-size: 12px; color: var(--accent-gold); }
+    .perk-node {
+      margin: 6px 0; padding: 6px; background: var(--bg-card); border-radius: 4px; cursor: pointer; font-size: 11px;
+      border-left: 3px solid var(--text-dim);
+    }
+    .perk-node:hover { border-left-color: var(--accent-gold); }
+    .perk-node.taken { opacity: 0.5; pointer-events: none; }
+    .line-v { border-left: 2px solid var(--border); margin-left: 8px; padding-left: 8px; }
+    #victory-screen h2 { color: var(--accent-green); }
+    .item-card { display: inline-block; margin: 4px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <h1>⚔️ Три Героя / Three Heroes</h1>
+    <div id="hud-top" class="panel stats-line">
+      Золото: <span id="gold-display">150</span> 💰 | Регион: <span id="region-display">1</span> | Ход карты: <span id="turn-display">1</span>
+    </div>
+
+    <div id="map-screen" class="screen">
+      <p class="stats-line">Проведите отряд через 3 региона и уничтожьте Тёмного Лорда.</p>
+      <div id="map-nodes" class="node-grid"></div>
+      <button class="btn" id="btn-inventory-map">Рюкзак</button>
+    </div>
+
+    <div id="city-screen" class="screen hidden">
+      <h2>🏙️ Город</h2>
+      <p class="stats-line">Торговец и отдых. Золото: <span id="city-gold">0</span></p>
+      <div id="shop-list"></div>
+      <button class="btn" id="btn-leave-city">Покинуть город</button>
+    </div>
+
+    <div id="battle-screen" class="screen hidden">
+      <div id="initiative-bar"></div>
+      <div class="row">
+        <div id="battle-wrap">
+          <canvas id="battle-canvas" width="512" height="512"></canvas>
+          <div id="battle-log"></div>
+        </div>
+        <div id="ui-overlay">
+          <div class="panel" id="unit-panel">
+            <div id="unit-title">—</div>
+            <div id="unit-stats"></div>
+            <div id="action-buttons"></div>
+          </div>
+          <div class="panel" id="deploy-hint" class="hidden">Расставьте героев в левых двух колонках. Клик по клетке — поставить выбранного.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="event-screen" class="screen hidden">
+      <div id="event-text" class="panel"></div>
+      <button class="btn" id="btn-event-ok">OK</button>
+    </div>
+
+    <div id="inventory-screen" class="screen hidden">
+      <h2>Рюкзак</h2>
+      <div id="inventory-list" class="panel"></div>
+      <button class="btn" id="btn-close-inv">Закрыть</button>
+    </div>
+
+    <div id="victory-screen" class="screen hidden">
+      <div class="modal-box">
+        <h2>Победа! ⚔️</h2>
+        <p id="vic-gold"></p>
+        <div id="vic-xp"></div>
+        <div id="vic-items"></div>
+        <button class="btn btn-primary" id="btn-vic-continue">Продолжить</button>
+      </div>
+    </div>
+
+    <div id="gameover-screen" class="screen hidden">
+      <div class="modal-box">
+        <h2 style="color:var(--accent-red)">Поражение</h2>
+        <p>Отряд пал...</p>
+        <button class="btn" id="btn-ad-revive">Смотреть рекламу — воскресить отряд +50💰</button>
+        <button class="btn" id="btn-go-title">В меню (сброс прогресса боя)</button>
+      </div>
+    </div>
+
+    <div id="ending-screen" class="screen hidden">
+      <div class="modal-box">
+        <h2 style="color:var(--accent-gold)">Победа над Тьмой!</h2>
+        <p>Тёмный Лорд повержен. Мир спасён благодаря трём героям.</p>
+        <p id="ending-stats"></p>
+        <button class="btn" id="btn-ending-ok">Замечательно</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tooltip"></div>
+  <div id="perk-modal" class="hidden">
+    <div class="modal-box">
+      <h3 id="perk-hero-name">Уровень!</h3>
+      <p class="stats-line">Выберите перк (нельзя отменить после подтверждения).</p>
+      <div id="perk-tree-ui" class="perk-tree"></div>
+    </div>
+  </div>
+  <div id="confirm-modal" class="hidden">
+    <div class="modal-box">
+      <p id="confirm-text">Вы уверены?</p>
+      <button class="btn" id="confirm-yes">Да</button>
+      <button class="btn" id="confirm-no">Нет</button>
+    </div>
+  </div>
+  <div id="fx-layer" style="position:fixed;inset:0;pointer-events:none;z-index:500"></div>
+
+  <!-- Яндекс Игры: в продакшене раскомментируйте официальный SDK -->
+  <!-- <script src="https://yandex.ru/games/sdk/v2"></script> -->
+
+  <script>
+  //══════════ SECTION 1: CONSTANTS ══════════
+  const CELL = 64, GRID = 8, CANVAS_SZ = 512;
+  const COLS_LEFT = 2, COLS_RIGHT = 2;
+  const TILE = { GROUND: 0, FOREST: 1, MOUNTAIN: 2, WATER: 3, FORT: 4, FIRE: 5 };
+  const TILE_EMOJI = { [TILE.GROUND]: '🟫', [TILE.FOREST]: '🌲', [TILE.MOUNTAIN]: '⛰️', [TILE.WATER]: '💧', [TILE.FORT]: '🏰', [TILE.FIRE]: '🔥' };
+  const STATUS = { STUN: 'stun', FREEZE: 'freeze', WEB: 'web', POISON: 'poison', BURN: 'burn', SLOW: 'slow', BLIND: 'blind', CURSE: 'curse', BERSERK: 'berserk', STEALTH: 'stealth' };
+  const SAVE_KEY = 'threeHeroesSave';
+
+  //══════════ SECTION 2: GAME_DATA ══════════
+  const ENEMY_IDS = {
+    SKELETON: 'skeleton', GOBLIN_ARCHER: 'goblin_archer', BOAR: 'boar', ZOMBIE: 'zombie', SHAMAN: 'shaman',
+    ORC_GUARD: 'orc_guard', SUICIDE: 'suicide', SPIDER: 'spider', WATCHER: 'watcher', ICE_ELEM: 'ice_elem',
+    DARK_KNIGHT: 'dark_knight', NECRO: 'necro', CHAOS: 'chaos', ASSASSIN: 'assassin', HYDRA: 'hydra', GHOST: 'ghost',
+    FIRE_TITAN: 'fire_titan', DARK_LORD: 'dark_lord'
+  };
+
+  function baseHeroTemplate() {
+    return [
+      { id: 'garet', name: 'Гарет', emoji: '⚔️', role: 'warrior', hp: 40, maxHp: 40, armor: 5, attack: 8, range: 1, move: 3, speed: 10, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
+        cds: { shieldBash: 0, fireCall: 0, berserk: 0 }, flags: { firstAttackTurn: true } },
+      { id: 'alira', name: 'Алира', emoji: '🏹', role: 'archer', hp: 25, maxHp: 25, armor: 2, attack: 10, range: 4, move: 4, speed: 11, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
+        cds: { doubleShot: 0, slowArrow: 0, arrowRain: 0 }, flags: { firstAttackTurn: true } },
+      { id: 'seris', name: 'Сэрис', emoji: '🔮', role: 'mage', hp: 20, maxHp: 20, armor: 1, attack: 12, range: 3, move: 3, speed: 9, level: 1, xp: 0, perks: [], mana: 10, maxMana: 10,
+        cds: { fireball: 0, freeze: 0, meteor: 0 }, flags: { mysticShield: 3 } }
+    ];
+  }
+
+  const PERK_TREES = {
+    garet: {
+      defense: [
+        { level: 1, id: 'd1', name: '+5 HP', apply: h => { h.maxHp += 5; h.hp += 5; } },
+        { level: 2, id: 'd2', name: '+1 броня', apply: h => { h.armor += 1; } },
+        { level: 3, id: 'd3', name: 'Отражение 1 урона', apply: h => { h.perks.push('reflect1'); } }
+      ],
+      attack: [
+        { level: 1, id: 'a1', name: '+2 урон', apply: h => { h.attack += 2; } },
+        { level: 2, id: 'a2', name: 'Пробивание', apply: h => { h.perks.push('armorPierce'); } },
+        { level: 3, id: 'a3', name: 'Крит 15%', apply: h => { h.perks.push('crit15'); } }
+      ],
+      leader: [
+        { level: 1, id: 'l1', name: 'Соседи +1 броня', apply: h => { h.perks.push('auraArmor'); } },
+        { level: 2, id: 'l2', name: 'Аура +10% урон', apply: h => { h.perks.push('auraDmg'); } },
+        { level: 3, id: 'l3', name: 'Командир', apply: h => { h.speed += 1; } }
+      ]
+    },
+    alira: {
+      accuracy: [
+        { level: 1, id: 'm1', name: '+1 дальность', apply: h => { h.range += 1; } },
+        { level: 2, id: 'm2', name: '+3 урон', apply: h => { h.attack += 3; } },
+        { level: 3, id: 'm3', name: 'Игнор укрытия', apply: h => { h.perks.push('ignoreCover'); } }
+      ],
+      speed: [
+        { level: 1, id: 's1', name: '+1 движение', apply: h => { h.move += 1; } },
+        { level: 2, id: 's2', name: 'Выстрел после шага', apply: h => { h.perks.push('moveAttack'); } },
+        { level: 3, id: 's3', name: '+2 скорость', apply: h => { h.speed += 2; } }
+      ],
+      traps: [
+        { level: 1, id: 't1', name: 'Ловушка урон', apply: h => { h.perks.push('trapDmg'); } },
+        { level: 2, id: 't2', name: 'Ловушка замедление', apply: h => { h.perks.push('trapSlow'); } },
+        { level: 3, id: 't3', name: 'Двойные ловушки', apply: h => { h.perks.push('trapDouble'); } }
+      ]
+    },
+    seris: {
+      destruction: [
+        { level: 1, id: 'r1', name: '+3 маг. урон', apply: h => { h.attack += 3; } },
+        { level: 2, id: 'r2', name: 'AoE +1', apply: h => { h.perks.push('aoePlus'); } },
+        { level: 3, id: 'r3', name: 'Сжигание 2 хода', apply: h => { h.perks.push('burnSpell'); } }
+      ],
+      control: [
+        { level: 1, id: 'c1', name: 'Заморозка 2 хода', apply: h => { h.perks.push('freeze2'); } },
+        { level: 2, id: 'c2', name: 'Страх 1 ход', apply: h => { h.perks.push('fear'); } },
+        { level: 3, id: 'c3', name: 'Контроль мастер', apply: h => { h.maxMana += 2; h.mana += 2; } }
+      ],
+      mystic: [
+        { level: 1, id: 'y1', name: '+3 макс маны', apply: h => { h.maxMana += 3; h.mana += 3; } },
+        { level: 2, id: 'y2', name: 'HP за убийство', apply: h => { h.perks.push('killHeal'); } },
+        { level: 3, id: 'y3', name: 'Телепорт', apply: h => { h.perks.push('teleport'); } }
+      ]
+    }
+  };
+
+  function enemyDef(type) {
+    const D = ENEMY_IDS;
+    const map = {
+      [D.SKELETON]: { name: 'Скелет', emoji: '💀', hp: 8, armor: 0, attack: 5, move: 2, range: 1, speed: 8, gold: [5,10] },
+      [D.GOBLIN_ARCHER]: { name: 'Гоблин-лучник', emoji: '🏹', hp: 10, armor: 0, attack: 6, move: 2, range: 3, speed: 9, gold: [8,12] },
+      [D.BOAR]: { name: 'Кабан', emoji: '🐗', hp: 15, armor: 2, attack: 7, move: 2, range: 1, speed: 8, gold: [10,15] },
+      [D.ZOMBIE]: { name: 'Зомби', emoji: '🧟', hp: 12, armor: 1, attack: 6, move: 1, range: 1, speed: 5, gold: [8,12] },
+      [D.SHAMAN]: { name: 'Лесной шаман', emoji: '🧙', hp: 25, armor: 1, attack: 5, move: 2, range: 2, speed: 7, gold: [40,60], miniBoss: true },
+      [D.ORC_GUARD]: { name: 'Орк-страж', emoji: '🛡️', hp: 30, armor: 6, attack: 9, move: 1, range: 1, speed: 6, gold: [15,20] },
+      [D.SUICIDE]: { name: 'Подрывник', emoji: '💣', hp: 8, armor: 0, attack: 0, move: 3, range: 1, speed: 10, gold: [12,18] },
+      [D.SPIDER]: { name: 'Паук', emoji: '🕷️', hp: 18, armor: 1, attack: 7, move: 3, range: 1, speed: 10, gold: [15,22] },
+      [D.WATCHER]: { name: 'Следящий', emoji: '👁️', hp: 15, armor: 0, attack: 4, move: 1, range: 0, speed: 4, gold: [20,30] },
+      [D.ICE_ELEM]: { name: 'Ледяной элем.', emoji: '🧊', hp: 22, armor: 3, attack: 8, move: 2, range: 2, speed: 8, gold: [20,28] },
+      [D.DARK_KNIGHT]: { name: 'Тёмный рыцарь', emoji: '⚔️', hp: 45, armor: 5, attack: 12, move: 2, range: 1, speed: 7, gold: [80,100], miniBoss: true },
+      [D.NECRO]: { name: 'Некромант', emoji: '🔮', hp: 28, armor: 1, attack: 8, move: 2, range: 3, speed: 8, gold: [30,40] },
+      [D.CHAOS]: { name: 'Хаос-демон', emoji: '🌀', hp: 25, armor: 2, attack: 11, move: 0, range: 2, speed: 12, gold: [28,38] },
+      [D.ASSASSIN]: { name: 'Убийца', emoji: '🗡️', hp: 20, armor: 0, attack: 14, move: 4, range: 1, speed: 14, gold: [30,40] },
+      [D.HYDRA]: { name: 'Гидра', emoji: '🐍', hp: 35, armor: 2, attack: 9, move: 1, range: 2, speed: 6, gold: [50,70], heads: 3, headHp: 10 },
+      [D.GHOST]: { name: 'Призрак', emoji: '👻', hp: 18, armor: 0, attack: 10, move: 3, range: 1, speed: 11, gold: [35,45] },
+      [D.FIRE_TITAN]: { name: 'Огненный титан', emoji: '🔥', hp: 80, armor: 4, attack: 15, move: 2, range: 1, speed: 8, gold: [150,150], boss: true },
+      [D.DARK_LORD]: { name: 'Тёмный Лорд', emoji: '👑', hp: 120, armor: 6, attack: 16, move: 2, range: 1, speed: 10, gold: [300,300], boss: true }
+    };
+    return map[type] || map[D.SKELETON];
+  }
+
+  const SHOP_ITEMS = [
+    { id: 'potion', name: 'Зелье HP +15', price: 30, use: (h) => { h.hp = Math.min(h.maxHp, h.hp + 15); } },
+    { id: 'elixir', name: 'Эликсир маны +5', price: 40, use: (h) => { if (h.maxMana) h.mana = Math.min(h.maxMana, h.mana + 5); } },
+    { id: 'mag_stone', name: 'Камень магии (+1 атака мага)', price: 80, use: (h) => { if (h.role === 'mage') h.attack += 1; } }
+  ];
+
+  //══════════ SECTION 3: GAME_STATE helpers ══════════
+  const GameState = {
+    screen: 'map',
+    region: 1,
+    turn: 1,
+    gold: 150,
+    heroes: [],
+    currentBattle: null,
+    worldMap: [],
+    log: [],
+    inventory: [],
+    adsAvailable: true,
+    lastAdTime: 0,
+    mapNodeId: null,
+    pendingPerks: [],
+    selectedHeroDeploy: 0
+  };
+
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+  function initHeroesFromTemplate() {
+    GameState.heroes = baseHeroTemplate().map(h => {
+      const x = deepClone(h);
+      x.activeStatuses = [];
+      return x;
+    });
+  }
+  function saveGame() {
+    const snap = deepClone(GameState);
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(snap)); } catch (e) { console.warn(e); }
+  }
+  function loadGame() {
+    try {
+      const s = localStorage.getItem(SAVE_KEY);
+      if (s) {
+        const o = JSON.parse(s);
+        Object.assign(GameState, o);
+        if (!GameState.heroes || !GameState.heroes.length) initHeroesFromTemplate();
+        if (!GameState.worldMap || !GameState.worldMap.length) buildWorldMap();
+        return true;
+      }
+    } catch (e) { console.warn(e); }
+    return false;
+  }
+  function randInt(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function inBounds(x, y) { return x >= 0 && x < GRID && y >= 0 && y < GRID; }
+
+  //══════════ A* (обязательная короткая функция) ══════════
+  function astar(grid, start, end, passable) {
+    const h = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    const key = p => p.x + ',' + p.y;
+    const open = [start];
+    const came = {};
+    const g = { [key(start)]: 0 };
+    const f = { [key(start)]: h(start, end) };
+    while (open.length) {
+      open.sort((a, b) => (f[key(a)] || 1e9) - (f[key(b)] || 1e9));
+      const cur = open.shift();
+      if (cur.x === end.x && cur.y === end.y) {
+        const path = [];
+        let k = key(cur);
+        while (k) {
+          const [xx, yy] = k.split(',').map(Number);
+          path.push({ x: xx, y: yy });
+          k = came[k];
+        }
+        return path.reverse();
+      }
+      for (const d of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
+        const nx = cur.x + d.x, ny = cur.y + d.y;
+        if (!inBounds(nx, ny) || !passable(nx, ny)) continue;
+        const nk = key({ x: nx, y: ny });
+        const step = 1;
+        const tg = (g[key(cur)] || 0) + step;
+        if (tg < (g[nk] ?? 1e9)) {
+          came[nk] = key(cur);
+          g[nk] = tg;
+          f[nk] = tg + h({ x: nx, y: ny }, end);
+          if (!open.find(o => o.x === nx && o.y === ny)) open.push({ x: nx, y: ny });
+        }
+      }
+    }
+    return null;
+  }
+
+  //══════════ Map generation (cellular + clusters + passage) ══════════
+  function carvePassage(grid) {
+    for (let y = 0; y < GRID; y++) {
+      grid[y][1] = TILE.GROUND;
+      grid[y][GRID - 2] = TILE.GROUND;
+    }
+    for (let x = 1; x < GRID - 1; x++) grid[Math.floor(GRID / 2)][x] = TILE.GROUND;
+  }
+  function generateBattleGrid(region) {
+    const grid = [];
+    for (let y = 0; y < GRID; y++) {
+      grid[y] = [];
+      for (let x = 0; x < GRID; x++) grid[y][x] = TILE.GROUND;
+    }
+    const density = 0.35 + region * 0.08;
+    let noise = [];
+    for (let y = 0; y < GRID; y++) {
+      noise[y] = [];
+      for (let x = 0; x < GRID; x++) noise[y][x] = Math.random() < 0.5 ? 1 : 0;
+    }
+    for (let it = 0; it < 3; it++) {
+      const n2 = noise.map(row => row.slice());
+      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+        let s = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx, ny = y + dy;
+          s += inBounds(nx, ny) ? noise[ny][nx] : 0;
+        }
+        n2[y][x] = s >= 5 ? 1 : 0;
+      }
+      noise = n2;
+    }
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+      if (noise[y][x] && Math.random() < density) grid[y][x] = TILE.FOREST;
+    }
+    const clusters = 2 + region;
+    for (let c = 0; c < clusters; c++) {
+      const cx = randInt(2, GRID - 3), cy = randInt(1, GRID - 2);
+      const r = randInt(1, 2);
+      for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+        if (inBounds(x, y) && Math.random() < 0.6) {
+          if (Math.random() < 0.55) grid[y][x] = TILE.MOUNTAIN;
+          else grid[y][x] = TILE.WATER;
+        }
+      }
+    }
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+      if (x < 2 || x >= GRID - 2) grid[y][x] = grid[y][x] === TILE.MOUNTAIN ? TILE.GROUND : grid[y][x];
+    }
+    carvePassage(grid);
+    if (Math.random() < 0.4) grid[randInt(1, GRID - 2)][randInt(2, GRID - 3)] = TILE.FORT;
+    return grid;
+  }
+
+  function tileBlocksMove(t, unit) {
+    if (t === TILE.MOUNTAIN) return unit && unit.enemyId === ENEMY_IDS.GHOST ? false : true;
+    return false;
+  }
+  function tileMoveCost(t, unit) {
+    if (t === TILE.WATER) {
+      if (unit && unit.heroId === 'seris') return 1;
+      return 2;
+    }
+    return 1;
+  }
+  function tileDefenseBonus(t) {
+    if (t === TILE.FOREST) return 2;
+    if (t === TILE.FORT) return 4;
+    return 0;
+  }
+  function hasForestBetween(ax, ay, bx, by, grid) {
+    const dx = Math.sign(bx - ax), dy = Math.sign(by - ay);
+    let x = ax, y = ay;
+    while (x !== bx || y !== by) {
+      if (inBounds(x, y) && grid[y][x] === TILE.FOREST && (x !== bx || y !== by)) {
+        if (Math.abs(bx - ax) >= Math.abs(by - ay)) x += dx; else y += dy;
+        continue;
+      }
+      if (Math.abs(bx - ax) >= Math.abs(by - ay)) x += dx; else y += dy;
+    }
+    return false;
+  }
+  function rangedBlocked(ax, ay, tx, ty, grid, ignoreForestForTarget) {
+    if (grid[ty][tx] === TILE.FOREST && ignoreForestForTarget) return false;
+    const steps = Math.max(Math.abs(tx - ax), Math.abs(ty - ay));
+    if (steps === 0) return false;
+    for (let i = 1; i < steps; i++) {
+      const px = Math.round(ax + (tx - ax) * i / steps);
+      const py = Math.round(ay + (ty - ay) * i / steps);
+      if (inBounds(px, py) && grid[py][px] === TILE.MOUNTAIN) return true;
+      if (inBounds(px, py) && grid[py][px] === TILE.FOREST) return true;
+    }
+    return false;
+  }
+
+  //══════════ Unit factory ══════════
+  function makeBattleHero(h, idx) {
+    const src = GameState.heroes.find(x => x.id === h.id) || h;
+    const u = deepClone(src);
+    u.isHero = true;
+    u.heroId = h.id;
+    u.x = -1; u.y = -1;
+    u.speed = 10 + (u.role === 'archer' ? 1 : u.role === 'mage' ? -1 : 0);
+    u.cds = { ...(u.cds || {}), shieldBash: u.cds?.shieldBash || 0, fireCall: u.cds?.fireCall || 0, berserk: u.cds?.berserk || 0,
+      doubleShot: u.cds?.doubleShot || 0, slowArrow: u.cds?.slowArrow || 0, arrowRain: u.cds?.arrowRain || 0,
+      fireball: u.cds?.fireball || 0, freeze: u.cds?.freeze || 0, meteor: u.cds?.meteor || 0 };
+    u.flags = { firstAttackTurn: true, mysticShield: src.flags?.mysticShield ?? 3, ...(u.flags || {}) };
+    u.activeStatuses = (u.activeStatuses || []).map(s => ({ ...s }));
+    u.sprite = u.emoji;
+    return u;
+  }
+  function spawnEnemy(type, x, y) {
+    const d = enemyDef(type);
+    const u = {
+      isHero: false, enemyId: type, name: d.name, emoji: d.emoji,
+      x, y, hp: d.hp, maxHp: d.hp, armor: d.armor, attack: d.attack,
+      move: d.move, range: d.range, speed: d.speed, activeStatuses: [],
+      aiVar: {}
+    };
+    if (type === ENEMY_IDS.HYDRA) { u.heads = 3; u.headHp = d.headHp; }
+    if (type === ENEMY_IDS.DARK_LORD) { u.phase = 1; u.turnCount = 0; u.teleportCd = 0; u.aoeCd = 0; u.summonCd = 0; u.aiVar = {}; }
+    if (type === ENEMY_IDS.FIRE_TITAN) { u.bossVar = { aoeCounter: 0 }; }
+    if (type === ENEMY_IDS.CHAOS) { u.bossVar = { aoeTurn: 0 }; }
+    u.aiVar = u.aiVar || {};
+    return u;
+  }
+
+  function buildWorldMap() {
+    GameState.worldMap = [
+      { id: 'r1n1', name: 'Тёмный лес — застава', type: 'battle', region: 1, connections: ['r1n2'], enemyWave: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.ZOMBIE] },
+      { id: 'r1n2', name: 'Лес — тропа', type: 'battle', region: 1, connections: ['r1city', 'r1n3'], enemyWave: [ENEMY_IDS.BOAR, ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER] },
+      { id: 'r1city', name: 'Деревня', type: 'city', region: 1, connections: ['r1n2'] },
+      { id: 'r1n3', name: 'Лес шамана', type: 'battle', region: 1, connections: ['r1n2', 'r2n1'], enemyWave: [ENEMY_IDS.SHAMAN, ENEMY_IDS.SKELETON, ENEMY_IDS.ZOMBIE], miniBoss: true },
+      { id: 'r2n1', name: 'Руины — вход', type: 'battle', region: 2, connections: ['r1n3', 'r2n2'], enemyWave: [ENEMY_IDS.ORC_GUARD, ENEMY_IDS.SPIDER, ENEMY_IDS.SUICIDE] },
+      { id: 'r2n2', name: 'Руины — зал', type: 'battle', region: 2, connections: ['r2n1', 'r2city', 'r2boss'], enemyWave: [ENEMY_IDS.WATCHER, ENEMY_IDS.ICE_ELEM, ENEMY_IDS.SPIDER] },
+      { id: 'r2city', name: 'Квартал торговцев', type: 'city', region: 2, connections: ['r2n2'] },
+      { id: 'r2boss', name: 'Огненный титан', type: 'battle', region: 2, connections: ['r2n2', 'r3n1'], enemyWave: [ENEMY_IDS.FIRE_TITAN], boss: true },
+      { id: 'r3n1', name: 'Цитадель — врата', type: 'battle', region: 3, connections: ['r2boss', 'r3n2'], enemyWave: [ENEMY_IDS.NECRO, ENEMY_IDS.CHAOS, ENEMY_IDS.SKELETON] },
+      { id: 'r3n2', name: 'Зал теней', type: 'battle', region: 3, connections: ['r3n1', 'r3city', 'r3n3'], enemyWave: [ENEMY_IDS.ASSASSIN, ENEMY_IDS.GHOST, ENEMY_IDS.ORC_GUARD] },
+      { id: 'r3city', name: 'Последний лагерь', type: 'city', region: 3, connections: ['r3n2'] },
+      { id: 'r3n3', name: 'Трон Тьмы', type: 'battle', region: 3, connections: ['r3n2'], enemyWave: [ENEMY_IDS.DARK_LORD], boss: true, final: true }
+    ];
+    GameState.worldMap.forEach(n => { n.completed = false; });
+  }
+
+  //══════════ Battle core ══════════
+  function startBattle(node) {
+    const grid = generateBattleGrid(node.region);
+    const units = [];
+    const heroes = GameState.heroes.filter(h => h.hp > 0).map((h, i) => makeBattleHero(h, i));
+    const wave = node.enemyWave || [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON];
+    const rightXs = [GRID - 2, GRID - 1];
+    let ei = 0;
+    for (const t of wave) {
+      let placed = false;
+      for (const rx of rightXs) {
+        for (let y = 0; y < GRID && !placed; y++) {
+          if (!tileBlocksMove(grid[y][rx], null) && !units.find(u => u.x === rx && u.y === y)) {
+            units.push(spawnEnemy(t, rx, y));
+            placed = true;
+          }
+        }
+      }
+      if (!placed) units.push(spawnEnemy(t, GRID - 1, ei % GRID));
+      ei++;
+    }
+    GameState.currentBattle = {
+      grid, units, phase: 'deploy', round: 1,
+      activeIndex: 0, order: [], mode: 'idle',
+      selected: null, moveFrom: null, nodeId: node.id,
+      battleLog: [], pendingLoot: { gold: 0, items: [] },
+      globalBuffs: { watcherDeadMove: 0 }, heroMoved: false, heroActionDone: false, pendingSkill: null
+    };
+    GameState.screen = 'battle';
+    GameState.mapNodeId = node.id;
+    showScreen('battle');
+    updateBattleUI();
+    const b0 = GameState.currentBattle;
+    b0.battleLog.push({ text: 'Расставьте героев (левые 2 колонки), затем «Начать бой».', t: 'status' });
+    renderBattleLog();
+    buildInitiative();
+    saveGame();
+  }
+
+  function unitAt(b, x, y) { return b.units.find(u => u.hp > 0 && u.x === x && u.y === y); }
+  function allEnemiesDead(b) { return !b.units.some(u => !u.isHero && u.hp > 0); }
+  function allHeroesDead(b) { return !b.units.some(u => u.isHero && u.hp > 0); }
+
+  function getSpeed(u) {
+    let s = u.speed || 10;
+    if (u.activeStatuses) {
+      if (u.activeStatuses.find(s => s.type === STATUS.SLOW)) s -= 2;
+    }
+    if (!u.isHero && GameState.currentBattle?.globalBuffs?.watcherDeadMove > 0) s += 1;
+    return s;
+  }
+  function buildInitiative() {
+    const b = GameState.currentBattle;
+    if (!b) return;
+    b.order = b.units.map((u, i) => i).filter(i => b.units[i].hp > 0)
+      .sort((ia, ib) => getSpeed(b.units[ib]) - getSpeed(b.units[ia]));
+    b.activeIndex = 0;
+  }
+  function getActiveUnit() {
+    const b = GameState.currentBattle;
+    if (!b || !b.order.length) return null;
+    const idx = b.order[b.activeIndex];
+    return b.units[idx];
+  }
+
+  function passableForUnit(b, x, y, self) {
+    if (!inBounds(x, y)) return false;
+    if (tileBlocksMove(b.grid[y][x], self)) return false;
+    const occ = b.units.find(u => u.hp > 0 && u.x === x && u.y === y && u !== self);
+    if (occ) {
+      if (self && self.enemyId === ENEMY_IDS.GHOST && occ) return true;
+      return false;
+    }
+    return true;
+  }
+
+  function getMovePoints(u, b) {
+    let m = u.move;
+    if (u.activeStatuses && u.activeStatuses.find(s => s.type === STATUS.SLOW)) m = Math.max(0, m - 2);
+    if (u.activeStatuses && u.activeStatuses.find(s => s.type === STATUS.WEB)) m = 0;
+    if (u.activeStatuses && u.activeStatuses.find(s => s.type === STATUS.STUN)) m = 0;
+    return m;
+  }
+
+  function floodReachable(b, u) {
+    const maxCost = getMovePoints(u, b);
+    const dist = {};
+    const key = (x, y) => x + ',' + y;
+    const q = [{ x: u.x, y: u.y, c: 0 }];
+    dist[key(u.x, u.y)] = 0;
+    while (q.length) {
+      const cur = q.shift();
+      for (const d of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
+        const nx = cur.x + d.x, ny = cur.y + d.y;
+        if (!inBounds(nx, ny)) continue;
+        const fake = { enemyId: u.enemyId, heroId: u.heroId };
+        if (!passableForUnit(b, nx, ny, u)) continue;
+        const step = tileMoveCost(b.grid[ny][nx], u);
+        const nc = cur.c + step;
+        if (nc > maxCost) continue;
+        const k = key(nx, ny);
+        if (dist[k] === undefined || nc < dist[k]) {
+          dist[k] = nc;
+          q.push({ x: nx, y: ny, c: nc });
+        }
+      }
+    }
+    return dist;
+  }
+
+  function addStatus(u, type, turns, meta) {
+    u.activeStatuses = u.activeStatuses || [];
+    const ex = u.activeStatuses.find(s => s.type === type);
+    if (ex) { ex.turns = Math.max(ex.turns, turns); }
+    else u.activeStatuses.push({ type, turns, meta: meta || {} });
+  }
+  function tickStatusesStart(u) {
+    if (!u.activeStatuses) return;
+    u.activeStatuses.forEach(s => {
+      if (s.type === STATUS.POISON) u.hp -= 3;
+      if (s.type === STATUS.BURN) u.hp -= 3;
+    });
+    u.activeStatuses = u.activeStatuses.filter(s => {
+      if (s.type === STATUS.POISON || s.type === STATUS.BURN) { s.turns--; return s.turns > 0; }
+      return true;
+    });
+  }
+  function tickStatusesEndTurn(u) {
+    if (!u.activeStatuses) return;
+    u.activeStatuses.forEach(s => {
+      if ([STATUS.STUN, STATUS.FREEZE, STATUS.SLOW, STATUS.WEB, STATUS.BLIND, STATUS.CURSE, STATUS.BERSERK].includes(s.type)) s.turns--;
+    });
+    u.activeStatuses = u.activeStatuses.filter(s => s.turns > 0);
+  }
+
+  function syncHeroFromUnit(unit) {
+    if (!unit.isHero) return;
+    const h = GameState.heroes.find(x => x.id === unit.heroId);
+    if (h) {
+      h.hp = unit.hp; h.mana = unit.mana; h.cds = { ...unit.cds };
+      h.activeStatuses = unit.activeStatuses;
+      h.flags = { ...unit.flags };
+    }
+  }
+
+  function dealDamage(attacker, target, rawDmg, opts) {
+    const b = GameState.currentBattle;
+    opts = opts || {};
+    let dmg = rawDmg;
+    if (target.isHero && target.heroId === 'garet' && target.flags && target.flags.fireCallMitigateActive) dmg = Math.floor(dmg * 0.5);
+    if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags && attacker.flags.firstAttackTurn) dmg = Math.floor(dmg * 1.5);
+    if (attacker.activeStatuses && attacker.activeStatuses.find(s => s.type === STATUS.BERSERK)) dmg = Math.floor(dmg * 2);
+    let armor = target.armor + tileDefenseBonus(b.grid[target.y][target.x]);
+    if (attacker.isHero && attacker.heroId === 'garet' && attacker.perks && attacker.perks.includes('armorPierce')) armor = Math.max(0, armor - 2);
+    if (attacker.enemyId === ENEMY_IDS.ORC_GUARD && !opts.ignoreOrc) armor = Math.max(0, armor - 2);
+    dmg = Math.max(0, dmg - armor);
+    if (target.isHero && target.heroId === 'seris' && target.flags && target.flags.mysticShield > 0) {
+      const absorb = Math.min(3, target.flags.mysticShield, dmg);
+      target.flags.mysticShield -= absorb;
+      dmg -= absorb;
+    }
+    if (target.enemyId === ENEMY_IDS.GHOST && (!opts.magic)) {
+      if (attacker.isHero && (attacker.heroId === 'garet' || attacker.heroId === 'alira')) dmg = 0;
+    }
+    if (target.enemyId === ENEMY_IDS.DARK_LORD && b?.units.find(u => u.enemyId === ENEMY_IDS.DARK_LORD && u.hp > 0 && u.phase === 3)) {
+      if (attacker.isHero && attacker.heroId !== 'seris' && !opts.magic && !opts.artifact) dmg = 0;
+    }
+    if (target.enemyId === ENEMY_IDS.ICE_ELEM && opts.fire) dmg = Math.floor(dmg * 1.5);
+    if (Math.random() < 0.25 && target.isHero && target.heroId === 'garet' && !opts.blockIgnore && !opts.magic) {
+      pushBattleLog(`[${target.emoji} ${target.name}] Щитовой блок!`, 'status');
+      return 0;
+    }
+    target.hp -= dmg;
+    spawnDamageFx(target.x, target.y, dmg);
+    if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags) attacker.flags.firstAttackTurn = false;
+    if (target.hp <= 0) onUnitDeath(target);
+    if (b && allEnemiesDead(b)) checkBattleEnd();
+    if (b && allHeroesDead(b)) checkBattleEnd();
+    return dmg;
+  }
+
+  function onUnitDeath(u) {
+    const b = GameState.currentBattle;
+    pushBattleLog(`☠️ ${u.emoji} ${u.name} повержен!`, 'enemy');
+    if (!u.isHero && u.enemyId === ENEMY_IDS.ZOMBIE) {
+      for (const t of b.units) {
+        if (!t.isHero || t.hp <= 0) continue;
+        if (Math.abs(t.x - u.x) + Math.abs(t.y - u.y) <= 1) dealDamage(u, t, 5, { blockIgnore: true, magic: true });
+      }
+    }
+    if (!u.isHero && u.enemyId === ENEMY_IDS.WATCHER) b.globalBuffs.watcherDeadMove = 2;
+  }
+
+  function endBattleVictory() {
+    const b = GameState.currentBattle;
+    const node = GameState.worldMap.find(n => n.id === b.nodeId);
+    let gold = 0;
+    (node.enemyWave || []).forEach(() => { gold += randInt(5, 15); });
+    if (node.boss && node.enemyWave.includes(ENEMY_IDS.FIRE_TITAN)) gold = 150;
+    if (node.final) gold = 300;
+    GameState.gold += gold;
+    const xpEach = 20 + GameState.region * 10;
+    GameState.heroes.forEach(h => {
+      if (h.hp > 0) {
+        h.xp = (h.xp || 0) + xpEach;
+        while (h.xp >= h.level * 40 && h.level < 8) {
+          h.xp -= h.level * 40;
+          h.level++;
+          GameState.pendingPerks.push(h.id);
+        }
+      }
+    });
+    if (node) node.completed = true;
+    saveGame();
+    GameState.currentBattle = null;
+    GameState.screen = 'map';
+    showVictoryUI(gold, xpEach);
+  }
+
+  function showVictoryUI(gold, xp) {
+    document.getElementById('vic-gold').textContent = `Получено золота: +${gold} 💰`;
+    const vx = document.getElementById('vic-xp');
+    vx.innerHTML = GameState.heroes.map(h => `<div>⭐ ${h.emoji} ${h.name}: +${xp} опыта, ур. ${h.level}</div>`).join('');
+    document.getElementById('vic-items').innerHTML = '';
+    showScreen('victory');
+    if (GameState.pendingPerks.length) setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
+  }
+
+  //══════════ RENDER ══════════
+  const canvas = document.getElementById('battle-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function drawBattle() {
+    const b = GameState.currentBattle;
+    ctx.clearRect(0, 0, CANVAS_SZ, CANVAS_SZ);
+    if (!b) return;
+    const sel = b.selected;
+    const reach = sel && sel.isHero && b.phase === 'combat' && b.mode === 'move' && getActiveUnit() === sel ? floodReachable(b, sel) : null;
+    const blind = sel && sel.activeStatuses && sel.activeStatuses.find(s => s.type === STATUS.BLIND);
+
+    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+      const px = x * CELL, py = y * CELL;
+      ctx.fillStyle = '#2a2a3a';
+      ctx.fillRect(px, py, CELL, CELL);
+      ctx.strokeStyle = '#1a1a2e';
+      ctx.strokeRect(px, py, CELL, CELL);
+      ctx.font = '28px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(TILE_EMOJI[b.grid[y][x]] || '🟫', px + CELL / 2, py + CELL / 2);
+      if (sel && sel.x === x && sel.y === y) {
+        ctx.fillStyle = 'rgba(255,255,0,0.25)';
+        ctx.fillRect(px, py, CELL, CELL);
+      }
+      if (reach && reach[x + ',' + y] !== undefined && !(sel && sel.x === x && sel.y === y)) {
+        if (blind) { /* skip */ }
+        else {
+          ctx.fillStyle = 'rgba(60,120,255,0.35)';
+          ctx.fillRect(px, py, CELL, CELL);
+        }
+      }
+    }
+
+    if (b.phase === 'combat' && sel && !blind && b.mode === 'attack') {
+      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+        const dist = Math.abs(sel.x - x) + Math.abs(sel.y - y);
+        if (dist <= sel.range && sel.range > 0) {
+          const tgt = unitAt(b, x, y);
+          if (tgt && !tgt.isHero) {
+            if (sel.range > 1 && rangedBlocked(sel.x, sel.y, x, y, b.grid, false)) continue;
+            ctx.fillStyle = 'rgba(255,60,60,0.35)';
+            ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+          }
+        }
+      }
+    }
+
+    b.units.filter(u => u.hp > 0).forEach(u => {
+      const px = u.x * CELL, py = u.y * CELL;
+      let show = true;
+      if (u.enemyId === ENEMY_IDS.ASSASSIN) {
+        const t = b.grid[u.y][u.x];
+        const nearM = [[-1,0],[1,0],[0,-1],[0,1]].some(([dx,dy]) => inBounds(u.x+dx,u.y+dy) && b.grid[u.y+dy][u.x+dx]===TILE.MOUNTAIN);
+        if (t === TILE.FOREST || nearM) show = false;
+      }
+      if (show) {
+        ctx.font = '32px serif';
+        ctx.fillText(u.isHero ? u.sprite : u.emoji, px + CELL / 2, py + CELL / 2 - 4);
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(`${u.hp}/${u.maxHp}`, px + CELL / 2, py + CELL - 6);
+        if (u.activeStatuses && u.activeStatuses.length) {
+          const ic = u.activeStatuses.map(s => s.type === STATUS.FREEZE ? '🧊' : s.type === STATUS.POISON ? '☠' : s.type === STATUS.WEB ? '🕸' : '·').join('');
+          ctx.fillText(ic, px + CELL / 2, py + 12);
+        }
+      }
+    });
+  }
+
+  function renderInitiative() {
+    const bar = document.getElementById('initiative-bar');
+    const b = GameState.currentBattle;
+    bar.innerHTML = '';
+    if (!b) return;
+    const active = getActiveUnit();
+    b.order.forEach((unitIdx, i) => {
+      const u = b.units[unitIdx];
+      if (!u || u.hp <= 0) return;
+      const d = document.createElement('span');
+      d.className = 'init-slot' + (u === active ? ' active' : '');
+      d.textContent = u.isHero ? u.sprite : u.emoji;
+      bar.appendChild(d);
+    });
+  }
+
+  function renderBattleLog() {
+    const el = document.getElementById('battle-log');
+    const b = GameState.currentBattle;
+    const lines = b ? b.battleLog : [];
+    el.innerHTML = lines.slice(-80).map(l => {
+      const cls = l.t === 'hero' ? 'l-hero' : l.t === 'enemy' ? 'l-enemy' : 'l-status';
+      return `<div class="${cls}">${l.text}</div>`;
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+  function pushBattleLog(text, t) {
+    const b = GameState.currentBattle;
+    if (b) {
+      b.battleLog.push({ text, t: t || 'status' });
+      renderBattleLog();
+    }
+  }
+
+  function spawnDamageFx(x, y, n) {
+    const layer = document.getElementById('fx-layer');
+    const rect = canvas.getBoundingClientRect();
+    const d = document.createElement('div');
+    d.className = 'fx-dmg';
+    d.style.color = '#ff5555';
+    d.style.left = (rect.left + x * CELL + CELL / 2) + 'px';
+    d.style.top = (rect.top + y * CELL) + 'px';
+    d.textContent = '-' + n;
+    layer.appendChild(d);
+    setTimeout(() => d.remove(), 900);
+  }
+
+  let rafId = 0;
+  function loop() {
+    drawBattle();
+    renderInitiative();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  //══════════ BATTLE: turn flow, fire, deploy ══════════
+  function countDeployedHeroes(b) {
+    return b.units.filter(u => u.isHero && u.hp > 0 && u.x >= 0).length;
+  }
+  function beginCombatFromDeploy() {
+    const b = GameState.currentBattle;
+    if (!b || b.phase !== 'deploy') return;
+    if (countDeployedHeroes(b) < 1) { alert('Поставьте хотя бы одного героя.'); return; }
+    b.phase = 'combat';
+    b.heroMoved = false;
+    b.heroActionDone = false;
+    b.battleLog.push({ text: 'Сражение!', t: 'status' });
+    renderBattleLog();
+    buildInitiative();
+    b.activeIndex = 0;
+    b.units.filter(u => u.enemyId === ENEMY_IDS.DARK_LORD && u.phase === 1).forEach(dl => {
+      if (!dl.aiVar.initSummon) {
+        dl.aiVar.initSummon = true;
+        let cnt = 0;
+        for (let y = 0; y < GRID && cnt < 4; y++) for (let x = GRID - 2; x < GRID && cnt < 4; x++) {
+          if (enemyPassable(b, x, y, dl) && !unitAt(b, x, y)) { b.units.push(spawnEnemy(ENEMY_IDS.ORC_GUARD, x, y)); cnt++; }
+        }
+        buildInitiative();
+      }
+    });
+    const fu = getActiveUnit();
+    if (fu && !fu.isHero) setTimeout(() => runEnemyTurn(), 120);
+    else updateBattleUI();
+  }
+  function applyGroundEffects(u) {
+    const b = GameState.currentBattle;
+    if (!b) return;
+    const t = b.grid[u.y][u.x];
+    if (t === TILE.FIRE) {
+      u.hp -= 3;
+      pushBattleLog(`🔥 ${u.emoji} горит на огне (−3)`, 'status');
+      if (u.hp <= 0) onUnitDeath(u);
+    }
+  }
+  function advanceSingleTurn() {
+    const b = GameState.currentBattle;
+    if (!b || !b.order.length) return null;
+    b.activeIndex++;
+    if (b.activeIndex >= b.order.length) {
+      b.activeIndex = 0;
+      b.round++;
+      b.units.forEach(u => { if (u.isHero) { u.flags = u.flags || {}; u.flags.firstAttackTurn = true; } });
+      if (b.globalBuffs.watcherDeadMove > 0) b.globalBuffs.watcherDeadMove--;
+      buildInitiative();
+    }
+    let guard = 0;
+    while (guard++ < 32) {
+      const u = getActiveUnit();
+      if (!u) return null;
+      if (u.hp > 0) return u;
+      b.activeIndex++;
+      if (b.activeIndex >= b.order.length) {
+        b.activeIndex = 0;
+        b.round++;
+        buildInitiative();
+      }
+    }
+    return null;
+  }
+  function endUnitTurn() {
+    const b = GameState.currentBattle;
+    if (!b) return;
+    const prev = getActiveUnit();
+    if (prev) {
+      tickStatusesEndTurn(prev);
+      if (prev.isHero) syncHeroFromUnit(prev);
+    }
+    b.heroMoved = false;
+    b.heroActionDone = false;
+    b.selected = null;
+    b.mode = 'idle';
+    b.pendingSkill = null;
+
+    for (;;) {
+      const nu = advanceSingleTurn();
+      if (!nu) { checkBattleEnd(); return; }
+      if (nu.isHero && nu.heroId === 'garet' && nu.flags) nu.flags.fireCallMitigateActive = false;
+      tickStatusesStart(nu);
+      if (b.grid[nu.y] && b.grid[nu.y][nu.x] === TILE.FIRE) applyGroundEffects(nu);
+      if (nu.hp <= 0) continue;
+      if (nu.isHero) {
+        nu.mana = Math.min(nu.maxMana, (nu.mana || 0) + 2);
+        Object.keys(nu.cds || {}).forEach(k => { if (nu.cds[k] > 0) nu.cds[k]--; });
+        const hh = GameState.heroes.find(x => x.id === nu.heroId);
+        if (hh) hh.cds = { ...nu.cds };
+      }
+      if (nu.activeStatuses && nu.activeStatuses.find(s => s.type === STATUS.STUN || s.type === STATUS.FREEZE)) {
+        pushBattleLog(`${nu.emoji} пропускает ход (оглушение/мороз)`, 'status');
+        continue;
+      }
+      if (!nu.isHero) {
+        setTimeout(() => runEnemyTurn(), 80);
+        updateBattleUI();
+        return;
+      }
+      updateBattleUI();
+      return;
+    }
+  }
+  function checkBattleEnd() {
+    const b = GameState.currentBattle;
+    if (!b) return;
+    if (allEnemiesDead(b)) {
+      const node = GameState.worldMap.find(n => n.id === b.nodeId);
+      if (node?.final) {
+        GameState.gold += 300;
+        const xpEach = 20 + GameState.region * 10;
+        GameState.heroes.forEach(h => {
+          if (h.hp > 0) {
+            h.xp = (h.xp || 0) + xpEach;
+            while (h.xp >= h.level * 40 && h.level < 8) {
+              h.xp -= h.level * 40;
+              h.level++;
+              GameState.pendingPerks.push(h.id);
+            }
+          }
+        });
+        node.completed = true;
+        saveGame();
+        GameState.currentBattle = null;
+        GameState.screen = 'map';
+        showScreen('ending');
+        document.getElementById('ending-stats').textContent = `Накоплено золота: ${GameState.gold} 💰`;
+        if (GameState.pendingPerks.length) setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
+        return;
+      }
+      endBattleVictory();
+      return;
+    }
+    if (allHeroesDead(b)) {
+      GameState.screen = 'gameover';
+      showScreen('gameover');
+    }
+  }
+
+  //══════════ AI ══════════
+  function priorityTarget(b) {
+    const heroes = b.units.filter(u => u.isHero && u.hp > 0);
+    const mage = heroes.find(h => h.heroId === 'seris');
+    if (mage) return mage;
+    const arch = heroes.find(h => h.heroId === 'alira');
+    if (arch) return arch;
+    return heroes[0];
+  }
+  function findWatcher(b) {
+    return b.units.find(u => !u.isHero && u.enemyId === ENEMY_IDS.WATCHER && u.hp > 0);
+  }
+  function aiChooseTarget(b, self) {
+    const w = findWatcher(b);
+    if (w) {
+      let best = null, bd = 999;
+      for (const h of b.units.filter(u => u.isHero && u.hp > 0)) {
+        const d = Math.abs(h.x - w.x) + Math.abs(h.y - w.y);
+        if (d < bd) { bd = d; best = h; }
+      }
+      if (best) return best;
+    }
+    return priorityTarget(b);
+  }
+  function enemyPassable(b, x, y, self) {
+    if (!inBounds(x, y)) return false;
+    if (self.enemyId !== ENEMY_IDS.GHOST && tileBlocksMove(b.grid[y][x], self)) return false;
+    if (b.units.some(u => u.hp > 0 && u.x === x && u.y === y && u !== self)) {
+      if (self.enemyId === ENEMY_IDS.GHOST) return true;
+      return false;
+    }
+    return true;
+  }
+  function runEnemyTurn() {
+    const b = GameState.currentBattle;
+    if (!b || b.phase !== 'combat') return;
+    const u = getActiveUnit();
+    if (!u || u.isHero || u.hp <= 0) { endUnitTurn(); return; }
+    u.aiVar = u.aiVar || {};
+    if (u.enemyId === ENEMY_IDS.SHAMAN) {
+      const allies = b.units.filter(x => !x.isHero && x.hp > 0 && x !== u);
+      let healT = null, low = 999;
+      for (const a of allies) {
+        const ratio = a.hp / a.maxHp;
+        if (a.hp < a.maxHp && a.hp < low) { low = a.hp; healT = a; }
+      }
+      if (!healT) healT = u;
+      if (healT) {
+        healT.hp = Math.min(healT.maxHp, healT.hp + 4);
+        pushBattleLog(`[${u.emoji}] лечит ${healT.emoji} +4`, 'enemy');
+      }
+      endUnitTurn();
+      return;
+    }
+    if (u.enemyId === ENEMY_IDS.WATCHER) { endUnitTurn(); return; }
+    if (u.enemyId === ENEMY_IDS.ORC_GUARD) {
+      u.aiVar.turnNum = (u.aiVar.turnNum || 0) + 1;
+      if (u.aiVar.turnNum <= 2) { endUnitTurn(); return; }
+    }
+
+    const tgt0 = aiChooseTarget(b, u);
+    if (u.enemyId === ENEMY_IDS.GOBLIN_ARCHER && tgt0) {
+      const d0 = Math.abs(tgt0.x - u.x) + Math.abs(tgt0.y - u.y);
+      if (d0 <= 1) {
+        let best = null, bestD = -1;
+        for (const d of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
+          const nx = u.x + d.x, ny = u.y + d.y;
+          if (!enemyPassable(b, nx, ny, u)) continue;
+          const dist = Math.abs(tgt0.x - nx) + Math.abs(tgt0.y - ny);
+          if (dist > bestD) { bestD = dist; best = { x: nx, y: ny }; }
+        }
+        if (best) { u.x = best.x; u.y = best.y; pushBattleLog(`[${u.emoji}] отступает`, 'enemy'); }
+      }
+    }
+
+    if (u.enemyId === ENEMY_IDS.CHAOS) {
+      const spots = [];
+      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) if (enemyPassable(b, x, y, u)) spots.push({ x, y });
+      if (spots.length) { const p = spots[randInt(0, spots.length - 1)]; u.x = p.x; u.y = p.y; }
+      u.bossVar.aoeTurn = (u.bossVar.aoeTurn || 0) + 1;
+      if (u.bossVar.aoeTurn % 3 === 0) {
+        b.units.forEach(t => {
+          if (t.isHero && t.hp > 0 && Math.abs(t.x - u.x) + Math.abs(t.y - u.y) <= 2) dealDamage(u, t, 8, { magic: true });
+        });
+      } else if (tgt0) aiAttack(u, tgt0);
+      endUnitTurn();
+      return;
+    }
+
+    if (u.enemyId === ENEMY_IDS.DARK_LORD) {
+      darkLordAi(u);
+      endUnitTurn();
+      return;
+    }
+    if (u.enemyId === ENEMY_IDS.FIRE_TITAN) {
+      fireTitanAi(u);
+      endUnitTurn();
+      return;
+    }
+
+    let tgt = tgt0;
+    if (u.enemyId === ENEMY_IDS.SUICIDE || u.enemyId === ENEMY_IDS.BOAR) {
+      let best = null, bd = 999;
+      for (const h of b.units.filter(x => x.isHero && x.hp > 0)) {
+        const d = Math.abs(h.x - u.x) + Math.abs(h.y - u.y);
+        if (d < bd) { bd = d; best = h; }
+      }
+      tgt = best || tgt;
+    }
+
+    if (u.enemyId === ENEMY_IDS.BOAR && tgt) {
+      const path = astar(b.grid, { x: u.x, y: u.y }, { x: tgt.x, y: tgt.y }, (x, y) => enemyPassable(b, x, y, u));
+      if (path && path.length > 1) {
+        let steps = 2, i = 1;
+        while (steps > 0 && i < path.length) {
+          const nx = path[i].x, ny = path[i].y;
+          if (!enemyPassable(b, nx, ny, u)) break;
+          u.x = nx; u.y = ny;
+          steps--; i++;
+        }
+      }
+      const dist = tgt ? Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) : 9;
+      if (dist <= 1) {
+        const times = u.hp < u.maxHp * 0.5 ? 2 : 1;
+        for (let k = 0; k < times; k++) if (tgt.hp > 0) aiAttack(u, tgt);
+      }
+      endUnitTurn();
+      return;
+    }
+
+    if (u.move > 0 && tgt) {
+      const path = astar(b.grid, { x: u.x, y: u.y }, { x: tgt.x, y: tgt.y }, (x, y) => enemyPassable(b, x, y, u));
+      if (path && path.length > 1) {
+        let cost = 0, i = 1, maxM = u.move;
+        while (i < path.length && cost < maxM) {
+          const nx = path[i].x, ny = path[i].y;
+          const step = tileMoveCost(b.grid[ny][nx], u);
+          if (cost + step > maxM) break;
+          if (!enemyPassable(b, nx, ny, u)) break;
+          u.x = nx; u.y = ny;
+          cost += step;
+          i++;
+        }
+      }
+    }
+    tgt = aiChooseTarget(b, u);
+    if (u.enemyId === ENEMY_IDS.SUICIDE && tgt) {
+      const d = Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y);
+      if (d <= 1) {
+        b.units.forEach(t => {
+          if (t.isHero && t.hp > 0 && Math.abs(t.x - u.x) + Math.abs(t.y - u.y) <= 1) dealDamage(u, t, 15, { magic: true });
+        });
+        u.hp = 0;
+        pushBattleLog('💣 Подрывник взорвался!', 'enemy');
+        checkBattleEnd();
+        endUnitTurn();
+        return;
+      }
+    }
+    if (tgt && u.range >= 1) {
+      const dist = Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y);
+      if (dist <= u.range && (u.range === 1 || !rangedBlocked(u.x, u.y, tgt.x, tgt.y, b.grid, false)))
+        aiAttack(u, tgt);
+    }
+    endUnitTurn();
+  }
+
+  function aiAttack(attacker, target) {
+    let dmg = attacker.attack;
+    if (attacker.enemyId === ENEMY_IDS.DARK_LORD) {
+      if (attacker.phase === 2) dmg = 18;
+      else if (attacker.phase === 3) dmg = attacker.attack + 6;
+    }
+    if (!attacker.isHero && findWatcher(GameState.currentBattle)) dmg += 2;
+    const mul = (attacker.enemyId === ENEMY_IDS.ASSASSIN && target.isHero) ? (() => {
+      const backs = [{ x: target.x, y: target.y + 1 }, { x: target.x, y: target.y - 1 }, { x: target.x - 1, y: target.y }, { x: target.x + 1, y: target.y }];
+      return backs.some(p => p.x === attacker.x && p.y === attacker.y) ? 2 : 1;
+    })() : 1;
+    let heads = 1;
+    if (attacker.enemyId === ENEMY_IDS.HYDRA) heads = 3;
+    for (let h = 0; h < heads; h++) {
+      if (target.hp <= 0) break;
+      dealDamage(attacker, target, Math.floor(dmg * mul), { magic: attacker.enemyId === ENEMY_IDS.GHOST });
+      if (attacker.enemyId === ENEMY_IDS.SPIDER && target.hp > 0) addStatus(target, STATUS.WEB, 2);
+      if (attacker.enemyId === ENEMY_IDS.ICE_ELEM && target.hp > 0) addStatus(target, STATUS.FREEZE, 1);
+      if (attacker.enemyId === ENEMY_IDS.HYDRA && target.hp > 0) addStatus(target, STATUS.POISON, 2);
+    }
+    pushBattleLog(`[${attacker.emoji}] бьёт [${target.emoji}]`, 'enemy');
+  }
+
+  function darkLordAi(u) {
+    const b = GameState.currentBattle;
+    u.turnCount = (u.turnCount || 0) + 1;
+    const guards = b.units.filter(x => !x.isHero && x.enemyId === ENEMY_IDS.ORC_GUARD && x.hp > 0);
+    if (u.phase === 1) {
+      if (guards.length === 0) { u.phase = 2; }
+      else return;
+    }
+    else if (u.phase === 2) {
+      u.teleportCd = (u.teleportCd || 0) + 1;
+      if (u.teleportCd % 2 === 0) {
+        for (let t = 0; t < 20; t++) {
+          const x = randInt(0, GRID - 1), y = randInt(0, GRID - 1);
+          if (enemyPassable(b, x, y, u) && !unitAt(b, x, y)) { u.x = x; u.y = y; break; }
+        }
+      }
+      const tgt = priorityTarget(b);
+      if (tgt && Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= 1) aiAttack(u, tgt);
+      u.aoeCd = (u.aoeCd || 0) + 1;
+      if (u.aoeCd % 3 === 0) {
+        b.units.forEach(t => {
+          if (t.isHero && t.hp > 0 && (Math.abs(t.x - u.x) + Math.abs(t.y - u.y) === 1)) {
+            dealDamage(u, t, 12, { magic: true });
+            addStatus(t, STATUS.BLIND, 1);
+          }
+        });
+      }
+      u.summonCd = (u.summonCd || 0) + 1;
+      if (u.summonCd % 4 === 0) {
+        for (let k = 0; k < 2; k++) {
+          for (let y = 0; y < GRID; y++) for (let x = GRID - 2; x < GRID; x++) {
+            if (enemyPassable(b, x, y, u) && !unitAt(b, x, y)) { b.units.push(spawnEnemy(ENEMY_IDS.SKELETON, x, y)); break; }
+          }
+        }
+      }
+      if (u.hp <= 80) u.phase = 3;
+    }
+    else if (u.phase === 3) {
+      const tgt = priorityTarget(b);
+      if (tgt) aiAttack(u, tgt);
+      const heroes = b.units.filter(h => h.isHero && h.hp > 0);
+      if (heroes.length) addStatus(heroes[randInt(0, heroes.length - 1)], STATUS.CURSE, 2);
+    }
+  }
+
+  function fireTitanAi(u) {
+    const b = GameState.currentBattle;
+    const nFire = u.hp < u.maxHp * 0.5 ? 4 : 2;
+    for (let k = 0; k < nFire; k++) {
+      const x = randInt(0, GRID - 1), y = randInt(0, GRID - 1);
+      b.grid[y][x] = TILE.FIRE;
+    }
+    u.bossVar.aoeCounter = (u.bossVar.aoeCounter || 0) + 1;
+    if (u.bossVar.aoeCounter % 3 === 0) {
+      const dirs = [[0,0],[1,0],[-1,0],[0,1],[0,-1]];
+      dirs.forEach(([dx, dy]) => {
+        const x = u.x + dx, y = u.y + dy;
+        if (!inBounds(x, y)) return;
+        b.units.forEach(t => { if (t.isHero && t.hp > 0 && t.x === x && t.y === y) dealDamage(u, t, 10, { fire: true, magic: true }); });
+      });
+    }
+    const tgt = priorityTarget(b);
+    if (tgt && Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= 1) aiAttack(u, tgt);
+  }
+
+  //══════════ Hero UI & actions ══════════
+  function updateBattleUI() {
+    const b = GameState.currentBattle;
+    const deployHint = document.getElementById('deploy-hint');
+    const title = document.getElementById('unit-title');
+    const stats = document.getElementById('unit-stats');
+    const actions = document.getElementById('action-buttons');
+    if (!b) return;
+    if (b.phase === 'deploy') {
+      deployHint.classList.remove('hidden');
+      const list = GameState.heroes.filter(h => h.hp > 0);
+      title.textContent = 'Расстановка';
+      stats.innerHTML = list.map((h, i) => `<div>${h.emoji} ${h.name} — ${i === GameState.selectedHeroDeploy ? '●' : '○'}</div>`).join('');
+      actions.innerHTML = `
+        ${list.map((h, i) => `<button class="btn" data-deploy="${i}">${h.emoji} Выбрать</button>`).join('')}
+        <button class="btn btn-primary" id="btn-start-battle">Начать бой</button>
+      `;
+      actions.querySelectorAll('[data-deploy]').forEach(btn => {
+        btn.onclick = () => { GameState.selectedHeroDeploy = +btn.getAttribute('data-deploy'); updateBattleUI(); };
+      });
+      const sb = document.getElementById('btn-start-battle');
+      if (sb) sb.onclick = () => beginCombatFromDeploy();
+      return;
+    }
+    deployHint.classList.add('hidden');
+    const u = getActiveUnit();
+    if (!u) { title.textContent = '—'; stats.innerHTML = ''; actions.innerHTML = ''; return; }
+    if (!u.isHero) {
+      title.textContent = `${u.emoji} ход врага…`;
+      stats.innerHTML = '';
+      actions.innerHTML = '';
+      return;
+    }
+    b.selected = u;
+    title.textContent = `${u.sprite} ${u.name}`;
+    let st = `HP ${u.hp}/${u.maxHp} | Броня ${u.armor} | Атк ${u.attack} | Ход ${getMovePoints(u, b)}/${u.move}`;
+    if (u.heroId === 'seris') st += ` | Мана ${u.mana}/${u.maxMana}`;
+    stats.innerHTML = st;
+    let html = '';
+    if (!b.heroMoved) {
+      html += `<button class="btn" id="btn-mode-move">Движение</button><button class="btn" id="btn-skip-move">Пропуск движения</button>`;
+    } else if (!b.heroActionDone) {
+      html += `<button class="btn" id="btn-mode-atk">Атака</button><button class="btn" id="btn-wait">Ждать</button>`;
+      if (u.heroId === 'garet') html += `<button class="btn" id="sk-shield">Удар щитом</button><button class="btn" id="sk-firecall">Вызов огня</button><button class="btn" id="sk-berz">Берсерк</button>`;
+      if (u.heroId === 'alira') html += `<button class="btn" id="sk-double">Двойной выстрел</button><button class="btn" id="sk-slow">Стрела замедления</button><button class="btn" id="sk-rain">Дождь стрел</button>`;
+      if (u.heroId === 'seris') html += `<button class="btn" id="sk-fb">Огненный шар</button><button class="btn" id="sk-fr">Заморозка</button><button class="btn" id="sk-met">Метеорит</button>`;
+    }
+    actions.innerHTML = html;
+    const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    bind('btn-mode-move', () => { b.mode = 'move'; });
+    bind('btn-skip-move', () => { b.heroMoved = true; b.mode = 'idle'; updateBattleUI(); });
+    bind('btn-mode-atk', () => { b.mode = 'attack'; b.pendingSkill = null; });
+    bind('btn-wait', () => { b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-shield', () => { if (u.cds.shieldBash > 0) return; b.pendingSkill = 'shieldBash'; b.mode = 'skill'; });
+    bind('sk-firecall', () => { if (u.cds.fireCall > 0) return; b.pendingSkill = 'fireCall'; b.mode = 'skill'; });
+    bind('sk-berz', () => { if (u.cds.berserk > 0) return; addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-double', () => { if (u.cds.doubleShot > 0) return; b.pendingSkill = 'double'; b.mode = 'skill'; });
+    bind('sk-slow', () => { if (u.cds.slowArrow > 0) return; b.pendingSkill = 'slowArrow'; b.mode = 'skill'; });
+    bind('sk-rain', () => { if (u.cds.arrowRain > 0) return; const b2 = GameState.currentBattle; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && Math.abs(t.x - u.x) <= 1 && Math.abs(t.y - u.y) <= 1) dealDamage(u, t, u.attack, {}); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-fb', () => { if (u.mana < 3 || u.cds.fireball > 0) return; b.pendingSkill = 'fireball'; b.mode = 'skill'; });
+    bind('sk-fr', () => { if (u.mana < 4 || u.cds.freeze > 0) return; b.pendingSkill = 'freeze'; b.mode = 'skill'; });
+    bind('sk-met', () => { if (u.mana < 8 || u.cds.meteor > 0) return; b.pendingSkill = 'meteor'; b.mode = 'skill'; });
+  }
+
+  function performHeroAttack(u, target) {
+    const b = GameState.currentBattle;
+    const dist = Math.abs(u.x - target.x) + Math.abs(u.y - target.y);
+    if (dist > u.range) return;
+    if (u.range > 1 && rangedBlocked(u.x, u.y, target.x, target.y, b.grid, u.perks && u.perks.includes('ignoreCover'))) return;
+    let base = u.attack;
+    if (b.pendingSkill === 'double') {
+      dealDamage(u, target, base, {});
+      if (target.hp > 0) dealDamage(u, target, base, {});
+      u.cds.doubleShot = 2;
+    } else {
+      dealDamage(u, target, base, { magic: u.heroId === 'seris' });
+    }
+    if (b.pendingSkill === 'shieldBash' && target.hp > 0) { addStatus(target, STATUS.STUN, 1); u.cds.shieldBash = 3; }
+    pushBattleLog(`[${u.sprite} ${u.name}] атакует [${target.emoji}]`, 'hero');
+    b.pendingSkill = null;
+    b.heroActionDone = true;
+    b.mode = 'idle';
+    syncHeroFromUnit(u);
+    endUnitTurn();
+  }
+
+  function canvasBattleClick(gx, gy) {
+    const b = GameState.currentBattle;
+    if (!b || !inBounds(gx, gy)) return;
+    if (b.phase === 'deploy') {
+      if (gx > 1) return;
+      if (!passableForUnit(b, gx, gy, null)) return;
+      const list = GameState.heroes.filter(h => h.hp > 0);
+      const h = list[GameState.selectedHeroDeploy];
+      if (!h) return;
+      if (unitAt(b, gx, gy)) return;
+      let u = b.units.find(x => x.isHero && x.heroId === h.id);
+      if (u) { u.x = gx; u.y = gy; }
+      else { u = makeBattleHero(h, 0); u.x = gx; u.y = gy; b.units.push(u); }
+      saveGame();
+      updateBattleUI();
+      return;
+    }
+    const active = getActiveUnit();
+    if (!active || !active.isHero) return;
+    const u = active;
+    if (u.activeStatuses && u.activeStatuses.find(s => s.type === STATUS.BLIND) && b.mode === 'move') return;
+
+    if (b.mode === 'move' && !b.heroMoved) {
+      const reach = floodReachable(b, u);
+      if (reach[gx + ',' + gy] === undefined) return;
+      u.x = gx; u.y = gy;
+      b.heroMoved = true;
+      b.mode = 'idle';
+      syncHeroFromUnit(u);
+      updateBattleUI();
+      return;
+    }
+    if ((b.mode === 'attack' || b.mode === 'skill') && !b.heroActionDone) {
+      if (b.pendingSkill === 'fireCall' && u.heroId === 'garet') {
+        b.units.filter(e => !e.isHero && e.hp > 0).forEach(e => {
+          if (Math.abs(e.x - u.x) + Math.abs(e.y - u.y) <= 2) dealDamage(e, u, Math.max(1, Math.floor(e.attack * 0.5)), { blockIgnore: true });
+        });
+        u.flags = u.flags || {};
+        u.flags.fireCallMitigateActive = true;
+        u.cds.fireCall = 4;
+        pushBattleLog(`[${u.sprite}] Вызов огня!`, 'hero');
+        b.heroActionDone = true; endUnitTurn(); return;
+      }
+      const tgt = unitAt(b, gx, gy);
+      if (!tgt || tgt.isHero) return;
+      if (b.pendingSkill === 'fireball' && u.heroId === 'seris') {
+        if (u.mana < 3) return;
+        if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range) return;
+        u.mana -= 3; u.cds.fireball = 2;
+        dealDamage(u, tgt, 15, { fire: true, magic: true });
+        [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx,dy]) => {
+          const tx = gx + dx, ty = gy + dy;
+          const t2 = unitAt(b, tx, ty);
+          if (t2 && !t2.isHero) dealDamage(u, t2, 7, { fire: true, magic: true });
+        });
+        b.heroActionDone = true; endUnitTurn(); return;
+      }
+      if (b.pendingSkill === 'freeze' && u.heroId === 'seris') {
+        if (u.mana < 4) return;
+        u.mana -= 4; u.cds.freeze = 3;
+        addStatus(tgt, STATUS.FREEZE, 1);
+        pushBattleLog(`🧊 ${tgt.name} заморожен`, 'status');
+        b.heroActionDone = true; endUnitTurn(); return;
+      }
+      if (b.pendingSkill === 'meteor' && u.heroId === 'seris') {
+        if (u.mana < 8) return;
+        u.mana -= 8; u.cds.meteor = 6;
+        for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 2; dx++) {
+          const t2 = unitAt(b, gx + dx, gy + dy);
+          if (t2 && !t2.isHero) dealDamage(u, t2, 30, { fire: true, magic: true });
+        }
+        b.heroActionDone = true; endUnitTurn(); return;
+      }
+      if (b.pendingSkill === 'shieldBash') {
+        if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > 1) return;
+        performHeroAttack(u, tgt);
+        return;
+      }
+      if (b.pendingSkill === 'slowArrow') {
+        if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range || rangedBlocked(u.x, u.y, gx, gy, b.grid, false)) return;
+        dealDamage(u, tgt, u.attack, {});
+        addStatus(tgt, STATUS.SLOW, 2);
+        u.cds.slowArrow = 3;
+        b.heroActionDone = true; endUnitTurn(); return;
+      }
+      performHeroAttack(u, tgt);
+    }
+  }
+
+  //══════════ Map / economy / screens ══════════
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    if (name === 'map') document.getElementById('map-screen').classList.remove('hidden');
+    if (name === 'city') document.getElementById('city-screen').classList.remove('hidden');
+    if (name === 'battle') document.getElementById('battle-screen').classList.remove('hidden');
+    if (name === 'inventory') document.getElementById('inventory-screen').classList.remove('hidden');
+    if (name === 'victory') document.getElementById('victory-screen').classList.remove('hidden');
+    if (name === 'gameover') document.getElementById('gameover-screen').classList.remove('hidden');
+    if (name === 'ending') document.getElementById('ending-screen').classList.remove('hidden');
+    document.getElementById('gold-display').textContent = GameState.gold;
+    document.getElementById('region-display').textContent = GameState.region;
+    document.getElementById('turn-display').textContent = GameState.turn;
+  }
+  function renderMap() {
+    const root = document.getElementById('map-nodes');
+    root.innerHTML = '';
+    const at = GameState.mapNodeId || 'r1n1';
+    GameState.worldMap.forEach(node => {
+      const el = document.createElement('div');
+      el.className = 'map-node';
+      const unlocked = node.id === 'r1n1' || GameState.worldMap.some(n => n.completed && n.connections && n.connections.includes(node.id));
+      if (!unlocked) el.classList.add('locked');
+      if (node.completed) el.classList.add('done');
+      el.innerHTML = `<div>${node.type === 'city' ? '🏙️' : '⚔️'}</div><div>${node.name}</div><small>Р${node.region}</small>`;
+      el.onclick = () => {
+        if (!unlocked) return;
+        GameState.region = node.region;
+        if (node.type === 'city') enterCity(node);
+        else if (!node.completed) startBattle(node);
+      };
+      root.appendChild(el);
+    });
+  }
+  function enterCity(node) {
+    GameState.screen = 'city';
+    document.getElementById('city-gold').textContent = GameState.gold;
+    const shop = document.getElementById('shop-list');
+    shop.innerHTML = SHOP_ITEMS.map(it => `<div class="panel"><b>${it.name}</b> — ${it.price}💰 <button class="btn" data-buy="${it.id}">Купить</button></div>`).join('');
+    shop.querySelectorAll('[data-buy]').forEach(btn => {
+      btn.onclick = () => {
+        const it = SHOP_ITEMS.find(x => x.id === btn.getAttribute('data-buy'));
+        if (!it || GameState.gold < it.price) return;
+        GameState.gold -= it.price;
+        GameState.inventory.push(it.id);
+        saveGame();
+        document.getElementById('city-gold').textContent = GameState.gold;
+      };
+    });
+    showScreen('city');
+  }
+
+  function openPerkModal(heroId) {
+    const h = GameState.heroes.find(x => x.id === heroId);
+    if (!h) return;
+    const modal = document.getElementById('perk-modal');
+    document.getElementById('perk-hero-name').textContent = `${h.emoji} ${h.name} — новый уровень (${h.level})`;
+    const tree = PERK_TREES[heroId];
+    h.perkLevels = h.perkLevels || {};
+    const branches = Object.keys(tree);
+    const opts = [];
+    branches.forEach(br => {
+      const idx = h.perkLevels[br] || 0;
+      if (idx < tree[br].length) opts.push({ br, perk: tree[br][idx] });
+    });
+    if (!opts.length) {
+      modal.classList.add('hidden');
+      return;
+    }
+    const pair = [opts[0], opts[1]].filter(Boolean);
+    const box = document.getElementById('perk-tree-ui');
+    const labels = { defense: 'Защита', attack: 'Атака', leader: 'Лидерство', accuracy: 'Меткость', speed: 'Скорость', traps: 'Ловушки', destruction: 'Разрушение', control: 'Контроль', mystic: 'Мистика' };
+    box.innerHTML = `<p class="stats-line">Выберите один из двух перков:</p><div class="perk-row">${
+      pair.map(o => `<div class="perk-branch"><h4>${labels[o.br] || o.br}</h4><div class="perk-node" data-br="${o.br}" data-id="${o.perk.id}">${o.perk.name}</div></div>`).join('')
+    }</div>`;
+    box.querySelectorAll('.perk-node').forEach(n => {
+      n.onclick = () => {
+        const br = n.getAttribute('data-br');
+        const pid = n.getAttribute('data-id');
+        const pdef = tree[br].find(x => x.id === pid);
+        document.getElementById('confirm-modal').classList.remove('hidden');
+        document.getElementById('confirm-text').textContent = `Вы уверены? Перк: «${pdef.name}»`;
+        document.getElementById('confirm-yes').onclick = () => {
+          h.perks = h.perks || [];
+          pdef.apply(h);
+          h.perkLevels[br] = (h.perkLevels[br] || 0) + 1;
+          if (!h.perksApplied) h.perksApplied = [];
+          h.perksApplied.push({ br, id: pid });
+          document.getElementById('confirm-modal').classList.add('hidden');
+          modal.classList.add('hidden');
+          saveGame();
+          if (GameState.pendingPerks.length) openPerkModal(GameState.pendingPerks.shift());
+        };
+        document.getElementById('confirm-no').onclick = () => document.getElementById('confirm-modal').classList.add('hidden');
+      };
+    });
+    modal.classList.remove('hidden');
+  }
+
+  function showRewardAd(cb) {
+    if (window.ysdk && window.ysdk.adv) {
+      window.ysdk.adv.showRewardedVideo({ onRewarded: cb, onClose: () => {} });
+    } else {
+      alert('Реклама (демо): награда выдана.');
+      cb();
+    }
+  }
+
+  //══════════ INPUT (battle) ══════════
+  canvas.addEventListener('mousemove', e => {
+    const b = GameState.currentBattle;
+    if (!b || b.phase !== 'combat') { hideTip(); return; }
+    const r = canvas.getBoundingClientRect();
+    const gx = Math.floor((e.clientX - r.left) / CELL);
+    const gy = Math.floor((e.clientY - r.top) / CELL);
+    const u = unitAt(b, gx, gy);
+    const tip = document.getElementById('tooltip');
+    if (u && !u.isHero) {
+      tip.style.display = 'block';
+      tip.style.left = (e.clientX + 12) + 'px';
+      tip.style.top = (e.clientY + 12) + 'px';
+      tip.innerHTML = `<b>${u.emoji} ${u.name}</b><br/>HP ${u.hp}/${u.maxHp}<br/>Атк ${u.attack} Дальн ${u.range}`;
+    } else hideTip();
+  });
+  function hideTip() { document.getElementById('tooltip').style.display = 'none'; }
+  canvas.addEventListener('mouseleave', hideTip);
+
+  canvas.addEventListener('click', e => {
+    const b = GameState.currentBattle;
+    if (!b) return;
+    const r = canvas.getBoundingClientRect();
+    const gx = Math.floor((e.clientX - r.left) / CELL);
+    const gy = Math.floor((e.clientY - r.top) / CELL);
+    canvasBattleClick(gx, gy);
+  });
+
+  //══════════ INIT ══════════
+  function init() {
+    if (!loadGame()) {
+      initHeroesFromTemplate();
+      buildWorldMap();
+      GameState.gold = 150;
+      GameState.turn = 1;
+      GameState.inventory = [];
+      saveGame();
+    }
+    GameState.inventory = GameState.inventory || [];
+    showScreen('map');
+    renderMap();
+    requestAnimationFrame(loop);
+    document.getElementById('btn-inventory-map').onclick = () => {
+      document.getElementById('inventory-list').innerHTML = (GameState.inventory || []).length
+        ? GameState.inventory.map(id => `<div>${id}</div>`).join('')
+        : '<div>Пусто. Купите зелья в городе.</div>';
+      showScreen('inventory');
+    };
+    document.getElementById('btn-close-inv').onclick = () => { showScreen('map'); renderMap(); };
+    document.getElementById('btn-leave-city').onclick = () => { showScreen('map'); renderMap(); };
+    document.getElementById('btn-vic-continue').onclick = () => {
+      document.getElementById('victory-screen').classList.add('hidden');
+      showScreen('map');
+      renderMap();
+    };
+    document.getElementById('btn-ad-revive').onclick = () => {
+      showRewardAd(() => {
+        GameState.heroes.forEach(h => { h.hp = Math.max(1, Math.floor(h.maxHp * 0.5)); });
+        GameState.gold += 50;
+        GameState.currentBattle = null;
+        showScreen('map');
+        renderMap();
+        saveGame();
+      });
+    };
+    document.getElementById('btn-go-title').onclick = () => { GameState.currentBattle = null; showScreen('map'); renderMap(); };
+    document.getElementById('btn-ending-ok').onclick = () => { showScreen('map'); renderMap(); };
+  }
+  if (typeof YaGames !== 'undefined') {
+    YaGames.init().then(ysdk => { window.ysdk = ysdk; });
+  }
+  init();
+  </script>
+</body>
+</html>
