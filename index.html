@@ -27,7 +27,23 @@
       overflow-x: auto;
     }
     #game-container { max-width: 1200px; margin: 0 auto; padding: 12px; }
-    h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 8px; }
+    h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 8px; display: none; }
+    #hud-top {
+      height: 36px;
+      background: #1a1a2e;
+      border-bottom: 1px solid #2a2a4a;
+      border-radius: 0;
+      margin: -12px -12px 10px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-main);
+    }
+    #topbar-left { min-width: 140px; font-weight: bold; }
+    #topbar-center { text-align: center; flex: 1; font-size: 12px; }
+    #topbar-right { min-width: 110px; text-align: right; }
+    #btn-open-menu { padding: 4px 8px; margin: 0; }
     .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
     #battle-wrap { display: flex; gap: 0; align-items: stretch; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; }
     #battle-canvas {
@@ -96,6 +112,16 @@
       100% { opacity: 0; transform: translateY(-40px); }
     }
     #perk-modal, #confirm-modal { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    #game-menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 2500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #game-menu-overlay.show { display: flex; }
     .modal-box { background: var(--bg-panel); border: 2px solid var(--border); border-radius: 10px; padding: 20px; max-width: 520px; max-height: 90vh; overflow: auto; }
     .perk-tree { display: flex; flex-direction: column; gap: 12px; }
     .perk-row { display: flex; gap: 12px; align-items: stretch; }
@@ -133,7 +159,9 @@
       </div>
     </div>
     <div id="hud-top" class="panel stats-line">
-      Золото: <span id="gold-display">150</span> 💰 | Регион: <span id="region-display">1</span> | Ход карты: <span id="turn-display">1</span>
+      <div id="topbar-left">⚔ <span id="topbar-title">ТРИ КЛИНКА</span></div>
+      <div id="topbar-center">Золото: <span id="gold-display">150</span> | Регион: <span id="region-display">1</span> | Ход: <span id="turn-display">1</span></div>
+      <div id="topbar-right"><button class="btn" id="btn-open-menu">☰ Меню</button></div>
     </div>
 
     <div id="map-screen" class="screen hidden">
@@ -228,6 +256,14 @@
     </div>
   </div>
   <div id="fx-layer" style="position:fixed;inset:0;pointer-events:none;z-index:500"></div>
+  <div id="game-menu-overlay">
+    <div class="modal-box">
+      <h3>Меню</h3>
+      <button class="btn btn-primary" id="btn-menu-continue">Продолжить</button>
+      <button class="btn" id="btn-menu-save-exit">Сохранить и выйти</button>
+      <button class="btn" id="btn-menu-exit">Выйти без сохранения</button>
+    </div>
+  </div>
 
   <!-- Яндекс Игры: в продакшене раскомментируйте официальный SDK -->
   <!-- <script src="https://yandex.ru/games/sdk/v2"></script> -->
@@ -1722,6 +1758,12 @@
     document.getElementById('region-display').textContent = GameState.region;
     document.getElementById('turn-display').textContent = GameState.turn;
   }
+  function openGameMenu() {
+    document.getElementById('game-menu-overlay').classList.add('show');
+  }
+  function closeGameMenu() {
+    document.getElementById('game-menu-overlay').classList.remove('show');
+  }
   function renderMap() {
     const root = document.getElementById('map-nodes');
     root.innerHTML = '';
@@ -2002,6 +2044,17 @@
       mk();
     };
     document.getElementById('btn-ending-ok').onclick = () => { showScreen('map'); renderMap(); };
+    document.getElementById('btn-open-menu').onclick = openGameMenu;
+    document.getElementById('btn-menu-continue').onclick = closeGameMenu;
+    document.getElementById('btn-menu-save-exit').onclick = () => {
+      saveGame();
+      closeGameMenu();
+      showScreen('menu');
+    };
+    document.getElementById('btn-menu-exit').onclick = () => {
+      closeGameMenu();
+      showScreen('menu');
+    };
     if (!window.ysdk) {
       const adBtn = document.getElementById('btn-ad-revive');
       if (adBtn) adBtn.classList.add('hidden');
