@@ -479,7 +479,7 @@
   function inBounds(x, y) { return x >= 0 && x < GRID && y >= 0 && y < GRID; }
 
   //══════════ A* (обязательная короткая функция) ══════════
-  function astar(grid, start, end, passable) {
+  function astar(grid, start, end, passable, costFn) {
     const h = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
     const key = p => p.x + ',' + p.y;
     const open = [start];
@@ -503,7 +503,7 @@
         const nx = cur.x + d.x, ny = cur.y + d.y;
         if (!inBounds(nx, ny) || !passable(nx, ny)) continue;
         const nk = key({ x: nx, y: ny });
-        const step = 1;
+        const step = costFn ? costFn(nx, ny) : 1;
         const tg = (g[key(cur)] || 0) + step;
         if (tg < (g[nk] ?? 1e9)) {
           came[nk] = key(cur);
@@ -575,9 +575,10 @@
     return false;
   }
   function tileMoveCost(t, unit) {
+    if (t === TILE.FOREST) return 3;
     if (t === TILE.WATER) {
       if (unit && unit.heroId === 'seris') return 1;
-      return 2;
+      return 3;
     }
     return 1;
   }
@@ -794,7 +795,9 @@
         if (!inBounds(nx, ny)) continue;
         const fake = { enemyId: u.enemyId, heroId: u.heroId };
         if (!passableForUnit(b, nx, ny, u)) continue;
-        const step = tileMoveCost(b.grid[ny][nx], u);
+        const tile = b.grid[ny][nx];
+        if (tile === TILE.MOUNTAIN) continue;
+        const step = tileMoveCost(tile, u);
         const nc = cur.c + step;
         if (nc > maxCost) continue;
         const k = key(nx, ny);
@@ -1221,132 +1224,48 @@
     if (!b || b.phase !== 'combat') return;
     const u = getActiveUnit();
     if (!u || u.isHero || u.hp <= 0) { endUnitTurn(); return; }
-    u.aiVar = u.aiVar || {};
-    if (u.enemyId === ENEMY_IDS.SHAMAN) {
-      const allies = b.units.filter(x => !x.isHero && x.hp > 0 && x !== u);
-      let healT = null, low = 999;
-      for (const a of allies) {
-        const ratio = a.hp / a.maxHp;
-        if (a.hp < a.maxHp && a.hp < low) { low = a.hp; healT = a; }
+    const heroes = b.units.filter(h => h.isHero && h.hp > 0);
+    if (!heroes.length) { endUnitTurn(); return; }
+    let nearest = null;
+    let bestPath = null;
+    for (const h of heroes) {
+      const p = astar(
+        b.grid,
+        { x: u.x, y: u.y },
+        { x: h.x, y: h.y },
+        (x, y) => enemyPassable(b, x, y, u) || (x === h.x && y === h.y),
+        (x, y) => tileMoveCost(b.grid[y][x], u)
+      );
+      if (p && (!bestPath || p.length < bestPath.length)) {
+        bestPath = p;
+        nearest = h;
       }
-      if (!healT) healT = u;
-      if (healT) {
-        healT.hp = Math.min(healT.maxHp, healT.hp + 4);
-        pushBattleLog(`[${u.emoji}] лечит ${healT.emoji} +4`, 'enemy');
-      }
+    }
+    if (!nearest) { endUnitTurn(); return; }
+    const inRange = (att, tgt) => {
+      const d = Math.abs(att.x - tgt.x) + Math.abs(att.y - tgt.y);
+      return d <= att.range && (att.range === 1 || !rangedBlocked(att.x, att.y, tgt.x, tgt.y, b.grid, false));
+    };
+    const doEnemyAttack = (att, tgt) => {
+      const dmg = Math.max(1, att.attack - tgt.armor);
+      tgt.hp -= dmg;
+      pushBattleLog(`[${att.emoji} ${att.name}] атакует [${tgt.emoji} ${tgt.name}] → ${dmg} урона`, 'enemy');
+      spawnDamageFx(tgt.x, tgt.y, dmg);
+      if (tgt.hp <= 0) onUnitDeath(tgt);
+    };
+    if (inRange(u, nearest)) {
+      doEnemyAttack(u, nearest);
       endUnitTurn();
       return;
     }
-    if (u.enemyId === ENEMY_IDS.WATCHER) { endUnitTurn(); return; }
-    if (u.enemyId === ENEMY_IDS.ORC_GUARD) {
-      u.aiVar.turnNum = (u.aiVar.turnNum || 0) + 1;
-      if (u.aiVar.turnNum <= 2) { endUnitTurn(); return; }
-    }
-
-    const tgt0 = aiChooseTarget(b, u);
-    if (u.enemyId === ENEMY_IDS.GOBLIN_ARCHER && tgt0) {
-      const d0 = Math.abs(tgt0.x - u.x) + Math.abs(tgt0.y - u.y);
-      if (d0 <= 1) {
-        let best = null, bestD = -1;
-        for (const d of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
-          const nx = u.x + d.x, ny = u.y + d.y;
-          if (!enemyPassable(b, nx, ny, u)) continue;
-          const dist = Math.abs(tgt0.x - nx) + Math.abs(tgt0.y - ny);
-          if (dist > bestD) { bestD = dist; best = { x: nx, y: ny }; }
-        }
-        if (best) { u.x = best.x; u.y = best.y; pushBattleLog(`[${u.emoji}] отступает`, 'enemy'); }
+    if (bestPath && bestPath.length > 1) {
+      const step = bestPath[1];
+      if (enemyPassable(b, step.x, step.y, u)) {
+        u.x = step.x;
+        u.y = step.y;
       }
     }
-
-    if (u.enemyId === ENEMY_IDS.CHAOS) {
-      const spots = [];
-      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) if (enemyPassable(b, x, y, u)) spots.push({ x, y });
-      if (spots.length) { const p = spots[randInt(0, spots.length - 1)]; u.x = p.x; u.y = p.y; }
-      u.bossVar.aoeTurn = (u.bossVar.aoeTurn || 0) + 1;
-      if (u.bossVar.aoeTurn % 3 === 0) {
-        b.units.forEach(t => {
-          if (t.isHero && t.hp > 0 && Math.abs(t.x - u.x) + Math.abs(t.y - u.y) <= 2) dealDamage(u, t, 8, { magic: true });
-        });
-      } else if (tgt0) aiAttack(u, tgt0);
-      endUnitTurn();
-      return;
-    }
-
-    if (u.enemyId === ENEMY_IDS.DARK_LORD) {
-      darkLordAi(u);
-      endUnitTurn();
-      return;
-    }
-    if (u.enemyId === ENEMY_IDS.FIRE_TITAN) {
-      fireTitanAi(u);
-      endUnitTurn();
-      return;
-    }
-
-    let tgt = tgt0;
-    if (u.enemyId === ENEMY_IDS.SUICIDE || u.enemyId === ENEMY_IDS.BOAR) {
-      let best = null, bd = 999;
-      for (const h of b.units.filter(x => x.isHero && x.hp > 0)) {
-        const d = Math.abs(h.x - u.x) + Math.abs(h.y - u.y);
-        if (d < bd) { bd = d; best = h; }
-      }
-      tgt = best || tgt;
-    }
-
-    if (u.enemyId === ENEMY_IDS.BOAR && tgt) {
-      const path = astar(b.grid, { x: u.x, y: u.y }, { x: tgt.x, y: tgt.y }, (x, y) => enemyPassable(b, x, y, u));
-      if (path && path.length > 1) {
-        let steps = 2, i = 1;
-        while (steps > 0 && i < path.length) {
-          const nx = path[i].x, ny = path[i].y;
-          if (!enemyPassable(b, nx, ny, u)) break;
-          u.x = nx; u.y = ny;
-          steps--; i++;
-        }
-      }
-      const dist = tgt ? Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) : 9;
-      if (dist <= 1) {
-        const times = u.hp < u.maxHp * 0.5 ? 2 : 1;
-        for (let k = 0; k < times; k++) if (tgt.hp > 0) aiAttack(u, tgt);
-      }
-      endUnitTurn();
-      return;
-    }
-
-    if (u.move > 0 && tgt) {
-      const path = astar(b.grid, { x: u.x, y: u.y }, { x: tgt.x, y: tgt.y }, (x, y) => enemyPassable(b, x, y, u));
-      if (path && path.length > 1) {
-        let cost = 0, i = 1, maxM = u.move;
-        while (i < path.length && cost < maxM) {
-          const nx = path[i].x, ny = path[i].y;
-          const step = tileMoveCost(b.grid[ny][nx], u);
-          if (cost + step > maxM) break;
-          if (!enemyPassable(b, nx, ny, u)) break;
-          u.x = nx; u.y = ny;
-          cost += step;
-          i++;
-        }
-      }
-    }
-    tgt = aiChooseTarget(b, u);
-    if (u.enemyId === ENEMY_IDS.SUICIDE && tgt) {
-      const d = Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y);
-      if (d <= 1) {
-        b.units.forEach(t => {
-          if (t.isHero && t.hp > 0 && Math.abs(t.x - u.x) + Math.abs(t.y - u.y) <= 1) dealDamage(u, t, 15, { magic: true });
-        });
-        u.hp = 0;
-        pushBattleLog('💣 Подрывник взорвался!', 'enemy');
-        checkBattleEnd();
-        endUnitTurn();
-        return;
-      }
-    }
-    if (tgt && u.range >= 1) {
-      const dist = Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y);
-      if (dist <= u.range && (u.range === 1 || !rangedBlocked(u.x, u.y, tgt.x, tgt.y, b.grid, false)))
-        aiAttack(u, tgt);
-    }
+    if (nearest.hp > 0 && inRange(u, nearest)) doEnemyAttack(u, nearest);
     endUnitTurn();
   }
 
