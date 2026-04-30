@@ -56,7 +56,8 @@
       display: grid;
       grid-template-columns: var(--battle-side-w) 1fr var(--battle-side-w);
       width: 100%;
-      height: 100%;
+      flex: 1;
+      min-height: 0;
       gap: 0;
       border: 1px solid var(--border);
       border-radius: 0;
@@ -293,9 +294,9 @@
     .event-icon-big { font-size: 48px; margin-bottom: 12px; }
     .event-type-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; }
     .event-main-text { font-size: 14px; color: var(--text-main); line-height: 1.6; margin-bottom: 20px; }
-    #event-screen { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 56px); }
+    #event-screen { display: flex; align-items: center; justify-content: center; }
     /* 9: Victory screen card */
-    .vic-screen-wrap { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 56px); }
+    .vic-screen-wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
     .vic-card { background: var(--bg-panel); border: 2px solid var(--accent-gold); border-radius: 14px; padding: 28px 24px; max-width: 520px; text-align: center; }
     .vic-header { font-size: 22px; color: var(--accent-gold); margin-bottom: 16px; }
     .vic-stats-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
@@ -469,7 +470,7 @@
       /* Map: keep grid primary and compress info panel */
       .map-screen-layout {
         grid-template-columns: 1fr 170px;
-        min-height: calc(100vh - 78px);
+        flex: 1; min-height: 0;
       }
       .map-grid-wrap { padding: 6px; }
       #map-screen .node-grid { gap: 2px; }
@@ -487,7 +488,9 @@
       .battle-layout {
         --battle-side-w: 156px;
         grid-template-columns: var(--battle-side-w) 1fr var(--battle-side-w);
-        height: calc(100vh - 74px);
+        flex: 1;
+        min-height: 0;
+        height: auto;
       }
       .battle-left { padding: 6px 4px; gap: 4px; }
       .hero-card { padding: 5px; }
@@ -518,7 +521,7 @@
       /* City: keep center gameplay, compress side columns */
       .city-body {
         grid-template-columns: 138px 1fr 154px;
-        min-height: calc(100vh - 72px);
+        flex: 1; min-height: 0;
       }
       .city-left, .city-center, .city-right { padding: 6px; gap: 6px; }
       .city-name { font-size: 11px; }
@@ -551,7 +554,7 @@
       /* Inventory: horizontal-first compact layout */
       #inventory-layout {
         grid-template-columns: 148px 1fr;
-        min-height: calc(100vh - 72px);
+        flex: 1; min-height: 0;
       }
       #inv-left { padding: 6px; gap: 4px; }
       #inv-right { padding: 6px; gap: 6px; }
@@ -583,7 +586,7 @@
       }
 
       /* Main menu: horizontal phone composition */
-      #main-menu { min-height: calc(100vh - 8px); }
+      #main-menu { flex: 1; min-height: 0; }
       .menu-screen { padding: 14px 10px; gap: 10px; width: 100%; }
       .menu-logo-icon { font-size: 24px; margin-bottom: 2px; }
       .menu-logo-title { font-size: 18px; letter-spacing: 2px; }
@@ -651,7 +654,7 @@
       .btn { min-height: 30px; }
 
       /* Battle ultra-compact */
-      .battle-layout { --battle-side-w: 124px; grid-template-columns: var(--battle-side-w) 1fr var(--battle-side-w); height: calc(100vh - 62px); }
+      .battle-layout { --battle-side-w: 124px; grid-template-columns: var(--battle-side-w) 1fr var(--battle-side-w); flex: 1; min-height: 0; height: auto; }
       .battle-left { padding: 4px 3px; gap: 3px; }
       .hero-card { padding: 4px; }
       .hero-card-top { margin-bottom: 3px; gap: 4px; }
@@ -673,7 +676,7 @@
       .deploy-hint-box { font-size: 8px; padding: 4px; line-height: 1.25; }
 
       /* Map ultra-compact */
-      .map-screen-layout { grid-template-columns: 1fr 140px; min-height: calc(100vh - 66px); }
+      .map-screen-layout { grid-template-columns: 1fr 140px; flex: 1; min-height: 0; }
       .map-grid-wrap { padding: 4px; }
       #map-screen .node-grid { gap: 1px; }
       .map-node { font-size: 10px; border-radius: 3px; }
@@ -689,7 +692,7 @@
       .eq-mini { display: none; }
 
       /* City + Inventory ultra-compact */
-      .city-body { grid-template-columns: 116px 1fr 128px; min-height: calc(100vh - 62px); }
+      .city-body { grid-template-columns: 116px 1fr 128px; flex: 1; min-height: 0; }
       .city-left, .city-center, .city-right { padding: 4px; gap: 4px; }
       .city-name { font-size: 9px; }
       .npc { padding: 4px; }
@@ -702,7 +705,7 @@
       .service-desc { display: none; }
       .service-btns .btn { min-height: 26px; font-size: 7px; padding: 2px 4px; }
 
-      #inventory-layout { grid-template-columns: 122px 1fr; min-height: calc(100vh - 62px); }
+      #inventory-layout { grid-template-columns: 122px 1fr; flex: 1; min-height: 0; }
       #inv-left, #inv-right { padding: 4px; gap: 4px; }
       .inv-tab { font-size: 7px; min-height: 24px; padding: 2px 3px; }
       .inv-portrait-icon { font-size: 18px; }
