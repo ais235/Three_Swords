@@ -3028,29 +3028,46 @@
       inventory: 'inventory-screen', victory: 'victory-screen',
       gameover: 'gameover-screen', ending: 'ending-screen', event: 'event-screen'
     };
-    const targetId = screenMap[name];
-    // Fade out all visible screens, then switch
-    const allScreens = document.querySelectorAll('.screen:not(.hidden)');
+    const mainMenu = document.getElementById('main-menu');
+
     const doShow = () => {
-      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-      document.getElementById('main-menu').classList.add('hidden');
+      // Clear all opacity overrides first
+      document.querySelectorAll('.screen').forEach(s => { s.classList.add('hidden'); s.style.opacity = ''; s.style.transition = ''; });
+      mainMenu.classList.add('hidden');
+      mainMenu.style.opacity = '';
+      mainMenu.style.transition = '';
+
       if (name === 'menu') {
-        document.getElementById('main-menu').classList.remove('hidden');
         document.getElementById('hud-top').classList.add('hidden');
+        mainMenu.classList.remove('hidden');
+        mainMenu.style.opacity = '0';
+        requestAnimationFrame(() => { mainMenu.style.transition = 'opacity 0.15s ease'; mainMenu.style.opacity = '1'; });
       } else {
         document.getElementById('hud-top').classList.remove('hidden');
-      }
-      if (targetId) {
-        const el = document.getElementById(targetId);
-        if (el) { el.classList.remove('hidden'); el.style.opacity = '0'; requestAnimationFrame(() => { el.style.transition = 'opacity 0.15s ease'; el.style.opacity = '1'; }); }
+        const targetId = screenMap[name];
+        if (targetId) {
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.classList.remove('hidden');
+            el.style.opacity = '0';
+            requestAnimationFrame(() => { el.style.transition = 'opacity 0.15s ease'; el.style.opacity = '1'; });
+          }
+        }
       }
       document.getElementById('gold-display').textContent = GameState.gold;
       document.getElementById('region-display').textContent = GameState.region;
       document.getElementById('turn-display').textContent = GameState.turn;
     };
-    if (allScreens.length > 0) {
-      allScreens.forEach(s => { s.style.transition = 'opacity 0.1s ease'; s.style.opacity = '0'; });
-      setTimeout(doShow, 100);
+
+    // Find currently visible elements to fade out
+    const visibleScreens = Array.from(document.querySelectorAll('.screen:not(.hidden)'));
+    const menuVisible = !mainMenu.classList.contains('hidden');
+    const hasVisible = visibleScreens.length > 0 || menuVisible;
+
+    if (hasVisible) {
+      visibleScreens.forEach(s => { s.style.transition = 'opacity 0.1s ease'; s.style.opacity = '0'; });
+      if (menuVisible) { mainMenu.style.transition = 'opacity 0.1s ease'; mainMenu.style.opacity = '0'; }
+      setTimeout(doShow, 110);
     } else {
       doShow();
     }
