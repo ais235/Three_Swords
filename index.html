@@ -104,17 +104,32 @@
     .btn-ad { border-color: var(--accent-purple); color: var(--accent-purple); }
     .btn-dim { border-color: var(--border); color: var(--text-hint); cursor: not-allowed; }
     .hidden { display: none !important; }
-    #map-screen .node-grid { display: grid; grid-template-columns: repeat(6, 72px); gap: 6px; width: max-content; }
+    .map-screen-layout { display: grid; grid-template-columns: 1fr 200px; gap: 0; min-height: 340px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .map-grid-wrap { padding: 12px; overflow: auto; background: var(--bg-card); }
+    #map-screen .node-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; width: 100%; min-width: 420px; }
     .map-node {
-      width: 72px; height: 72px; padding: 4px; background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 8px; cursor: pointer; text-align: center; display: flex; flex-direction: column; justify-content: center;
-      font-size: 1.2rem;
+      aspect-ratio: 1;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      background: var(--bg-card);
+      position: relative;
     }
     .map-node:hover { border-color: var(--accent-gold); }
     .map-node.done { opacity: 0.5; }
     .map-node.locked { opacity: 0.35; pointer-events: none; }
-    .map-node.current { outline: 2px solid var(--accent-blue); }
-    .map-node small { font-size: 9px; color: var(--text-dim); }
+    .map-node.current { border-color: var(--accent-gold); background: #1a1500; box-shadow: 0 0 0 1px var(--accent-gold); }
+    .map-node small { font-size: 8px; color: var(--text-hint); margin-top: 1px; }
+    .map-panel { background: var(--bg-card); border-left: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .map-panel-title { font-size: 11px; color: var(--accent-gold); letter-spacing: 1px; }
+    .cell-info { background: var(--bg-panel); border-radius: 6px; padding: 10px; font-size: 11px; color: var(--text-dim); flex: 1; }
+    .cell-info-icon { font-size: 24px; margin-bottom: 6px; }
+    .cell-info-name { color: var(--text-main); font-size: 12px; margin-bottom: 4px; }
     #map-screen, #battle-screen, #city-screen, #inventory-screen { min-height: calc(100vh - 56px); }
     .rarity-common { color: #b0b0b0; }
     .rarity-rare { color: #4a9eff; }
@@ -234,11 +249,22 @@
     <div id="map-screen" class="screen hidden">
       <p class="stats-line">Проведите отряд через 3 региона и уничтожьте Тёмного Лорда.</p>
       <div id="party-strip"></div>
-      <div id="world-panel" class="panel">
-        <div id="map-nodes" class="node-grid"></div>
+      <div class="map-screen-layout">
+        <div class="map-grid-wrap">
+          <div id="map-nodes" class="node-grid"></div>
+        </div>
+        <div class="map-panel">
+          <div class="map-panel-title">ЛОКАЦИЯ</div>
+          <div id="map-cell-info" class="cell-info">
+            <div class="cell-info-icon">⚔️</div>
+            <div class="cell-info-name">Выберите клетку</div>
+            <div>Показывает информацию о выбранной зоне.</div>
+          </div>
+          <button class="btn btn-gold" id="btn-map-enter">▶ Войти</button>
+          <button class="btn btn-dim" id="btn-map-bag">🎒 Рюкзак</button>
+        </div>
       </div>
       <div class="stats-line" id="map-help">Клик на соседнюю клетку (диагональ разрешена).</div>
-      <button class="btn" id="btn-inventory-map">Рюкзак</button>
     </div>
 
     <div id="city-screen" class="screen hidden">
@@ -1934,8 +1960,10 @@
   }
   function renderMap() {
     const root = document.getElementById('map-nodes');
+    const info = document.getElementById('map-cell-info');
     root.innerHTML = '';
     renderPartyStrip();
+    let selectedNode = getCurrentCell();
     GameState.mapGrid.forEach(node => {
       const el = document.createElement('div');
       el.className = 'map-node';
@@ -1945,9 +1973,18 @@
       if (node.x === GameState.playerPos.x && node.y === GameState.playerPos.y) el.classList.add('current');
       const typeNames = { mission:'Миссия', city:'Город', dungeon:'Подземелье', event:'Событие', boss:'Босс', wanderer:'Странник', arena:'Арена', final:'Финал' };
       const typeLbl = unlocked ? (typeNames[node.type] || '') : '';
-      el.innerHTML = `<div>${node.emoji}</div>${typeLbl ? `<small style="font-size:8px;color:#555577">${typeLbl}</small>` : ''}`;
+      el.innerHTML = `<div>${node.emoji}</div>${typeLbl ? `<small>${typeLbl}</small>` : ''}`;
+      const setInfo = (n) => {
+        const t = typeNames[n.type] || n.type;
+        info.innerHTML = `<div class="cell-info-icon">${n.emoji}</div>
+          <div class="cell-info-name">Регион ${n.region} · ${t}</div>
+          <div>${n.completed ? 'Локация зачищена.' : 'Локация активна.'}</div>`;
+        selectedNode = n;
+      };
+      el.onmouseenter = () => setInfo(node);
       el.onclick = () => {
         if (!unlocked) return;
+        setInfo(node);
         const cur = getCurrentCell();
         if (!cellNeighbors(cur, node) && !(node.x === cur.x && node.y === cur.y)) return;
         GameState.playerPos = { x: node.x, y: node.y };
@@ -1984,6 +2021,28 @@
       };
       root.appendChild(el);
     });
+    if (selectedNode) {
+      const typeNames = { mission:'Миссия', city:'Город', dungeon:'Подземелье', event:'Событие', boss:'Босс', wanderer:'Странник', arena:'Арена', final:'Финал' };
+      info.innerHTML = `<div class="cell-info-icon">${selectedNode.emoji}</div>
+        <div class="cell-info-name">Регион ${selectedNode.region} · ${typeNames[selectedNode.type] || selectedNode.type}</div>
+        <div>Текущая точка отряда.</div>`;
+    }
+    const enterBtn = document.getElementById('btn-map-enter');
+    if (enterBtn) enterBtn.onclick = () => {
+      const node = selectedNode || getCurrentCell();
+      if (!node) return;
+      if (node.type === 'city') enterCity(node);
+      else if (node.type === 'event' && !node.completed) triggerEvent(node);
+      else if (['mission', 'dungeon', 'boss', 'final'].includes(node.type) && !node.completed) {
+        startBattleForCell(node, { skipDeploy: GameState.hardFlags.skipDeployNextBattle });
+        GameState.hardFlags.skipDeployNextBattle = false;
+      }
+    };
+    const bagBtn = document.getElementById('btn-map-bag');
+    if (bagBtn) bagBtn.onclick = () => {
+      renderInventoryScreen();
+      showScreen('inventory');
+    };
   }
   function enterCity(node, strangerOnly) {
     GameState.screen = 'city';
@@ -2211,10 +2270,14 @@
       renderMap();
       updateMenuMeta();
     };
-    document.getElementById('btn-inventory-map').onclick = () => {
+    const openInventory = () => {
       renderInventoryScreen();
       showScreen('inventory');
     };
+    const legacyInvBtn = document.getElementById('btn-inventory-map');
+    if (legacyInvBtn) legacyInvBtn.onclick = openInventory;
+    const mapInvBtn = document.getElementById('btn-map-bag');
+    if (mapInvBtn) mapInvBtn.onclick = openInventory;
     document.getElementById('btn-close-inv').onclick = () => { showScreen('map'); renderMap(); };
     document.getElementById('btn-leave-city').onclick = () => { saveGame(); showScreen('map'); renderMap(); };
     document.getElementById('btn-vic-continue').onclick = () => {
