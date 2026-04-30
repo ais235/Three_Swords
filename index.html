@@ -1446,8 +1446,10 @@
     }
     b.selected = u;
     title.textContent = `${u.sprite} ${u.name}`;
+    const hh = GameState.heroes.find(x => x.id === u.heroId);
     let st = `HP ${u.hp}/${u.maxHp} | Броня ${u.armor} | Атк ${u.attack} | Ход ${getMovePoints(u, b)}/${u.move}`;
     if (u.heroId === 'seris') st += ` | Мана ${u.mana}/${u.maxMana}`;
+    if (hh) st += `<br/>Снаряжение: <span class="eq-mini">${heroEquipIcons(hh)}</span>`;
     stats.innerHTML = st;
     let html = '';
     if (!b.heroMoved) {
@@ -1742,8 +1744,9 @@
     };
     document.getElementById('inv-transfer-btn').onclick = () => {
       const others = GameState.heroes.filter(h => h.id !== hero.id);
-      const target = others[0];
-      if (!target) return;
+      if (!others.length) return;
+      const pick = prompt(`Передать кому? (${others.map(h => h.name).join(', ')})`, others[0].name);
+      const target = others.find(h => h.name.toLowerCase() === (pick || '').toLowerCase()) || others[0];
       InvState.activeHeroId = target.id;
       renderInventoryScreen();
     };
