@@ -156,18 +156,53 @@
     .cell-info { background: var(--bg-panel); border-radius: 6px; padding: 10px; font-size: 11px; color: var(--text-dim); flex: 1; }
     .cell-info-icon { font-size: 24px; margin-bottom: 6px; }
     .cell-info-name { color: var(--text-main); font-size: 12px; margin-bottom: 4px; }
-    .city-body { display: grid; grid-template-columns: 160px 1fr 200px; min-height: 420px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-    .city-left, .city-right { background: var(--bg-card); padding: 10px; }
-    .city-left { border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
-    .city-center { padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--bg-dark); }
-    .city-right { border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
-    .city-name { font-size: 12px; color: var(--accent-gold); letter-spacing: 1px; }
-    .npc { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 10px; color: var(--text-dim); }
-    .npc.active { border-color: var(--accent-gold); }
-    .city-heroes { margin-top: auto; border-top: 1px solid var(--border); padding-top: 8px; }
-    .city-hero-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; font-size: 10px; }
-    .city-items-grid { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 6px; }
-    .service-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 7px; padding: 8px; }
+    .city-body { display: grid; grid-template-columns: 170px 1fr 200px; min-height: calc(100vh - 56px); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .city-left { background: #111128; border-right: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .city-center { padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-dark); overflow-y: auto; }
+    .city-right { background: #111128; border-left: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .city-name { font-size: 13px; color: var(--accent-gold); letter-spacing: 1px; margin-bottom: 2px; }
+    .city-desc { font-size: 9px; color: var(--text-dim); line-height: 1.5; margin-bottom: 6px; }
+    .npc-list { display: flex; flex-direction: column; gap: 4px; }
+    .npc { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: #0d0d1a; }
+    .npc:hover, .npc.active { border-color: var(--accent-gold); background: #1a1500; }
+    .npc-icon { font-size: 20px; width: 30px; text-align: center; }
+    .npc-name { font-size: 11px; color: var(--text-main); }
+    .npc-role { font-size: 9px; color: var(--text-dim); }
+    .heroes-bar { margin-top: auto; border-top: 1px solid var(--border); padding-top: 8px; }
+    .heroes-bar-title { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+    .hero-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .hero-icon-s { font-size: 14px; }
+    .hero-hp-wrap { flex: 1; }
+    .hero-hp-name { font-size: 9px; color: var(--text-main); margin-bottom: 2px; }
+    .bar { height: 4px; border-radius: 2px; background: #1a1a2e; overflow: hidden; }
+    .bar-hp { background: var(--accent-green); height: 100%; border-radius: 2px; }
+    .hero-heal-btn { font-size: 9px; padding: 2px 6px; border-radius: 3px; border: 1px solid var(--accent-green); color: var(--accent-green); cursor: pointer; white-space: nowrap; background: transparent; font-family: inherit; }
+    .hero-heal-btn.grey { border-color: var(--border); color: #555577; cursor: default; }
+    .shop-header { display: flex; align-items: center; justify-content: space-between; }
+    .shop-title { font-size: 13px; color: var(--text-main); letter-spacing: 1px; }
+    .items-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .item-card { background: var(--bg-panel); border-radius: 7px; padding: 9px; border: 1px solid var(--border); cursor: pointer; position: relative; }
+    .item-card:hover { border-color: var(--accent-blue); }
+    .item-card.selected { border-color: var(--accent-gold); background: #150f00; }
+    .item-card.secret { border-color: #9b59b6; background: #0f0a1a; text-align: center; }
+    .item-icon { font-size: 22px; margin-bottom: 4px; }
+    .item-name { font-size: 10px; color: var(--text-main); margin-bottom: 3px; line-height: 1.3; }
+    .item-stats { font-size: 9px; color: var(--accent-green); margin-bottom: 4px; }
+    .item-footer { display: flex; align-items: center; justify-content: space-between; }
+    .item-price { font-size: 11px; color: var(--accent-gold); font-weight: 700; }
+    .item-price.cant { color: var(--accent-red); }
+    .badge { font-size: 9px; padding: 2px 5px; border-radius: 3px; }
+    .badge-common { background: #1a1a2e; color: #8888aa; border: 1px solid var(--border); }
+    .badge-rare { background: #0d1520; color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+    .badge-epic { background: #1a0a00; color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+    .services-title { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 2px; text-transform: uppercase; }
+    .service-card { background: #0d0d1a; border-radius: 7px; border: 1px solid var(--border); padding: 10px; }
+    .service-card-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .service-icon { font-size: 18px; }
+    .service-name { font-size: 11px; color: var(--text-main); }
+    .service-desc { font-size: 9px; color: var(--text-dim); line-height: 1.4; margin-bottom: 8px; }
+    .service-btns { display: flex; flex-direction: column; gap: 4px; }
+    .service-btns .btn { font-size: 9px; padding: 5px 8px; text-align: center; width: 100%; }
     #map-screen, #battle-screen, #city-screen, #inventory-screen { min-height: calc(100vh - 56px); }
     .rarity-common { color: #b0b0b0; }
     .rarity-rare { color: #4a9eff; }
@@ -241,13 +276,48 @@
     }
     .item-card:hover { border-color: var(--accent-blue); }
     .item-card.selected { border-color: var(--accent-gold); background: #150f00; }
-    #inventory-layout { display: flex; gap: 10px; }
-    #inv-left { width: 180px; }
-    #inv-right { flex: 1; }
+    #inventory-layout { display: grid; grid-template-columns: 190px 1fr; min-height: calc(100vh - 56px); gap: 0; }
+    #inv-left { background: #111128; border-right: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+    #inv-right { padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+    .inv-hero-tab { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px; }
+    .inv-tab { padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; border: 1px solid var(--border); color: var(--text-dim); font-family: inherit; background: transparent; }
+    .inv-tab.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .inv-portrait { text-align: center; padding: 10px 0; }
+    .inv-portrait-icon { font-size: 32px; }
+    .inv-portrait-name { font-size: 13px; color: var(--text-main); margin-top: 4px; }
+    .inv-portrait-class { font-size: 10px; color: var(--text-dim); }
+    .inv-stats { background: var(--bg-panel); border-radius: 6px; padding: 8px; margin-bottom: 4px; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); margin-bottom: 3px; }
+    .stat-val { color: var(--text-main); }
+    .stat-val.buffed { color: var(--accent-green); }
+    .slots-title { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-top: 6px; margin-bottom: 4px; text-transform: uppercase; }
+    .equip-slot { background: var(--bg-panel); border-radius: 6px; padding: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; margin-bottom: 4px; cursor: pointer; }
+    .equip-slot:hover { border-color: var(--accent-blue); }
+    .equip-slot-icon { font-size: 18px; width: 28px; height: 28px; background: #0d0d1a; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .equip-slot-info { flex: 1; min-width: 0; }
+    .equip-slot-name { font-size: 10px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .equip-slot-type { font-size: 9px; color: var(--text-dim); }
+    .equip-slot-empty { color: #555577; font-style: italic; }
+    .inv-right-title { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
+    #bag-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .inv-item-card { background: var(--bg-panel); border-radius: 6px; padding: 8px; border: 1px solid var(--border); cursor: pointer; text-align: center; }
+    .inv-item-card:hover { border-color: var(--accent-blue); }
+    .inv-item-card.selected { border-color: var(--accent-gold); background: #150f00; }
+    .inv-item-icon { font-size: 22px; margin-bottom: 4px; }
+    .inv-item-name { font-size: 9px; color: var(--text-main); line-height: 1.3; }
+    #inv-detail { background: var(--bg-panel); border-radius: 8px; padding: 12px; border: 1px solid var(--border); margin-top: auto; font-size: 10px; color: var(--text-dim); }
+    .item-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .item-detail-icon { font-size: 28px; }
+    .item-detail-title { font-size: 13px; color: var(--text-main); }
+    .item-detail-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+    .item-detail-stats { font-size: 11px; color: var(--accent-green); margin-bottom: 8px; }
+    .item-detail-desc { font-size: 10px; color: var(--text-dim); line-height: 1.5; margin-bottom: 10px; }
+    .item-detail-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .item-detail-btns .btn { font-size: 10px; padding: 5px 12px; }
     .hero-tab { width: 100%; text-align: left; }
     .equip-slot { padding: 6px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; cursor: pointer; }
     .equip-slot.empty { color: var(--text-dim); font-style: italic; }
-    #bag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+
     .bag-item { border: 1px solid var(--border); border-radius: 6px; padding: 6px; cursor: pointer; }
     .bag-item.active { outline: 2px solid var(--accent-gold); }
     #inv-detail { min-height: 120px; }
@@ -323,34 +393,45 @@
     </div>
 
     <div id="city-screen" class="screen hidden">
-      <h2>🏙️ Город</h2>
-      <p class="stats-line">Торговец и отдых. Золото: <span id="city-gold">0</span></p>
       <div class="city-body">
         <div class="city-left">
-          <div class="city-name">🏘 ЛЕСНОЙ ПРИЮТ</div>
-          <div class="npc active">🛒 Торговец<br><small>Оружие · Броня · Артефакты</small></div>
-          <div class="npc">⚗ Алхимик<br><small>Улучшение предметов</small></div>
-          <div class="npc">🔮 Оракул<br><small>Инфо о следующем бою</small></div>
-          <div id="city-heroes" class="city-heroes"></div>
+          <div class="city-name" id="city-name-label">🏘 ЛЕСНОЙ ПРИЮТ</div>
+          <div class="city-desc">Торговый пост на краю Тёмного леса. Отдых, снаряжение, мудрый совет.</div>
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">ЖИТЕЛИ</div>
+          <div class="npc-list">
+            <div class="npc active"><span class="npc-icon">🛒</span><div class="npc-info"><div class="npc-name">Торговец Борн</div><div class="npc-role">Оружие · Броня · Зелья</div></div></div>
+            <div class="npc"><span class="npc-icon">⚗</span><div class="npc-info"><div class="npc-name">Алхимик Рута</div><div class="npc-role">Улучшение предметов</div></div></div>
+            <div class="npc"><span class="npc-icon">🔮</span><div class="npc-info"><div class="npc-name">Оракул</div><div class="npc-role">Инфо о следующем бое</div></div></div>
+          </div>
+          <div class="heroes-bar" id="city-heroes"></div>
         </div>
         <div class="city-center">
-          <div id="shop-list" class="city-items-grid"></div>
-          <div id="city-actions" class="panel"></div>
+          <div class="shop-header">
+            <span class="shop-title">🛒 ТОРГОВЕЦ БОРН</span>
+            <button class="btn btn-dim" id="btn-reroll-shop" style="font-size:9px;padding:3px 10px">↺ Обновить (20g)</button>
+          </div>
+          <div id="shop-list" class="items-grid"></div>
+          <div id="city-actions"></div>
         </div>
         <div class="city-right">
+          <div class="services-title">УСЛУГИ</div>
           <div class="service-card">
-            <div><b>⚗ Алхимик</b></div>
-            <div class="stats-line">Обычный→Редкий: 100g<br>Редкий→Эпический: 200g</div>
-            <button class="btn btn-ad" id="btn-city-alch-ad">📺 Улучшить бесплатно</button>
+            <div class="service-card-head"><span class="service-icon">⚗</span><span class="service-name">Алхимик Рута</span></div>
+            <div class="service-desc">Обычн.→Редкий: 100g<br>Редкий→Эпический: 200g</div>
+            <div class="service-btns">
+              <button class="btn btn-ad" id="btn-city-alch-ad">📺 Улучшить бесплатно</button>
+            </div>
           </div>
           <div class="service-card">
-            <div><b>🔮 Оракул</b></div>
-            <div class="stats-line">Покажет врагов следующей миссии</div>
-            <button class="btn btn-ad" id="btn-city-oracle-ad">📺 Узнать будущее</button>
+            <div class="service-card-head"><span class="service-icon">🔮</span><span class="service-name">Оракул</span></div>
+            <div class="service-desc">Покажет врагов следующей миссии</div>
+            <div class="service-btns">
+              <button class="btn btn-ad" id="btn-city-oracle-ad">📺 Узнать будущее</button>
+            </div>
           </div>
+          <button class="btn btn-dim" id="btn-leave-city" style="width:100%;margin-top:auto;text-align:center">← Покинуть город</button>
         </div>
       </div>
-      <button class="btn" id="btn-leave-city">Покинуть город</button>
     </div>
 
     <div id="battle-screen" class="screen hidden">
@@ -384,21 +465,23 @@
     </div>
 
     <div id="inventory-screen" class="screen hidden">
-      <h2>Рюкзак</h2>
       <div id="inventory-layout">
-        <div id="inv-left" class="panel">
-          <button class="btn hero-tab" data-hero-tab="garet">⚔ Гарет</button>
-          <button class="btn hero-tab" data-hero-tab="alira">🏹 Алира</button>
-          <button class="btn hero-tab" data-hero-tab="seris">🔮 Сэрис</button>
+        <div id="inv-left">
+          <div class="inv-hero-tab" id="inv-tabs">
+            <button class="inv-tab active" data-hero-tab="garet">⚔ Гарет</button>
+            <button class="inv-tab" data-hero-tab="alira">🏹 Алира</button>
+            <button class="inv-tab" data-hero-tab="seris">🔮 Сэрис</button>
+          </div>
           <div id="inv-hero-card"></div>
           <div id="inv-equip-slots"></div>
         </div>
         <div id="inv-right">
-          <div id="bag-grid" class="panel"></div>
-          <div id="inv-detail" class="panel">Выберите предмет справа.</div>
+          <div class="inv-right-title">РЮКЗАК</div>
+          <div id="bag-grid"></div>
+          <div id="inv-detail">Выберите предмет.</div>
+          <button class="btn btn-dim" id="btn-close-inv" style="width:100%;margin-top:auto;text-align:center">✕ Закрыть</button>
         </div>
       </div>
-      <button class="btn" id="btn-close-inv">Закрыть</button>
     </div>
 
     <div id="victory-screen" class="screen hidden">
@@ -1982,17 +2065,45 @@
     const hero = GameState.heroes.find(h => h.id === InvState.activeHeroId) || GameState.heroes[0];
     if (!hero) return;
     recalcHeroFromEquipment(hero);
+
+    // Update tabs
+    document.querySelectorAll('.inv-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.heroTab === hero.id);
+    });
+
+    // Hero portrait + stats
     const card = document.getElementById('inv-hero-card');
-    card.innerHTML = `<div style="font-size:30px">${hero.emoji}</div>
-      <div>Атака: ${hero.attack}</div><div>Броня: ${hero.armor}</div><div>HP: ${hero.hp}/${hero.maxHp}</div><div>Скорость: ${hero.speed || 10}</div>`;
+    const roleLabel2 = { garet: 'Воин', alira: 'Лучник', seris: 'Маг' };
+    const baseTpl = baseHeroTemplate().find(b => b.id === hero.id) || hero;
+    const atkBuff = hero.attack > baseTpl.attack;
+    const armBuff = hero.armor > baseTpl.armor;
+    card.innerHTML = `<div class="inv-portrait">
+      <div class="inv-portrait-icon">${hero.emoji}</div>
+      <div class="inv-portrait-name">${hero.name}</div>
+      <div class="inv-portrait-class">${roleLabel2[hero.id] || ''} · Ур. ${hero.level}</div>
+    </div>
+    <div class="inv-stats">
+      <div class="stat-row"><span>HP</span><span class="stat-val">${hero.hp}/${hero.maxHp}</span></div>
+      <div class="stat-row"><span>Атака</span><span class="stat-val ${atkBuff ? 'buffed' : ''}">${hero.attack}</span></div>
+      <div class="stat-row"><span>Броня</span><span class="stat-val ${armBuff ? 'buffed' : ''}">${hero.armor}</span></div>
+      <div class="stat-row"><span>Дальность</span><span class="stat-val">${hero.range}</span></div>
+      <div class="stat-row"><span>Ход</span><span class="stat-val">${hero.move}</span></div>
+      ${hero.maxMana ? `<div class="stat-row"><span>Мана</span><span class="stat-val">${hero.mana}/${hero.maxMana}</span></div>` : ''}
+    </div>`;
+
+    // Equipment slots
     const slots = document.getElementById('inv-equip-slots');
     hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
-    const names = { weapon: 'Оружие', armor: 'Броня', artifact: 'Артефакт' };
-    slots.innerHTML = ['weapon', 'armor', 'artifact'].map(slot => {
+    const slotNames = { weapon: '⚔ Оружие', armor: '🛡 Броня', artifact: '✨ Артефакт' };
+    const rarBadge = r => r === 'epic' ? `<span class="badge badge-epic">Эпик</span>` : r === 'rare' ? `<span class="badge badge-rare">Редкий</span>` : `<span class="badge badge-common">Обычн.</span>`;
+    slots.innerHTML = `<div class="slots-title">СНАРЯЖЕНИЕ</div>` + ['weapon', 'armor', 'artifact'].map(slot => {
       const id = hero.equipment[slot];
       const it = itemById(id);
-      return `<div class="equip-slot ${it ? '' : 'empty'}" data-slot="${slot}">
-        <b>${names[slot]}:</b> ${it ? `<span class="rarity-${it.rarity}">${it.name}</span>` : '— нет'}
+      return `<div class="equip-slot" data-slot="${slot}" title="${it ? 'Кликни чтобы снять' : ''}">
+        <div class="equip-slot-icon">${it ? it.name.split(' ')[0] : '·'}</div>
+        <div class="equip-slot-info">
+          ${it ? `<div class="equip-slot-name">${it.name.split(' ').slice(1).join(' ')}</div>${rarBadge(it.rarity)}` : `<div class="equip-slot-name equip-slot-empty">${slotNames[slot]}</div>`}
+        </div>
       </div>`;
     }).join('');
     slots.querySelectorAll('.equip-slot').forEach(el => {
@@ -2007,35 +2118,46 @@
         renderInventoryScreen();
       };
     });
+
+    // Backpack grid
     const bag = document.getElementById('bag-grid');
     const invList = (GameState.inventory || []).filter(id => itemById(id));
     if (invList.length === 0) {
-      bag.innerHTML = '<div style="grid-column:1/-1;color:var(--text-dim);text-align:center;padding:20px;">Рюкзак пуст</div><div style="grid-column:1/-1"><button class="btn" id="btn-bag-back">← Вернуться</button></div>';
-      const bb = document.getElementById('btn-bag-back');
-      if (bb) bb.onclick = () => { showScreen('map'); renderMap(); };
+      bag.innerHTML = '<div style="grid-column:1/-1;color:var(--text-dim);text-align:center;padding:20px;">Рюкзак пуст</div>';
     } else {
       bag.innerHTML = invList.map(id => {
         const it = itemById(id);
-        const active = id === InvState.selectedItemId ? 'active' : '';
-        const emoji = it.name.split(' ')[0];
-        const cleanName = it.name.split(' ').slice(1).join(' ');
-        const statText = Object.entries(it.mods || {}).filter(([k,v]) => typeof v === 'number' && v > 0).map(([k,v]) => `+${v} ${k}`).join(', ') || 'особый';
-        return `<div class="bag-item ${active} rarity-${it.rarity}" data-item="${id}"><div style="font-size:22px">${emoji}</div><div style="font-size:10px;color:#e8e8f0">${cleanName}</div><div style="font-size:9px;color:#2ecc71">${statText}</div><div style="font-size:9px;color:#f0a500">${it.price}g</div></div>`;
+        const active = id === InvState.selectedItemId ? 'selected' : '';
+        const ic = it.name.split(' ')[0];
+        const nm = it.name.split(' ').slice(1).join(' ');
+        return `<div class="inv-item-card ${active}" data-item="${id}">
+          <div class="inv-item-icon">${ic}</div>
+          <div class="inv-item-name">${nm}</div>
+          <div style="font-size:9px;color:var(--accent-gold)">${it.price}g</div>
+        </div>`;
       }).join('');
-      bag.querySelectorAll('.bag-item').forEach(el => {
+      bag.querySelectorAll('.inv-item-card').forEach(el => {
         el.onclick = () => { InvState.selectedItemId = el.getAttribute('data-item'); renderInventoryScreen(); };
       });
     }
+
+    // Detail panel
     const detail = document.getElementById('inv-detail');
     const sel = itemById(InvState.selectedItemId);
-    if (!sel) { detail.textContent = 'Выберите предмет справа.'; return; }
-    detail.innerHTML = `<div class="rarity-${sel.rarity}"><b>${sel.name}</b> (${sel.slot})</div>
-      <div>Для: ${sel.id.includes('bow') ? 'Лучник' : sel.id.includes('staff') || sel.id.includes('wand') ? 'Маг' : sel.id.includes('sword') || sel.id.includes('hammer') ? 'Воин' : 'Все'}</div>
-      <div class="bonus">${Object.entries(sel.mods).filter(([k,v]) => typeof v === 'number' && v > 0).map(([k,v]) => `${k} +${v}`).join(', ') || 'особый эффект'}</div>
-      <div class="stats-line">Описание: предмет повышает боевую эффективность.</div>
-      <button class="btn" id="inv-equip-btn">Надеть</button>
+    if (!sel) { detail.innerHTML = '<div style="color:var(--text-dim)">Выберите предмет в рюкзаке.</div>'; return; }
+    const statLines = Object.entries(sel.mods || {}).filter(([k,v]) => typeof v === 'number' && v !== 0).map(([k,v]) => `${v > 0 ? '+' : ''}${v} ${k}`).join(' · ') || 'особый эффект';
+    const forRole = sel.id.includes('bow') ? 'Лучник' : sel.id.includes('staff') || sel.id.includes('wand') ? 'Маг' : sel.id.includes('sword') || sel.id.includes('hammer') ? 'Воин' : 'Все';
+    detail.innerHTML = `<div class="item-detail-head">
+      <div class="item-detail-icon">${sel.name.split(' ')[0]}</div>
+      <div><div class="item-detail-title">${sel.name.split(' ').slice(1).join(' ')}</div><div class="item-detail-sub">${slotNames[sel.slot] || sel.slot} · ${forRole} · ${rarBadge(sel.rarity)}</div></div>
+    </div>
+    <div class="item-detail-stats">${statLines}</div>
+    <div class="item-detail-desc">Предмет повышает боевую эффективность героя.</div>
+    <div class="item-detail-btns">
+      <button class="btn btn-green" id="inv-equip-btn">Надеть</button>
       <button class="btn" id="inv-transfer-btn">Передать</button>
-      <button class="btn" id="inv-drop-btn">✕ Выбросить</button>`;
+      <button class="btn btn-red" id="inv-drop-btn">✕ Убрать</button>
+    </div>`;
     const equipBtn = document.getElementById('inv-equip-btn');
     equipBtn.onclick = () => {
       if (!inventoryItemFitsHero(sel, hero)) { alert('Предмет не подходит герою.'); return; }
@@ -2283,30 +2405,95 @@
   function enterCity(node, strangerOnly) {
     GameState.screen = 'city';
     GameState.activeCityNode = node.id;
-    document.getElementById('city-gold').textContent = GameState.gold;
     if (!strangerOnly) GameState.shopStock = generateShopStock(node.region);
-    GameState.cityState = { adUpgradeUsed: false, secretRevealed: false, secretItemId: randomItem(node.region, 'epic').id };
-    const shop = document.getElementById('shop-list');
+    GameState.cityState = GameState.cityState || {};
+    GameState.cityState.adUpgradeUsed = GameState.cityState.adUpgradeUsed || false;
+    GameState.cityState.secretRevealed = false;
+    GameState.cityState.secretItemId = randomItem(node.region, 'epic').id;
+
+    // === Left panel: NPC list + heroes bar ===
     const hbox = document.getElementById('city-heroes');
     if (hbox) {
-      hbox.innerHTML = GameState.heroes.map(h => `
-        <div class="city-hero-row">
-          <span>${h.emoji}</span>
-          <span>${h.name}</span>
-          <span style="margin-left:auto;color:var(--text-dim)">${h.hp}/${h.maxHp}</span>
-        </div>
-      `).join('');
+      const healCost = GameState.heroes.reduce((sum, h) => sum + Math.max(0, h.maxHp - h.hp) * 2, 0);
+      const allHealthy = healCost === 0;
+      hbox.innerHTML = `
+        <div class="heroes-bar-title">СОСТОЯНИЕ ОТРЯДА</div>
+        ${GameState.heroes.map(h => {
+          const pct = Math.round((h.hp / h.maxHp) * 100);
+          const indivCost = Math.max(0, h.maxHp - h.hp) * 2;
+          const full = h.hp >= h.maxHp;
+          return `<div class="hero-row">
+            <span class="hero-icon-s">${h.emoji}</span>
+            <div class="hero-hp-wrap">
+              <div class="hero-hp-name">${h.name} · ${h.hp}/${h.maxHp}</div>
+              <div class="bar"><div class="bar-hp" style="width:${pct}%"></div></div>
+            </div>
+            <div class="hero-heal-btn${full ? ' grey' : ''}" data-heal="${h.id}">${full ? 'полн.' : `-${indivCost}g`}</div>
+          </div>`;
+        }).join('')}
+        <button class="btn btn-green" id="btn-heal-full" ${allHealthy ? 'disabled' : ''} style="width:100%;margin-top:8px;font-size:10px;text-align:center">${allHealthy ? '✓ Все здоровы' : `+ Лечить всех · ${healCost}g`}</button>
+        ${window.ysdk ? '<button class="btn btn-ad" id="btn-heal-ad" style="width:100%;margin-top:4px;font-size:9px;text-align:center">📺 Лечить всех бесплатно</button>' : ''}
+      `;
+      hbox.querySelectorAll('[data-heal]').forEach(btn => {
+        btn.onclick = () => {
+          const h = GameState.heroes.find(x => x.id === btn.dataset.heal);
+          if (!h || h.hp >= h.maxHp) return;
+          const cost = Math.max(0, h.maxHp - h.hp) * 2;
+          if (GameState.gold < cost) { alert('Недостаточно золота.'); return; }
+          GameState.gold -= cost;
+          h.hp = h.maxHp;
+          saveGame();
+          enterCity(node, strangerOnly);
+        };
+      });
+      const healAll = document.getElementById('btn-heal-full');
+      if (healAll) healAll.onclick = () => {
+        const cost = GameState.heroes.reduce((s, h) => s + Math.max(0, h.maxHp - h.hp) * 2, 0);
+        if (cost === 0 || GameState.gold < cost) return;
+        GameState.gold -= cost;
+        GameState.heroes.forEach(h => h.hp = h.maxHp);
+        saveGame();
+        enterCity(node, strangerOnly);
+      };
+      const healAd = document.getElementById('btn-heal-ad');
+      if (healAd) healAd.onclick = () => showRewardedAd(() => {
+        GameState.heroes.forEach(h => h.hp = h.maxHp);
+        saveGame();
+        enterCity(node, strangerOnly);
+      });
     }
-    const secretCard = window.ysdk ? `<div class="item-card"><b>❓ Тайный товар</b><br><button class="btn" id="btn-secret">Открыть за рекламу</button></div>` : '';
-    shop.innerHTML = GameState.shopStock.map(it => `<div class="item-card rarity-${it.rarity}"><b>${it.name}</b><br>${it.price}💰 <button class="btn" data-buy="${it.id}">Купить</button></div>`).join('') + secretCard;
-    shop.querySelectorAll('[data-buy]').forEach(btn => {
-      btn.onclick = () => {
-        const it = itemById(btn.getAttribute('data-buy'));
-        if (!it || GameState.gold < it.price) return;
+
+    // === Center panel: shop ===
+    const shop = document.getElementById('shop-list');
+    const rarBadge2 = r => r === 'epic' ? `<span class="badge badge-epic">Эпик</span>` : r === 'rare' ? `<span class="badge badge-rare">Редкий</span>` : `<span class="badge badge-common">Обычн.</span>`;
+    const secretCard = window.ysdk ? `
+      <div class="item-card secret">
+        <div class="item-icon" style="font-size:28px">❓</div>
+        <div class="item-name" style="color:#9b59b6">Тайный товар</div>
+        <div style="font-size:9px;color:#9b59b6;margin-bottom:8px">Посмотри рекламу — узнай что скрыто</div>
+        <button class="btn btn-ad" id="btn-secret" style="font-size:9px;padding:4px 8px;width:100%">📺 Открыть</button>
+      </div>` : '';
+    shop.innerHTML = GameState.shopStock.map(it => {
+      const canBuy = GameState.gold >= it.price;
+      const ic = it.name.split(' ')[0];
+      const nm = it.name.split(' ').slice(1).join(' ');
+      const statText = Object.entries(it.mods || {}).filter(([k,v]) => typeof v === 'number' && v !== 0).map(([k,v]) => `${v>0?'+':''}${v} ${k}`).join(' · ');
+      return `<div class="item-card" data-buy="${it.id}">
+        <div class="item-icon">${ic}</div>
+        <div class="item-name">${nm}</div>
+        <div class="item-stats">${statText}</div>
+        <div class="item-footer">${rarBadge2(it.rarity)}<span class="item-price${canBuy ? '' : ' cant'}">${it.price}g</span></div>
+      </div>`;
+    }).join('') + secretCard;
+
+    shop.querySelectorAll('[data-buy]').forEach(card => {
+      card.onclick = () => {
+        const it = itemById(card.getAttribute('data-buy'));
+        if (!it || GameState.gold < it.price) { if (it) alert('Недостаточно золота.'); return; }
         GameState.gold -= it.price;
         GameState.inventory.push(it.id);
         saveGame();
-        document.getElementById('city-gold').textContent = GameState.gold;
+        enterCity(node, strangerOnly);
       };
     });
     const bs = document.getElementById('btn-secret');
@@ -2314,26 +2501,24 @@
       GameState.cityState.secretRevealed = true;
       const item = itemById(GameState.cityState.secretItemId);
       const price = Math.floor(item.price * 0.7);
-      shop.insertAdjacentHTML('beforeend', `<div class="item-card rarity-epic"><b>${item.name}</b><br>Скидка: ${price}💰 <button class="btn" id="buy-secret">Купить</button></div>`);
-      const b = document.getElementById('buy-secret');
-      if (b) b.onclick = () => { if (GameState.gold >= price) { GameState.gold -= price; GameState.inventory.push(item.id); saveGame(); enterCity(node, strangerOnly); } };
+      const ic2 = item.name.split(' ')[0];
+      const nm2 = item.name.split(' ').slice(1).join(' ');
+      const secretEl = shop.querySelector('.secret');
+      if (secretEl) secretEl.outerHTML = `<div class="item-card" data-buy="__secret__">
+        <div class="item-icon">${ic2}</div>
+        <div class="item-name">${nm2}</div>
+        <div class="item-footer"><span class="badge badge-epic">Эпик</span><span class="item-price">${price}g</span></div>
+      </div>`;
+      shop.querySelector('[data-buy="__secret__"]')?.addEventListener('click', () => {
+        if (GameState.gold < price) { alert('Недостаточно золота.'); return; }
+        GameState.gold -= price; GameState.inventory.push(item.id); saveGame(); enterCity(node, strangerOnly);
+      });
     });
-    const healCost = GameState.heroes.reduce((sum, h) => sum + Math.max(0, h.maxHp - h.hp) * 2, 0);
-    const allHealthy = healCost === 0;
-    const heroHpLines = GameState.heroes.map(h => `${h.emoji} ${h.name}: ${h.hp}/${h.maxHp}`).join(' · ');
-    document.getElementById('city-actions').innerHTML = `
-      <div class="stats-line" style="margin-bottom:6px">${heroHpLines}</div>
-      <button class="btn" id="btn-heal-full"${allHealthy ? ' disabled' : ''}>${allHealthy ? 'Все здоровы' : `Лечить всех · ${healCost}g`}</button>
-      <button class="btn" id="btn-reroll-shop">Обновить ассортимент (20💰)</button>
-      <button class="btn" id="btn-alchemy">Алхимик: улучшить предмет</button>
-      ${window.ysdk ? '<button class="btn" id="btn-oracle">🔮 Узнать будущее [реклама]</button>' : ''}
-    `;
-    const heal = document.getElementById('btn-heal-full');
-    if (heal) heal.onclick = () => { if (!allHealthy && GameState.gold >= healCost) { GameState.gold -= healCost; GameState.heroes.forEach(h => h.hp = h.maxHp); saveGame(); enterCity(node, strangerOnly); } };
-    const rer = document.getElementById('btn-reroll-shop');
-    if (rer) rer.onclick = () => { if (GameState.gold >= 20) { GameState.gold -= 20; GameState.shopStock = generateShopStock(node.region); saveGame(); enterCity(node, strangerOnly); } };
-    const al = document.getElementById('btn-alchemy');
-    if (al) al.onclick = () => {
+
+    // === Right panel: alchemist + oracle ===
+    const al = document.getElementById('btn-city-alch-ad');
+    const oracle = document.getElementById('btn-city-oracle-ad');
+    const doAlchemy = () => {
       const inv = GameState.inventory.map(itemById).filter(Boolean);
       const base = inv.find(i => i.rarity === 'common') || inv.find(i => i.rarity === 'rare');
       if (!base) { alert('Нет подходящего предмета.'); return; }
@@ -2345,23 +2530,27 @@
         const idx = GameState.inventory.indexOf(base.id);
         if (idx >= 0) GameState.inventory[idx] = cand.id;
         saveGame();
+        alert(`${base.name} → ${cand.name}!`);
         enterCity(node, strangerOnly);
       };
       if (GameState.gold >= cost && confirm(`Улучшить ${base.name} за ${cost}💰?`)) { GameState.gold -= cost; doUpgrade(); return; }
-      if (window.ysdk && !GameState.cityState.adUpgradeUsed) showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
+      else if (window.ysdk && !GameState.cityState.adUpgradeUsed) showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
+      else alert(`Нужно ${cost}💰 для улучшения.`);
     };
-    const oracle = document.getElementById('btn-oracle');
-    if (oracle) oracle.onclick = () => showRewardedAd(() => {
+    if (al) al.onclick = doAlchemy;
+    const doOracle = () => showRewardedAd(() => {
       const cur = getCurrentCell();
       const next = GameState.mapGrid.find(c => c.region <= GameState.regionUnlocked && !c.completed && ['mission', 'dungeon', 'boss', 'final'].includes(c.type) && cellNeighbors(cur, c));
       if (!next) { alert('Ближайших боёв не найдено.'); return; }
-      const wave = generateEnemyWaveForCell(next).map(id => enemyDef(id).emoji).join(' ');
-      alert(`Оракул видит бой: ${wave}`);
+      const wave = generateEnemyWaveForCell(next).map(id => `${enemyDef(id).emoji} ${enemyDef(id).name}`).join(', ');
+      alert(`Оракул видит: ${wave}`);
     });
-    const rightAlch = document.getElementById('btn-city-alch-ad');
-    if (rightAlch) rightAlch.onclick = () => al && al.click();
-    const rightOracle = document.getElementById('btn-city-oracle-ad');
-    if (rightOracle) rightOracle.onclick = () => oracle && oracle.click();
+    if (oracle) oracle.onclick = doOracle;
+
+    // Refresh shop button
+    const rer = document.getElementById('btn-reroll-shop');
+    if (rer) rer.onclick = () => { if (GameState.gold >= 20) { GameState.gold -= 20; GameState.shopStock = generateShopStock(node.region); saveGame(); enterCity(node, strangerOnly); } else alert('Нужно 20💰'); };
+
     showScreen('city');
   }
 
