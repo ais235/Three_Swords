@@ -98,11 +98,12 @@
       background: #111;
       cursor: crosshair;
       image-rendering: pixelated;
-      /* 12x8 grid: height drives size, width auto via aspect-ratio 3/2 */
-      height: 100%;
-      width: auto;
+      /* 12x8 grid: width fills container, height auto from aspect-ratio 3/2.
+         max-height:100% prevents overflow if container is shorter than wide. */
+      width: 100%;
+      height: auto;
       aspect-ratio: 3 / 2;
-      max-width: 100%;
+      max-height: 100%;
     }
     #battle-log {
       flex: 1;
@@ -452,7 +453,7 @@
       #inventory-layout { grid-template-columns: 1fr; }
       #inv-left { border-right: 0; border-bottom: 1px solid var(--border); }
       #battle-wrap { width: 100%; overflow: auto; }
-      #battle-canvas { height: min(90%, 90vw); width: auto; aspect-ratio: 1/1; max-width: 100%; }
+      #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
       .map-screen-layout { grid-template-columns: 1fr; }
       .map-panel { border-left: 0; border-top: 1px solid var(--border); }
       #map-screen .node-grid { min-width: 0; }
@@ -500,7 +501,7 @@
       .hero-card-class, .bar-label { font-size: 8px; }
       .skill-btn { width: 20px; height: 20px; font-size: 10px; }
       #battle-wrap { border-width: 1px; }
-      #battle-canvas { height: 100%; width: auto; aspect-ratio: 1/1; max-width: 100%; min-width: 0; min-height: 0; }
+      #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
       #ui-overlay { min-width: 0; padding: 6px; gap: 4px; }
       .br-label { font-size: 8px; margin-bottom: 2px; }
       #initiative-bar { gap: 2px; margin-bottom: 2px; }
@@ -666,7 +667,7 @@
       .bar-label { font-size: 7px; margin-bottom: 1px; }
       .skills-row { gap: 2px; margin-top: 2px; }
       .skill-btn { width: 18px; height: 18px; font-size: 9px; }
-      #battle-canvas { height: 100%; width: auto; aspect-ratio: 1/1; max-width: 100%; min-width: 0; min-height: 0; }
+      #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
       #ui-overlay { min-width: 0; padding: 4px; gap: 3px; }
       .br-label { font-size: 7px; margin-bottom: 1px; }
       .init-slot { width: 18px; height: 18px; font-size: 11px; }
@@ -751,7 +752,7 @@
       #perk-detail-panel .btn { min-height: 24px; font-size: 7px; }
     }
     @media (max-width: 480px) and (orientation: portrait) {
-      #battle-canvas { height: 100%; width: auto; aspect-ratio: 1/1; max-width: 100%; }
+      #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
       body { font-size: 12px; }
       .btn { padding: 6px 8px; }
       .map-node { width: 56px; height: 56px; font-size: 1rem; }
