@@ -66,14 +66,22 @@
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-primary { background: #1e3a5f; border-color: var(--accent-blue); }
     .hidden { display: none !important; }
-    #map-screen .node-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    #map-screen .node-grid { display: grid; grid-template-columns: repeat(6, 72px); gap: 6px; width: max-content; }
     .map-node {
-      min-width: 100px; padding: 10px; background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 8px; cursor: pointer; text-align: center;
+      width: 72px; height: 72px; padding: 4px; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer; text-align: center; display: flex; flex-direction: column; justify-content: center;
+      font-size: 1.2rem;
     }
     .map-node:hover { border-color: var(--accent-gold); }
     .map-node.done { opacity: 0.5; }
     .map-node.locked { opacity: 0.35; pointer-events: none; }
+    .map-node.current { outline: 2px solid var(--accent-blue); }
+    .map-node small { font-size: 9px; color: var(--text-dim); }
+    .rarity-common { color: #b0b0b0; }
+    .rarity-rare { color: #4a9eff; }
+    .rarity-epic { color: #f0a500; }
+    #main-menu { text-align: center; }
+    #world-panel { overflow: auto; }
     #tooltip {
       position: fixed; z-index: 1000; pointer-events: none;
       background: var(--bg-card); border: 1px solid var(--accent-gold); padding: 8px; border-radius: 6px;
@@ -101,19 +109,39 @@
     .perk-node.taken { opacity: 0.5; pointer-events: none; }
     .line-v { border-left: 2px solid var(--border); margin-left: 8px; padding-left: 8px; }
     #victory-screen h2 { color: var(--accent-green); }
-    .item-card { display: inline-block; margin: 4px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; font-size: 11px; }
+    .item-card { display: inline-block; margin: 4px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; font-size: 11px; width: 220px; vertical-align: top; }
   </style>
+  <script src="https://yandex.ru/games/sdk/v2"></script>
 </head>
 <body>
   <div id="game-container">
     <h1>⚔️ Три Героя / Three Heroes</h1>
+    <div id="main-menu" class="screen">
+      <div class="panel">
+        <h2>Главное меню</h2>
+        <div>
+          <button class="btn btn-primary" id="btn-new-game">Новая игра</button>
+          <button class="btn" id="btn-continue">Продолжить</button>
+        </div>
+        <div class="stats-line">
+          Сложность:
+          <select id="difficulty-select" class="btn" aria-label="Сложность игры">
+            <option value="normal">Обычная</option>
+            <option value="hardcore">Хардкор (перманентная смерть)</option>
+          </select>
+        </div>
+      </div>
+    </div>
     <div id="hud-top" class="panel stats-line">
       Золото: <span id="gold-display">150</span> 💰 | Регион: <span id="region-display">1</span> | Ход карты: <span id="turn-display">1</span>
     </div>
 
-    <div id="map-screen" class="screen">
+    <div id="map-screen" class="screen hidden">
       <p class="stats-line">Проведите отряд через 3 региона и уничтожьте Тёмного Лорда.</p>
-      <div id="map-nodes" class="node-grid"></div>
+      <div id="world-panel" class="panel">
+        <div id="map-nodes" class="node-grid"></div>
+      </div>
+      <div class="stats-line" id="map-help">Клик на соседнюю клетку (диагональ разрешена).</div>
       <button class="btn" id="btn-inventory-map">Рюкзак</button>
     </div>
 
@@ -121,6 +149,7 @@
       <h2>🏙️ Город</h2>
       <p class="stats-line">Торговец и отдых. Золото: <span id="city-gold">0</span></p>
       <div id="shop-list"></div>
+      <div id="city-actions" class="panel"></div>
       <button class="btn" id="btn-leave-city">Покинуть город</button>
     </div>
 
@@ -166,9 +195,10 @@
     <div id="gameover-screen" class="screen hidden">
       <div class="modal-box">
         <h2 style="color:var(--accent-red)">Поражение</h2>
-        <p>Отряд пал...</p>
-        <button class="btn" id="btn-ad-revive">Смотреть рекламу — воскресить отряд +50💰</button>
-        <button class="btn" id="btn-go-title">В меню (сброс прогресса боя)</button>
+        <p id="go-stats">Отряд пал...</p>
+        <button class="btn" id="btn-ad-revive">⚡ Древний артефакт [реклама]</button>
+        <button class="btn" id="btn-load-last">Загрузить последнее сохранение</button>
+        <button class="btn" id="btn-go-title">Начать заново</button>
       </div>
     </div>
 
@@ -210,6 +240,9 @@
   const TILE_EMOJI = { [TILE.GROUND]: '🟫', [TILE.FOREST]: '🌲', [TILE.MOUNTAIN]: '⛰️', [TILE.WATER]: '💧', [TILE.FORT]: '🏰', [TILE.FIRE]: '🔥' };
   const STATUS = { STUN: 'stun', FREEZE: 'freeze', WEB: 'web', POISON: 'poison', BURN: 'burn', SLOW: 'slow', BLIND: 'blind', CURSE: 'curse', BERSERK: 'berserk', STEALTH: 'stealth' };
   const SAVE_KEY = 'threeHeroesSave';
+  const AD_MIN_INTERVAL_MS = 3 * 60 * 1000;
+  const BONUS_GOLD_CD_MS = 5 * 60 * 1000;
+  const WORLD_SIZE = 6;
 
   //══════════ SECTION 2: GAME_DATA ══════════
   const ENEMY_IDS = {
@@ -314,6 +347,35 @@
     { id: 'elixir', name: 'Эликсир маны +5', price: 40, use: (h) => { if (h.maxMana) h.mana = Math.min(h.maxMana, h.mana + 5); } },
     { id: 'mag_stone', name: 'Камень магии (+1 атака мага)', price: 80, use: (h) => { if (h.role === 'mage') h.attack += 1; } }
   ];
+  const ITEM_POOL = [
+    { id: 'steel_sword', slot: 'weapon', rarity: 'common', name: '⚔️ Стальной меч', price: 35, mods: { attack: 3 } },
+    { id: 'hunter_bow', slot: 'weapon', rarity: 'common', name: '🏹 Охотничий лук', price: 40, mods: { attack: 3, range: 1 } },
+    { id: 'magic_wand', slot: 'weapon', rarity: 'common', name: '🔮 Магический жезл', price: 40, mods: { attack: 4, mageOnly: true } },
+    { id: 'poison_blade', slot: 'weapon', rarity: 'rare', name: '🗡️ Клинок яда', price: 90, mods: { attack: 2, poisonOnHit: true } },
+    { id: 'shadow_bow', slot: 'weapon', rarity: 'rare', name: '🏹 Лук теней', price: 100, mods: { attack: 4, ignoreCover: true } },
+    { id: 'fire_staff', slot: 'weapon', rarity: 'rare', name: '🔥 Огненный посох', price: 110, mods: { attack: 5, aoePlus: true } },
+    { id: 'thunder_hammer', slot: 'weapon', rarity: 'epic', name: '⚡ Громовой молот', price: 160, mods: { attack: 4, stunOnHit: true } },
+    { id: 'moon_bow', slot: 'weapon', rarity: 'epic', name: '🌙 Лунный лук', price: 180, mods: { attack: 6, passiveDouble: true } },
+    { id: 'chaos_staff', slot: 'weapon', rarity: 'epic', name: '☄️ Посох хаоса', price: 200, mods: { attack: 7, randomAoe: true } },
+    { id: 'leather', slot: 'armor', rarity: 'common', name: '🛡️ Кожаная броня', price: 30, mods: { armor: 2 } },
+    { id: 'gloves', slot: 'armor', rarity: 'common', name: '🧤 Лёгкие перчатки', price: 35, mods: { armor: 1, move: 1 } },
+    { id: 'robe', slot: 'armor', rarity: 'common', name: '🧣 Мантия', price: 35, mods: { armor: 1, mana: 2 } },
+    { id: 'shadow_cloak', slot: 'armor', rarity: 'rare', name: '🧥 Плащ теней', price: 85, mods: { armor: 1, dodge: 0.2 } },
+    { id: 'runic_shield', slot: 'armor', rarity: 'rare', name: '🛡️ Рунический щит', price: 95, mods: { armor: 3, reflectStatus: 0.25 } },
+    { id: 'mirror_robe', slot: 'armor', rarity: 'rare', name: '🌀 Мантия отражения', price: 100, mods: { armor: 2, reflectDmg: 0.1 } },
+    { id: 'guardian_plate', slot: 'armor', rarity: 'epic', name: '💎 Доспех стражника', price: 170, mods: { armor: 4, reflectFlat: 1 } },
+    { id: 'phoenix', slot: 'armor', rarity: 'epic', name: '👘 Одеяние феникса', price: 200, mods: { armor: 3, revive5: true } },
+    { id: 'dark_mantle', slot: 'armor', rarity: 'epic', name: '🌑 Тёмная мантия', price: 190, mods: { armor: 2, attack: 3, maxHp: -5 } },
+    { id: 'luck_amulet', slot: 'artifact', rarity: 'common', name: '🧿 Амулет удачи', price: 25, mods: { goldBonus: 0.15 } },
+    { id: 'power_potion', slot: 'artifact', rarity: 'common', name: '💊 Зелье силы', price: 20, mods: { battleAttackBuff: 2 } },
+    { id: 'vision_candle', slot: 'artifact', rarity: 'common', name: '🕯️ Свеча видения', price: 30, mods: { visionForest: true } },
+    { id: 'mana_crystal', slot: 'artifact', rarity: 'rare', name: '🔮 Кристалл маны', price: 80, mods: { manaRegenBonus: 3 } },
+    { id: 'seer_eye', slot: 'artifact', rarity: 'rare', name: '👁️ Глаз провидца', price: 85, mods: { preBattleScout: true } },
+    { id: 'hourglass', slot: 'artifact', rarity: 'rare', name: '⏱️ Песочные часы', price: 95, mods: { extraAction: true } },
+    { id: 'death_ring', slot: 'artifact', rarity: 'epic', name: '☠️ Кольцо смерти', price: 175, mods: { deathExplode: true } },
+    { id: 'portal_stone', slot: 'artifact', rarity: 'epic', name: '🌀 Портальный камень', price: 185, mods: { battleTeleport: true } },
+    { id: 'crown', slot: 'artifact', rarity: 'epic', name: '👑 Корона власти', price: 195, mods: { teamAura: true } }
+  ];
 
   //══════════ SECTION 3: GAME_STATE helpers ══════════
   const GameState = {
@@ -330,7 +392,23 @@
     lastAdTime: 0,
     mapNodeId: null,
     pendingPerks: [],
-    selectedHeroDeploy: 0
+    selectedHeroDeploy: 0,
+    mapGrid: [],
+    playerPos: { x: 0, y: 0 },
+    regionUnlocked: 1,
+    shopStock: [],
+    cityState: { adUpgradeUsed: false, secretRevealed: false, secretItemId: null },
+    difficulty: 'normal',
+    stats: { battles: 0, kills: 0, goldEarned: 0 },
+    pendingNegativeEvent: null,
+    adMeta: { lastShownAt: 0, lastBonusGoldAt: 0 },
+    defeatedBosses: 0,
+    hardFlags: { skipDeployNextBattle: false },
+    arenaDoneByRegion: {},
+    wandererUsedByRegion: {},
+    activeCityNode: null,
+    battleReviveUsed: false,
+    lastSafeSave: null
   };
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -343,16 +421,19 @@
   }
   function saveGame() {
     const snap = deepClone(GameState);
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(snap)); } catch (e) { console.warn(e); }
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(snap));
+      localStorage.setItem('save', JSON.stringify(snap));
+    } catch (e) { console.warn(e); }
   }
   function loadGame() {
     try {
-      const s = localStorage.getItem(SAVE_KEY);
+      const s = localStorage.getItem(SAVE_KEY) || localStorage.getItem('save');
       if (s) {
         const o = JSON.parse(s);
         Object.assign(GameState, o);
         if (!GameState.heroes || !GameState.heroes.length) initHeroesFromTemplate();
-        if (!GameState.worldMap || !GameState.worldMap.length) buildWorldMap();
+        if (!GameState.mapGrid || !GameState.mapGrid.length) buildWorldMap();
         return true;
       }
     } catch (e) { console.warn(e); }
@@ -527,25 +608,61 @@
   }
 
   function buildWorldMap() {
-    GameState.worldMap = [
-      { id: 'r1n1', name: 'Тёмный лес — застава', type: 'battle', region: 1, connections: ['r1n2'], enemyWave: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.ZOMBIE] },
-      { id: 'r1n2', name: 'Лес — тропа', type: 'battle', region: 1, connections: ['r1city', 'r1n3'], enemyWave: [ENEMY_IDS.BOAR, ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER] },
-      { id: 'r1city', name: 'Деревня', type: 'city', region: 1, connections: ['r1n2'] },
-      { id: 'r1n3', name: 'Лес шамана', type: 'battle', region: 1, connections: ['r1n2', 'r2n1'], enemyWave: [ENEMY_IDS.SHAMAN, ENEMY_IDS.SKELETON, ENEMY_IDS.ZOMBIE], miniBoss: true },
-      { id: 'r2n1', name: 'Руины — вход', type: 'battle', region: 2, connections: ['r1n3', 'r2n2'], enemyWave: [ENEMY_IDS.ORC_GUARD, ENEMY_IDS.SPIDER, ENEMY_IDS.SUICIDE] },
-      { id: 'r2n2', name: 'Руины — зал', type: 'battle', region: 2, connections: ['r2n1', 'r2city', 'r2boss'], enemyWave: [ENEMY_IDS.WATCHER, ENEMY_IDS.ICE_ELEM, ENEMY_IDS.SPIDER] },
-      { id: 'r2city', name: 'Квартал торговцев', type: 'city', region: 2, connections: ['r2n2'] },
-      { id: 'r2boss', name: 'Огненный титан', type: 'battle', region: 2, connections: ['r2n2', 'r3n1'], enemyWave: [ENEMY_IDS.FIRE_TITAN], boss: true },
-      { id: 'r3n1', name: 'Цитадель — врата', type: 'battle', region: 3, connections: ['r2boss', 'r3n2'], enemyWave: [ENEMY_IDS.NECRO, ENEMY_IDS.CHAOS, ENEMY_IDS.SKELETON] },
-      { id: 'r3n2', name: 'Зал теней', type: 'battle', region: 3, connections: ['r3n1', 'r3city', 'r3n3'], enemyWave: [ENEMY_IDS.ASSASSIN, ENEMY_IDS.GHOST, ENEMY_IDS.ORC_GUARD] },
-      { id: 'r3city', name: 'Последний лагерь', type: 'city', region: 3, connections: ['r3n2'] },
-      { id: 'r3n3', name: 'Трон Тьмы', type: 'battle', region: 3, connections: ['r3n2'], enemyWave: [ENEMY_IDS.DARK_LORD], boss: true, final: true }
-    ];
-    GameState.worldMap.forEach(n => { n.completed = false; });
+    const grid = [];
+    for (let y = 0; y < WORLD_SIZE; y++) {
+      for (let x = 0; x < WORLD_SIZE; x++) {
+        const region = y < 2 ? 1 : y < 4 ? 2 : 3;
+        grid.push({
+          id: `c_${x}_${y}`, x, y, region,
+          type: 'locked', completed: false, visited: false, emoji: '🔒'
+        });
+      }
+    }
+    const byRegion = {
+      1: { rows: [0, 1], mission: 6, city: 2, dungeon: 1, event: 2, boss: 1 },
+      2: { rows: [2, 3], mission: 5, city: 1, dungeon: 2, event: 2, boss: 1, wanderer: 1, arena: 1 },
+      3: { rows: [4, 5], mission: 4, city: 1, dungeon: 2, event: 1, boss: 1, wanderer: 1, final: 1, arena: 1 }
+    };
+    const pick = (cells, n) => {
+      const arr = cells.slice();
+      const out = [];
+      while (arr.length && out.length < n) out.push(arr.splice(randInt(0, arr.length - 1), 1)[0]);
+      return out;
+    };
+    for (const region of [1, 2, 3]) {
+      const conf = byRegion[region];
+      const cells = grid.filter(c => conf.rows.includes(c.y));
+      const free = cells.slice();
+      const assign = (kind, count, emoji) => {
+        pick(free, count).forEach(c => {
+          c.type = kind; c.emoji = emoji;
+          free.splice(free.indexOf(c), 1);
+        });
+      };
+      assign('mission', conf.mission, '⚔️');
+      assign('city', conf.city, '🏘️');
+      assign('dungeon', conf.dungeon, '🗺️');
+      assign('event', conf.event, '❓');
+      assign('boss', conf.boss, '💀');
+      if (conf.wanderer) assign('wanderer', conf.wanderer, '✨');
+      if (conf.arena) assign('arena', conf.arena, '🕳️');
+      if (conf.final) assign('final', conf.final, '👑');
+      free.forEach(c => { c.type = 'mission'; c.emoji = '⚔️'; });
+    }
+    GameState.mapGrid = grid;
+    GameState.playerPos = { x: 0, y: 0 };
+    const start = GameState.mapGrid.find(c => c.x === 0 && c.y === 0);
+    start.type = 'mission';
+    start.emoji = '⚔️';
+    GameState.regionUnlocked = 1;
+    GameState.defeatedBosses = 0;
+    GameState.worldMap = [];
   }
 
   //══════════ Battle core ══════════
   function startBattle(node) {
+    GameState.lastSafeSave = deepClone(GameState);
+    GameState.battleReviveUsed = false;
     const grid = generateBattleGrid(node.region);
     const units = [];
     const heroes = GameState.heroes.filter(h => h.hp > 0).map((h, i) => makeBattleHero(h, i));
@@ -728,6 +845,7 @@
   function onUnitDeath(u) {
     const b = GameState.currentBattle;
     pushBattleLog(`☠️ ${u.emoji} ${u.name} повержен!`, 'enemy');
+    if (!u.isHero) GameState.stats.kills += 1;
     if (!u.isHero && u.enemyId === ENEMY_IDS.ZOMBIE) {
       for (const t of b.units) {
         if (!t.isHero || t.hp <= 0) continue;
@@ -739,12 +857,13 @@
 
   function endBattleVictory() {
     const b = GameState.currentBattle;
-    const node = GameState.worldMap.find(n => n.id === b.nodeId);
-    let gold = 0;
-    (node.enemyWave || []).forEach(() => { gold += randInt(5, 15); });
-    if (node.boss && node.enemyWave.includes(ENEMY_IDS.FIRE_TITAN)) gold = 150;
-    if (node.final) gold = 300;
+    const cell = getCellById(b.nodeId);
+    let gold = cell?.type === 'dungeon' ? randInt(45, 80) : randInt(20, 35);
+    if (cell?.type === 'boss') gold = randInt(120, 160);
+    if (cell?.type === 'final') gold = 300;
     GameState.gold += gold;
+    GameState.stats.battles += 1;
+    GameState.stats.goldEarned += gold;
     const xpEach = 20 + GameState.region * 10;
     GameState.heroes.forEach(h => {
       if (h.hp > 0) {
@@ -756,7 +875,14 @@
         }
       }
     });
-    if (node) node.completed = true;
+    if (cell) {
+      cell.completed = true;
+      if (cell.type === 'boss') {
+        GameState.defeatedBosses += 1;
+        GameState.regionUnlocked = Math.max(GameState.regionUnlocked, Math.min(3, cell.region + 1));
+      }
+      applyBattleRewards(cell);
+    }
     saveGame();
     GameState.currentBattle = null;
     GameState.screen = 'map';
@@ -767,7 +893,6 @@
     document.getElementById('vic-gold').textContent = `Получено золота: +${gold} 💰`;
     const vx = document.getElementById('vic-xp');
     vx.innerHTML = GameState.heroes.map(h => `<div>⭐ ${h.emoji} ${h.name}: +${xp} опыта, ур. ${h.level}</div>`).join('');
-    document.getElementById('vic-items').innerHTML = '';
     showScreen('victory');
     if (GameState.pendingPerks.length) setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
   }
@@ -1005,27 +1130,11 @@
     const b = GameState.currentBattle;
     if (!b) return;
     if (allEnemiesDead(b)) {
-      const node = GameState.worldMap.find(n => n.id === b.nodeId);
-      if (node?.final) {
-        GameState.gold += 300;
-        const xpEach = 20 + GameState.region * 10;
-        GameState.heroes.forEach(h => {
-          if (h.hp > 0) {
-            h.xp = (h.xp || 0) + xpEach;
-            while (h.xp >= h.level * 40 && h.level < 8) {
-              h.xp -= h.level * 40;
-              h.level++;
-              GameState.pendingPerks.push(h.id);
-            }
-          }
-        });
-        node.completed = true;
-        saveGame();
-        GameState.currentBattle = null;
-        GameState.screen = 'map';
+      const node = getCellById(b.nodeId);
+      if (node?.type === 'final') {
+        endBattleVictory();
         showScreen('ending');
-        document.getElementById('ending-stats').textContent = `Накоплено золота: ${GameState.gold} 💰`;
-        if (GameState.pendingPerks.length) setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
+        document.getElementById('ending-stats').textContent = `Боев: ${GameState.stats.battles}, золото: ${GameState.gold} 💰`;
         return;
       }
       endBattleVictory();
@@ -1033,6 +1142,7 @@
     }
     if (allHeroesDead(b)) {
       GameState.screen = 'gameover';
+      document.getElementById('go-stats').textContent = `Боев: ${GameState.stats.battles} | Убито врагов: ${GameState.stats.kills} | Золото: ${GameState.gold}`;
       showScreen('gameover');
     }
   }
@@ -1468,8 +1578,139 @@
   }
 
   //══════════ Map / economy / screens ══════════
+  function getCellById(id) { return GameState.mapGrid.find(c => c.id === id); }
+  function getCurrentCell() { return GameState.mapGrid.find(c => c.x === GameState.playerPos.x && c.y === GameState.playerPos.y); }
+  function cellNeighbors(a, b) { return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1 && !(a.x === b.x && a.y === b.y); }
+  function canShowAd() {
+    return window.ysdk && (Date.now() - (GameState.adMeta.lastShownAt || 0) >= AD_MIN_INTERVAL_MS);
+  }
+  function showRewardedAd(rewardCallback) {
+    if (!window.ysdk) { rewardCallback(); return; }
+    if (!canShowAd()) { alert('Реклама временно недоступна (антиспам).'); return; }
+    window.ysdk.adv.showRewardedVideo({
+      callbacks: {
+        onRewarded: () => {
+          GameState.adMeta.lastShownAt = Date.now();
+          rewardCallback();
+        },
+        onClose: () => {},
+        onError: () => alert('Реклама недоступна')
+      }
+    });
+  }
+  function itemById(id) { return ITEM_POOL.find(i => i.id === id); }
+  function randomItem(region, minRarity) {
+    const rarOrder = { common: 1, rare: 2, epic: 3 };
+    const min = rarOrder[minRarity || 'common'];
+    const pool = ITEM_POOL.filter(i => rarOrder[i.rarity] >= min && (region >= 2 || i.rarity === 'common'));
+    return deepClone(pool[randInt(0, pool.length - 1)]);
+  }
+  function equipItem(hero, item) {
+    hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
+    hero.equipment[item.slot] = item.id;
+  }
+  function applyItemToHero(hero, item) {
+    hero.attack += item.mods.attack || 0;
+    hero.armor += item.mods.armor || 0;
+    hero.range += item.mods.range || 0;
+    hero.move += item.mods.move || 0;
+    if (item.mods.mana) {
+      hero.maxMana = (hero.maxMana || 0) + item.mods.mana;
+      hero.mana = Math.min(hero.maxMana, (hero.mana || 0) + item.mods.mana);
+    }
+    if (item.mods.maxHp) {
+      hero.maxHp += item.mods.maxHp;
+      hero.hp = Math.min(hero.maxHp, hero.hp + item.mods.maxHp);
+    }
+    equipItem(hero, item);
+  }
+  function generateShopStock(region) {
+    const stock = [];
+    for (let i = 0; i < 4; i++) stock.push(randomItem(region, region === 1 ? 'common' : Math.random() < 0.6 ? 'common' : 'rare'));
+    return stock;
+  }
+  function generateEnemyWaveForCell(cell) {
+    if (!cell) return [ENEMY_IDS.SKELETON];
+    const pools = {
+      1: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.BOAR, ENEMY_IDS.ZOMBIE, ENEMY_IDS.SHAMAN],
+      2: [ENEMY_IDS.ORC_GUARD, ENEMY_IDS.SPIDER, ENEMY_IDS.SUICIDE, ENEMY_IDS.ICE_ELEM, ENEMY_IDS.WATCHER, ENEMY_IDS.DARK_KNIGHT],
+      3: [ENEMY_IDS.NECRO, ENEMY_IDS.CHAOS, ENEMY_IDS.ASSASSIN, ENEMY_IDS.HYDRA, ENEMY_IDS.GHOST]
+    };
+    if (cell.type === 'boss') return [cell.region === 2 ? ENEMY_IDS.FIRE_TITAN : ENEMY_IDS.DARK_KNIGHT];
+    if (cell.type === 'final') return [ENEMY_IDS.DARK_LORD];
+    const pool = pools[cell.region];
+    const cnt = cell.type === 'dungeon' ? 4 : cell.type === 'arena' ? 1 : 3;
+    const wave = [];
+    for (let i = 0; i < cnt; i++) wave.push(pool[randInt(0, pool.length - 1)]);
+    return wave;
+  }
+  function startBattleForCell(cell, opts) {
+    const node = {
+      id: cell.id,
+      region: cell.region,
+      type: cell.type,
+      enemyWave: (opts && opts.wave) || generateEnemyWaveForCell(cell),
+      boss: cell.type === 'boss',
+      final: cell.type === 'final'
+    };
+    startBattle(node);
+    if (opts && opts.skipDeploy) {
+      const b = GameState.currentBattle;
+      const alive = b.units.filter(u => u.isHero);
+      alive.forEach((h, i) => { h.x = i % 2; h.y = Math.floor(i / 2); });
+      beginCombatFromDeploy();
+    }
+  }
+  function applyBattleRewards(cell) {
+    let gMin = 20, gMax = 35, minR = 'common';
+    if (cell.type === 'dungeon') { gMin = 45; gMax = 80; minR = 'rare'; }
+    if (cell.type === 'boss') { gMin = 120; gMax = 160; minR = 'epic'; }
+    if (cell.type === 'final') { gMin = 200; gMax = 300; minR = 'epic'; }
+    const gold = randInt(gMin, gMax);
+    GameState.gold += gold;
+    GameState.stats.goldEarned += gold;
+    const drop = randomItem(cell.region, minR);
+    GameState.inventory.push(drop.id);
+    document.getElementById('vic-gold').textContent = `Получено золота: +${gold} 💰`;
+    const vItems = document.getElementById('vic-items');
+    vItems.innerHTML = `<div class="item-card ${'rarity-' + drop.rarity}">Дроп: ${drop.name}</div>`;
+  }
+  function triggerEvent(cell) {
+    const events = [
+      () => { const g = randInt(20, 40); GameState.gold += g; return { text: `Найдено золото: +${g}`, negative: false }; },
+      () => { GameState.heroes.forEach(h => h.hp = Math.min(h.maxHp, h.hp + 10)); return { text: 'Лечебный источник: все +10HP', negative: false }; },
+      () => { const h = GameState.heroes[randInt(0, GameState.heroes.length - 1)]; h.attack += 1; return { text: `Старый кузнец: ${h.name} +1 атака`, negative: false }; },
+      () => { const h = GameState.heroes[randInt(0, GameState.heroes.length - 1)]; h.maxHp = Math.max(1, h.maxHp - 5); h.hp = Math.min(h.hp, h.maxHp); return { text: `Проклятое место: ${h.name} -5 макс HP`, negative: true }; },
+      () => {
+        if (GameState.gold >= 30) {
+          if (confirm('Беженцы просят 30 золота за благословение опыта. Отдать?')) {
+            GameState.gold -= 30;
+            GameState.heroes.forEach(h => h.xp += 100);
+            return { text: 'Вы помогли беженцам: +100 опыта всем', negative: false };
+          }
+        }
+        return { text: 'Вы отказали беженцам.', negative: false };
+      },
+      () => { const it = randomItem(cell.region, 'common'); GameState.inventory.push(it.id); return { text: `Тайный склад: найден ${it.name}`, negative: false }; },
+      () => { GameState.hardFlags.skipDeployNextBattle = true; return { text: 'Туман войны: следующий бой без расстановки', negative: true }; },
+      () => { const h = GameState.heroes[randInt(0, GameState.heroes.length - 1)]; h.armor += 2; return { text: `Благословение: ${h.name} +2 брони`, negative: false }; },
+      () => { const wave = [ENEMY_IDS.SKELETON, ENEMY_IDS.BOAR, ENEMY_IDS.GOBLIN_ARCHER]; startBattleForCell(cell, { wave, skipDeploy: true }); return { text: 'Засада! Начинается мини-бой.', negative: false, immediate: true }; },
+      () => { const it = randomItem(cell.region, 'rare'); GameState.inventory.push(it.id); return { text: `Торговец предлагает обмен: получен ${it.name}`, negative: false }; }
+    ];
+    const out = events[randInt(0, events.length - 1)]();
+    GameState.pendingNegativeEvent = out.negative ? cell.id : null;
+    if (!out.immediate) alert(out.text);
+    if (out.negative && window.ysdk) {
+      if (confirm('🎲 Судьба даёт второй шанс (реклама)?')) showRewardedAd(() => { GameState.pendingNegativeEvent = null; triggerEvent(cell); });
+    }
+    cell.completed = true;
+    saveGame();
+  }
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById('main-menu').classList.add('hidden');
+    document.getElementById('hud-top').classList.toggle('hidden', name === 'menu');
+    if (name === 'menu') document.getElementById('main-menu').classList.remove('hidden');
     if (name === 'map') document.getElementById('map-screen').classList.remove('hidden');
     if (name === 'city') document.getElementById('city-screen').classList.remove('hidden');
     if (name === 'battle') document.getElementById('battle-screen').classList.remove('hidden');
@@ -1484,37 +1725,116 @@
   function renderMap() {
     const root = document.getElementById('map-nodes');
     root.innerHTML = '';
-    const at = GameState.mapNodeId || 'r1n1';
-    GameState.worldMap.forEach(node => {
+    GameState.mapGrid.forEach(node => {
       const el = document.createElement('div');
       el.className = 'map-node';
-      const unlocked = node.id === 'r1n1' || GameState.worldMap.some(n => n.completed && n.connections && n.connections.includes(node.id));
+      const unlocked = node.region <= GameState.regionUnlocked && (node.type !== 'final' || GameState.defeatedBosses >= 3);
       if (!unlocked) el.classList.add('locked');
       if (node.completed) el.classList.add('done');
-      el.innerHTML = `<div>${node.type === 'city' ? '🏙️' : '⚔️'}</div><div>${node.name}</div><small>Р${node.region}</small>`;
+      if (node.x === GameState.playerPos.x && node.y === GameState.playerPos.y) el.classList.add('current');
+      el.innerHTML = `<div>${node.emoji}</div><small>(${node.x},${node.y})</small>`;
       el.onclick = () => {
         if (!unlocked) return;
+        const cur = getCurrentCell();
+        if (!cellNeighbors(cur, node) && !(node.x === cur.x && node.y === cur.y)) return;
+        GameState.playerPos = { x: node.x, y: node.y };
+        node.visited = true;
+        GameState.turn += 1;
         GameState.region = node.region;
         if (node.type === 'city') enterCity(node);
-        else if (!node.completed) startBattle(node);
+        else if (node.type === 'event' && !node.completed) triggerEvent(node);
+        else if (node.type === 'wanderer' && !GameState.wandererUsedByRegion[node.region]) {
+          if (window.ysdk && confirm('Посмотреть товары странника за рекламу?')) {
+            showRewardedAd(() => {
+              GameState.wandererUsedByRegion[node.region] = true;
+              GameState.shopStock = [randomItem(node.region, 'epic'), randomItem(node.region, 'epic'), randomItem(node.region, 'epic')];
+              enterCity(node, true);
+            });
+          } else {
+            alert('Странник ушёл.');
+            GameState.wandererUsedByRegion[node.region] = true;
+          }
+        }
+        else if (node.type === 'arena' && !GameState.arenaDoneByRegion[node.region]) {
+          if (window.ysdk && confirm('Войти в Арену теней за рекламу?')) {
+            showRewardedAd(() => {
+              GameState.arenaDoneByRegion[node.region] = true;
+              startBattleForCell(node, { wave: [ENEMY_IDS.CHAOS], skipDeploy: false });
+            });
+          }
+        }
+        else if (['mission', 'dungeon', 'boss', 'final'].includes(node.type) && !node.completed) {
+          startBattleForCell(node, { skipDeploy: GameState.hardFlags.skipDeployNextBattle });
+          GameState.hardFlags.skipDeployNextBattle = false;
+        }
+        renderMap();
       };
       root.appendChild(el);
     });
   }
-  function enterCity(node) {
+  function enterCity(node, strangerOnly) {
     GameState.screen = 'city';
+    GameState.activeCityNode = node.id;
     document.getElementById('city-gold').textContent = GameState.gold;
+    if (!strangerOnly) GameState.shopStock = generateShopStock(node.region);
+    GameState.cityState = { adUpgradeUsed: false, secretRevealed: false, secretItemId: randomItem(node.region, 'epic').id };
     const shop = document.getElementById('shop-list');
-    shop.innerHTML = SHOP_ITEMS.map(it => `<div class="panel"><b>${it.name}</b> — ${it.price}💰 <button class="btn" data-buy="${it.id}">Купить</button></div>`).join('');
+    const secretCard = window.ysdk ? `<div class="item-card"><b>❓ Тайный товар</b><br><button class="btn" id="btn-secret">Открыть за рекламу</button></div>` : '';
+    shop.innerHTML = GameState.shopStock.map(it => `<div class="item-card rarity-${it.rarity}"><b>${it.name}</b><br>${it.price}💰 <button class="btn" data-buy="${it.id}">Купить</button></div>`).join('') + secretCard;
     shop.querySelectorAll('[data-buy]').forEach(btn => {
       btn.onclick = () => {
-        const it = SHOP_ITEMS.find(x => x.id === btn.getAttribute('data-buy'));
+        const it = itemById(btn.getAttribute('data-buy'));
         if (!it || GameState.gold < it.price) return;
         GameState.gold -= it.price;
         GameState.inventory.push(it.id);
         saveGame();
         document.getElementById('city-gold').textContent = GameState.gold;
       };
+    });
+    const bs = document.getElementById('btn-secret');
+    if (bs) bs.onclick = () => showRewardedAd(() => {
+      GameState.cityState.secretRevealed = true;
+      const item = itemById(GameState.cityState.secretItemId);
+      const price = Math.floor(item.price * 0.7);
+      shop.insertAdjacentHTML('beforeend', `<div class="item-card rarity-epic"><b>${item.name}</b><br>Скидка: ${price}💰 <button class="btn" id="buy-secret">Купить</button></div>`);
+      const b = document.getElementById('buy-secret');
+      if (b) b.onclick = () => { if (GameState.gold >= price) { GameState.gold -= price; GameState.inventory.push(item.id); saveGame(); enterCity(node, strangerOnly); } };
+    });
+    document.getElementById('city-actions').innerHTML = `
+      <button class="btn" id="btn-heal-full">Полное лечение (60💰)</button>
+      <button class="btn" id="btn-reroll-shop">Обновить ассортимент (20💰)</button>
+      <button class="btn" id="btn-alchemy">Алхимик: улучшить предмет</button>
+      ${window.ysdk ? '<button class="btn" id="btn-oracle">🔮 Узнать будущее [реклама]</button>' : ''}
+    `;
+    const heal = document.getElementById('btn-heal-full');
+    if (heal) heal.onclick = () => { if (GameState.gold >= 60) { GameState.gold -= 60; GameState.heroes.forEach(h => h.hp = h.maxHp); saveGame(); enterCity(node, strangerOnly); } };
+    const rer = document.getElementById('btn-reroll-shop');
+    if (rer) rer.onclick = () => { if (GameState.gold >= 20) { GameState.gold -= 20; GameState.shopStock = generateShopStock(node.region); saveGame(); enterCity(node, strangerOnly); } };
+    const al = document.getElementById('btn-alchemy');
+    if (al) al.onclick = () => {
+      const inv = GameState.inventory.map(itemById).filter(Boolean);
+      const base = inv.find(i => i.rarity === 'common') || inv.find(i => i.rarity === 'rare');
+      if (!base) { alert('Нет подходящего предмета.'); return; }
+      const cost = base.rarity === 'common' ? 100 : 200;
+      const doUpgrade = () => {
+        const next = base.rarity === 'common' ? 'rare' : 'epic';
+        const cand = ITEM_POOL.find(i => i.slot === base.slot && i.rarity === next);
+        if (!cand) return;
+        const idx = GameState.inventory.indexOf(base.id);
+        if (idx >= 0) GameState.inventory[idx] = cand.id;
+        saveGame();
+        enterCity(node, strangerOnly);
+      };
+      if (GameState.gold >= cost && confirm(`Улучшить ${base.name} за ${cost}💰?`)) { GameState.gold -= cost; doUpgrade(); return; }
+      if (window.ysdk && !GameState.cityState.adUpgradeUsed) showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
+    };
+    const oracle = document.getElementById('btn-oracle');
+    if (oracle) oracle.onclick = () => showRewardedAd(() => {
+      const cur = getCurrentCell();
+      const next = GameState.mapGrid.find(c => c.region <= GameState.regionUnlocked && !c.completed && ['mission', 'dungeon', 'boss', 'final'].includes(c.type) && cellNeighbors(cur, c));
+      if (!next) { alert('Ближайших боёв не найдено.'); return; }
+      const wave = generateEnemyWaveForCell(next).map(id => enemyDef(id).emoji).join(' ');
+      alert(`Оракул видит бой: ${wave}`);
     });
     showScreen('city');
   }
@@ -1566,14 +1886,7 @@
     modal.classList.remove('hidden');
   }
 
-  function showRewardAd(cb) {
-    if (window.ysdk && window.ysdk.adv) {
-      window.ysdk.adv.showRewardedVideo({ onRewarded: cb, onClose: () => {} });
-    } else {
-      alert('Реклама (демо): награда выдана.');
-      cb();
-    }
-  }
+  function showRewardAd(cb) { showRewardedAd(cb); }
 
   //══════════ INPUT (battle) ══════════
   canvas.addEventListener('mousemove', e => {
@@ -1605,7 +1918,8 @@
 
   //══════════ INIT ══════════
   function init() {
-    if (!loadGame()) {
+    const hasSave = loadGame();
+    if (!hasSave) {
       initHeroesFromTemplate();
       buildWorldMap();
       GameState.gold = 150;
@@ -1614,38 +1928,90 @@
       saveGame();
     }
     GameState.inventory = GameState.inventory || [];
-    showScreen('map');
-    renderMap();
+    showScreen('menu');
     requestAnimationFrame(loop);
+    const mk = () => {
+      initHeroesFromTemplate();
+      buildWorldMap();
+      GameState.gold = 150;
+      GameState.turn = 1;
+      GameState.inventory = [];
+      GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
+      GameState.difficulty = document.getElementById('difficulty-select').value;
+      saveGame();
+      showScreen('map');
+      renderMap();
+    };
+    document.getElementById('btn-new-game').onclick = mk;
+    document.getElementById('btn-continue').onclick = () => {
+      if (!localStorage.getItem(SAVE_KEY) && !localStorage.getItem('save')) { alert('Сохранение не найдено.'); return; }
+      loadGame();
+      showScreen('map');
+      renderMap();
+    };
     document.getElementById('btn-inventory-map').onclick = () => {
       document.getElementById('inventory-list').innerHTML = (GameState.inventory || []).length
-        ? GameState.inventory.map(id => `<div>${id}</div>`).join('')
+        ? GameState.inventory.map(id => {
+          const it = itemById(id);
+          return `<div class="rarity-${it?.rarity || 'common'}">${it ? it.name : id}</div>`;
+        }).join('')
         : '<div>Пусто. Купите зелья в городе.</div>';
       showScreen('inventory');
     };
     document.getElementById('btn-close-inv').onclick = () => { showScreen('map'); renderMap(); };
-    document.getElementById('btn-leave-city').onclick = () => { showScreen('map'); renderMap(); };
+    document.getElementById('btn-leave-city').onclick = () => { saveGame(); showScreen('map'); renderMap(); };
     document.getElementById('btn-vic-continue').onclick = () => {
       document.getElementById('victory-screen').classList.add('hidden');
       showScreen('map');
       renderMap();
+      const expensive = GameState.shopStock.find(i => i.price > GameState.gold && i.price <= GameState.gold + 50);
+      if (expensive && window.ysdk && Date.now() - (GameState.adMeta.lastBonusGoldAt || 0) > BONUS_GOLD_CD_MS) {
+        if (confirm('💰 Гонец нашёл клад! +50 золота за рекламу?')) {
+          showRewardedAd(() => {
+            GameState.gold += 50;
+            GameState.adMeta.lastBonusGoldAt = Date.now();
+            saveGame();
+            renderMap();
+          });
+        }
+      }
     };
     document.getElementById('btn-ad-revive').onclick = () => {
-      showRewardAd(() => {
-        GameState.heroes.forEach(h => { h.hp = Math.max(1, Math.floor(h.maxHp * 0.5)); });
-        GameState.gold += 50;
-        GameState.currentBattle = null;
-        showScreen('map');
-        renderMap();
-        saveGame();
+      if (GameState.battleReviveUsed || !GameState.currentBattle) return;
+      showRewardedAd(() => {
+        GameState.battleReviveUsed = true;
+        GameState.heroes.forEach(h => { h.hp = Math.max(1, Math.floor(h.maxHp * 0.3)); });
+        const b = GameState.currentBattle;
+        b.units.forEach(u => { if (u.isHero) { const h = GameState.heroes.find(x => x.id === u.heroId); u.hp = h.hp; } });
+        showScreen('battle');
+        updateBattleUI();
       });
     };
-    document.getElementById('btn-go-title').onclick = () => { GameState.currentBattle = null; showScreen('map'); renderMap(); };
+    document.getElementById('btn-load-last').onclick = () => {
+      if (GameState.lastSafeSave) {
+        Object.assign(GameState, deepClone(GameState.lastSafeSave));
+        GameState.currentBattle = null;
+        saveGame();
+        showScreen('map');
+        renderMap();
+      }
+    };
+    document.getElementById('btn-go-title').onclick = () => {
+      localStorage.removeItem(SAVE_KEY);
+      localStorage.removeItem('save');
+      mk();
+    };
     document.getElementById('btn-ending-ok').onclick = () => { showScreen('map'); renderMap(); };
+    if (!window.ysdk) {
+      const adBtn = document.getElementById('btn-ad-revive');
+      if (adBtn) adBtn.classList.add('hidden');
+    }
   }
-  if (typeof YaGames !== 'undefined') {
-    YaGames.init().then(ysdk => { window.ysdk = ysdk; });
-  }
+  if (typeof YaGames !== 'undefined') YaGames.init().then(sdk => {
+    window.ysdk = sdk;
+    const adBtn = document.getElementById('btn-ad-revive');
+    if (adBtn) adBtn.classList.remove('hidden');
+  });
   init();
   </script>
 </body>
