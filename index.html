@@ -98,10 +98,10 @@
       background: #111;
       cursor: crosshair;
       image-rendering: pixelated;
-      /* Square canvas: height drives size, width auto via aspect-ratio */
+      /* 12x8 grid: height drives size, width auto via aspect-ratio 3/2 */
       height: 100%;
       width: auto;
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 3 / 2;
       max-width: 100%;
     }
     #battle-log {
@@ -854,7 +854,7 @@
       <div class="battle-layout">
         <div class="battle-left" id="battle-left-heroes"></div>
         <div id="battle-wrap">
-          <canvas id="battle-canvas" width="512" height="512"></canvas>
+          <canvas id="battle-canvas" width="768" height="512"></canvas>
         </div>
         <div id="ui-overlay">
           <div class="br-section">
@@ -1007,7 +1007,7 @@
 
   <script>
   //══════════ SECTION 1: CONSTANTS ══════════
-  const CELL = 64, GRID = 8, CANVAS_SZ = 512;
+  const CELL = 64, GRID_W = 12, GRID_H = 8, CANVAS_W = CELL * 12, CANVAS_H = CELL * 8;
   const COLS_LEFT = 2, COLS_RIGHT = 2;
   const TILE = { GROUND: 0, FOREST: 1, MOUNTAIN: 2, WATER: 3, FORT: 4, FIRE: 5 };
   const TILE_EMOJI = { [TILE.GROUND]: '🟫', [TILE.FOREST]: '🌲', [TILE.MOUNTAIN]: '⛰️', [TILE.WATER]: '💧', [TILE.FORT]: '🏰', [TILE.FIRE]: '🔥' };
@@ -1218,7 +1218,7 @@
     return false;
   }
   function randInt(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
-  function inBounds(x, y) { return x >= 0 && x < GRID && y >= 0 && y < GRID; }
+  function inBounds(x, y) { return x >= 0 && x < GRID_W && y >= 0 && y < GRID_H; }
 
   //══════════ A* (обязательная короткая функция) ══════════
   function astar(grid, start, end, passable, costFn) {
@@ -1260,27 +1260,27 @@
 
   //══════════ Map generation (cellular + clusters + passage) ══════════
   function carvePassage(grid) {
-    for (let y = 0; y < GRID; y++) {
+    for (let y = 0; y < GRID_H; y++) {
       grid[y][1] = TILE.GROUND;
-      grid[y][GRID - 2] = TILE.GROUND;
+      grid[y][GRID_W - 2] = TILE.GROUND;
     }
-    for (let x = 1; x < GRID - 1; x++) grid[Math.floor(GRID / 2)][x] = TILE.GROUND;
+    for (let x = 1; x < GRID_W - 1; x++) grid[Math.floor(GRID_H / 2)][x] = TILE.GROUND;
   }
   function generateBattleGrid(region) {
     const grid = [];
-    for (let y = 0; y < GRID; y++) {
+    for (let y = 0; y < GRID_H; y++) {
       grid[y] = [];
-      for (let x = 0; x < GRID; x++) grid[y][x] = TILE.GROUND;
+      for (let x = 0; x < GRID_W; x++) grid[y][x] = TILE.GROUND;
     }
     const density = 0.35 + region * 0.08;
     let noise = [];
-    for (let y = 0; y < GRID; y++) {
+    for (let y = 0; y < GRID_H; y++) {
       noise[y] = [];
-      for (let x = 0; x < GRID; x++) noise[y][x] = Math.random() < 0.5 ? 1 : 0;
+      for (let x = 0; x < GRID_W; x++) noise[y][x] = Math.random() < 0.5 ? 1 : 0;
     }
     for (let it = 0; it < 3; it++) {
       const n2 = noise.map(row => row.slice());
-      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+      for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
         let s = 0;
         for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
           const nx = x + dx, ny = y + dy;
@@ -1290,12 +1290,12 @@
       }
       noise = n2;
     }
-    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+    for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
       if (noise[y][x] && Math.random() < density) grid[y][x] = TILE.FOREST;
     }
     const clusters = 2 + region;
     for (let c = 0; c < clusters; c++) {
-      const cx = randInt(2, GRID - 3), cy = randInt(1, GRID - 2);
+      const cx = randInt(2, GRID_W - 3), cy = randInt(1, GRID_H - 2);
       const r = randInt(1, 2);
       for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
         if (inBounds(x, y) && Math.random() < 0.6) {
@@ -1304,11 +1304,11 @@
         }
       }
     }
-    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
-      if (x < 2 || x >= GRID - 2) grid[y][x] = grid[y][x] === TILE.MOUNTAIN ? TILE.GROUND : grid[y][x];
+    for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
+      if (x < 2 || x >= GRID_W - 2) grid[y][x] = grid[y][x] === TILE.MOUNTAIN ? TILE.GROUND : grid[y][x];
     }
     carvePassage(grid);
-    if (Math.random() < 0.4) grid[randInt(1, GRID - 2)][randInt(2, GRID - 3)] = TILE.FORT;
+    if (Math.random() < 0.4) grid[randInt(1, GRID_H - 2)][randInt(2, GRID_W - 3)] = TILE.FORT;
     return grid;
   }
 
@@ -1453,12 +1453,12 @@
       let slot = preferredSlots.find(s => isFree(s.x, s.y));
       if (!slot) {
         for (let x = 0; x <= 1 && !slot; x++) {
-          for (let y = 0; y < GRID && !slot; y++) {
+          for (let y = 0; y < GRID_H && !slot; y++) {
             if (isFree(x, y)) slot = { x, y };
           }
         }
       }
-      if (!slot) slot = { x: 0, y: i % GRID };
+      if (!slot) slot = { x: 0, y: i % GRID_H };
       hu.x = slot.x;
       hu.y = slot.y;
       used.add(slot.x + ',' + slot.y);
@@ -1466,19 +1466,19 @@
     // Heroes must exist in battle units immediately (for sidebar + board visibility).
     units.push(...heroes);
     const wave = node.enemyWave || [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON];
-    const rightXs = [GRID - 2, GRID - 1];
+    const rightXs = [GRID_W - 2, GRID_W - 1];
     let ei = 0;
     for (const t of wave) {
       let placed = false;
       for (const rx of rightXs) {
-        for (let y = 0; y < GRID && !placed; y++) {
+        for (let y = 0; y < GRID_H && !placed; y++) {
           if (!tileBlocksMove(grid[y][rx], null) && !units.find(u => u.x === rx && u.y === y)) {
             units.push(spawnEnemy(t, rx, y));
             placed = true;
           }
         }
       }
-      if (!placed) units.push(spawnEnemy(t, GRID - 1, ei % GRID));
+      if (!placed) units.push(spawnEnemy(t, GRID_W - 1, ei % GRID_H));
       ei++;
     }
     GameState.currentBattle = {
@@ -1732,18 +1732,17 @@
     pinchStartZoom: 1
   };
   function clampBattleView() {
-    // World size at current zoom (in canvas internal pixels)
-    const scaled = CANVAS_SZ * BattleView.zoom;
-    if (scaled <= CANVAS_SZ) {
-      // Entire world fits — center it
-      BattleView.offsetX = (CANVAS_SZ - scaled) / 2;
-      BattleView.offsetY = (CANVAS_SZ - scaled) / 2;
+    const scaledW = CANVAS_W * BattleView.zoom;
+    const scaledH = CANVAS_H * BattleView.zoom;
+    if (scaledW <= CANVAS_W) {
+      BattleView.offsetX = (CANVAS_W - scaledW) / 2;
     } else {
-      // World larger than viewport — clamp pan so no dead space
-      const minX = CANVAS_SZ - scaled, maxX = 0;
-      const minY = CANVAS_SZ - scaled, maxY = 0;
-      BattleView.offsetX = Math.min(maxX, Math.max(minX, BattleView.offsetX));
-      BattleView.offsetY = Math.min(maxY, Math.max(minY, BattleView.offsetY));
+      BattleView.offsetX = Math.min(0, Math.max(CANVAS_W - scaledW, BattleView.offsetX));
+    }
+    if (scaledH <= CANVAS_H) {
+      BattleView.offsetY = (CANVAS_H - scaledH) / 2;
+    } else {
+      BattleView.offsetY = Math.min(0, Math.max(CANVAS_H - scaledH, BattleView.offsetY));
     }
   }
   function resetBattleView() {
@@ -1759,8 +1758,8 @@
     const r = canvas.getBoundingClientRect();
     // Canvas is always square (aspect-ratio 1:1), simple linear mapping
     return {
-      x: (clientX - r.left) * (CANVAS_SZ / r.width),
-      y: (clientY - r.top) * (CANVAS_SZ / r.height)
+      x: (clientX - r.left) * (CANVAS_W / r.width),
+      y: (clientY - r.top) * (CANVAS_H / r.height)
     };
   }
   function eventToGrid(clientX, clientY) {
@@ -1825,7 +1824,7 @@
 
   function drawBattle() {
     const b = GameState.currentBattle;
-    ctx.clearRect(0, 0, CANVAS_SZ, CANVAS_SZ);
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     if (!b) return;
     clampBattleView();
     ctx.save();
@@ -1835,7 +1834,7 @@
     const reach = sel && sel.isHero && b.phase === 'combat' && b.mode === 'move' && getActiveUnit() === sel ? floodReachable(b, sel) : null;
     const blind = sel && sel.activeStatuses && sel.activeStatuses.find(s => s.type === STATUS.BLIND);
 
-    for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+    for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
       const px = x * CELL, py = y * CELL;
       const t = b.grid[y][x];
       const tex = TileTextures[t];
@@ -1868,7 +1867,7 @@
     }
 
     if (b.phase === 'combat' && sel && !blind && b.mode === 'attack') {
-      for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+      for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
         const dist = Math.abs(sel.x - x) + Math.abs(sel.y - y);
         if (dist <= sel.range && sel.range > 0) {
           const tgt = unitAt(b, x, y);
@@ -1982,8 +1981,8 @@
   function canvasToScreen(canvasPx_x, canvasPx_y) {
     // Canvas is square with simple linear mapping (aspect-ratio: 1/1)
     const rect = canvas.getBoundingClientRect();
-    const scaleX = rect.width / CANVAS_SZ;
-    const scaleY = rect.height / CANVAS_SZ;
+    const scaleX = rect.width / CANVAS_W;
+    const scaleY = rect.height / CANVAS_H;
     return {
       sx: rect.left + canvasPx_x * scaleX,
       sy: rect.top + canvasPx_y * scaleY
@@ -2045,7 +2044,7 @@
       if (!dl.aiVar.initSummon) {
         dl.aiVar.initSummon = true;
         let cnt = 0;
-        for (let y = 0; y < GRID && cnt < 4; y++) for (let x = GRID - 2; x < GRID && cnt < 4; x++) {
+        for (let y = 0; y < GRID_H && cnt < 4; y++) for (let x = GRID_W - 2; x < GRID_W && cnt < 4; x++) {
           if (enemyPassable(b, x, y, dl) && !unitAt(b, x, y)) { b.units.push(spawnEnemy(ENEMY_IDS.ORC_GUARD, x, y)); cnt++; }
         }
         buildInitiative();
@@ -2379,7 +2378,7 @@
       u.teleportCd = (u.teleportCd || 0) + 1;
       if (u.teleportCd % 2 === 0) {
         for (let t = 0; t < 20; t++) {
-          const x = randInt(0, GRID - 1), y = randInt(0, GRID - 1);
+          const x = randInt(0, GRID_W - 1), y = randInt(0, GRID_W - 1);
           if (enemyPassable(b, x, y, u) && !unitAt(b, x, y)) { u.x = x; u.y = y; break; }
         }
       }
@@ -2397,7 +2396,7 @@
       u.summonCd = (u.summonCd || 0) + 1;
       if (u.summonCd % 4 === 0) {
         for (let k = 0; k < 2; k++) {
-          for (let y = 0; y < GRID; y++) for (let x = GRID - 2; x < GRID; x++) {
+          for (let y = 0; y < GRID_H; y++) for (let x = GRID_W - 2; x < GRID_W; x++) {
             if (enemyPassable(b, x, y, u) && !unitAt(b, x, y)) { b.units.push(spawnEnemy(ENEMY_IDS.SKELETON, x, y)); break; }
           }
         }
@@ -2416,7 +2415,7 @@
     const b = GameState.currentBattle;
     const nFire = u.hp < u.maxHp * 0.5 ? 4 : 2;
     for (let k = 0; k < nFire; k++) {
-      const x = randInt(0, GRID - 1), y = randInt(0, GRID - 1);
+      const x = randInt(0, GRID_W - 1), y = randInt(0, GRID_W - 1);
       b.grid[y][x] = TILE.FIRE;
     }
     u.bossVar.aoeCounter = (u.bossVar.aoeCounter || 0) + 1;
@@ -3573,8 +3572,8 @@
       const dx = e.clientX - BattleView.lastX;
       const dy = e.clientY - BattleView.lastY;
       const r = canvas.getBoundingClientRect();
-      BattleView.offsetX += dx * (CANVAS_SZ / r.width);
-      BattleView.offsetY += dy * (CANVAS_SZ / r.height);
+      BattleView.offsetX += dx * (CANVAS_W / r.width);
+      BattleView.offsetY += dy * (CANVAS_H / r.height);
       BattleView.lastX = e.clientX;
       BattleView.lastY = e.clientY;
       if (Math.abs(dx) + Math.abs(dy) > 1) BattleView.moved = true;
@@ -3716,8 +3715,8 @@
       const dx = t.clientX - BattleView.lastX;
       const dy = t.clientY - BattleView.lastY;
       const r = canvas.getBoundingClientRect();
-      BattleView.offsetX += dx * (CANVAS_SZ / r.width);
-      BattleView.offsetY += dy * (CANVAS_SZ / r.height);
+      BattleView.offsetX += dx * (CANVAS_W / r.width);
+      BattleView.offsetY += dy * (CANVAS_H / r.height);
       BattleView.lastX = t.clientX;
       BattleView.lastY = t.clientY;
       if (Math.abs(t.clientX - touchState.startX) + Math.abs(t.clientY - touchState.startY) > 6) BattleView.moved = true;
