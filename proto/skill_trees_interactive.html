@@ -1,0 +1,275 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Courier New',monospace}
+.wrap{background:#0d0d1a;border-radius:12px;border:1px solid #2a2a4a;overflow:hidden}
+.topbar{background:#1a1a2e;border-bottom:1px solid #2a2a4a;padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{color:#f0a500;font-size:12px;letter-spacing:1px}
+.hero-tabs{display:flex;gap:6px}
+.htab{padding:5px 14px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid #2a2a4a;color:#8888aa;font-family:'Courier New',monospace;background:#0d0d1a}
+.htab.active{color:#f0a500;border-color:#f0a500;background:#1a1000}
+.pts{font-size:11px;color:#2ecc71}
+
+.body{display:grid;grid-template-columns:1fr 220px;min-height:500px}
+.tree-area{padding:16px;overflow:auto}
+.branch-title{font-size:10px;letter-spacing:2px;margin-bottom:10px;text-align:center}
+.branches{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.branch{display:flex;flex-direction:column;align-items:center;gap:0}
+.branch-header{font-size:10px;letter-spacing:1px;padding:4px 12px;border-radius:4px;margin-bottom:8px;text-align:center;width:100%}
+.bh-red{background:#1a0808;color:#e74c3c;border:1px solid #e74c3c}
+.bh-blue{background:#060e1a;color:#4a9eff;border:1px solid #4a9eff}
+.bh-gold{background:#1a1000;color:#f0a500;border:1px solid #f0a500}
+.bh-green{background:#081408;color:#2ecc71;border:1px solid #2ecc71}
+.bh-purple{background:#0e0814;color:#9b59b6;border:1px solid #9b59b6}
+.bh-teal{background:#051210;color:#1abc9c;border:1px solid #1abc9c}
+.bh-orange{background:#150a00;color:#e67e22;border:1px solid #e67e22}
+.bh-pink{background:#140610;color:#e91e8c;border:1px solid #e91e8c}
+.bh-gray{background:#111120;color:#aaaacc;border:1px solid #555577}
+
+.skill{width:88px;height:72px;background:#111128;border:1px solid #2a2a4a;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;margin-bottom:0}
+.skill:hover{border-color:#888}
+.skill.unlocked{border-color:#2ecc71;background:#081408}
+.skill.active-sel{border-color:#f0a500;background:#1a1000}
+.skill.locked{opacity:0.35;cursor:not-allowed}
+.skill.cross{border-color:#9b59b6;background:#0e0814}
+.skill-icon{font-size:18px;margin-bottom:2px}
+.skill-name{font-size:8px;color:#e8e8f0;text-align:center;line-height:1.2;padding:0 3px}
+.skill-pts{font-size:8px;color:#8888aa;margin-top:2px}
+.skill-pts span{color:#2ecc71}
+.connector{width:2px;height:12px;background:#2a2a4a;margin:0 auto}
+.connector.lit{background:#2ecc71}
+.connector-h{height:2px;background:#2a2a4a;align-self:center}
+.cross-badge{position:absolute;top:-6px;right:-6px;font-size:7px;background:#9b59b6;color:#fff;padding:1px 4px;border-radius:3px}
+.lvl-req{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-size:7px;background:#1a1a2e;color:#8888aa;padding:1px 4px;border-radius:2px;white-space:nowrap}
+
+.info-panel{background:#111128;border-left:1px solid #2a2a4a;padding:12px;display:flex;flex-direction:column;gap:8px}
+.info-hero{text-align:center;padding-bottom:10px;border-bottom:1px solid #2a2a4a}
+.info-hero-icon{font-size:32px;margin-bottom:4px}
+.info-hero-name{font-size:14px;color:#e8e8f0}
+.info-hero-class{font-size:10px;color:#8888aa}
+.info-stats{background:#0d0d1a;border-radius:6px;padding:8px}
+.stat-r{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px}
+.stat-r span:first-child{color:#8888aa}
+.stat-r span:last-child{color:#e8e8f0}
+.stat-r .bonus{color:#2ecc71}
+.info-skill{background:#0d0d1a;border-radius:6px;padding:10px;flex:1}
+.info-skill-icon{font-size:24px;margin-bottom:4px}
+.info-skill-name{font-size:12px;color:#e8e8f0;margin-bottom:2px}
+.info-skill-branch{font-size:9px;margin-bottom:6px}
+.info-skill-desc{font-size:10px;color:#8888aa;line-height:1.5;margin-bottom:8px}
+.info-skill-effect{font-size:10px;color:#2ecc71;margin-bottom:8px}
+.info-skill-req{font-size:9px;color:#8888aa;margin-bottom:8px}
+.info-btns{display:flex;flex-direction:column;gap:4px}
+.btn{background:#1a1a2e;border:1px solid #4a9eff;color:#4a9eff;padding:5px 12px;border-radius:5px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace;text-align:center}
+.btn-gold{border-color:#f0a500;color:#f0a500}
+.btn-green{border-color:#2ecc71;color:#2ecc71}
+.btn-dim{border-color:#2a2a4a;color:#555577;cursor:not-allowed}
+.pts-left{font-size:11px;color:#2ecc71;text-align:center;padding:4px;background:#081408;border-radius:4px}
+.cross-note{font-size:9px;color:#9b59b6;line-height:1.4;padding:6px 8px;background:#0e0814;border-radius:4px;border:1px solid #9b59b6}
+</style>
+
+<div class="wrap">
+<div class="topbar">
+  <span class="topbar-title">⚔ РАЗВИТИЕ ГЕРОЕВ</span>
+  <div class="hero-tabs">
+    <div class="htab active" onclick="showHero('warrior',this)">⚔ Гарет</div>
+    <div class="htab" onclick="showHero('archer',this)">🏹 Алира</div>
+    <div class="htab" onclick="showHero('mage',this)">🔮 Сэрис</div>
+  </div>
+  <span class="pts">Очки: <span id="pts-display">3</span></span>
+</div>
+
+<div class="body">
+<div class="tree-area" id="tree-area"></div>
+<div class="info-panel">
+  <div class="info-hero">
+    <div class="info-hero-icon" id="ph-icon">⚔</div>
+    <div class="info-hero-name" id="ph-name">Гарет</div>
+    <div class="info-hero-class" id="ph-class">Воин · Уровень 4</div>
+  </div>
+  <div class="info-stats" id="ph-stats">
+    <div class="stat-r"><span>Атака</span><span>8 <span class="bonus">+3</span></span></div>
+    <div class="stat-r"><span>Броня</span><span>5 <span class="bonus">+2</span></span></div>
+    <div class="stat-r"><span>HP макс</span><span>40 <span class="bonus">+5</span></span></div>
+    <div class="stat-r"><span>Скорость</span><span>10</span></div>
+    <div class="stat-r"><span>Крит шанс</span><span class="bonus">15%</span></div>
+  </div>
+  <div class="pts-left" id="pts-left">Очков прокачки: 3</div>
+  <div class="info-skill" id="skill-detail">
+    <div style="color:#555577;font-size:10px;line-height:1.6">Нажми на умение чтобы увидеть описание.<br><br>🟢 Открыто<br>⬛ Доступно<br>🔒 Требует уровень<br>🟣 Перекрёстное умение</div>
+  </div>
+  <div class="cross-note">🟣 Перекрёстные умения доступны двум героям и открываются при прокачке обоих</div>
+</div>
+</div>
+</div>
+
+<script>
+const HEROES = {
+  warrior: {
+    icon:'⚔', name:'Гарет', cls:'Воин · Уровень 4',
+    stats:[['Атака','8 <span class="bonus">+3</span>'],['Броня','5 <span class="bonus">+2</span>'],['HP макс','40 <span class="bonus">+5</span>'],['Скорость','10'],['Крит шанс','<span class="bonus">15%</span>']],
+    branches:[
+      {name:'ЗАЩИТНИК', color:'bh-blue', skills:[
+        {id:'w1',icon:'🛡',name:'Щитовой блок',pts:'1/3',desc:'Пассивный шанс заблокировать удар.',effect:'+10/20/30% шанс блока',req:null,unlocked:true},
+        {id:'w2',icon:'💢',name:'Вызов огня',pts:'0/1',desc:'Все враги атакуют тебя 1 ход. Урон -50%.',effect:'Таунт · КД 4',req:'Ур.2',unlocked:false},
+        {id:'w3',icon:'🔰',name:'Железная кожа',pts:'0/3',desc:'Пассивный бонус к броне.',effect:'+1/2/3 броня',req:'Ур.4 · Щитовой блок 2',unlocked:false,locked:true},
+        {id:'w4',icon:'💎',name:'Несокрушимость',pts:'0/1',desc:'Раз в бой: 3 хода полного иммунитета к урону.',effect:'Иммунитет 3 хода · КД 6',req:'Ур.6 · Железная кожа 3',unlocked:false,locked:true},
+      ]},
+      {name:'БЕРСЕРК', color:'bh-red', skills:[
+        {id:'w5',icon:'⚡',name:'Ярость',pts:'2/3',desc:'Пассивно: при получении урона атака растёт.',effect:'+1/2/3 атк за каждый полученный удар',req:null,unlocked:true},
+        {id:'w6',icon:'🔥',name:'Берсерк-режим',pts:'0/1',desc:'+100% атака, -30% броня на 3 хода.',effect:'Берсерк · КД 5',req:'Ур.3',unlocked:false},
+        {id:'w7',icon:'💥',name:'Пробивание',pts:'0/3',desc:'Атаки игнорируют часть брони врага.',effect:'Игнор 1/2/3 брони',req:'Ур.4 · Ярость 2',unlocked:false,locked:true},
+        {id:'w8',icon:'☠',name:'Смертельный удар',pts:'0/1',desc:'15% шанс мгновенно убить врага с HP<30%.',effect:'Добивание · пасс.',req:'Ур.7 · Пробивание 2',unlocked:false,locked:true},
+      ]},
+      {name:'ЛИДЕР', color:'bh-gold', skills:[
+        {id:'w9',icon:'🌟',name:'Боевой клич',pts:'1/1',desc:'Все союзники +2 атк на 2 хода.',effect:'+2 атк союзникам · КД 4',req:null,unlocked:true},
+        {id:'w10',icon:'🤝',name:'Аура стойкости',pts:'0/3',desc:'Соседние союзники получают пассивный бонус к броне.',effect:'+1/2/3 брони союзникам в радиусе 2',req:'Ур.3',unlocked:false},
+        {id:'w11',icon:'⚔',name:'Тактик',pts:'0/1',desc:'После победы в бою весь отряд +5% опыта.',effect:'+5% опыт отряду',req:'Ур.5 · Аура 1',unlocked:false,locked:true},
+        {id:'w12',icon:'👑',name:'Вдохновение',pts:'0/1',desc:'Раз в бой: воскресить павшего союзника с 1HP.',effect:'Воскрешение · КД бой',req:'Ур.7 · Тактик',unlocked:false,locked:true,cross:'Перекрёстное: Алира Ур.5'},
+      ]},
+    ]
+  },
+  archer: {
+    icon:'🏹', name:'Алира', cls:'Лучник · Уровень 3',
+    stats:[['Атака','10 <span class="bonus">+2</span>'],['Дальность','4 <span class="bonus">+1</span>'],['HP макс','25'],['Скорость','12 <span class="bonus">+1</span>'],['Крит урон','<span class="bonus">×1.5</span>']],
+    branches:[
+      {name:'МЕТКОСТЬ', color:'bh-green', skills:[
+        {id:'a1',icon:'🎯',name:'Меткий глаз',pts:'2/3',desc:'Первая атака за ход наносит больше урона.',effect:'+20/35/50% урон первой атаки',req:null,unlocked:true},
+        {id:'a2',icon:'🏹',name:'Двойной выстрел',pts:'1/1',desc:'Атаковать дважды за 1 действие.',effect:'2 атаки · КД 2',req:'Ур.2',unlocked:true},
+        {id:'a3',icon:'🔍',name:'Слабое место',pts:'0/3',desc:'Шанс удвоить урон по уязвимому месту.',effect:'Крит 10/20/30%',req:'Ур.4 · Меткий глаз 2',unlocked:false,locked:true},
+        {id:'a4',icon:'💀',name:'Смертельная точность',pts:'0/1',desc:'Гарантированный крит раз в 3 хода.',effect:'Авто-крит каждые 3 хода',req:'Ур.6 · Слабое место 3',unlocked:false,locked:true},
+      ]},
+      {name:'СКОРОСТЬ', color:'bh-teal', skills:[
+        {id:'a5',icon:'💨',name:'Стремительность',pts:'1/3',desc:'Пассивный бонус к движению.',effect:'+1/1/2 клетки движения',req:null,unlocked:true},
+        {id:'a6',icon:'🌀',name:'Перекат',pts:'0/1',desc:'После атаки: переместиться на 2 клетки бесплатно.',effect:'Откат после атаки',req:'Ур.3',unlocked:false},
+        {id:'a7',icon:'⚡',name:'Молниеносность',pts:'0/3',desc:'Бонус к инициативе — ходишь раньше.',effect:'+2/4/6 инициативы',req:'Ур.4 · Стремительность 2',unlocked:false,locked:true},
+        {id:'a8',icon:'🌪',name:'Танец стрел',pts:'0/1',desc:'3 атаки по 3 разным целям за 1 ход.',effect:'3 цели · КД 5',req:'Ур.7 · Молниеносность',unlocked:false,locked:true},
+      ]},
+      {name:'ЛОВУШКИ', color:'bh-orange', skills:[
+        {id:'a9',icon:'🕸',name:'Паутина',pts:'0/3',desc:'Поставить ловушку: враг встал — пропускает ход.',effect:'Ловушка · 1/2/3 за бой',req:null,unlocked:false},
+        {id:'a10',icon:'💣',name:'Мина',pts:'0/1',desc:'Ловушка взрывается — урон 15 по площади.',effect:'AoE 15 урона · КД 3',req:'Ур.3 · Паутина 1',unlocked:false,locked:true},
+        {id:'a11',icon:'🔮',name:'Магическая ловушка',pts:'0/1',desc:'Ловушка накладывает случайный отрицательный статус.',effect:'Случайный дебафф',req:'Ур.5 · Паутина 2',unlocked:false,locked:true,cross:'Перекрёстное: Сэрис Ур.4'},
+        {id:'a12',icon:'🌧',name:'Дождь стрел',pts:'0/1',desc:'Урон всем врагам в зоне 3×3.',effect:'AoE 8 урона · КД 5',req:'Ур.6 · Мина',unlocked:false,locked:true},
+      ]},
+    ]
+  },
+  mage: {
+    icon:'🔮', name:'Сэрис', cls:'Маг · Уровень 3',
+    stats:[['Атака заклин.','12 <span class="bonus">+4</span>'],['Мана макс','10 <span class="bonus">+2</span>'],['HP макс','20'],['Скорость','10'],['AoE радиус','<span class="bonus">+1</span>']],
+    branches:[
+      {name:'РАЗРУШЕНИЕ', color:'bh-red', skills:[
+        {id:'m1',icon:'🔥',name:'Огненный шар',pts:'2/3',desc:'Урон цели и соседям.',effect:'15/20/25 урона · AoE',req:null,unlocked:true},
+        {id:'m2',icon:'☄',name:'Метеорит',pts:'0/1',desc:'Мощный AoE в зоне 2×2.',effect:'30 урона · 8 маны · КД 6',req:'Ур.3',unlocked:false},
+        {id:'m3',icon:'💥',name:'Усиление заклятий',pts:'0/3',desc:'Все заклинания наносят больше урона.',effect:'+2/4/6 к урону заклинаний',req:'Ур.4 · Огн.шар 2',unlocked:false,locked:true},
+        {id:'m4',icon:'🌋',name:'Армагеддон',pts:'0/1',desc:'Урон ВСЕМ врагам на поле — один раз за бой.',effect:'20 урона всем · 1 раз/бой',req:'Ур.7 · Усиление 3',unlocked:false,locked:true},
+      ]},
+      {name:'КОНТРОЛЬ', color:'bh-purple', skills:[
+        {id:'m5',icon:'🧊',name:'Заморозка',pts:'1/3',desc:'Цель пропускает ход.',effect:'Пропуск 1/1/2 хода · 4 маны',req:null,unlocked:true},
+        {id:'m6',icon:'😱',name:'Страх',pts:'0/1',desc:'Враг убегает от героев 1-2 хода.',effect:'Паника · 3 маны · КД 4',req:'Ур.3',unlocked:false},
+        {id:'m7',icon:'🌀',name:'Оглушение',pts:'0/3',desc:'Атака накладывает оглушение.',effect:'Оглушение 1 хода пасс.',req:'Ур.4 · Заморозка 2',unlocked:false,locked:true},
+        {id:'m8',icon:'🕳',name:'Чёрная дыра',pts:'0/1',desc:'Притягивает всех врагов к центру на 1 клетку.',effect:'Притяжение · 10 маны · КД 5',req:'Ур.6 · Оглушение',unlocked:false,locked:true},
+      ]},
+      {name:'МИСТИКА', color:'bh-pink', skills:[
+        {id:'m9',icon:'✨',name:'Мистический щит',pts:'1/3',desc:'Поглощает первые N единиц урона за бой.',effect:'Щит 3/5/8 HP',req:null,unlocked:true},
+        {id:'m10',icon:'💊',name:'Исцеление',pts:'0/3',desc:'Восстановить HP союзнику.',effect:'Лечение 8/12/16 HP · 5 маны',req:'Ур.3',unlocked:false},
+        {id:'m11',icon:'🌀',name:'Портал',pts:'0/1',desc:'Переместить союзника на любую клетку.',effect:'Телепорт · 6 маны · КД 4',req:'Ур.5 · Щит 2',unlocked:false,locked:true,cross:'Перекрёстное: Алира Ур.4'},
+        {id:'m12',icon:'☀',name:'Воскрешение',pts:'0/1',desc:'Поднять павшего героя с 50% HP. Раз за бой.',effect:'Воскреш. · 8 маны · 1р/бой',req:'Ур.7 · Портал',unlocked:false,locked:true,cross:'Перекрёстное: Гарет Ур.6'},
+      ]},
+    ]
+  }
+};
+
+let currentHero = 'warrior';
+let selectedSkill = null;
+const pts = {warrior:3, archer:2, mage:1};
+
+function showHero(key, tabEl) {
+  currentHero = key;
+  selectedSkill = null;
+  document.querySelectorAll('.htab').forEach(t=>t.classList.remove('active'));
+  tabEl.classList.add('active');
+  const h = HEROES[key];
+  document.getElementById('ph-icon').textContent = h.icon;
+  document.getElementById('ph-name').textContent = h.name;
+  document.getElementById('ph-class').textContent = h.cls;
+  document.getElementById('ph-stats').innerHTML = h.stats.map(([l,v])=>`<div class="stat-r"><span>${l}</span><span>${v}</span></div>`).join('');
+  document.getElementById('pts-display').textContent = pts[key];
+  document.getElementById('pts-left').textContent = 'Очков прокачки: ' + pts[key];
+  renderTree(key);
+  document.getElementById('skill-detail').innerHTML = '<div style="color:#555577;font-size:10px;line-height:1.6">Нажми на умение чтобы увидеть описание.<br><br>🟢 Открыто&nbsp;&nbsp;⬛ Доступно<br>🔒 Требует уровень&nbsp;&nbsp;🟣 Перекрёстное</div>';
+}
+
+function renderTree(key) {
+  const h = HEROES[key];
+  const area = document.getElementById('tree-area');
+  area.innerHTML = h.branches.map(b => {
+    const skills = b.skills;
+    const rows = [];
+    for(let i=0;i<skills.length;i++) {
+      const s = skills[i];
+      let cls = 'skill';
+      if(s.unlocked) cls += ' unlocked';
+      if(s.locked) cls += ' locked';
+      if(s.cross) cls += ' cross';
+      if(selectedSkill && selectedSkill.id === s.id) cls += ' active-sel';
+      const conn = i < skills.length-1 ? `<div class="connector${s.unlocked?' lit':''}"></div>` : '';
+      const crossBadge = s.cross ? `<span class="cross-badge">🟣</span>` : '';
+      const lvlReq = s.req ? `<span class="lvl-req">${s.req}</span>` : '';
+      rows.push(`
+        <div class="${cls}" onclick="selectSkill('${key}','${b.name}',${i})" title="${s.name}">
+          ${crossBadge}
+          <div class="skill-icon">${s.icon}</div>
+          <div class="skill-name">${s.name}</div>
+          <div class="skill-pts"><span>${s.pts}</span></div>
+          ${lvlReq}
+        </div>
+        ${conn}
+      `);
+    }
+    return `<div class="branch">
+      <div class="branch-header ${b.color}">${b.name}</div>
+      ${rows.join('')}
+    </div>`;
+  }).join('');
+  area.innerHTML = `<div class="branches">${area.innerHTML}</div>`;
+}
+
+function selectSkill(heroKey, branchName, idx) {
+  const h = HEROES[heroKey];
+  const branch = h.branches.find(b=>b.name===branchName);
+  const s = branch.skills[idx];
+  if(s.locked) return;
+  selectedSkill = s;
+  renderTree(heroKey);
+  const crossHtml = s.cross ? `<div style="font-size:9px;color:#9b59b6;margin-bottom:6px">🟣 ${s.cross}</div>` : '';
+  const btnHtml = s.unlocked
+    ? `<button class="btn btn-dim" style="width:100%">✓ Уже изучено</button>`
+    : pts[heroKey] > 0
+      ? `<button class="btn btn-green" style="width:100%" onclick="learnSkill('${heroKey}','${branchName}',${idx})">+ Изучить (1 очко)</button>`
+      : `<button class="btn btn-dim" style="width:100%">Нет очков прокачки</button>`;
+  document.getElementById('skill-detail').innerHTML = `
+    <div class="skill-icon" style="font-size:24px;margin-bottom:4px">${s.icon}</div>
+    <div style="font-size:12px;color:#e8e8f0;margin-bottom:2px">${s.name}</div>
+    <div style="font-size:9px;color:#8888aa;margin-bottom:6px">${branchName} · ${s.pts}</div>
+    ${crossHtml}
+    <div style="font-size:10px;color:#8888aa;line-height:1.5;margin-bottom:6px">${s.desc}</div>
+    <div style="font-size:10px;color:#2ecc71;margin-bottom:${s.req?'6px':'10px'}">${s.effect}</div>
+    ${s.req?`<div style="font-size:9px;color:#e74c3c;margin-bottom:10px">Требует: ${s.req}</div>`:''}
+    ${btnHtml}
+  `;
+}
+
+function learnSkill(heroKey, branchName, idx) {
+  if(pts[heroKey] <= 0) return;
+  const h = HEROES[heroKey];
+  const branch = h.branches.find(b=>b.name===branchName);
+  const s = branch.skills[idx];
+  s.unlocked = true;
+  pts[heroKey]--;
+  document.getElementById('pts-display').textContent = pts[heroKey];
+  document.getElementById('pts-left').textContent = 'Очков прокачки: ' + pts[heroKey];
+  selectSkill(heroKey, branchName, idx);
+  renderTree(heroKey);
+}
+
+renderTree('warrior');
+</script>

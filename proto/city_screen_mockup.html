@@ -1,0 +1,273 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Courier New',monospace}
+.screen{background:#0d0d1a;border-radius:12px;border:1px solid #2a2a4a;overflow:hidden;margin-bottom:2rem}
+.topbar{background:#1a1a2e;border-bottom:1px solid #2a2a4a;padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{color:#f0a500;font-size:13px;letter-spacing:1px}
+.topbar-mid{font-size:11px;color:#8888aa;display:flex;gap:16px}
+.topbar-mid span{color:#e8e8f0}
+.gold{color:#f0a500}
+.btn{background:#1a1a2e;border:1px solid #4a9eff;color:#4a9eff;padding:5px 14px;border-radius:5px;font-family:'Courier New',monospace;font-size:11px;cursor:pointer}
+.btn-gold{border-color:#f0a500;color:#f0a500}
+.btn-green{border-color:#2ecc71;color:#2ecc71}
+.btn-red{border-color:#e74c3c;color:#e74c3c}
+.btn-dim{border-color:#2a2a4a;color:#8888aa}
+.btn-ad{border-color:#9b59b6;color:#9b59b6}
+.badge{font-size:9px;padding:2px 6px;border-radius:3px}
+.badge-common{background:#1a1a2e;color:#8888aa;border:1px solid #2a2a4a}
+.badge-rare{background:#0d1520;color:#4a9eff;border:1px solid #185fa5}
+.badge-epic{background:#1a0800;color:#f0a500;border:1px solid #854f0b}
+
+.city-body{display:grid;grid-template-columns:160px 1fr 200px;height:480px}
+
+.city-left{background:#111128;border-right:1px solid #2a2a4a;padding:10px;display:flex;flex-direction:column;gap:6px}
+.city-name{font-size:13px;color:#f0a500;letter-spacing:1px;margin-bottom:4px}
+.city-desc{font-size:9px;color:#8888aa;line-height:1.5;margin-bottom:8px}
+.npc-list{display:flex;flex-direction:column;gap:4px}
+.npc{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;border:1px solid #2a2a4a;cursor:pointer;background:#0d0d1a}
+.npc:hover,.npc.active{border-color:#f0a500;background:#1a1500}
+.npc-icon{font-size:20px;width:30px;text-align:center}
+.npc-info{}
+.npc-name{font-size:11px;color:#e8e8f0}
+.npc-role{font-size:9px;color:#8888aa}
+.heroes-bar{margin-top:auto;border-top:1px solid #2a2a4a;padding-top:8px}
+.heroes-bar-title{font-size:9px;color:#8888aa;letter-spacing:1px;margin-bottom:6px}
+.hero-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.hero-icon{font-size:14px}
+.hero-hp-wrap{flex:1}
+.hero-hp-name{font-size:9px;color:#e8e8f0;margin-bottom:2px}
+.bar{height:4px;border-radius:2px;background:#1a1a2e;overflow:hidden}
+.bar-hp{background:#2ecc71;height:100%}
+.hero-heal-btn{font-size:9px;padding:2px 6px;border-radius:3px;border:1px solid #2ecc71;color:#2ecc71;cursor:pointer;white-space:nowrap}
+.hero-heal-btn.grey{border-color:#2a2a4a;color:#555577}
+
+.city-center{padding:12px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.shop-header{display:flex;align-items:center;justify-content:space-between}
+.shop-title{font-size:13px;color:#e8e8f0;letter-spacing:1px}
+.shop-tabs{display:flex;gap:4px}
+.tab{padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;border:1px solid #2a2a4a;color:#8888aa}
+.tab.active{border-color:#4a9eff;color:#4a9eff;background:#060e1a}
+.items-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.item-card{background:#1a1a2e;border-radius:7px;padding:9px;border:1px solid #2a2a4a;cursor:pointer;position:relative}
+.item-card:hover{border-color:#4a9eff}
+.item-card.selected{border-color:#f0a500;background:#150f00}
+.item-card.secret{border-color:#9b59b6;background:#0f0a1a;text-align:center}
+.item-icon{font-size:22px;margin-bottom:4px}
+.item-name{font-size:10px;color:#e8e8f0;margin-bottom:3px;line-height:1.3}
+.item-stats{font-size:9px;color:#2ecc71;margin-bottom:4px}
+.item-footer{display:flex;align-items:center;justify-content:space-between}
+.item-price{font-size:11px;color:#f0a500;font-weight:700}
+.item-price.cant{color:#e74c3c}
+.secret-icon{font-size:28px;margin-bottom:6px}
+.secret-text{font-size:9px;color:#9b59b6;line-height:1.4;margin-bottom:8px}
+.refresh-row{display:flex;align-items:center;gap:8px;font-size:10px;color:#8888aa}
+
+.detail-panel{background:#111128;border-top:1px solid #2a2a4a;padding:10px;margin-top:auto}
+.detail-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.detail-icon{font-size:26px}
+.detail-title{font-size:13px;color:#e8e8f0}
+.detail-sub{font-size:10px;color:#8888aa;margin-top:2px}
+.detail-stats{font-size:11px;color:#2ecc71;margin-bottom:6px}
+.detail-desc{font-size:10px;color:#8888aa;line-height:1.5;margin-bottom:10px}
+.detail-compare{font-size:10px;color:#e74c3c;margin-bottom:8px}
+.detail-btns{display:flex;gap:6px}
+
+.city-right{background:#111128;border-left:1px solid #2a2a4a;padding:10px;display:flex;flex-direction:column;gap:8px}
+.services-title{font-size:11px;color:#8888aa;letter-spacing:1px;margin-bottom:2px}
+.service-card{background:#0d0d1a;border-radius:7px;border:1px solid #2a2a4a;padding:10px}
+.service-card-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.service-icon{font-size:18px}
+.service-name{font-size:11px;color:#e8e8f0}
+.service-desc{font-size:9px;color:#8888aa;line-height:1.4;margin-bottom:8px}
+.service-btns{display:flex;flex-direction:column;gap:4px}
+.service-btns .btn{font-size:9px;padding:5px 8px;text-align:center;width:100%}
+.divider{border:none;border-top:1px solid #2a2a4a;margin:4px 0}
+.ad-hint{font-size:9px;color:#9b59b6;text-align:center;margin-top:4px}
+.event-card{background:#150f00;border:1px solid #854f0b;border-radius:7px;padding:10px;margin-top:auto}
+.event-icon{font-size:20px;margin-bottom:4px}
+.event-title{font-size:11px;color:#f0a500;margin-bottom:4px}
+.event-desc{font-size:9px;color:#8888aa;line-height:1.4;margin-bottom:8px}
+</style>
+
+<div class="screen">
+  <div class="topbar">
+    <span class="topbar-title">⚔ ТРИ КЛИНКА</span>
+    <div class="topbar-mid">Золото: <span class="gold">272</span>&nbsp;&nbsp;Регион: <span>1</span>&nbsp;&nbsp;Ход: <span>7</span></div>
+    <button class="btn btn-dim" style="font-size:10px;padding:3px 10px">☰ Меню</button>
+  </div>
+  <div class="city-body">
+
+    <div class="city-left">
+      <div class="city-name">🏘 ЛЕСНОЙ ПРИЮТ</div>
+      <div class="city-desc">Небольшой торговый пост у границы Тёмного леса. Здесь можно отдохнуть, пополнить запасы и получить мудрый совет.</div>
+      <div style="font-size:9px;color:#8888aa;letter-spacing:1px;margin-bottom:2px">ЖИТЕЛИ</div>
+      <div class="npc-list">
+        <div class="npc active">
+          <span class="npc-icon">🛒</span>
+          <div class="npc-info"><div class="npc-name">Торговец Борн</div><div class="npc-role">Оружие · Броня · Зелья</div></div>
+        </div>
+        <div class="npc">
+          <span class="npc-icon">⚗</span>
+          <div class="npc-info"><div class="npc-name">Алхимик Рута</div><div class="npc-role">Улучшение предметов</div></div>
+        </div>
+        <div class="npc">
+          <span class="npc-icon">🏥</span>
+          <div class="npc-info"><div class="npc-name">Лекарь Самин</div><div class="npc-role">Лечение · Снятие статусов</div></div>
+        </div>
+        <div class="npc">
+          <span class="npc-icon">🗺</span>
+          <div class="npc-info"><div class="npc-name">Разведчик</div><div class="npc-role">Открыть карту · Слухи</div></div>
+        </div>
+      </div>
+      <div class="heroes-bar">
+        <div class="heroes-bar-title">СОСТОЯНИЕ ОТРЯДА</div>
+        <div class="hero-row">
+          <span class="hero-icon">⚔</span>
+          <div class="hero-hp-wrap">
+            <div class="hero-hp-name">Гарет · 32/40</div>
+            <div class="bar"><div class="bar-hp" style="width:80%"></div></div>
+          </div>
+          <div class="hero-heal-btn">-20g</div>
+        </div>
+        <div class="hero-row">
+          <span class="hero-icon">🏹</span>
+          <div class="hero-hp-wrap">
+            <div class="hero-hp-name">Алира · 25/25</div>
+            <div class="bar"><div class="bar-hp" style="width:100%"></div></div>
+          </div>
+          <div class="hero-heal-btn grey">полн.</div>
+        </div>
+        <div class="hero-row">
+          <span class="hero-icon">🔮</span>
+          <div class="hero-hp-wrap">
+            <div class="hero-hp-name">Сэрис · 12/20</div>
+            <div class="bar"><div class="bar-hp" style="width:60%"></div></div>
+          </div>
+          <div class="hero-heal-btn">-24g</div>
+        </div>
+        <button class="btn btn-green" style="width:100%;margin-top:8px;font-size:10px;text-align:center">+ Лечить всех · 44g</button>
+        <button class="btn btn-ad" style="width:100%;margin-top:4px;font-size:9px;text-align:center">📺 Лечить всех бесплатно</button>
+      </div>
+    </div>
+
+    <div class="city-center">
+      <div class="shop-header">
+        <span class="shop-title">🛒 ТОРГОВЕЦ БОРН</span>
+        <div class="shop-tabs">
+          <div class="tab active">Всё</div>
+          <div class="tab">⚔ Оружие</div>
+          <div class="tab">🛡 Броня</div>
+          <div class="tab">✨ Артефакты</div>
+          <div class="tab">💊 Расходники</div>
+        </div>
+      </div>
+      <div class="items-grid">
+        <div class="item-card">
+          <div class="item-icon">🗡</div>
+          <div class="item-name">Клинок яда</div>
+          <div class="item-stats">+2 атк · яд 3/ход</div>
+          <div class="item-footer"><span class="badge badge-rare">Редкий</span><span class="item-price">90g</span></div>
+        </div>
+        <div class="item-card selected">
+          <div class="item-icon">🧥</div>
+          <div class="item-name">Плащ теней</div>
+          <div class="item-stats">+1 защ · уклон 20%</div>
+          <div class="item-footer"><span class="badge badge-rare">Редкий</span><span class="item-price">85g</span></div>
+        </div>
+        <div class="item-card">
+          <div class="item-icon">🔮</div>
+          <div class="item-name">Кристалл маны</div>
+          <div class="item-stats">+3 маны/ход</div>
+          <div class="item-footer"><span class="badge badge-rare">Редкий</span><span class="item-price cant">80g</span></div>
+        </div>
+        <div class="item-card">
+          <div class="item-icon">⚔</div>
+          <div class="item-name">Стальной меч</div>
+          <div class="item-stats">+3 атака</div>
+          <div class="item-footer"><span class="badge badge-common">Обычн.</span><span class="item-price">35g</span></div>
+        </div>
+        <div class="item-card">
+          <div class="item-icon">💊</div>
+          <div class="item-name">Зелье силы</div>
+          <div class="item-stats">+2 атк на 1 бой</div>
+          <div class="item-footer"><span class="badge badge-common">Обычн.</span><span class="item-price">20g</span></div>
+        </div>
+        <div class="item-card secret">
+          <div class="secret-icon">❓</div>
+          <div class="item-name" style="color:#9b59b6">Тайный товар</div>
+          <div class="secret-text">Посмотри рекламу — узнай что скрыто</div>
+          <button class="btn btn-ad" style="font-size:9px;padding:4px 8px;width:100%">📺 Открыть</button>
+        </div>
+      </div>
+      <div class="refresh-row">
+        <button class="btn btn-dim" style="font-size:9px;padding:3px 10px">🔄 Обновить · 20g</button>
+        <span>или</span>
+        <button class="btn btn-ad" style="font-size:9px;padding:3px 10px">📺 Обновить бесплатно</button>
+        <span style="margin-left:auto;font-size:9px">Осталось: 3 предмета</span>
+      </div>
+
+      <div class="detail-panel">
+        <div class="detail-head">
+          <div class="detail-icon">🧥</div>
+          <div>
+            <div class="detail-title">Плащ теней <span class="badge badge-rare" style="margin-left:6px;font-size:9px">Редкий</span></div>
+            <div class="detail-sub">Броня · Для всех героев</div>
+          </div>
+        </div>
+        <div class="detail-stats">+1 защита · 20% шанс уклонения от атаки</div>
+        <div class="detail-desc">Соткан из теней болотных духов. Владелец становится чуть менее заметным для врагов.</div>
+        <div class="detail-compare">Гарет сейчас: Кожаная броня (+2 защ) — это ХУЖЕ по защите, НО уклонение новое</div>
+        <div class="detail-btns">
+          <button class="btn btn-gold" style="font-size:10px;padding:5px 12px">💰 Купить · 85g</button>
+          <select style="background:#1a1a2e;border:1px solid #2a2a4a;color:#8888aa;padding:4px 8px;border-radius:5px;font-family:'Courier New',monospace;font-size:10px">
+            <option>→ Гарет</option>
+            <option>→ Алира</option>
+            <option>→ Сэрис</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="city-right">
+      <div class="services-title">УСЛУГИ</div>
+
+      <div class="service-card">
+        <div class="service-card-head"><span class="service-icon">⚗</span><span class="service-name">Алхимик Рута</span></div>
+        <div class="service-desc">Улучшает предметы. Обычный → Редкий или Редкий → Эпический.</div>
+        <div class="service-btns">
+          <button class="btn" style="font-size:9px;padding:5px 8px;text-align:center;width:100%">⬆ Улучшить · 100g</button>
+          <button class="btn btn-ad" style="font-size:9px;padding:5px 8px;text-align:center;width:100%">📺 Улучшить бесплатно</button>
+        </div>
+        <div class="ad-hint">1 раз на город</div>
+      </div>
+
+      <div class="service-card">
+        <div class="service-card-head"><span class="service-icon">🗺</span><span class="service-name">Разведчик</span></div>
+        <div class="service-desc">Открывает скрытые клетки карты и рассказывает о соседних локациях.</div>
+        <div class="service-btns">
+          <button class="btn" style="font-size:9px;padding:5px;text-align:center;width:100%">🗺 Разведка · 30g</button>
+          <button class="btn btn-ad" style="font-size:9px;padding:5px;text-align:center;width:100%">📺 Узнать бесплатно</button>
+        </div>
+      </div>
+
+      <div class="service-card">
+        <div class="service-card-head"><span class="service-icon">🔮</span><span class="service-name">Оракул</span></div>
+        <div class="service-desc">Покажет состав врагов в следующей миссии до боя.</div>
+        <div class="service-btns">
+          <button class="btn btn-ad" style="font-size:9px;padding:5px;text-align:center;width:100%">📺 Увидеть будущее</button>
+        </div>
+        <div class="ad-hint">Только за рекламу</div>
+      </div>
+
+      <div class="event-card">
+        <div class="event-icon">✨</div>
+        <div class="event-title">Странствующий торговец</div>
+        <div class="event-desc">Таинственный торговец предлагает эпические предметы. Уйдёт после вашего следующего хода.</div>
+        <button class="btn btn-ad" style="font-size:9px;padding:5px;text-align:center;width:100%">📺 Посмотреть товары</button>
+      </div>
+
+      <button class="btn btn-dim" style="font-size:10px;padding:7px;text-align:center;width:100%;margin-top:auto">← Вернуться на карту</button>
+    </div>
+
+  </div>
+</div>

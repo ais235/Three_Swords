@@ -1,0 +1,491 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Courier New',monospace}
+.section{margin-bottom:2rem}
+.section-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase}
+.screen{background:#0d0d1a;border-radius:12px;border:1px solid #2a2a4a;overflow:hidden;width:100%}
+.topbar{background:#1a1a2e;border-bottom:1px solid #2a2a4a;padding:8px 16px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{color:#f0a500;font-size:13px;font-weight:500;letter-spacing:1px}
+.topbar-stats{display:flex;gap:16px;font-size:12px;color:#8888aa}
+.topbar-stats span{color:#e8e8f0}
+.gold{color:#f0a500}
+.btn{background:#1a1a2e;border:1px solid #4a9eff;color:#4a9eff;padding:6px 16px;border-radius:6px;font-family:'Courier New',monospace;font-size:12px;cursor:pointer}
+.btn-gold{border-color:#f0a500;color:#f0a500}
+.btn-red{border-color:#e74c3c;color:#e74c3c}
+.btn-green{border-color:#2ecc71;color:#2ecc71}
+.btn-dim{border-color:#2a2a4a;color:#8888aa}
+
+/* === SCREEN 1: MAIN MENU === */
+.menu-screen{padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:24px}
+.menu-logo{text-align:center}
+.menu-logo-title{font-size:28px;color:#f0a500;letter-spacing:4px;font-weight:700}
+.menu-logo-sub{font-size:11px;color:#8888aa;letter-spacing:6px;margin-top:4px}
+.menu-logo-icon{font-size:36px;margin-bottom:8px}
+.menu-btns{display:flex;flex-direction:column;gap:10px;width:200px}
+.menu-btns .btn{text-align:center;padding:10px 16px;font-size:13px}
+.menu-diff{display:flex;align-items:center;gap:10px;font-size:12px;color:#8888aa}
+.diff-toggle{display:flex;gap:4px}
+.diff-opt{padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid #2a2a4a;color:#8888aa;font-family:'Courier New',monospace}
+.diff-opt.active{border-color:#f0a500;color:#f0a500;background:#1a0a00}
+
+/* === SCREEN 2: WORLD MAP === */
+.map-screen{display:grid;grid-template-columns:1fr 200px;height:340px}
+.map-grid-wrap{padding:12px;overflow:auto}
+.map-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.cell{aspect-ratio:1;border-radius:4px;border:1px solid #2a2a4a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;cursor:pointer;background:#111128;position:relative}
+.cell.active{border-color:#f0a500;background:#1a1500;box-shadow:0 0 0 1px #f0a500}
+.cell.done{opacity:0.4}
+.cell.locked{opacity:0.2;cursor:not-allowed}
+.cell-label{font-size:8px;color:#555577;margin-top:1px}
+.map-panel{background:#111128;border-left:1px solid #2a2a4a;padding:12px;display:flex;flex-direction:column;gap:10px}
+.map-panel-title{font-size:11px;color:#f0a500;letter-spacing:1px}
+.cell-info{background:#1a1a2e;border-radius:6px;padding:10px;font-size:11px;color:#8888aa;flex:1}
+.cell-info-icon{font-size:24px;margin-bottom:6px}
+.cell-info-name{color:#e8e8f0;font-size:12px;margin-bottom:4px}
+.hero-pos{display:flex;gap:6px;align-items:center;font-size:11px;color:#8888aa}
+
+/* === SCREEN 3: BATTLE === */
+.battle-screen{display:grid;grid-template-columns:140px 1fr 160px;height:400px}
+.battle-left{background:#111128;border-right:1px solid #2a2a4a;padding:8px;display:flex;flex-direction:column;gap:6px}
+.hero-card{background:#1a1a2e;border-radius:6px;padding:8px;border:1px solid #2a2a4a}
+.hero-card.active{border-color:#4a9eff}
+.hero-card-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.hero-icon{font-size:18px}
+.hero-name{font-size:11px;color:#e8e8f0;font-weight:500}
+.hero-class{font-size:9px;color:#8888aa}
+.bar-wrap{margin-bottom:3px}
+.bar-label{display:flex;justify-content:space-between;font-size:9px;color:#8888aa;margin-bottom:2px}
+.bar{height:5px;border-radius:3px;background:#1a1a2e;overflow:hidden}
+.bar-fill-hp{background:#2ecc71;height:100%}
+.bar-fill-mp{background:#4a9eff;height:100%}
+.skills-row{display:flex;gap:3px;margin-top:4px}
+.skill-btn{width:22px;height:22px;border-radius:4px;border:1px solid #2a2a4a;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#0d0d1a}
+.skill-btn.ready{border-color:#4a9eff}
+.skill-btn.used{opacity:0.3}
+
+.battle-canvas{position:relative;overflow:hidden}
+.grid-bg{display:grid;grid-template-columns:repeat(8,1fr);height:100%;gap:0}
+.tile{border:1px solid #1a1a2e;display:flex;align-items:center;justify-content:center;font-size:16px;position:relative;cursor:pointer}
+.tile.ground{background:#111128}
+.tile.forest{background:#0d1a0d}
+.tile.mountain{background:#1a1510}
+.tile.water{background:#0d1520}
+.tile.fort{background:#1a1528}
+.tile.move-hl{background:#0d1f2d;border-color:#4a9eff}
+.tile.atk-hl{background:#2d0d0d;border-color:#e74c3c}
+.tile.selected{border-color:#f0a500;background:#1a1500}
+.unit{font-size:20px;position:relative}
+.unit-hp{position:absolute;bottom:-2px;left:0;right:0;height:3px;background:#333;border-radius:2px}
+.unit-hp-fill{background:#2ecc71;height:100%;border-radius:2px}
+.dmg-float{position:absolute;top:-10px;right:-4px;font-size:9px;color:#e74c3c;font-weight:700}
+
+.battle-right{background:#111128;border-left:1px solid #2a2a4a;padding:8px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.turn-queue{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px}
+.turn-chip{width:24px;height:24px;border-radius:4px;border:1px solid #2a2a4a;display:flex;align-items:center;justify-content:center;font-size:12px}
+.turn-chip.current{border-color:#f0a500;background:#1a1500}
+.turn-chip.hero{border-color:#4a9eff}
+.turn-chip.enemy{border-color:#e74c3c}
+.log-title{font-size:9px;color:#8888aa;letter-spacing:1px}
+.log-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:2px}
+.log-line{font-size:9px;color:#8888aa;line-height:1.4}
+.log-line.hero-line{color:#4a9eff}
+.log-line.enemy-line{color:#e74c3c}
+.log-line.status-line{color:#f0a500}
+.battle-actions{display:flex;flex-direction:column;gap:4px;margin-top:auto}
+.battle-actions .btn{font-size:10px;padding:5px 8px;text-align:center}
+
+/* === SCREEN 4: INVENTORY === */
+.inv-screen{display:grid;grid-template-columns:180px 1fr;height:360px}
+.inv-left{background:#111128;border-right:1px solid #2a2a4a;padding:10px;display:flex;flex-direction:column;gap:6px}
+.inv-hero-tab{display:flex;gap:4px;margin-bottom:4px}
+.inv-tab{padding:4px 8px;border-radius:4px;font-size:10px;cursor:pointer;border:1px solid #2a2a4a;color:#8888aa;font-family:'Courier New',monospace}
+.inv-tab.active{border-color:#f0a500;color:#f0a500}
+.inv-hero-portrait{text-align:center;padding:10px 0}
+.inv-portrait-icon{font-size:32px}
+.inv-portrait-name{font-size:13px;color:#e8e8f0;margin-top:4px}
+.inv-portrait-class{font-size:10px;color:#8888aa}
+.inv-stats{background:#1a1a2e;border-radius:6px;padding:8px}
+.stat-row{display:flex;justify-content:space-between;font-size:10px;color:#8888aa;margin-bottom:3px}
+.stat-val{color:#e8e8f0}
+.stat-val.buffed{color:#2ecc71}
+.slots-title{font-size:9px;color:#8888aa;letter-spacing:1px;margin-top:6px;margin-bottom:4px}
+.slot{background:#1a1a2e;border-radius:6px;padding:8px;border:1px solid #2a2a4a;display:flex;align-items:center;gap:8px;margin-bottom:4px;cursor:pointer}
+.slot:hover{border-color:#4a9eff}
+.slot-icon{font-size:18px;width:28px;height:28px;background:#0d0d1a;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.slot-info{flex:1}
+.slot-name{font-size:10px;color:#e8e8f0}
+.slot-type{font-size:9px;color:#8888aa}
+.slot-badge{font-size:8px;padding:2px 5px;border-radius:3px}
+.badge-common{background:#1a1a2e;color:#8888aa;border:1px solid #2a2a4a}
+.badge-rare{background:#0d1520;color:#4a9eff;border:1px solid #4a9eff}
+.badge-epic{background:#1a0a00;color:#f0a500;border:1px solid #f0a500}
+.slot-empty{color:#555577;font-style:italic}
+
+.inv-right{padding:10px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.inv-right-title{font-size:11px;color:#8888aa;letter-spacing:1px}
+.item-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.item-card{background:#1a1a2e;border-radius:6px;padding:8px;border:1px solid #2a2a4a;cursor:pointer;text-align:center}
+.item-card:hover{border-color:#4a9eff}
+.item-card.selected{border-color:#f0a500;background:#1a1500}
+.item-card-icon{font-size:22px;margin-bottom:4px}
+.item-card-name{font-size:9px;color:#e8e8f0;line-height:1.3}
+.item-card-price{font-size:9px;color:#f0a500;margin-top:2px}
+.item-detail{background:#1a1a2e;border-radius:8px;padding:12px;border:1px solid #2a2a4a;margin-top:auto}
+.item-detail-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.item-detail-icon{font-size:28px}
+.item-detail-title{font-size:13px;color:#e8e8f0}
+.item-detail-sub{font-size:10px;color:#8888aa}
+.item-detail-stats{font-size:11px;color:#2ecc71;margin-bottom:8px}
+.item-detail-desc{font-size:10px;color:#8888aa;line-height:1.5;margin-bottom:10px}
+.item-detail-btns{display:flex;gap:6px}
+.item-detail-btns .btn{font-size:10px;padding:5px 12px}
+</style>
+
+<div class="section">
+  <div class="section-label">1 — Главное меню</div>
+  <div class="screen">
+    <div class="topbar">
+      <span class="topbar-title">⚔ THREE BLADES / ТРИ КЛИНКА</span>
+      <span style="font-size:10px;color:#555577">v0.1</span>
+    </div>
+    <div class="menu-screen">
+      <div class="menu-logo">
+        <div class="menu-logo-icon">⚔</div>
+        <div class="menu-logo-title">ТРИ КЛИНКА</div>
+        <div class="menu-logo-sub">THREE BLADES</div>
+      </div>
+      <div class="menu-btns">
+        <button class="btn btn-gold" style="font-size:13px;padding:10px">▶ Новая игра</button>
+        <button class="btn" style="font-size:13px;padding:10px">↩ Продолжить</button>
+        <button class="btn btn-dim" style="font-size:13px;padding:10px">? Об игре</button>
+      </div>
+      <div class="menu-diff">
+        <span>Сложность:</span>
+        <div class="diff-toggle">
+          <div class="diff-opt active">Обычная</div>
+          <div class="diff-opt">Хардкор</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#555577;text-align:center">Лучший результат: Регион 2 · 1240g · 18 убийств</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">2 — Карта мира</div>
+  <div class="screen">
+    <div class="topbar">
+      <span class="topbar-title">⚔ ТРИ КЛИНКА</span>
+      <div class="topbar-stats">Золото: <span class="gold">272</span>&nbsp;&nbsp;Регион: <span>1</span>&nbsp;&nbsp;Ход: <span>7</span></div>
+      <button class="btn btn-dim" style="font-size:10px;padding:3px 10px">☰ Меню</button>
+    </div>
+    <div class="map-screen">
+      <div class="map-grid-wrap">
+        <div class="map-grid">
+          <div class="cell active">⚔<div class="cell-label">здесь</div></div>
+          <div class="cell">❓</div>
+          <div class="cell">⚔</div>
+          <div class="cell">📖</div>
+          <div class="cell">🏘</div>
+          <div class="cell">🏘</div>
+          <div class="cell done">💀<div class="cell-label">✓</div></div>
+          <div class="cell">⚔</div>
+          <div class="cell">⚔</div>
+          <div class="cell">⚔</div>
+          <div class="cell">⚔</div>
+          <div class="cell">⚔</div>
+          <div class="cell locked">⚔</div>
+          <div class="cell locked">⚔</div>
+          <div class="cell locked">❓</div>
+          <div class="cell locked">📖</div>
+          <div class="cell locked">❓</div>
+          <div class="cell locked">📖</div>
+          <div class="cell locked">🏘</div>
+          <div class="cell locked">⚔</div>
+          <div class="cell locked">🗺</div>
+          <div class="cell locked">⚔</div>
+          <div class="cell locked">⚔</div>
+          <div class="cell locked">❓</div>
+          <div class="cell locked">🏘</div>
+          <div class="cell locked">⚔</div>
+          <div class="cell locked">⚔</div>
+          <div class="cell locked">⚔</div>
+          <div class="cell locked">⚔</div>
+          <div class="cell locked">📖</div>
+          <div class="cell locked">🏘</div>
+          <div class="cell locked">💀</div>
+          <div class="cell locked">❓</div>
+          <div class="cell locked">📖</div>
+          <div class="cell locked">✨</div>
+          <div class="cell locked">👑</div>
+        </div>
+      </div>
+      <div class="map-panel">
+        <div class="map-panel-title">ЛОКАЦИЯ</div>
+        <div class="cell-info">
+          <div class="cell-info-icon">⚔</div>
+          <div class="cell-info-name">Тёмный лес · Миссия</div>
+          <div style="font-size:10px;color:#8888aa;margin-top:6px;line-height:1.5">Враги: 4–5 · Награда: 25–35g · Лут: обычный</div>
+          <div style="margin-top:8px;display:flex;gap:4px;flex-wrap:wrap">
+            <span style="font-size:9px;padding:2px 6px;background:#1a1a2e;border-radius:3px;color:#8888aa">💀 ×2</span>
+            <span style="font-size:9px;padding:2px 6px;background:#1a1a2e;border-radius:3px;color:#8888aa">🏹 ×1</span>
+            <span style="font-size:9px;padding:2px 6px;background:#1a1a2e;border-radius:3px;color:#8888aa">🐗 ×1</span>
+          </div>
+        </div>
+        <div class="hero-pos">
+          <span>Отряд:</span>
+          <span>⚔ 🏹 🔮</span>
+        </div>
+        <button class="btn btn-gold" style="font-size:10px;padding:6px;text-align:center">▶ Войти</button>
+        <button class="btn btn-dim" style="font-size:10px;padding:5px;text-align:center">🎒 Рюкзак</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">3 — Поле боя</div>
+  <div class="screen">
+    <div class="topbar">
+      <span class="topbar-title">⚔ БОЙ · Волна 1/8</span>
+      <div class="topbar-stats">Ход: <span>3</span>&nbsp;&nbsp;Золото: <span class="gold">272</span></div>
+      <button class="btn btn-dim" style="font-size:10px;padding:3px 10px">☰ Меню</button>
+    </div>
+    <div class="battle-screen">
+      <div class="battle-left">
+        <div style="font-size:9px;color:#8888aa;letter-spacing:1px;margin-bottom:2px">ГЕРОИ</div>
+        <div class="hero-card active">
+          <div class="hero-card-top">
+            <span class="hero-icon">⚔</span>
+            <div><div class="hero-name">Гарет</div><div class="hero-class">Воин · Ур.3</div></div>
+          </div>
+          <div class="bar-wrap"><div class="bar-label"><span>HP</span><span>32/40</span></div><div class="bar"><div class="bar-fill-hp" style="width:80%"></div></div></div>
+          <div class="skills-row">
+            <div class="skill-btn ready">🛡</div>
+            <div class="skill-btn ready">💢</div>
+            <div class="skill-btn used">⚡</div>
+            <div class="skill-btn used">🌀</div>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-top">
+            <span class="hero-icon">🏹</span>
+            <div><div class="hero-name">Алира</div><div class="hero-class">Лучник · Ур.2</div></div>
+          </div>
+          <div class="bar-wrap"><div class="bar-label"><span>HP</span><span>25/25</span></div><div class="bar"><div class="bar-fill-hp" style="width:100%"></div></div></div>
+          <div class="skills-row">
+            <div class="skill-btn ready">🎯</div>
+            <div class="skill-btn ready">❄</div>
+            <div class="skill-btn used">🌧</div>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-top">
+            <span class="hero-icon">🔮</span>
+            <div><div class="hero-name">Сэрис</div><div class="hero-class">Маг · Ур.2</div></div>
+          </div>
+          <div class="bar-wrap"><div class="bar-label"><span>HP</span><span>14/20</span></div><div class="bar"><div class="bar-fill-hp" style="width:70%"></div></div></div>
+          <div class="bar-wrap"><div class="bar-label"><span>MP</span><span>6/10</span></div><div class="bar"><div class="bar-fill-mp" style="width:60%"></div></div></div>
+          <div class="skills-row">
+            <div class="skill-btn ready">🔥</div>
+            <div class="skill-btn ready">🧊</div>
+            <div class="skill-btn used">☄</div>
+          </div>
+        </div>
+      </div>
+      <div class="battle-canvas">
+        <div class="grid-bg">
+          <div class="tile ground"><span class="unit">⚔<div class="unit-hp"><div class="unit-hp-fill" style="width:80%"></div></div></span></div>
+          <div class="tile forest">🌲</div>
+          <div class="tile move-hl"></div>
+          <div class="tile move-hl"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"><span class="unit">💀<div class="unit-hp"><div class="unit-hp-fill" style="width:60%;background:#e74c3c"></div></div></span></div>
+          <div class="tile ground"></div>
+          <div class="tile forest">🌲</div>
+          <div class="tile selected"><span class="unit">🏹<div class="unit-hp"><div class="unit-hp-fill" style="width:100%"></div></div></span></div>
+          <div class="tile move-hl"></div>
+          <div class="tile move-hl"></div>
+          <div class="tile atk-hl"><span class="unit">🏹<div class="unit-hp"><div class="unit-hp-fill" style="width:50%;background:#e74c3c"></div></div><span class="dmg-float">-8</span></span></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"><span class="unit">💀<div class="unit-hp"><div class="unit-hp-fill" style="width:40%;background:#e74c3c"></div></div></span></div>
+          <div class="tile ground"></div>
+          <div class="tile water">💧</div>
+          <div class="tile water">💧</div>
+          <div class="tile move-hl"></div>
+          <div class="tile move-hl"></div>
+          <div class="tile atk-hl"><span class="unit">🐗<div class="unit-hp"><div class="unit-hp-fill" style="width:90%;background:#e74c3c"></div></div></span></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile mountain">⛰</div>
+          <div class="tile mountain">⛰</div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"><span class="unit">🔮<div class="unit-hp"><div class="unit-hp-fill" style="width:70%"></div></div></span></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile forest">🌲</div>
+          <div class="tile forest">🌲</div>
+          <div class="tile ground"></div>
+          <div class="tile ground"><span class="unit">🧙<div class="unit-hp"><div class="unit-hp-fill" style="width:100%;background:#e74c3c"></div></div></span></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile fort">🏰</div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+          <div class="tile ground"></div>
+        </div>
+      </div>
+      <div class="battle-right">
+        <div style="font-size:9px;color:#8888aa;letter-spacing:1px">ОЧЕРЕДЬ ХОДОВ</div>
+        <div class="turn-queue">
+          <div class="turn-chip current">🏹</div>
+          <div class="turn-chip enemy">🐗</div>
+          <div class="turn-chip hero">⚔</div>
+          <div class="turn-chip enemy">💀</div>
+          <div class="turn-chip enemy">🏹</div>
+          <div class="turn-chip hero">🔮</div>
+          <div class="turn-chip enemy">🧙</div>
+          <div class="turn-chip enemy">💀</div>
+        </div>
+        <div class="log-title">БОЙ — ЛОГ</div>
+        <div class="log-wrap">
+          <div class="log-line status-line">— Ход 3 начался</div>
+          <div class="log-line hero-line">⚔ Гарет → 💀 Скелет: 8 урона</div>
+          <div class="log-line enemy-line">🐗 Кабан → ⚔ Гарет: 6 урона</div>
+          <div class="log-line status-line">☠ Скелет повержен!</div>
+          <div class="log-line hero-line">🏹 Алира выбирает цель...</div>
+          <div class="log-line enemy-line">🧙 Шаман лечит 🐗: +4HP</div>
+        </div>
+        <div class="battle-actions">
+          <button class="btn" style="font-size:10px;padding:5px">⚔ Атака</button>
+          <button class="btn btn-gold" style="font-size:10px;padding:5px">✨ Способность</button>
+          <button class="btn btn-dim" style="font-size:10px;padding:5px">→ Пропустить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">4 — Инвентарь / снаряжение</div>
+  <div class="screen">
+    <div class="topbar">
+      <span class="topbar-title">⚔ РЮКЗАК</span>
+      <div class="topbar-stats">Золото: <span class="gold">272</span></div>
+      <button class="btn btn-dim" style="font-size:10px;padding:3px 10px">✕ Закрыть</button>
+    </div>
+    <div class="inv-screen">
+      <div class="inv-left">
+        <div class="inv-hero-tab">
+          <div class="inv-tab active">⚔ Гарет</div>
+          <div class="inv-tab">🏹</div>
+          <div class="inv-tab">🔮</div>
+        </div>
+        <div class="inv-hero-portrait">
+          <div class="inv-portrait-icon">⚔</div>
+          <div class="inv-portrait-name">Гарет</div>
+          <div class="inv-portrait-class">Воин · Уровень 3</div>
+        </div>
+        <div class="inv-stats">
+          <div class="stat-row"><span>Атака</span><span class="stat-val buffed">8 (+3)</span></div>
+          <div class="stat-row"><span>Броня</span><span class="stat-val buffed">5 (+2)</span></div>
+          <div class="stat-row"><span>HP</span><span class="stat-val">40/40</span></div>
+          <div class="stat-row"><span>Скорость</span><span class="stat-val">10</span></div>
+        </div>
+        <div class="slots-title">СНАРЯЖЕНИЕ</div>
+        <div class="slot">
+          <div class="slot-icon">⚔</div>
+          <div class="slot-info">
+            <div class="slot-name">Стальной меч</div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><div class="slot-type">Оружие</div><span class="slot-badge badge-common">Обычн.</span></div>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-icon">🛡</div>
+          <div class="slot-info">
+            <div class="slot-name">Кожаная броня</div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><div class="slot-type">Броня</div><span class="slot-badge badge-common">Обычн.</span></div>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-icon" style="font-size:12px;color:#555577">пусто</div>
+          <div class="slot-info">
+            <div class="slot-empty">— артефакт</div>
+            <div class="slot-type">Артефакт</div>
+          </div>
+        </div>
+      </div>
+      <div class="inv-right">
+        <div class="inv-right-title">ПРЕДМЕТЫ В РЮКЗАКЕ</div>
+        <div class="item-grid">
+          <div class="item-card selected">
+            <div class="item-card-icon">🗡</div>
+            <div class="item-card-name">Клинок яда</div>
+            <div class="item-card-price">— (есть)</div>
+          </div>
+          <div class="item-card">
+            <div class="item-card-icon">🧿</div>
+            <div class="item-card-name">Амулет удачи</div>
+            <div class="item-card-price">— (есть)</div>
+          </div>
+          <div class="item-card">
+            <div class="item-card-icon">💊</div>
+            <div class="item-card-name">Зелье силы</div>
+            <div class="item-card-price">— (есть)</div>
+          </div>
+          <div class="item-card" style="opacity:0.4;border-style:dashed">
+            <div class="item-card-icon" style="font-size:16px;color:#555577">+</div>
+            <div class="item-card-name" style="color:#555577">пусто</div>
+          </div>
+        </div>
+        <div class="item-detail">
+          <div class="item-detail-head">
+            <div class="item-detail-icon">🗡</div>
+            <div>
+              <div class="item-detail-title">Клинок яда <span class="slot-badge badge-rare" style="margin-left:4px">Редкий</span></div>
+              <div class="item-detail-sub">Оружие · Воин</div>
+            </div>
+          </div>
+          <div class="item-detail-stats">+2 атака · Яд 3 урона/ход · 2 хода</div>
+          <div class="item-detail-desc">Отравленный клинок из болотных земель. Рана не заживает быстро.</div>
+          <div class="item-detail-btns">
+            <button class="btn btn-green" style="font-size:10px;padding:5px 12px">↑ Надеть</button>
+            <button class="btn btn-dim" style="font-size:10px;padding:5px 12px">↔ Передать</button>
+            <button class="btn btn-red" style="font-size:10px;padding:5px 8px">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
