@@ -51,7 +51,22 @@
     #btn-open-menu { padding: 4px 8px; margin: 0; }
     .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
     .battle-layout { display: grid; grid-template-columns: 140px 1fr 160px; width: 100%; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-    .battle-left { background: var(--bg-card); border-right: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .battle-left { background: #111128; border-right: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+    .hero-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+    .hero-card.active { border-color: var(--accent-blue); }
+    .hero-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .hero-icon-large { font-size: 18px; }
+    .hero-card-name { font-size: 11px; color: var(--text-main); font-weight: 500; }
+    .hero-card-class { font-size: 9px; color: var(--text-dim); }
+    .bar-wrap { margin-bottom: 3px; }
+    .bar-label { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim); margin-bottom: 2px; }
+    .bar { height: 5px; border-radius: 3px; background: #1a1a2e; overflow: hidden; }
+    .bar-fill-hp { background: var(--accent-green); height: 100%; border-radius: 3px; transition: width .2s; }
+    .bar-fill-mp { background: var(--accent-blue); height: 100%; border-radius: 3px; transition: width .2s; }
+    .skills-row { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
+    .skill-btn { width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #0d0d1a; padding: 0; }
+    .skill-btn.ready { border-color: var(--accent-blue); }
+    .skill-btn.used { opacity: 0.3; }
     .hero-mini { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 6px; font-size: 10px; }
     .hero-mini.active { border-color: var(--accent-blue); }
     .hp-line { height: 4px; border-radius: 2px; background: #1a1a2e; overflow: hidden; margin-top: 3px; }
@@ -64,30 +79,35 @@
       image-rendering: pixelated;
     }
     #battle-log {
-      width: 100%;
-      height: 512px;
-      background: var(--bg-panel);
-      border-left: none;
+      flex: 1;
+      min-height: 80px;
+      max-height: 220px;
+      background: #0d0d1a;
+      border-radius: 4px;
       overflow-y: auto;
-      font-size: 11px;
-      padding: 8px;
-      line-height: 1.35;
+      font-size: 9px;
+      padding: 6px;
+      line-height: 1.4;
     }
     #battle-log .l-hero { color: var(--accent-blue); }
     #battle-log .l-enemy { color: var(--accent-red); }
     #battle-log .l-status { color: #f1c40f; }
     #initiative-bar {
-      display: flex; gap: 6px; flex-wrap: wrap; padding: 6px;
-      background: var(--bg-card); border-radius: 6px; margin-bottom: 8px; min-height: 36px; align-items: center;
+      display: flex; gap: 3px; flex-wrap: wrap; align-items: center; margin-bottom: 4px;
     }
     .init-slot {
-      width: 24px; height: 24px; font-size: 16px; border-radius: 4px;
-      border: 2px solid var(--border); background: #0a0a14; display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; font-size: 14px; border-radius: 4px;
+      border: 1px solid var(--border); background: #0a0a14; display: inline-flex; align-items: center; justify-content: center;
     }
     .init-slot.hero { border-color: var(--accent-blue); }
     .init-slot.enemy { border-color: var(--accent-red); }
-    .init-slot.active { outline: 2px solid var(--accent-gold); box-shadow: 0 0 8px rgba(240,165,0,.5); }
-    #ui-overlay { min-width: 160px; background: var(--bg-card); border-left: 1px solid var(--border); padding: 8px; }
+    .init-slot.active { border-color: var(--accent-gold); background: #1a1500; box-shadow: 0 0 6px rgba(240,165,0,.4); }
+    #ui-overlay { min-width: 160px; background: #111128; border-left: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+    .br-section { }
+    .br-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 4px; }
+    .battle-actions { display: flex; flex-direction: column; gap: 4px; }
+    .battle-actions .btn { font-size: 10px; padding: 5px 8px; text-align: center; width: 100%; }
+    .deploy-hint-box { font-size: 10px; color: var(--text-dim); padding: 6px; border: 1px solid var(--border); border-radius: 4px; line-height: 1.4; }
     .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .stats-line { font-size: 12px; color: var(--text-dim); margin: 4px 0; }
     .btn {
@@ -152,7 +172,19 @@
     .rarity-common { color: #b0b0b0; }
     .rarity-rare { color: #4a9eff; }
     .rarity-epic { color: #f0a500; }
-    #main-menu { text-align: center; min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    #main-menu { text-align: center; min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; background: var(--bg-deep); }
+    .menu-screen { padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .menu-logo { text-align: center; }
+    .menu-logo-icon { font-size: 40px; margin-bottom: 8px; }
+    .menu-logo-title { font-size: 30px; color: var(--accent-gold); letter-spacing: 4px; font-weight: 700; }
+    .menu-logo-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 6px; margin-top: 4px; }
+    .menu-btns { display: flex; flex-direction: column; gap: 10px; width: 220px; }
+    .menu-btns .btn { text-align: center; padding: 10px 16px; font-size: 13px; }
+    .menu-diff { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-dim); }
+    .diff-toggle { display: flex; gap: 4px; }
+    .diff-opt { padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; border: 1px solid var(--border); color: var(--text-dim); font-family: 'Courier New', monospace; transition: all .15s; }
+    .diff-opt.active { border-color: var(--accent-gold); color: var(--accent-gold); background: #1a0a00; }
+    .menu-meta { font-size: 10px; color: #555577; text-align: center; }
     #world-panel { overflow: auto; }
     #tooltip {
       position: fixed; z-index: 1000; pointer-events: none;
@@ -241,21 +273,26 @@
 </head>
 <body>
   <div id="game-container">
-    <h1>⚔️ Три Героя / Three Heroes</h1>
     <div id="main-menu" class="screen">
-      <div class="panel">
-        <h2>Главное меню</h2>
-        <div>
-          <button class="btn btn-primary" id="btn-new-game">Новая игра</button>
-          <button class="btn" id="btn-continue">Продолжить</button>
+      <div class="menu-screen">
+        <div class="menu-logo">
+          <div class="menu-logo-icon">⚔</div>
+          <div class="menu-logo-title">ТРИ КЛИНКА</div>
+          <div class="menu-logo-sub">THREE BLADES</div>
         </div>
-        <div class="stats-line">
-          Сложность:
-          <select id="difficulty-select" class="btn" aria-label="Сложность игры">
-            <option value="normal">Обычная</option>
-            <option value="hardcore">Хардкор (перманентная смерть)</option>
-          </select>
+        <div class="menu-btns">
+          <button class="btn btn-gold" id="btn-new-game">▶ Новая игра</button>
+          <button class="btn" id="btn-continue">↩ Продолжить</button>
+          <button class="btn btn-dim" id="btn-about">? Об игре</button>
         </div>
+        <div class="menu-diff">
+          <span>Сложность:</span>
+          <div class="diff-toggle">
+            <div class="diff-opt active" id="diff-normal" data-diff="normal">Обычная</div>
+            <div class="diff-opt" id="diff-hardcore" data-diff="hardcore">Хардкор</div>
+          </div>
+        </div>
+        <div id="menu-meta" class="menu-meta"></div>
       </div>
     </div>
     <div id="hud-top" class="panel stats-line">
@@ -317,20 +354,26 @@
     </div>
 
     <div id="battle-screen" class="screen hidden">
-      <div id="initiative-bar"></div>
       <div class="battle-layout">
         <div class="battle-left" id="battle-left-heroes"></div>
         <div id="battle-wrap">
           <canvas id="battle-canvas" width="512" height="512"></canvas>
         </div>
         <div id="ui-overlay">
-          <div id="battle-log"></div>
-          <div class="panel" id="unit-panel">
-            <div id="unit-title">—</div>
-            <div id="unit-stats"></div>
-            <div id="action-buttons"></div>
+          <div class="br-section">
+            <div class="br-label">ОЧЕРЁДНОСТЬ</div>
+            <div id="initiative-bar"></div>
           </div>
-          <div class="panel" id="deploy-hint" class="hidden">Расставьте героев в левых двух колонках. Клик по клетке — поставить выбранного.</div>
+          <div class="br-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+            <div class="br-label">ЛОГ БОЕВЫХ ДЕЙСТВИЙ</div>
+            <div id="battle-log"></div>
+          </div>
+          <div id="unit-panel">
+            <div id="unit-title" class="br-label">—</div>
+            <div id="unit-stats" style="font-size:10px;color:var(--text-dim);margin-bottom:4px"></div>
+            <div id="action-buttons" class="battle-actions"></div>
+          </div>
+          <div id="deploy-hint" class="hidden deploy-hint-box">Расставьте героев в левых двух колонках. Клик по клетке — поставить выбранного.</div>
         </div>
       </div>
     </div>
@@ -1650,13 +1693,32 @@
     const actions = document.getElementById('action-buttons');
     if (!b) return;
     if (left) {
-      left.innerHTML = b.units.filter(u => u.isHero && u.hp > 0).map(h => {
+      const roleLabel = { garet: 'Воин', alira: 'Лучник', seris: 'Маг' };
+      left.innerHTML = b.units.filter(u => u.isHero).map(h => {
+        const alive = h.hp > 0;
         const active = getActiveUnit() === h ? 'active' : '';
-        const hpPct = Math.max(0, Math.min(100, Math.round((h.hp / h.maxHp) * 100)));
-        const mana = h.maxMana ? `<div>MP ${h.mana}/${h.maxMana}</div>` : '';
-        return `<div class="hero-mini ${active}">${h.sprite} ${h.name}<div>HP ${h.hp}/${h.maxHp}</div>${mana}
-          <div class="hp-line"><div class="hp-fill" style="width:${hpPct}%"></div></div>
-          <div class="eq-mini">${heroEquipIcons(GameState.heroes.find(x => x.id === h.heroId) || h)}</div></div>`;
+        const hpPct = alive ? Math.max(0, Math.min(100, Math.round((h.hp / h.maxHp) * 100))) : 0;
+        const mpPct = h.maxMana ? Math.max(0, Math.min(100, Math.round((h.mana / h.maxMana) * 100))) : 0;
+        const manaBar = h.maxMana ? `<div class="bar-wrap"><div class="bar-label"><span>MP</span><span>${h.mana}/${h.maxMana}</span></div><div class="bar"><div class="bar-fill-mp" style="width:${mpPct}%"></div></div></div>` : '';
+        const hh = GameState.heroes.find(x => x.id === h.heroId) || h;
+        const skillIcons = h.heroId === 'garet' ? ['🛡','🔥','💪'] : h.heroId === 'alira' ? ['🏹','🐢','🌧'] : ['🔥','🧊','☄'];
+        const cds = hh.cds || {};
+        const cdKeys = h.heroId === 'garet' ? ['shieldBash','fireCall','inspire'] : h.heroId === 'alira' ? ['doubleShot','slowArrow','arrowRain'] : ['fireball','freeze','meteor'];
+        const skillsHtml = skillIcons.map((ic, i) => {
+          const ready = !cds[cdKeys[i]] || cds[cdKeys[i]] <= 0;
+          return `<div class="skill-btn ${ready ? 'ready' : 'used'}" title="${cdKeys[i]}">${ic}</div>`;
+        }).join('');
+        const deadStyle = alive ? '' : 'opacity:0.4;';
+        return `<div class="hero-card ${active}" style="${deadStyle}">
+          <div class="hero-card-top">
+            <span class="hero-icon-large">${h.sprite}</span>
+            <div><div class="hero-card-name">${h.name}</div><div class="hero-card-class">${roleLabel[h.heroId] || ''}</div></div>
+          </div>
+          <div class="bar-wrap"><div class="bar-label"><span>HP</span><span>${h.hp}/${h.maxHp}</span></div><div class="bar"><div class="bar-fill-hp" style="width:${hpPct}%"></div></div></div>
+          ${manaBar}
+          <div class="skills-row">${skillsHtml}</div>
+          <div style="font-size:9px;color:var(--text-dim);margin-top:3px">${heroEquipIcons(hh)}</div>
+        </div>`;
       }).join('');
     }
     if (b.phase === 'deploy') {
@@ -2117,25 +2179,20 @@
     document.getElementById('game-menu-overlay').classList.remove('show');
   }
   function updateMenuMeta() {
-    const menu = document.querySelector('#main-menu .panel');
-    if (!menu) return;
     const last = localStorage.getItem(SAVE_KEY) || localStorage.getItem('save');
     const bestRaw = localStorage.getItem('threeBladesBest');
-    const best = bestRaw ? JSON.parse(bestRaw) : { gold: 0, kills: 0 };
-    let meta = document.getElementById('menu-meta');
-    if (!meta) {
-      meta = document.createElement('div');
-      meta.id = 'menu-meta';
-      menu.appendChild(meta);
-    }
-    let lastText = 'Последняя игра: нет';
+    const best = bestRaw ? JSON.parse(bestRaw) : { gold: 0, kills: 0, region: 0 };
+    const meta = document.getElementById('menu-meta');
+    if (!meta) return;
+    let lines = [];
     if (last) {
       try {
         const s = JSON.parse(last);
-        lastText = `Последняя игра: Регион ${s.region || 1} · Ход ${s.turn || 1} · ${s.gold || 0}g золота`;
+        lines.push(`Последняя игра: Регион ${s.region || 1} · Ход ${s.turn || 1} · ${s.gold || 0}💰`);
       } catch (_) {}
     }
-    meta.innerHTML = `<div class="stats-line">${lastText}</div><div class="stats-line">Лучший результат: ${best.gold || 0}g · ${best.kills || 0} убийств</div>`;
+    lines.push(`Лучший результат: Регион ${best.region || 1} · ${best.gold || 0}💰 · ${best.kills || 0} убийств`);
+    meta.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
   }
   function renderMap() {
     const root = document.getElementById('map-nodes');
@@ -2441,6 +2498,7 @@
     }
     GameState.inventory = GameState.inventory || [];
     showScreen('menu');
+    updateMenuMeta();
     requestAnimationFrame(loop);
     const mk = () => {
       initHeroesFromTemplate();
@@ -2449,12 +2507,22 @@
       GameState.turn = 1;
       GameState.inventory = ['steel_sword', 'leather', 'luck_amulet'];
       GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
-      GameState.difficulty = document.getElementById('difficulty-select').value;
+      GameState.difficulty = document.querySelector('.diff-opt.active')?.dataset.diff || 'normal';
       saveGame();
       showScreen('map');
       renderMap();
       updateMenuMeta();
     };
+    // Difficulty toggle
+    document.querySelectorAll('.diff-opt').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.diff-opt').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+    });
+    // About button
+    const aboutBtn = document.getElementById('btn-about');
+    if (aboutBtn) aboutBtn.onclick = () => alert('⚔ ТРИ КЛИНКА\nТактическая RPG. Проведите отряд из трёх героев через 3 региона и победите Тёмного Лорда.\nВерсия 1.0');
     document.getElementById('btn-new-game').onclick = mk;
     document.getElementById('btn-continue').onclick = () => {
       if (!localStorage.getItem(SAVE_KEY) && !localStorage.getItem('save')) { alert('Сохранение не найдено.'); return; }
