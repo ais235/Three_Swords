@@ -234,7 +234,40 @@
       0% { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-40px); }
     }
-    #perk-modal, #confirm-modal { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    #perk-modal, #confirm-modal { position: fixed; inset: 0; background: rgba(0,0,0,.82); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    .perk-modal-box { background: #0d0d1a; border: 1px solid var(--border); border-radius: 10px; width: min(680px, 96vw); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+    .perk-modal-topbar { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .perk-modal-title { font-size: 13px; color: var(--accent-gold); letter-spacing: 1px; }
+    .perk-modal-hint { font-size: 10px; color: var(--text-dim); }
+    .perk-modal-body { display: grid; grid-template-columns: 1fr 200px; overflow: hidden; }
+    .perk-branches { padding: 14px; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-content: start; }
+    .perk-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
+    .perk-col-header { font-size: 10px; letter-spacing: 1px; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; text-align: center; width: 100%; }
+    .bh-defense { background: #060e1a; color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+    .bh-attack  { background: #1a0808; color: var(--accent-red); border: 1px solid var(--accent-red); }
+    .bh-leader  { background: #1a1000; color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+    .bh-accuracy { background: #081408; color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .bh-speed   { background: #051210; color: #1abc9c; border: 1px solid #1abc9c; }
+    .bh-traps   { background: #150a00; color: #e67e22; border: 1px solid #e67e22; }
+    .bh-destruction { background: #1a0808; color: var(--accent-red); border: 1px solid var(--accent-red); }
+    .bh-control { background: #0e0814; color: #9b59b6; border: 1px solid #9b59b6; }
+    .bh-mystic  { background: #140610; color: #e91e8c; border: 1px solid #e91e8c; }
+    .perk-skill { width: 82px; min-height: 66px; background: #111128; border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; padding: 4px; }
+    .perk-skill:hover { border-color: #888; }
+    .perk-skill.unlocked { border-color: var(--accent-green); background: #081408; }
+    .perk-skill.available { border-color: var(--accent-blue); }
+    .perk-skill.locked { opacity: 0.35; cursor: not-allowed; }
+    .perk-skill.sel { border-color: var(--accent-gold); background: #1a1000; }
+    .perk-skill-icon { font-size: 16px; margin-bottom: 2px; }
+    .perk-skill-name { font-size: 8px; color: #e8e8f0; text-align: center; line-height: 1.2; padding: 0 2px; }
+    .perk-connector { width: 2px; height: 10px; background: var(--border); margin: 0 auto; }
+    .perk-connector.lit { background: var(--accent-green); }
+    .perk-detail-panel { background: #111128; border-left: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+    .perk-detail-icon { font-size: 24px; margin-bottom: 4px; }
+    .perk-detail-name { font-size: 12px; color: var(--text-main); margin-bottom: 2px; }
+    .perk-detail-branch { font-size: 9px; color: var(--text-dim); margin-bottom: 6px; }
+    .perk-detail-effect { font-size: 10px; color: var(--accent-green); margin-bottom: 8px; }
+    .perk-detail-desc { font-size: 10px; color: var(--text-dim); line-height: 1.5; margin-bottom: 10px; }
     #game-menu-overlay {
       position: fixed;
       inset: 0;
@@ -516,10 +549,17 @@
 
   <div id="tooltip"></div>
   <div id="perk-modal" class="hidden">
-    <div class="modal-box">
-      <h3 id="perk-hero-name">Уровень!</h3>
-      <p class="stats-line">Выберите перк (нельзя отменить после подтверждения).</p>
-      <div id="perk-tree-ui" class="perk-tree"></div>
+    <div class="perk-modal-box">
+      <div class="perk-modal-topbar">
+        <span class="perk-modal-title" id="perk-hero-name">Уровень!</span>
+        <span class="perk-modal-hint">Выберите перк — действие необратимо</span>
+      </div>
+      <div class="perk-modal-body">
+        <div id="perk-tree-ui" class="perk-branches"></div>
+        <div class="perk-detail-panel" id="perk-detail-panel">
+          <div style="color:#555577;font-size:10px;line-height:1.6">Нажмите на умение чтобы увидеть описание.</div>
+        </div>
+      </div>
     </div>
   </div>
   <div id="confirm-modal" class="hidden">
@@ -2558,46 +2598,123 @@
     const h = GameState.heroes.find(x => x.id === heroId);
     if (!h) return;
     const modal = document.getElementById('perk-modal');
-    document.getElementById('perk-hero-name').textContent = `${h.emoji} ${h.name} — новый уровень (${h.level})`;
+    document.getElementById('perk-hero-name').textContent = `${h.emoji} ${h.name} — новый уровень ${h.level}`;
     const tree = PERK_TREES[heroId];
     h.perkLevels = h.perkLevels || {};
-    const branches = Object.keys(tree);
-    const opts = [];
-    branches.forEach(br => {
+    const branchNames = Object.keys(tree);
+
+    const branchColors = {
+      defense: 'bh-defense', attack: 'bh-attack', leader: 'bh-leader',
+      accuracy: 'bh-accuracy', speed: 'bh-speed', traps: 'bh-traps',
+      destruction: 'bh-destruction', control: 'bh-control', mystic: 'bh-mystic'
+    };
+    const branchLabels = {
+      defense: 'ЗАЩИТА', attack: 'АТАКА', leader: 'ЛИДЕРСТВО',
+      accuracy: 'МЕТКОСТЬ', speed: 'СКОРОСТЬ', traps: 'ЛОВУШКИ',
+      destruction: 'РАЗРУШЕНИЕ', control: 'КОНТРОЛЬ', mystic: 'МИСТИКА'
+    };
+    const perkIcons = {
+      d1:'🛡',d2:'🔰',d3:'💎', a1:'⚡',a2:'🔥',a3:'💥', l1:'🌟',l2:'🤝',l3:'👑',
+      m1:'🎯',m2:'🏹',m3:'🔍', s1:'💨',s2:'🌀',s3:'⚡', t1:'🕸',t2:'💣',t3:'🌧',
+      r1:'🔥',r2:'☄',r3:'💥', c1:'🧊',c2:'😱',c3:'🌀', y1:'✨',y2:'💊',y3:'🌀'
+    };
+
+    // Determine which perk each branch is offering next
+    const nextPerkByBranch = {};
+    branchNames.forEach(br => {
       const idx = h.perkLevels[br] || 0;
-      if (idx < tree[br].length) opts.push({ br, perk: tree[br][idx] });
+      if (idx < tree[br].length) nextPerkByBranch[br] = tree[br][idx];
     });
-    if (!opts.length) {
-      modal.classList.add('hidden');
-      return;
-    }
-    const pair = [opts[0], opts[1]].filter(Boolean);
+    const availableBranches = branchNames.filter(br => nextPerkByBranch[br]);
+
+    let selectedBr = null;
+    let selectedPerkId = null;
+
     const box = document.getElementById('perk-tree-ui');
-    const labels = { defense: 'Защита', attack: 'Атака', leader: 'Лидерство', accuracy: 'Меткость', speed: 'Скорость', traps: 'Ловушки', destruction: 'Разрушение', control: 'Контроль', mystic: 'Мистика' };
-    box.innerHTML = `<p class="stats-line">Выберите один из двух перков:</p><div class="perk-row">${
-      pair.map(o => `<div class="perk-branch"><h4>${labels[o.br] || o.br}</h4><div class="perk-node" data-br="${o.br}" data-id="${o.perk.id}">${o.perk.name}</div></div>`).join('')
-    }</div>`;
-    box.querySelectorAll('.perk-node').forEach(n => {
-      n.onclick = () => {
-        const br = n.getAttribute('data-br');
-        const pid = n.getAttribute('data-id');
-        const pdef = tree[br].find(x => x.id === pid);
-        document.getElementById('confirm-modal').classList.remove('hidden');
-        document.getElementById('confirm-text').textContent = `Вы уверены? Перк: «${pdef.name}»`;
-        document.getElementById('confirm-yes').onclick = () => {
-          h.perks = h.perks || [];
-          pdef.apply(h);
-          h.perkLevels[br] = (h.perkLevels[br] || 0) + 1;
-          if (!h.perksApplied) h.perksApplied = [];
-          h.perksApplied.push({ br, id: pid });
-          document.getElementById('confirm-modal').classList.add('hidden');
-          modal.classList.add('hidden');
-          saveGame();
-          if (GameState.pendingPerks.length) openPerkModal(GameState.pendingPerks.shift());
+    const detailPanel = document.getElementById('perk-detail-panel');
+
+    function renderPerkTree() {
+      box.innerHTML = branchNames.map(br => {
+        const perks = tree[br];
+        const color = branchColors[br] || 'bh-defense';
+        const label = branchLabels[br] || br.toUpperCase();
+        const takenCount = h.perkLevels[br] || 0;
+
+        let rows = '';
+        perks.forEach((perk, i) => {
+          const taken = i < takenCount;
+          const available = i === takenCount && availableBranches.includes(br);
+          const locked = i > takenCount;
+          let cls = 'perk-skill';
+          if (taken) cls += ' unlocked';
+          else if (available) cls += ' available';
+          else if (locked) cls += ' locked';
+          if (selectedPerkId === perk.id) cls += ' sel';
+          const icon = perkIcons[perk.id] || '◆';
+          const connector = i < perks.length - 1
+            ? `<div class="perk-connector${taken ? ' lit' : ''}"></div>` : '';
+          rows += `<div class="${cls}" data-br="${br}" data-idx="${i}" data-id="${perk.id}">
+            <div class="perk-skill-icon">${icon}</div>
+            <div class="perk-skill-name">${perk.name}</div>
+          </div>${connector}`;
+        });
+
+        return `<div class="perk-col">
+          <div class="perk-col-header ${color}">${label}</div>
+          ${rows}
+        </div>`;
+      }).join('');
+
+      box.querySelectorAll('.perk-skill:not(.locked)').forEach(el => {
+        el.onclick = () => {
+          selectedBr = el.dataset.br;
+          selectedPerkId = el.dataset.id;
+          const idx = +el.dataset.idx;
+          const perk = tree[selectedBr][idx];
+          const taken = idx < (h.perkLevels[selectedBr] || 0);
+          const available = !taken && selectedBr in nextPerkByBranch && nextPerkByBranch[selectedBr].id === perk.id;
+          const icon2 = perkIcons[perk.id] || '◆';
+
+          detailPanel.innerHTML = `
+            <div class="perk-detail-icon">${icon2}</div>
+            <div class="perk-detail-name">${perk.name}</div>
+            <div class="perk-detail-branch">${branchLabels[selectedBr] || selectedBr}</div>
+            <div class="perk-detail-effect">${perk.name}</div>
+            <div class="perk-detail-desc">Улучшает боевые характеристики героя.</div>
+            ${taken
+              ? `<button class="btn btn-dim" style="width:100%">✓ Уже изучено</button>`
+              : available
+                ? `<button class="btn btn-green" id="perk-confirm-btn" style="width:100%">+ Изучить</button>`
+                : `<button class="btn btn-dim" style="width:100%;cursor:not-allowed">🔒 Сначала предыдущий</button>`
+            }
+          `;
+          renderPerkTree();
+
+          const confirmBtn = document.getElementById('perk-confirm-btn');
+          if (confirmBtn) {
+            confirmBtn.onclick = () => {
+              document.getElementById('confirm-modal').classList.remove('hidden');
+              document.getElementById('confirm-text').textContent = `Вы уверены? Перк: «${perk.name}»`;
+              document.getElementById('confirm-yes').onclick = () => {
+                h.perks = h.perks || [];
+                perk.apply(h);
+                h.perkLevels[selectedBr] = (h.perkLevels[selectedBr] || 0) + 1;
+                if (!h.perksApplied) h.perksApplied = [];
+                h.perksApplied.push({ br: selectedBr, id: perk.id });
+                document.getElementById('confirm-modal').classList.add('hidden');
+                modal.classList.add('hidden');
+                saveGame();
+                if (GameState.pendingPerks.length) openPerkModal(GameState.pendingPerks.shift());
+              };
+              document.getElementById('confirm-no').onclick = () => document.getElementById('confirm-modal').classList.add('hidden');
+            };
+          }
         };
-        document.getElementById('confirm-no').onclick = () => document.getElementById('confirm-modal').classList.add('hidden');
-      };
-    });
+      });
+    }
+
+    renderPerkTree();
+    detailPanel.innerHTML = '<div style="color:#555577;font-size:10px;line-height:1.6">Нажмите на умение чтобы увидеть описание.<br><br>🟢 Открыто&nbsp;&nbsp;🔵 Доступно<br>🔒 Требует предыдущее</div>';
     modal.classList.remove('hidden');
   }
 
