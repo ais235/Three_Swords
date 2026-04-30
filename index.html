@@ -1365,6 +1365,7 @@
     GameState.screen = 'battle';
     GameState.mapNodeId = node.id;
     showScreen('battle');
+    resetBattleView();
     updateBattleUI();
     const b0 = GameState.currentBattle;
     b0.battleLog.push({ text: 'Расставьте героев (левые 2 колонки), затем «Начать бой».', t: 'status' });
@@ -1575,6 +1576,73 @@
   //══════════ RENDER ══════════
   const canvas = document.getElementById('battle-canvas');
   const ctx = canvas.getContext('2d');
+  const BattleView = {
+    zoom: 1,
+    minZoom: 0.75,
+    maxZoom: 2.5,
+    offsetX: 0,
+    offsetY: 0,
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+    moved: false,
+    suppressClickUntil: 0,
+    pinchStartDist: 0,
+    pinchStartZoom: 1
+  };
+  function clampBattleView() {
+    const scaled = CANVAS_SZ * BattleView.zoom;
+    if (scaled <= CANVAS_SZ) {
+      BattleView.offsetX = (CANVAS_SZ - scaled) / 2;
+      BattleView.offsetY = (CANVAS_SZ - scaled) / 2;
+      return;
+    }
+    const minX = CANVAS_SZ - scaled, maxX = 0;
+    const minY = CANVAS_SZ - scaled, maxY = 0;
+    BattleView.offsetX = Math.min(maxX, Math.max(minX, BattleView.offsetX));
+    BattleView.offsetY = Math.min(maxY, Math.max(minY, BattleView.offsetY));
+  }
+  function resetBattleView() {
+    BattleView.zoom = 1;
+    BattleView.offsetX = 0;
+    BattleView.offsetY = 0;
+    BattleView.dragging = false;
+    BattleView.moved = false;
+    clampBattleView();
+  }
+  function eventToCanvasPx(clientX, clientY) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      x: (clientX - r.left) * (CANVAS_SZ / r.width),
+      y: (clientY - r.top) * (CANVAS_SZ / r.height)
+    };
+  }
+  function eventToGrid(clientX, clientY) {
+    const p = eventToCanvasPx(clientX, clientY);
+    const wx = (p.x - BattleView.offsetX) / BattleView.zoom;
+    const wy = (p.y - BattleView.offsetY) / BattleView.zoom;
+    return { gx: Math.floor(wx / CELL), gy: Math.floor(wy / CELL) };
+  }
+  function zoomAt(clientX, clientY, nextZoom) {
+    const nz = Math.max(BattleView.minZoom, Math.min(BattleView.maxZoom, nextZoom));
+    const oz = BattleView.zoom;
+    if (Math.abs(nz - oz) < 1e-4) return;
+    const p = eventToCanvasPx(clientX, clientY);
+    const worldX = (p.x - BattleView.offsetX) / oz;
+    const worldY = (p.y - BattleView.offsetY) / oz;
+    BattleView.zoom = nz;
+    BattleView.offsetX = p.x - worldX * nz;
+    BattleView.offsetY = p.y - worldY * nz;
+    clampBattleView();
+  }
+  function clientDist(t1, t2) {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.hypot(dx, dy);
+  }
+  function clientMid(t1, t2) {
+    return { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+  }
   const HERO_TEXTURE_PATHS = {
     garet: 'assets/heroes/garet.png',
     alira: 'assets/heroes/alira.png',
@@ -1613,6 +1681,10 @@
     const b = GameState.currentBattle;
     ctx.clearRect(0, 0, CANVAS_SZ, CANVAS_SZ);
     if (!b) return;
+    clampBattleView();
+    ctx.save();
+    ctx.translate(BattleView.offsetX, BattleView.offsetY);
+    ctx.scale(BattleView.zoom, BattleView.zoom);
     const sel = b.selected;
     const reach = sel && sel.isHero && b.phase === 'combat' && b.mode === 'move' && getActiveUnit() === sel ? floodReachable(b, sel) : null;
     const blind = sel && sel.activeStatuses && sel.activeStatuses.find(s => s.type === STATUS.BLIND);
@@ -1700,6 +1772,7 @@
         }
       }
     });
+    ctx.restore();
   }
 
   function renderInitiative() {
@@ -1739,11 +1812,14 @@
   function spawnDamageFx(x, y, n) {
     const layer = document.getElementById('fx-layer');
     const rect = canvas.getBoundingClientRect();
+    const scaleToCss = rect.width / CANVAS_SZ;
+    const cx = (x * CELL + CELL / 2) * BattleView.zoom + BattleView.offsetX;
+    const cy = (y * CELL) * BattleView.zoom + BattleView.offsetY;
     const d = document.createElement('div');
     d.className = 'fx-dmg';
     d.style.color = '#ff5555';
-    d.style.left = (rect.left + x * CELL + CELL / 2) + 'px';
-    d.style.top = (rect.top + y * CELL) + 'px';
+    d.style.left = (rect.left + cx * scaleToCss) + 'px';
+    d.style.top = (rect.top + cy * scaleToCss) + 'px';
     d.textContent = '-' + n;
     layer.appendChild(d);
     setTimeout(() => d.remove(), 900);
@@ -3111,11 +3187,22 @@
 
   //══════════ INPUT (battle) ══════════
   canvas.addEventListener('mousemove', e => {
+    if (BattleView.dragging) {
+      const dx = e.clientX - BattleView.lastX;
+      const dy = e.clientY - BattleView.lastY;
+      const r = canvas.getBoundingClientRect();
+      BattleView.offsetX += dx * (CANVAS_SZ / r.width);
+      BattleView.offsetY += dy * (CANVAS_SZ / r.height);
+      BattleView.lastX = e.clientX;
+      BattleView.lastY = e.clientY;
+      if (Math.abs(dx) + Math.abs(dy) > 1) BattleView.moved = true;
+      clampBattleView();
+      hideTip();
+      return;
+    }
     const b = GameState.currentBattle;
     if (!b || b.phase !== 'combat') { hideTip(); return; }
-    const r = canvas.getBoundingClientRect();
-    const gx = Math.floor((e.clientX - r.left) / CELL);
-    const gy = Math.floor((e.clientY - r.top) / CELL);
+    const { gx, gy } = eventToGrid(e.clientX, e.clientY);
     const u = unitAt(b, gx, gy);
     const tip = document.getElementById('tooltip');
     if (u && !u.isHero) {
@@ -3141,27 +3228,96 @@
   });
   function hideTip() { document.getElementById('tooltip').style.display = 'none'; }
   canvas.addEventListener('mouseleave', hideTip);
+  canvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    BattleView.dragging = true;
+    BattleView.lastX = e.clientX;
+    BattleView.lastY = e.clientY;
+    BattleView.moved = false;
+    hideTip();
+    e.preventDefault();
+  });
+  window.addEventListener('mouseup', () => {
+    if (!BattleView.dragging) return;
+    BattleView.dragging = false;
+    if (BattleView.moved) BattleView.suppressClickUntil = Date.now() + 160;
+  });
+  canvas.addEventListener('wheel', e => {
+    const factor = e.deltaY < 0 ? 1.1 : 0.9;
+    zoomAt(e.clientX, e.clientY, BattleView.zoom * factor);
+    hideTip();
+    e.preventDefault();
+  }, { passive: false });
 
   canvas.addEventListener('click', e => {
     const b = GameState.currentBattle;
     if (!b) return;
-    const r = canvas.getBoundingClientRect();
-    const gx = Math.floor((e.clientX - r.left) / CELL);
-    const gy = Math.floor((e.clientY - r.top) / CELL);
+    if (Date.now() < BattleView.suppressClickUntil) return;
+    const { gx, gy } = eventToGrid(e.clientX, e.clientY);
+    if (!inBounds(gx, gy)) return;
     canvasBattleClick(gx, gy);
   });
-  function handleTouch(ev) {
+  const touchState = { mode: 'none', startX: 0, startY: 0, startTime: 0 };
+  canvas.addEventListener('touchstart', ev => {
     const b = GameState.currentBattle;
     if (!b) return;
-    const t = ev.touches[0];
-    if (!t) return;
-    const r = canvas.getBoundingClientRect();
-    const gx = Math.floor((t.clientX - r.left) / (r.width / GRID));
-    const gy = Math.floor((t.clientY - r.top) / (r.height / GRID));
-    canvasBattleClick(gx, gy);
+    if (ev.touches.length === 1) {
+      const t = ev.touches[0];
+      touchState.mode = 'pan';
+      touchState.startX = t.clientX;
+      touchState.startY = t.clientY;
+      touchState.startTime = Date.now();
+      BattleView.lastX = t.clientX;
+      BattleView.lastY = t.clientY;
+      BattleView.moved = false;
+    } else if (ev.touches.length >= 2) {
+      touchState.mode = 'pinch';
+      BattleView.pinchStartDist = clientDist(ev.touches[0], ev.touches[1]);
+      BattleView.pinchStartZoom = BattleView.zoom;
+    }
     ev.preventDefault();
-  }
-  canvas.addEventListener('touchstart', handleTouch, { passive: false });
+  }, { passive: false });
+  canvas.addEventListener('touchmove', ev => {
+    const b = GameState.currentBattle;
+    if (!b) return;
+    if (touchState.mode === 'pinch' && ev.touches.length >= 2) {
+      const d = clientDist(ev.touches[0], ev.touches[1]);
+      const m = clientMid(ev.touches[0], ev.touches[1]);
+      if (BattleView.pinchStartDist > 0) {
+        const ratio = d / BattleView.pinchStartDist;
+        zoomAt(m.x, m.y, BattleView.pinchStartZoom * ratio);
+      }
+      hideTip();
+      ev.preventDefault();
+      return;
+    }
+    if (touchState.mode === 'pan' && ev.touches.length === 1) {
+      const t = ev.touches[0];
+      const dx = t.clientX - BattleView.lastX;
+      const dy = t.clientY - BattleView.lastY;
+      const r = canvas.getBoundingClientRect();
+      BattleView.offsetX += dx * (CANVAS_SZ / r.width);
+      BattleView.offsetY += dy * (CANVAS_SZ / r.height);
+      BattleView.lastX = t.clientX;
+      BattleView.lastY = t.clientY;
+      if (Math.abs(t.clientX - touchState.startX) + Math.abs(t.clientY - touchState.startY) > 6) BattleView.moved = true;
+      clampBattleView();
+      hideTip();
+      ev.preventDefault();
+    }
+  }, { passive: false });
+  canvas.addEventListener('touchend', ev => {
+    const b = GameState.currentBattle;
+    if (!b) return;
+    if (touchState.mode === 'pan' && !BattleView.moved && Date.now() - touchState.startTime < 260) {
+      const t = ev.changedTouches[0];
+      if (t) {
+        const { gx, gy } = eventToGrid(t.clientX, t.clientY);
+        if (inBounds(gx, gy)) canvasBattleClick(gx, gy);
+      }
+    }
+    if (ev.touches.length === 0) touchState.mode = 'none';
+  }, { passive: false });
 
   //══════════ INIT ══════════
   function init() {
