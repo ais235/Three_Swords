@@ -130,6 +130,18 @@
     .cell-info { background: var(--bg-panel); border-radius: 6px; padding: 10px; font-size: 11px; color: var(--text-dim); flex: 1; }
     .cell-info-icon { font-size: 24px; margin-bottom: 6px; }
     .cell-info-name { color: var(--text-main); font-size: 12px; margin-bottom: 4px; }
+    .city-body { display: grid; grid-template-columns: 160px 1fr 200px; min-height: 420px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .city-left, .city-right { background: var(--bg-card); padding: 10px; }
+    .city-left { border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+    .city-center { padding: 10px; display: flex; flex-direction: column; gap: 8px; background: var(--bg-dark); }
+    .city-right { border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+    .city-name { font-size: 12px; color: var(--accent-gold); letter-spacing: 1px; }
+    .npc { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font-size: 10px; color: var(--text-dim); }
+    .npc.active { border-color: var(--accent-gold); }
+    .city-heroes { margin-top: auto; border-top: 1px solid var(--border); padding-top: 8px; }
+    .city-hero-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; font-size: 10px; }
+    .city-items-grid { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 6px; }
+    .service-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 7px; padding: 8px; }
     #map-screen, #battle-screen, #city-screen, #inventory-screen { min-height: calc(100vh - 56px); }
     .rarity-common { color: #b0b0b0; }
     .rarity-rare { color: #4a9eff; }
@@ -270,8 +282,31 @@
     <div id="city-screen" class="screen hidden">
       <h2>🏙️ Город</h2>
       <p class="stats-line">Торговец и отдых. Золото: <span id="city-gold">0</span></p>
-      <div id="shop-list"></div>
-      <div id="city-actions" class="panel"></div>
+      <div class="city-body">
+        <div class="city-left">
+          <div class="city-name">🏘 ЛЕСНОЙ ПРИЮТ</div>
+          <div class="npc active">🛒 Торговец<br><small>Оружие · Броня · Артефакты</small></div>
+          <div class="npc">⚗ Алхимик<br><small>Улучшение предметов</small></div>
+          <div class="npc">🔮 Оракул<br><small>Инфо о следующем бою</small></div>
+          <div id="city-heroes" class="city-heroes"></div>
+        </div>
+        <div class="city-center">
+          <div id="shop-list" class="city-items-grid"></div>
+          <div id="city-actions" class="panel"></div>
+        </div>
+        <div class="city-right">
+          <div class="service-card">
+            <div><b>⚗ Алхимик</b></div>
+            <div class="stats-line">Обычный→Редкий: 100g<br>Редкий→Эпический: 200g</div>
+            <button class="btn btn-ad" id="btn-city-alch-ad">📺 Улучшить бесплатно</button>
+          </div>
+          <div class="service-card">
+            <div><b>🔮 Оракул</b></div>
+            <div class="stats-line">Покажет врагов следующей миссии</div>
+            <button class="btn btn-ad" id="btn-city-oracle-ad">📺 Узнать будущее</button>
+          </div>
+        </div>
+      </div>
       <button class="btn" id="btn-leave-city">Покинуть город</button>
     </div>
 
@@ -2051,6 +2086,16 @@
     if (!strangerOnly) GameState.shopStock = generateShopStock(node.region);
     GameState.cityState = { adUpgradeUsed: false, secretRevealed: false, secretItemId: randomItem(node.region, 'epic').id };
     const shop = document.getElementById('shop-list');
+    const hbox = document.getElementById('city-heroes');
+    if (hbox) {
+      hbox.innerHTML = GameState.heroes.map(h => `
+        <div class="city-hero-row">
+          <span>${h.emoji}</span>
+          <span>${h.name}</span>
+          <span style="margin-left:auto;color:var(--text-dim)">${h.hp}/${h.maxHp}</span>
+        </div>
+      `).join('');
+    }
     const secretCard = window.ysdk ? `<div class="item-card"><b>❓ Тайный товар</b><br><button class="btn" id="btn-secret">Открыть за рекламу</button></div>` : '';
     shop.innerHTML = GameState.shopStock.map(it => `<div class="item-card rarity-${it.rarity}"><b>${it.name}</b><br>${it.price}💰 <button class="btn" data-buy="${it.id}">Купить</button></div>`).join('') + secretCard;
     shop.querySelectorAll('[data-buy]').forEach(btn => {
@@ -2112,6 +2157,10 @@
       const wave = generateEnemyWaveForCell(next).map(id => enemyDef(id).emoji).join(' ');
       alert(`Оракул видит бой: ${wave}`);
     });
+    const rightAlch = document.getElementById('btn-city-alch-ad');
+    if (rightAlch) rightAlch.onclick = () => al && al.click();
+    const rightOracle = document.getElementById('btn-city-oracle-ad');
+    if (rightOracle) rightOracle.onclick = () => oracle && oracle.click();
     showScreen('city');
   }
 
