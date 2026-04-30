@@ -50,6 +50,12 @@
     #topbar-right { min-width: 110px; text-align: right; }
     #btn-open-menu { padding: 4px 8px; margin: 0; }
     .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+    .battle-layout { display: grid; grid-template-columns: 140px 1fr 160px; width: 100%; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .battle-left { background: var(--bg-card); border-right: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .hero-mini { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 6px; font-size: 10px; }
+    .hero-mini.active { border-color: var(--accent-blue); }
+    .hp-line { height: 4px; border-radius: 2px; background: #1a1a2e; overflow: hidden; margin-top: 3px; }
+    .hp-fill { height: 100%; background: var(--accent-green); }
     #battle-wrap { display: flex; gap: 0; align-items: stretch; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; }
     #battle-canvas {
       display: block;
@@ -58,10 +64,10 @@
       image-rendering: pixelated;
     }
     #battle-log {
-      width: 200px;
+      width: 100%;
       height: 512px;
       background: var(--bg-panel);
-      border-left: 2px solid var(--border);
+      border-left: none;
       overflow-y: auto;
       font-size: 11px;
       padding: 8px;
@@ -81,7 +87,7 @@
     .init-slot.hero { border-color: var(--accent-blue); }
     .init-slot.enemy { border-color: var(--accent-red); }
     .init-slot.active { outline: 2px solid var(--accent-gold); box-shadow: 0 0 8px rgba(240,165,0,.5); }
-    #ui-overlay { flex: 1; min-width: 280px; }
+    #ui-overlay { min-width: 160px; background: var(--bg-card); border-left: 1px solid var(--border); padding: 8px; }
     .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .stats-line { font-size: 12px; color: var(--text-dim); margin: 4px 0; }
     .btn {
@@ -312,12 +318,13 @@
 
     <div id="battle-screen" class="screen hidden">
       <div id="initiative-bar"></div>
-      <div class="row">
+      <div class="battle-layout">
+        <div class="battle-left" id="battle-left-heroes"></div>
         <div id="battle-wrap">
           <canvas id="battle-canvas" width="512" height="512"></canvas>
-          <div id="battle-log"></div>
         </div>
         <div id="ui-overlay">
+          <div id="battle-log"></div>
           <div class="panel" id="unit-panel">
             <div id="unit-title">—</div>
             <div id="unit-stats"></div>
@@ -1510,11 +1517,22 @@
   //══════════ Hero UI & actions ══════════
   function updateBattleUI() {
     const b = GameState.currentBattle;
+    const left = document.getElementById('battle-left-heroes');
     const deployHint = document.getElementById('deploy-hint');
     const title = document.getElementById('unit-title');
     const stats = document.getElementById('unit-stats');
     const actions = document.getElementById('action-buttons');
     if (!b) return;
+    if (left) {
+      left.innerHTML = b.units.filter(u => u.isHero && u.hp > 0).map(h => {
+        const active = getActiveUnit() === h ? 'active' : '';
+        const hpPct = Math.max(0, Math.min(100, Math.round((h.hp / h.maxHp) * 100)));
+        const mana = h.maxMana ? `<div>MP ${h.mana}/${h.maxMana}</div>` : '';
+        return `<div class="hero-mini ${active}">${h.sprite} ${h.name}<div>HP ${h.hp}/${h.maxHp}</div>${mana}
+          <div class="hp-line"><div class="hp-fill" style="width:${hpPct}%"></div></div>
+          <div class="eq-mini">${heroEquipIcons(GameState.heroes.find(x => x.id === h.heroId) || h)}</div></div>`;
+      }).join('');
+    }
     if (b.phase === 'deploy') {
       deployHint.classList.remove('hidden');
       const list = GameState.heroes.filter(h => h.hp > 0);
