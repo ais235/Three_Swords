@@ -502,6 +502,61 @@
         padding: 3px 6px;
         font-size: 8px;
       }
+
+      /* Main menu: horizontal phone composition */
+      #main-menu { min-height: calc(100vh - 8px); }
+      .menu-screen { padding: 14px 10px; gap: 10px; width: 100%; }
+      .menu-logo-icon { font-size: 24px; margin-bottom: 2px; }
+      .menu-logo-title { font-size: 18px; letter-spacing: 2px; }
+      .menu-logo-sub { font-size: 8px; letter-spacing: 3px; margin-top: 2px; }
+      .menu-btns {
+        width: min(520px, 100%);
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+      }
+      .menu-btns .btn {
+        min-height: 36px;
+        margin: 0;
+        padding: 6px 8px;
+        font-size: 10px;
+      }
+      .menu-diff {
+        font-size: 9px;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .diff-opt {
+        min-height: 28px;
+        padding: 5px 8px;
+        font-size: 9px;
+        display: inline-flex;
+        align-items: center;
+      }
+      .menu-meta { font-size: 8px; line-height: 1.35; }
+
+      /* Perk modal: keep tree readable in landscape */
+      .perk-modal-box { width: min(940px, 98vw); max-height: 96vh; }
+      .perk-modal-topbar { padding: 6px 8px; }
+      .perk-modal-title { font-size: 11px; }
+      .perk-modal-hint { font-size: 8px; }
+      .perk-modal-body { grid-template-columns: 1fr 170px; }
+      .perk-branches { padding: 8px; gap: 4px; }
+      .perk-col-header { font-size: 8px; padding: 3px 4px; margin-bottom: 4px; }
+      .perk-skill { width: 62px; min-height: 52px; padding: 3px; }
+      .perk-skill-icon { font-size: 12px; }
+      .perk-skill-name { font-size: 7px; }
+      .perk-connector { height: 6px; }
+      .perk-detail-panel { padding: 8px; gap: 4px; }
+      .perk-detail-icon { font-size: 16px; margin-bottom: 2px; }
+      .perk-detail-name { font-size: 10px; margin-bottom: 1px; }
+      .perk-detail-branch, .perk-detail-effect, .perk-detail-desc { font-size: 8px; margin-bottom: 4px; }
+      #perk-detail-panel .btn { min-height: 30px; font-size: 8px; padding: 3px 4px; }
+
+      /* Generic polish */
+      .modal-box { max-width: 92vw; padding: 10px; }
+      #tooltip { font-size: 9px; max-width: 170px; padding: 6px; }
     }
     @media (max-width: 480px) and (orientation: portrait) {
       #battle-canvas { width: 288px; height: 288px; min-width: 288px; min-height: 288px; }
