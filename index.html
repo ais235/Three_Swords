@@ -91,15 +91,15 @@
     .hero-mini.active { border-color: var(--accent-blue); }
     .hp-line { height: 4px; border-radius: 2px; background: #1a1a2e; overflow: hidden; margin-top: 3px; }
     .hp-fill { height: 100%; background: var(--accent-green); }
-    #battle-wrap { display: flex; gap: 0; align-items: center; justify-content: center; border: 2px solid var(--border); border-radius: 0; overflow: hidden; min-width: 0; min-height: 0; background: #0b0d1b; }
+    #battle-wrap { display: flex; gap: 0; align-items: stretch; justify-content: stretch; border: 2px solid var(--border); border-radius: 0; overflow: hidden; min-width: 0; min-height: 0; background: #0b0d1b; }
     #battle-canvas {
       display: block;
       background: #111;
       cursor: crosshair;
       image-rendering: pixelated;
-      width: min(100%, calc(100vh - 96px));
-      height: auto;
-      aspect-ratio: 1 / 1;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     #battle-log {
       flex: 1;
@@ -436,7 +436,7 @@
       .hero-card-class, .bar-label { font-size: 8px; }
       .skill-btn { width: 20px; height: 20px; font-size: 10px; }
       #battle-wrap { border-width: 1px; }
-      #battle-canvas { width: min(100%, calc(100vh - 106px)); height: auto; aspect-ratio: 1 / 1; min-width: 0; min-height: 0; }
+      #battle-canvas { width: 100%; height: 100%; object-fit: cover; min-width: 0; min-height: 0; }
       #ui-overlay { min-width: 0; padding: 6px; gap: 4px; }
       .br-label { font-size: 8px; margin-bottom: 2px; }
       #initiative-bar { gap: 2px; margin-bottom: 2px; }
@@ -602,7 +602,7 @@
       .bar-label { font-size: 7px; margin-bottom: 1px; }
       .skills-row { gap: 2px; margin-top: 2px; }
       .skill-btn { width: 18px; height: 18px; font-size: 9px; }
-      #battle-canvas { width: min(100%, calc(100vh - 88px)); height: auto; aspect-ratio: 1 / 1; min-width: 0; min-height: 0; }
+      #battle-canvas { width: 100%; height: 100%; object-fit: cover; min-width: 0; min-height: 0; }
       #ui-overlay { min-width: 0; padding: 4px; gap: 3px; }
       .br-label { font-size: 7px; margin-bottom: 1px; }
       .init-slot { width: 18px; height: 18px; font-size: 11px; }
@@ -1637,9 +1637,15 @@
   }
   function eventToCanvasPx(clientX, clientY) {
     const r = canvas.getBoundingClientRect();
+    // Canvas is shown with object-fit: cover, so part of image can be cropped.
+    const scale = Math.max(r.width / CANVAS_SZ, r.height / CANVAS_SZ);
+    const drawW = CANVAS_SZ * scale;
+    const drawH = CANVAS_SZ * scale;
+    const offX = (r.width - drawW) / 2;
+    const offY = (r.height - drawH) / 2;
     return {
-      x: (clientX - r.left) * (CANVAS_SZ / r.width),
-      y: (clientY - r.top) * (CANVAS_SZ / r.height)
+      x: (clientX - r.left - offX) / scale,
+      y: (clientY - r.top - offY) / scale
     };
   }
   function eventToGrid(clientX, clientY) {
@@ -1837,14 +1843,18 @@
   function spawnDamageFx(x, y, n) {
     const layer = document.getElementById('fx-layer');
     const rect = canvas.getBoundingClientRect();
-    const scaleToCss = rect.width / CANVAS_SZ;
+    const scaleToCss = Math.max(rect.width / CANVAS_SZ, rect.height / CANVAS_SZ);
+    const drawW = CANVAS_SZ * scaleToCss;
+    const drawH = CANVAS_SZ * scaleToCss;
+    const offX = (rect.width - drawW) / 2;
+    const offY = (rect.height - drawH) / 2;
     const cx = (x * CELL + CELL / 2) * BattleView.zoom + BattleView.offsetX;
     const cy = (y * CELL) * BattleView.zoom + BattleView.offsetY;
     const d = document.createElement('div');
     d.className = 'fx-dmg';
     d.style.color = '#ff5555';
-    d.style.left = (rect.left + cx * scaleToCss) + 'px';
-    d.style.top = (rect.top + cy * scaleToCss) + 'px';
+    d.style.left = (rect.left + offX + cx * scaleToCss) + 'px';
+    d.style.top = (rect.top + offY + cy * scaleToCss) + 'px';
     d.textContent = '-' + n;
     layer.appendChild(d);
     setTimeout(() => d.remove(), 900);
