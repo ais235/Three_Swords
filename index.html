@@ -66,10 +66,15 @@
     #battle-log .l-enemy { color: var(--accent-red); }
     #battle-log .l-status { color: #f1c40f; }
     #initiative-bar {
-      display: flex; gap: 4px; flex-wrap: wrap; padding: 8px;
-      background: var(--bg-card); border-radius: 6px; margin-bottom: 8px; min-height: 40px; align-items: center;
+      display: flex; gap: 6px; flex-wrap: wrap; padding: 6px;
+      background: var(--bg-card); border-radius: 6px; margin-bottom: 8px; min-height: 36px; align-items: center;
     }
-    .init-slot { font-size: 1.4rem; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); background: #0a0a14; }
+    .init-slot {
+      width: 24px; height: 24px; font-size: 16px; border-radius: 4px;
+      border: 2px solid var(--border); background: #0a0a14; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .init-slot.hero { border-color: var(--accent-blue); }
+    .init-slot.enemy { border-color: var(--accent-red); }
     .init-slot.active { outline: 2px solid var(--accent-gold); box-shadow: 0 0 8px rgba(240,165,0,.5); }
     #ui-overlay { flex: 1; min-width: 280px; }
     .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
@@ -1066,7 +1071,7 @@
       const u = b.units[unitIdx];
       if (!u || u.hp <= 0) return;
       const d = document.createElement('span');
-      d.className = 'init-slot' + (u === active ? ' active' : '');
+      d.className = 'init-slot ' + (u.isHero ? 'hero' : 'enemy') + (u === active ? ' active' : '');
       d.textContent = u.isHero ? u.sprite : u.emoji;
       bar.appendChild(d);
     });
@@ -2043,6 +2048,23 @@
 
   function showRewardAd(cb) { showRewardedAd(cb); }
 
+  function enemyAbilityText(enemyId) {
+    const m = {
+      [ENEMY_IDS.SKELETON]: 'Обычная атака.',
+      [ENEMY_IDS.GOBLIN_ARCHER]: 'Отступает при ближнем контакте.',
+      [ENEMY_IDS.BOAR]: 'Рывок к цели.',
+      [ENEMY_IDS.ZOMBIE]: 'Взрыв при смерти.',
+      [ENEMY_IDS.SHAMAN]: 'Лечит союзников.',
+      [ENEMY_IDS.ORC_GUARD]: 'Тяжелая броня.',
+      [ENEMY_IDS.SUICIDE]: 'Самоподрыв рядом с героем.',
+      [ENEMY_IDS.SPIDER]: 'Накладывает паутину.',
+      [ENEMY_IDS.WATCHER]: 'Усиливает союзников.',
+      [ENEMY_IDS.ICE_ELEM]: 'Морозит при атаке.',
+      [ENEMY_IDS.DARK_LORD]: 'Фазовый босс.'
+    };
+    return m[enemyId] || 'Опасный противник.';
+  }
+
   //══════════ INPUT (battle) ══════════
   canvas.addEventListener('mousemove', e => {
     const b = GameState.currentBattle;
@@ -2054,9 +2076,23 @@
     const tip = document.getElementById('tooltip');
     if (u && !u.isHero) {
       tip.style.display = 'block';
-      tip.style.left = (e.clientX + 12) + 'px';
-      tip.style.top = (e.clientY + 12) + 'px';
-      tip.innerHTML = `<b>${u.emoji} ${u.name}</b><br/>HP ${u.hp}/${u.maxHp}<br/>Атк ${u.attack} Дальн ${u.range}`;
+      const hpPct = Math.max(0, Math.min(100, Math.round((u.hp / u.maxHp) * 100)));
+      const sts = (u.activeStatuses || []).map(s => s.type === STATUS.FREEZE ? '🧊' : s.type === STATUS.POISON ? '☠️' : s.type === STATUS.SLOW ? '🐢' : '•').join(' ');
+      tip.innerHTML = `<b>${u.emoji} ${u.name}</b><br/>
+      HP: ${u.hp}/${u.maxHp}
+      <div style="height:6px;background:#222;border:1px solid #444;border-radius:3px;overflow:hidden;margin:4px 0">
+        <div style="height:100%;width:${hpPct}%;background:#e74c3c"></div>
+      </div>
+      Атака: ${u.attack} | Броня: ${u.armor}<br/>
+      Статусы: ${sts || 'нет'}<br/>
+      <span class="stats-line">${enemyAbilityText(u.enemyId)}</span>`;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const tw = 220, th = 120;
+      let lx = e.clientX + 12, ly = e.clientY + 12;
+      if (lx + tw > vw - 8) lx = vw - tw - 8;
+      if (ly + th > vh - 8) ly = vh - th - 8;
+      tip.style.left = lx + 'px';
+      tip.style.top = ly + 'px';
     } else hideTip();
   });
   function hideTip() { document.getElementById('tooltip').style.display = 'none'; }
