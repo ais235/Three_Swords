@@ -56,6 +56,16 @@
     .hero-card.active { border-color: var(--accent-blue); }
     .hero-card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
     .hero-icon-large { font-size: 18px; }
+    .hero-icon-large-img {
+      width: 22px;
+      height: 22px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #0d0d1a;
+      display: inline-block;
+      vertical-align: middle;
+    }
     .hero-card-name { font-size: 11px; color: var(--text-main); font-weight: 500; }
     .hero-card-class { font-size: 9px; color: var(--text-dim); }
     .bar-wrap { margin-bottom: 3px; }
@@ -1565,6 +1575,39 @@
   //══════════ RENDER ══════════
   const canvas = document.getElementById('battle-canvas');
   const ctx = canvas.getContext('2d');
+  const HERO_TEXTURE_PATHS = {
+    garet: 'assets/heroes/garet.png',
+    alira: 'assets/heroes/alira.png',
+    seris: 'assets/heroes/seris.png'
+  };
+  const HeroTextures = {};
+  Object.entries(HERO_TEXTURE_PATHS).forEach(([heroId, src]) => {
+    const img = new Image();
+    img.src = src;
+    HeroTextures[heroId] = img;
+  });
+  const TILE_TEXTURE_PATHS = {
+    [TILE.GROUND]: 'assets/tiles/ground.png',
+    [TILE.FOREST]: 'assets/tiles/forest.png',
+    [TILE.MOUNTAIN]: 'assets/tiles/mountain.png',
+    [TILE.WATER]: 'assets/tiles/water.png'
+  };
+  const TileTextures = {};
+  Object.entries(TILE_TEXTURE_PATHS).forEach(([tileType, src]) => {
+    const img = new Image();
+    img.src = src;
+    TileTextures[tileType] = img;
+  });
+  function getHeroTexture(heroId) {
+    const tex = HeroTextures[heroId];
+    if (tex && tex.complete && tex.naturalWidth > 0) return tex;
+    return null;
+  }
+  function heroIconHtml(heroId, fallback, cls) {
+    const tex = getHeroTexture(heroId);
+    if (tex) return `<img src="${HERO_TEXTURE_PATHS[heroId]}" class="${cls || 'hero-icon-large-img'}" alt="${heroId}" />`;
+    return `<span class="hero-icon-large">${fallback || '🙂'}</span>`;
+  }
 
   function drawBattle() {
     const b = GameState.currentBattle;
@@ -1576,14 +1619,23 @@
 
     for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
       const px = x * CELL, py = y * CELL;
-      ctx.fillStyle = '#2a2a3a';
-      ctx.fillRect(px, py, CELL, CELL);
+      const t = b.grid[y][x];
+      const tex = TileTextures[t];
+      if (tex && tex.complete && tex.naturalWidth > 0) {
+        ctx.drawImage(tex, px, py, CELL, CELL);
+      } else {
+        ctx.fillStyle = '#2a2a3a';
+        ctx.fillRect(px, py, CELL, CELL);
+      }
       ctx.strokeStyle = '#1a1a2e';
       ctx.strokeRect(px, py, CELL, CELL);
-      ctx.font = '28px serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(TILE_EMOJI[b.grid[y][x]] || '🟫', px + CELL / 2, py + CELL / 2);
+      // Keep emoji fallback for tiles without texture (e.g. fort/fire)
+      if (!tex || !tex.complete || tex.naturalWidth === 0) {
+        ctx.font = '28px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(TILE_EMOJI[t] || '🟫', px + CELL / 2, py + CELL / 2);
+      }
       if (sel && sel.x === x && sel.y === y) {
         ctx.fillStyle = 'rgba(255,255,0,0.25)';
         ctx.fillRect(px, py, CELL, CELL);
@@ -1620,8 +1672,21 @@
         if (t === TILE.FOREST || nearM) show = false;
       }
       if (show) {
-        ctx.font = '32px serif';
-        ctx.fillText(u.isHero ? u.sprite : u.emoji, px + CELL / 2, py + CELL / 2 - 4);
+        if (u.isHero) {
+          const hTex = getHeroTexture(u.heroId);
+          if (hTex) {
+            const sz = 34;
+            const ox = px + (CELL - sz) / 2;
+            const oy = py + (CELL - sz) / 2 - 6;
+            ctx.drawImage(hTex, ox, oy, sz, sz);
+          } else {
+            ctx.font = '32px serif';
+            ctx.fillText(u.sprite, px + CELL / 2, py + CELL / 2 - 4);
+          }
+        } else {
+          ctx.font = '32px serif';
+          ctx.fillText(u.emoji, px + CELL / 2, py + CELL / 2 - 4);
+        }
         ctx.font = '10px monospace';
         ctx.fillStyle = '#fff';
         ctx.fillText(`${u.hp}/${u.maxHp}`, px + CELL / 2, py + CELL - 6);
@@ -2141,7 +2206,7 @@
         const deadStyle = alive ? '' : 'opacity:0.4;';
         return `<div class="hero-card ${active}" style="${deadStyle}">
           <div class="hero-card-top">
-            <span class="hero-icon-large">${h.sprite}</span>
+            ${heroIconHtml(h.heroId, h.sprite)}
             <div><div class="hero-card-name">${h.name}</div><div class="hero-card-class">${roleLabel[h.heroId] || ''}</div></div>
           </div>
           <div class="bar-wrap"><div class="bar-label"><span>HP</span><span>${h.hp}/${h.maxHp}</span></div><div class="bar"><div class="bar-fill-hp" style="width:${hpPct}%"></div></div></div>
@@ -2177,7 +2242,7 @@
       return;
     }
     b.selected = u;
-    title.textContent = `${u.sprite} ${u.name}`;
+    title.innerHTML = `${heroIconHtml(u.heroId, u.sprite)} <span style="margin-left:6px">${u.name}</span>`;
     const hh = GameState.heroes.find(x => x.id === u.heroId);
     let st = `HP ${u.hp}/${u.maxHp} | Броня ${u.armor} | Атк ${u.attack} | Ход ${getMovePoints(u, b)}/${u.move}`;
     if (u.heroId === 'seris') st += ` | Мана ${u.mana}/${u.maxMana}`;
