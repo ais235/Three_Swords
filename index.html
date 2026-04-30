@@ -8,14 +8,19 @@
     :root {
       --bg-dark: #0d0d1a;
       --bg-panel: #1a1a2e;
-      --bg-card: #16213e;
+      --bg-card: #111128;
+      --bg-card-hover: #151530;
       --accent-gold: #f0a500;
       --accent-blue: #4a9eff;
+      --accent-purple: #9b59b6;
+      --accent-teal: #1abc9c;
       --accent-red: #e74c3c;
       --accent-green: #2ecc71;
       --text-main: #e8e8f0;
       --text-dim: #8888aa;
+      --text-hint: #555577;
       --border: #2a2a4a;
+      --border-active: #4a9eff;
     }
     * { box-sizing: border-box; }
     body {
@@ -26,7 +31,7 @@
       min-height: 100vh;
       overflow-x: auto;
     }
-    #game-container { max-width: 1200px; margin: 0 auto; padding: 12px; }
+    #game-container { max-width: 1200px; margin: 0 auto; padding: 12px; min-height: 100vh; }
     h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 8px; display: none; }
     #hud-top {
       height: 36px;
@@ -77,15 +82,27 @@
     .init-slot.enemy { border-color: var(--accent-red); }
     .init-slot.active { outline: 2px solid var(--accent-gold); box-shadow: 0 0 8px rgba(240,165,0,.5); }
     #ui-overlay { flex: 1; min-width: 280px; }
-    .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+    .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .stats-line { font-size: 12px; color: var(--text-dim); margin: 4px 0; }
     .btn {
-      background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border);
-      padding: 8px 12px; margin: 4px 4px 4px 0; cursor: pointer; border-radius: 6px; font-family: inherit;
+      background: var(--bg-panel);
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      padding: 5px 14px;
+      margin: 4px 4px 4px 0;
+      cursor: pointer;
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 11px;
     }
-    .btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .btn:hover { background: var(--bg-card-hover); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-primary { background: #1e3a5f; border-color: var(--accent-blue); }
+    .btn-primary { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .btn-gold { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .btn-green { border-color: var(--accent-green); color: var(--accent-green); }
+    .btn-red { border-color: var(--accent-red); color: var(--accent-red); }
+    .btn-ad { border-color: var(--accent-purple); color: var(--accent-purple); }
+    .btn-dim { border-color: var(--border); color: var(--text-hint); cursor: not-allowed; }
     .hidden { display: none !important; }
     #map-screen .node-grid { display: grid; grid-template-columns: repeat(6, 72px); gap: 6px; width: max-content; }
     .map-node {
@@ -98,10 +115,11 @@
     .map-node.locked { opacity: 0.35; pointer-events: none; }
     .map-node.current { outline: 2px solid var(--accent-blue); }
     .map-node small { font-size: 9px; color: var(--text-dim); }
+    #map-screen, #battle-screen, #city-screen, #inventory-screen { min-height: calc(100vh - 56px); }
     .rarity-common { color: #b0b0b0; }
     .rarity-rare { color: #4a9eff; }
     .rarity-epic { color: #f0a500; }
-    #main-menu { text-align: center; }
+    #main-menu { text-align: center; min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     #world-panel { overflow: auto; }
     #tooltip {
       position: fixed; z-index: 1000; pointer-events: none;
@@ -140,14 +158,31 @@
     .perk-node.taken { opacity: 0.5; pointer-events: none; }
     .line-v { border-left: 2px solid var(--border); margin-left: 8px; padding-left: 8px; }
     #victory-screen h2 { color: var(--accent-green); }
-    .item-card { display: inline-block; margin: 4px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; font-size: 11px; width: 220px; vertical-align: top; }
+    .badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; }
+    .badge-common { background:#1a1a2e; color:#8888aa; border:1px solid #2a2a4a; }
+    .badge-rare { background:#0d1520; color:#4a9eff; border:1px solid #185fa5; }
+    .badge-epic { background:#1a0800; color:#f0a500; border:1px solid #854f0b; }
+    .item-card {
+      display: inline-block;
+      margin: 4px;
+      padding: 9px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 11px;
+      width: 220px;
+      vertical-align: top;
+      cursor: pointer;
+    }
+    .item-card:hover { border-color: var(--accent-blue); }
+    .item-card.selected { border-color: var(--accent-gold); background: #150f00; }
     #inventory-layout { display: flex; gap: 10px; }
     #inv-left { width: 180px; }
     #inv-right { flex: 1; }
     .hero-tab { width: 100%; text-align: left; }
     .equip-slot { padding: 6px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; cursor: pointer; }
     .equip-slot.empty { color: var(--text-dim); font-style: italic; }
-    #bag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    #bag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
     .bag-item { border: 1px solid var(--border); border-radius: 6px; padding: 6px; cursor: pointer; }
     .bag-item.active { outline: 2px solid var(--accent-gold); }
     #inv-detail { min-height: 120px; }
@@ -1706,15 +1741,24 @@
       };
     });
     const bag = document.getElementById('bag-grid');
-    bag.innerHTML = (GameState.inventory || []).map(id => {
-      const it = itemById(id);
-      if (!it) return '';
-      const active = id === InvState.selectedItemId ? 'active' : '';
-      return `<div class="bag-item ${active} rarity-${it.rarity}" data-item="${id}">${it.name}<br><small>${it.slot}</small></div>`;
-    }).join('');
-    bag.querySelectorAll('.bag-item').forEach(el => {
-      el.onclick = () => { InvState.selectedItemId = el.getAttribute('data-item'); renderInventoryScreen(); };
-    });
+    const invList = (GameState.inventory || []).filter(id => itemById(id));
+    if (invList.length === 0) {
+      bag.innerHTML = '<div style="grid-column:1/-1;color:var(--text-dim);text-align:center;padding:20px;">Рюкзак пуст</div><div style="grid-column:1/-1"><button class="btn" id="btn-bag-back">← Вернуться</button></div>';
+      const bb = document.getElementById('btn-bag-back');
+      if (bb) bb.onclick = () => { showScreen('map'); renderMap(); };
+    } else {
+      bag.innerHTML = invList.map(id => {
+        const it = itemById(id);
+        const active = id === InvState.selectedItemId ? 'active' : '';
+        const emoji = it.name.split(' ')[0];
+        const cleanName = it.name.split(' ').slice(1).join(' ');
+        const statText = Object.entries(it.mods || {}).filter(([k,v]) => typeof v === 'number' && v > 0).map(([k,v]) => `+${v} ${k}`).join(', ') || 'особый';
+        return `<div class="bag-item ${active} rarity-${it.rarity}" data-item="${id}"><div style="font-size:22px">${emoji}</div><div style="font-size:10px;color:#e8e8f0">${cleanName}</div><div style="font-size:9px;color:#2ecc71">${statText}</div><div style="font-size:9px;color:#f0a500">${it.price}g</div></div>`;
+      }).join('');
+      bag.querySelectorAll('.bag-item').forEach(el => {
+        el.onclick = () => { InvState.selectedItemId = el.getAttribute('data-item'); renderInventoryScreen(); };
+      });
+    }
     const detail = document.getElementById('inv-detail');
     const sel = itemById(InvState.selectedItemId);
     if (!sel) { detail.textContent = 'Выберите предмет справа.'; return; }
@@ -1844,8 +1888,12 @@
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById('main-menu').classList.add('hidden');
-    document.getElementById('hud-top').classList.remove('hidden');
-    if (name === 'menu') document.getElementById('main-menu').classList.remove('hidden');
+    if (name === 'menu') {
+      document.getElementById('main-menu').classList.remove('hidden');
+      document.getElementById('hud-top').classList.add('hidden');
+    } else {
+      document.getElementById('hud-top').classList.remove('hidden');
+    }
     if (name === 'map') document.getElementById('map-screen').classList.remove('hidden');
     if (name === 'city') document.getElementById('city-screen').classList.remove('hidden');
     if (name === 'battle') document.getElementById('battle-screen').classList.remove('hidden');
@@ -1895,7 +1943,9 @@
       if (!unlocked) el.classList.add('locked');
       if (node.completed) el.classList.add('done');
       if (node.x === GameState.playerPos.x && node.y === GameState.playerPos.y) el.classList.add('current');
-      el.innerHTML = `<div>${node.emoji}</div><small>(${node.x},${node.y})</small>`;
+      const typeNames = { mission:'Миссия', city:'Город', dungeon:'Подземелье', event:'Событие', boss:'Босс', wanderer:'Странник', arena:'Арена', final:'Финал' };
+      const typeLbl = unlocked ? (typeNames[node.type] || '') : '';
+      el.innerHTML = `<div>${node.emoji}</div>${typeLbl ? `<small style="font-size:8px;color:#555577">${typeLbl}</small>` : ''}`;
       el.onclick = () => {
         if (!unlocked) return;
         const cur = getCurrentCell();
@@ -1963,14 +2013,18 @@
       const b = document.getElementById('buy-secret');
       if (b) b.onclick = () => { if (GameState.gold >= price) { GameState.gold -= price; GameState.inventory.push(item.id); saveGame(); enterCity(node, strangerOnly); } };
     });
+    const healCost = GameState.heroes.reduce((sum, h) => sum + Math.max(0, h.maxHp - h.hp) * 2, 0);
+    const allHealthy = healCost === 0;
+    const heroHpLines = GameState.heroes.map(h => `${h.emoji} ${h.name}: ${h.hp}/${h.maxHp}`).join(' · ');
     document.getElementById('city-actions').innerHTML = `
-      <button class="btn" id="btn-heal-full">Полное лечение (60💰)</button>
+      <div class="stats-line" style="margin-bottom:6px">${heroHpLines}</div>
+      <button class="btn" id="btn-heal-full"${allHealthy ? ' disabled' : ''}>${allHealthy ? 'Все здоровы' : `Лечить всех · ${healCost}g`}</button>
       <button class="btn" id="btn-reroll-shop">Обновить ассортимент (20💰)</button>
       <button class="btn" id="btn-alchemy">Алхимик: улучшить предмет</button>
       ${window.ysdk ? '<button class="btn" id="btn-oracle">🔮 Узнать будущее [реклама]</button>' : ''}
     `;
     const heal = document.getElementById('btn-heal-full');
-    if (heal) heal.onclick = () => { if (GameState.gold >= 60) { GameState.gold -= 60; GameState.heroes.forEach(h => h.hp = h.maxHp); saveGame(); enterCity(node, strangerOnly); } };
+    if (heal) heal.onclick = () => { if (!allHealthy && GameState.gold >= healCost) { GameState.gold -= healCost; GameState.heroes.forEach(h => h.hp = h.maxHp); saveGame(); enterCity(node, strangerOnly); } };
     const rer = document.getElementById('btn-reroll-shop');
     if (rer) rer.onclick = () => { if (GameState.gold >= 20) { GameState.gold -= 20; GameState.shopStock = generateShopStock(node.region); saveGame(); enterCity(node, strangerOnly); } };
     const al = document.getElementById('btn-alchemy');
@@ -2141,7 +2195,7 @@
       buildWorldMap();
       GameState.gold = 150;
       GameState.turn = 1;
-      GameState.inventory = [];
+      GameState.inventory = ['steel_sword', 'leather', 'luck_amulet'];
       GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
       GameState.difficulty = document.getElementById('difficulty-select').value;
       saveGame();
