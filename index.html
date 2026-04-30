@@ -558,6 +558,120 @@
       .modal-box { max-width: 92vw; padding: 10px; }
       #tooltip { font-size: 9px; max-width: 170px; padding: 6px; }
     }
+    @media (max-height: 430px) and (orientation: landscape) {
+      #game-container { padding: 4px; }
+      #hud-top {
+        height: 26px;
+        margin: -4px -4px 4px;
+        padding: 0 5px;
+      }
+      #topbar-left { min-width: 42px; font-size: 10px; }
+      #topbar-right { min-width: 58px; }
+      #topbar-center { font-size: 9px; }
+      #btn-open-menu { min-height: 24px; padding: 1px 6px; font-size: 9px; }
+      .btn { min-height: 30px; }
+
+      /* Battle ultra-compact */
+      .battle-layout { grid-template-columns: 88px 1fr 118px; min-height: calc(100vh - 62px); }
+      .battle-left { padding: 4px 3px; gap: 3px; }
+      .hero-card { padding: 4px; }
+      .hero-card-top { margin-bottom: 3px; gap: 4px; }
+      .hero-icon-large { font-size: 12px; }
+      .hero-card-name { font-size: 8px; }
+      .hero-card-class { display: none; }
+      .bar-wrap { margin-bottom: 2px; }
+      .bar-label { font-size: 7px; margin-bottom: 1px; }
+      .skills-row { gap: 2px; margin-top: 2px; }
+      .skill-btn { width: 18px; height: 18px; font-size: 9px; }
+      #battle-canvas {
+        width: min(52vw, 78vh);
+        height: min(52vw, 78vh);
+        min-width: 236px;
+        min-height: 236px;
+      }
+      #ui-overlay { min-width: 118px; padding: 4px; gap: 3px; }
+      .br-label { font-size: 7px; margin-bottom: 1px; }
+      .init-slot { width: 18px; height: 18px; font-size: 11px; }
+      #battle-log { min-height: 44px; max-height: 78px; font-size: 7px; line-height: 1.25; padding: 3px; }
+      #unit-stats { font-size: 8px !important; margin-bottom: 2px !important; }
+      .battle-actions { gap: 3px; }
+      .battle-actions .btn { min-height: 28px; padding: 2px 4px; font-size: 8px; }
+      .deploy-hint-box { font-size: 8px; padding: 4px; line-height: 1.25; }
+
+      /* Map ultra-compact */
+      .map-screen-layout { grid-template-columns: 1fr 140px; min-height: calc(100vh - 66px); }
+      .map-grid-wrap { padding: 4px; }
+      #map-screen .node-grid { gap: 1px; }
+      .map-node { font-size: 10px; border-radius: 3px; }
+      .map-node small { display: none; }
+      .map-panel { padding: 5px; gap: 4px; }
+      .map-panel-title { font-size: 8px; }
+      .cell-info { padding: 6px; font-size: 8px; }
+      .cell-info-icon { font-size: 14px; margin-bottom: 2px; }
+      .cell-info-name { font-size: 9px; }
+      #map-help { font-size: 8px; }
+      #party-strip { gap: 3px; margin-bottom: 3px; }
+      .party-card { font-size: 8px; padding: 3px 5px; }
+      .eq-mini { display: none; }
+
+      /* City + Inventory ultra-compact */
+      .city-body { grid-template-columns: 116px 1fr 128px; min-height: calc(100vh - 62px); }
+      .city-left, .city-center, .city-right { padding: 4px; gap: 4px; }
+      .city-name { font-size: 9px; }
+      .npc { padding: 4px; }
+      .npc-role, .heroes-bar-title { display: none; }
+      .hero-heal-btn { font-size: 7px; padding: 1px 3px; }
+      .items-grid { grid-template-columns: 1fr 1fr; gap: 3px; }
+      .item-card { padding: 4px; }
+      .item-icon { font-size: 13px; }
+      .item-name, .item-stats, .item-price, .badge { font-size: 7px; }
+      .service-desc { display: none; }
+      .service-btns .btn { min-height: 26px; font-size: 7px; padding: 2px 4px; }
+
+      #inventory-layout { grid-template-columns: 122px 1fr; min-height: calc(100vh - 62px); }
+      #inv-left, #inv-right { padding: 4px; gap: 4px; }
+      .inv-tab { font-size: 7px; min-height: 24px; padding: 2px 3px; }
+      .inv-portrait-icon { font-size: 18px; }
+      .inv-portrait-name { font-size: 8px; }
+      .inv-portrait-class, .slots-title { display: none; }
+      .inv-stats { padding: 4px; }
+      .stat-row { font-size: 7px; margin-bottom: 1px; }
+      .equip-slot { padding: 3px; margin-bottom: 2px; }
+      .equip-slot-icon { width: 16px; height: 16px; font-size: 10px; }
+      .equip-slot-name { font-size: 7px; }
+      #bag-grid { grid-template-columns: repeat(5, minmax(40px, 1fr)); gap: 3px; }
+      .inv-item-card { padding: 3px; }
+      .inv-item-icon { font-size: 11px; }
+      .inv-item-name { font-size: 6px; }
+      #inv-detail { padding: 5px; font-size: 7px; }
+      .item-detail-head { gap: 5px; margin-bottom: 3px; }
+      .item-detail-icon { font-size: 14px; }
+      .item-detail-title { font-size: 8px; }
+      .item-detail-sub, .item-detail-stats, .item-detail-desc { font-size: 7px; margin-bottom: 3px; }
+      .item-detail-btns { gap: 3px; }
+      .item-detail-btns .btn { min-height: 24px; font-size: 7px; padding: 2px 4px; }
+
+      /* Menu + perk modal ultra-compact */
+      .menu-screen { padding: 10px 8px; gap: 7px; }
+      .menu-logo-icon { font-size: 18px; }
+      .menu-logo-title { font-size: 14px; letter-spacing: 1px; }
+      .menu-logo-sub { display: none; }
+      .menu-btns .btn { min-height: 30px; font-size: 8px; padding: 4px 6px; }
+      .menu-diff { font-size: 8px; gap: 4px; }
+      .diff-opt { min-height: 24px; font-size: 8px; padding: 3px 6px; }
+      .menu-meta { font-size: 7px; }
+      .perk-modal-box { width: min(960px, 99vw); max-height: 98vh; }
+      .perk-modal-body { grid-template-columns: 1fr 140px; }
+      .perk-branches { padding: 6px; gap: 2px; }
+      .perk-col-header { font-size: 7px; padding: 2px 3px; margin-bottom: 3px; }
+      .perk-skill { width: 52px; min-height: 45px; }
+      .perk-skill-icon { font-size: 10px; }
+      .perk-skill-name { font-size: 6px; }
+      .perk-detail-panel { padding: 5px; }
+      .perk-detail-name { font-size: 8px; }
+      .perk-detail-branch, .perk-detail-effect, .perk-detail-desc { font-size: 7px; }
+      #perk-detail-panel .btn { min-height: 24px; font-size: 7px; }
+    }
     @media (max-width: 480px) and (orientation: portrait) {
       #battle-canvas { width: 288px; height: 288px; min-width: 288px; min-height: 288px; }
       body { font-size: 12px; }
