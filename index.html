@@ -3069,17 +3069,29 @@
     // Choose target: priority first, fallback nearest
     const target = aiChooseTarget(b, u);
 
-    // If already in range — attack immediately
-    if (inRange(u.x, u.y, target)) {
-      doEnemyAttack(target);
+    // Helper: pick best in-range target (priority order, but only among reachable)
+    const bestInRangeTarget = (ax, ay) => {
+      const inR = heroes.filter(h => inRange(ax, ay, h));
+      if (!inR.length) return null;
+      return inR.find(h => h.heroId === 'seris')
+        || inR.find(h => h.heroId === 'alira')
+        || inR.reduce((a, b) => a.hp < b.hp ? a : b); // lowest HP
+    };
+
+    // If already in range — attack immediately without moving
+    const preTarget = bestInRangeTarget(u.x, u.y);
+    if (preTarget) {
+      doEnemyAttack(preTarget);
       endUnitTurn();
       return;
     }
 
-    // Movement: move up to getMovePoints(u) steps along A* path
+    // Movement: flood-fill reachable tiles, pick closest to priority target
     const movePoints = getMovePoints(u, b);
     if (movePoints > 0) {
-      // Build path to each hero, pick closest reachable target
+      const prevX = u.x, prevY = u.y;
+
+      // Try A* toward each hero, walk the path
       let bestPath = null;
       let bestTarget = null;
       for (const h of heroes) {
@@ -3097,11 +3109,9 @@
       }
 
       if (bestPath && bestPath.length > 1) {
-        // Walk along path spending movement points
         let spent = 0;
         for (let i = 1; i < bestPath.length; i++) {
           const step = bestPath[i];
-          // Stop before occupying a hero's tile
           if (b.units.some(h => h.isHero && h.hp > 0 && h.x === step.x && h.y === step.y)) break;
           if (!enemyPassable(b, step.x, step.y, u)) break;
           const cost = tileMoveCost(b.grid[step.y][step.x], u);
@@ -3109,15 +3119,30 @@
           spent += cost;
           u.x = step.x;
           u.y = step.y;
-          // Stop as soon as we are in attack range
           if (bestTarget && inRange(u.x, u.y, bestTarget)) break;
         }
       }
+
+      // Fallback: if A* path was blocked (e.g. water too expensive), use flood-fill
+      // to find the reachable tile closest to target
+      if (u.x === prevX && u.y === prevY) {
+        const tgt = target;
+        const reachable = floodReachable(b, u);
+        let bestCell = null, bestDist = Infinity;
+        for (const key of Object.keys(reachable)) {
+          const [rx, ry] = key.split(',').map(Number);
+          if (rx === u.x && ry === u.y) continue;
+          if (b.units.some(h => h.hp > 0 && h.x === rx && h.y === ry && h !== u)) continue;
+          const d = Math.abs(rx - tgt.x) + Math.abs(ry - tgt.y);
+          if (d < bestDist) { bestDist = d; bestCell = { x: rx, y: ry }; }
+        }
+        if (bestCell) { u.x = bestCell.x; u.y = bestCell.y; }
+      }
     }
 
-    // After moving, try to attack
-    const tgtAfterMove = aiChooseTarget(b, u);
-    if (tgtAfterMove && tgtAfterMove.hp > 0 && inRange(u.x, u.y, tgtAfterMove)) {
+    // After moving, attack nearest in-range hero (respecting priority)
+    const tgtAfterMove = bestInRangeTarget(u.x, u.y);
+    if (tgtAfterMove) {
       doEnemyAttack(tgtAfterMove);
     }
     endUnitTurn();
