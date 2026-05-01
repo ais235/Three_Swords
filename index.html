@@ -1909,7 +1909,7 @@
     u.isHero = true;
     u.heroId = h.id;
     u.x = -1; u.y = -1;
-    u.speed = 10 + (u.role === 'archer' ? 1 : u.role === 'mage' ? -1 : 0);
+    // speed берётся из конфига героя (Воин:13, Лучник:11, Маг:9) + перки
     u.cds = { ...(u.cds || {}), shieldBash: u.cds?.shieldBash || 0, fireCall: u.cds?.fireCall || 0, berserk: u.cds?.berserk || 0,
       doubleShot: u.cds?.doubleShot || 0, slowArrow: u.cds?.slowArrow || 0, arrowRain: u.cds?.arrowRain || 0,
       fireball: u.cds?.fireball || 0, freeze: u.cds?.freeze || 0, meteor: u.cds?.meteor || 0 };
