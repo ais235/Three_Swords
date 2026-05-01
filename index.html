@@ -28,7 +28,9 @@
       margin: 0;
       background: var(--bg-dark);
       color: var(--text-main);
-      font-family: 'Courier New', Courier, monospace;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      line-height: 1.45;
       height: 100vh;
       overflow: hidden;
     }
@@ -46,9 +48,11 @@
       align-items: center;
       justify-content: space-between;
       color: var(--text-main);
+      font-size: 7px;
+      line-height: 1.35;
     }
     #topbar-left { min-width: 140px; font-weight: bold; }
-    #topbar-center { text-align: center; flex: 1; font-size: 12px; }
+    #topbar-center { text-align: center; flex: 1; font-size: 7px; line-height: 1.4; }
     #topbar-right { min-width: 110px; text-align: right; }
     #btn-open-menu { padding: 4px 8px; margin: 0; }
     .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
@@ -85,6 +89,7 @@
     .bar { height: 5px; border-radius: 3px; background: #1a1a2e; overflow: hidden; }
     .bar-fill-hp { background: var(--accent-green); height: 100%; border-radius: 3px; transition: width .2s; }
     .bar-fill-mp { background: var(--accent-blue); height: 100%; border-radius: 3px; transition: width .2s; }
+    .hero-mini-stats { font-size: 8px; color: var(--text-dim); margin: 3px 0 2px; letter-spacing: 0.5px; }
     .skills-row { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
     .skill-btn { width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #0d0d1a; padding: 0; }
     .skill-btn.ready { border-color: var(--accent-blue); }
@@ -124,13 +129,16 @@
       display: flex; gap: 3px; flex-wrap: wrap; align-items: center; margin-bottom: 4px;
     }
     .init-slot {
-      width: 24px; height: 24px; font-size: 14px; border-radius: 4px;
-      border: 1px solid var(--border); background: #0a0a14; display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; font-size: 14px; border-radius: 5px;
+      border: 2px solid var(--border); background: #0a0a14; display: inline-flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
     }
+    .init-slot img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .init-slot.hero { border-color: var(--accent-blue); }
     .init-slot.enemy { border-color: var(--accent-red); }
     .init-slot.active { border-color: var(--accent-gold); background: #1a1500; box-shadow: 0 0 6px rgba(240,165,0,.4); }
     #ui-overlay { min-width: 160px; background: #111128; border-left: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+    #unit-title:empty, #unit-stats:empty { display: none; }
     .br-section { }
     .br-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 4px; }
     .battle-actions { display: flex; flex-direction: column; gap: 4px; }
@@ -138,6 +146,10 @@
     .deploy-hint-box { font-size: 10px; color: var(--text-dim); padding: 6px; border: 1px solid var(--border); border-radius: 4px; line-height: 1.4; }
     .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .stats-line { font-size: 12px; color: var(--text-dim); margin: 4px 0; }
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: inherit;
+    }
     .btn {
       background: var(--bg-panel);
       border: 1px solid var(--accent-blue);
@@ -147,7 +159,8 @@
       cursor: pointer;
       border-radius: 5px;
       font-family: inherit;
-      font-size: 11px;
+      font-size: 8px;
+      line-height: 1.35;
     }
     .btn:hover { background: var(--bg-card-hover); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -158,33 +171,117 @@
     .btn-ad { border-color: var(--accent-purple); color: var(--accent-purple); }
     .btn-dim { border-color: var(--border); color: var(--text-hint); cursor: not-allowed; }
     .hidden { display: none !important; }
-    .map-screen-layout { display: grid; grid-template-columns: 1fr 200px; gap: 0; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
-    .map-grid-wrap { padding: 10px; overflow: auto; background: var(--bg-card); display: flex; align-items: stretch; }
-    #map-screen .node-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; width: 100%; height: 100%; align-content: stretch; }
-    .map-node {
-      aspect-ratio: 1;
-      border-radius: 5px;
+    .map-screen-layout {
+      display: grid;
+      grid-template-columns: 1fr minmax(150px, 200px);
+      grid-template-rows: minmax(0, 1fr);
+      gap: 0;
+      flex: 1;
+      min-height: 0;
       border: 1px solid var(--border);
+      border-radius: 0;
+      overflow: hidden;
+      align-items: stretch;
+    }
+    .map-grid-wrap {
+      padding: 8px;
+      min-height: 0;
+      max-height: 100%;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      background-color: var(--bg-card);
+      background-image: url('assets/ui/mir.png');
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: stretch;
+      position: relative;
+    }
+    #map-screen .node-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 3px;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      align-content: stretch;
+    }
+    #map-screen .map-node {
+      aspect-ratio: auto;
+      min-height: 0;
+      border-radius: 4px;
+      border: 1px solid rgba(42, 42, 74, 0.9);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: clamp(12px, 2vmin, 18px);
+      font-size: clamp(7px, 1.35vmin, 12px);
       cursor: pointer;
-      background: var(--bg-card);
+      background: rgba(17, 17, 40, 0.82);
       position: relative;
       min-width: 0;
+      overflow: hidden;
     }
-    .map-node:hover { border-color: var(--accent-gold); }
-    .map-node.done { opacity: 0.5; }
-    .map-node.locked { opacity: 0.35; pointer-events: none; }
-    .map-node.current { border-color: var(--accent-gold); background: #1a1500; box-shadow: 0 0 0 1px var(--accent-gold); }
-    .map-node small { font-size: 8px; color: var(--text-hint); margin-top: 1px; }
-    .map-panel { background: var(--bg-card); border-left: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-    .map-panel-title { font-size: 11px; color: var(--accent-gold); letter-spacing: 1px; }
-    .cell-info { background: var(--bg-panel); border-radius: 6px; padding: 10px; font-size: 11px; color: var(--text-dim); flex: 1; }
-    .cell-info-icon { font-size: 24px; margin-bottom: 6px; }
-    .cell-info-name { color: var(--text-main); font-size: 12px; margin-bottom: 4px; }
+    #map-screen .map-node.map-region-1 { border-color: rgba(74, 158, 255, 0.45); box-shadow: inset 0 0 0 1px rgba(74, 158, 255, 0.2); }
+    #map-screen .map-node.map-region-2 { border-color: rgba(155, 89, 182, 0.45); box-shadow: inset 0 0 0 1px rgba(155, 89, 182, 0.2); }
+    #map-screen .map-node.map-region-3 { border-color: rgba(231, 76, 60, 0.45); box-shadow: inset 0 0 0 1px rgba(231, 76, 60, 0.2); }
+    #map-screen .map-node.fog { opacity: 0.35; filter: grayscale(1); }
+    #map-screen .map-node.hidden {
+      display: flex !important;
+      background: #000;
+      cursor: default;
+      pointer-events: none;
+    }
+    #map-screen .map-node.hidden::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(0, 0, 0, 0.8) 0,
+        rgba(0, 0, 0, 0.8) 2px,
+        rgba(5, 5, 15, 0.9) 2px,
+        rgba(5, 5, 15, 0.9) 4px
+      );
+    }
+    #map-screen .map-node:hover:not(.hidden):not(.locked) { border-color: rgba(240, 165, 0, 0.85); }
+    #map-screen .map-node.done:not(.hidden) { opacity: 0.5; }
+    #map-screen .map-node.locked { opacity: 0.45; cursor: not-allowed; }
+    #map-screen .map-node.current { border-color: rgba(240, 165, 0, 0.95); background: rgba(26, 21, 0, 0.88); box-shadow: 0 0 0 1px rgba(240, 165, 0, 0.5); }
+    #map-screen .map-node small { font-size: 5px; color: var(--text-hint); margin-top: 1px; line-height: 1.2; }
+    #map-screen .map-node .map-node-face,
+    #map-screen .map-node .map-node-lbl { position: relative; z-index: 2; }
+    .map-fog-counter { font-size: 6px; color: var(--text-dim); line-height: 1.6; }
+    .btn-map-reveal-ad { border-color: #9b59b6 !important; color: #9b59b6 !important; }
+    .map-panel {
+      background: var(--bg-card);
+      border-left: 1px solid var(--border);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .map-panel-title { font-size: 8px; color: var(--accent-gold); letter-spacing: 1px; flex-shrink: 0; }
+    .map-panel .btn { margin-left: 0; margin-right: 0; width: 100%; text-align: center; flex-shrink: 0; padding: 6px 8px; }
+    .cell-info {
+      background: var(--bg-panel);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 6px;
+      color: var(--text-dim);
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .cell-info-icon { font-size: 18px; margin-bottom: 4px; }
+    .cell-info-name { color: var(--text-main); font-size: 7px; margin-bottom: 3px; line-height: 1.35; }
     .city-body { display: grid; grid-template-columns: 170px 1fr 200px; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
     .city-left { background: #111128; border-right: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
     .city-center { padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-dark); overflow-y: auto; }
@@ -232,8 +329,61 @@
     .service-desc { font-size: 9px; color: var(--text-dim); line-height: 1.4; margin-bottom: 8px; }
     .service-btns { display: flex; flex-direction: column; gap: 4px; }
     .service-btns .btn { font-size: 9px; padding: 5px 8px; text-align: center; width: 100%; }
-    #battle-screen, #city-screen, #inventory-screen, #map-screen, #event-screen, #victory-screen, #gameover-screen, #ending-screen { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
-    #map-screen { flex: 1; display: flex; flex-direction: column; }
+    #battle-screen, #city-screen, #inventory-screen, #map-screen, #event-screen, #victory-screen, #gameover-screen, #ending-screen, #bestiary-screen { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+    /* ══ БЕСТИАРИЙ ══ */
+    .bestiary-layout { display: grid; grid-template-columns: 260px 1fr; flex: 1; min-height: 0; overflow: hidden; border: 1px solid var(--border); }
+    .bestiary-list {
+      background: #0a0a14; border-right: 1px solid var(--border);
+      padding: 8px 6px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+    }
+    .bestiary-bar { background: #111128; border-bottom: 1px solid var(--border); padding: 6px 10px;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .bestiary-bar-title { font-size: 9px; color: var(--accent-gold); letter-spacing: 1px; }
+    .bestiary-bar-count { font-size: 8px; color: var(--text-dim); }
+    .bestiary-card {
+      display: flex; align-items: center; gap: 8px; padding: 7px 8px;
+      border-radius: 6px; border: 1px solid var(--border); cursor: pointer;
+      background: #0d0d1a; transition: border-color .15s;
+    }
+    .bestiary-card:hover, .bestiary-card.active { border-color: var(--accent-gold); background: #1a1000; }
+    .bestiary-card-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+    .bestiary-card-name { font-size: 8px; color: var(--text-main); line-height: 1.3; }
+    .bestiary-card-status { font-size: 7px; margin-top: 2px; }
+    .bs-new { color: var(--text-hint); }
+    .bs-seen { color: var(--accent-blue); }
+    .bs-dead { color: var(--accent-green); }
+    .bestiary-detail {
+      padding: 18px 20px; overflow-y: auto; background: var(--bg-dark);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .bestiary-detail-icon { font-size: 52px; text-align: center; line-height: 1; }
+    .bestiary-detail-icon.bs-unknown { font-size: 40px; color: var(--text-hint); text-align: center; }
+    .bestiary-detail-name { font-size: 14px; color: var(--text-main); letter-spacing: 1px; }
+    .bestiary-stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .bestiary-stat { background: #0a0a14; border: 1px solid var(--border); border-radius: 6px;
+      padding: 5px 12px; font-size: 8px; color: var(--text-dim); text-align: center; }
+    .bestiary-stat b { display: block; font-size: 13px; color: var(--text-main); }
+    .bestiary-section-label { font-size: 7px; color: var(--text-dim); letter-spacing: 2px;
+      text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+    .bestiary-text { font-size: 9px; color: var(--text-dim); line-height: 1.6; }
+    .bestiary-weakness { font-size: 9px; color: #f39c12; line-height: 1.6; }
+    .bestiary-locked { font-size: 9px; color: var(--text-hint); font-style: italic; }
+    .bestiary-region-badge { font-size: 7px; padding: 2px 8px; border-radius: 3px; display: inline-block; margin-bottom: 4px; }
+    .bregion-1 { background: rgba(74,158,255,.15); color: #4a9eff; border: 1px solid rgba(74,158,255,.4); }
+    .bregion-2 { background: rgba(155,89,182,.15); color: #9b59b6; border: 1px solid rgba(155,89,182,.4); }
+    .bregion-3 { background: rgba(231,76,60,.15); color: #e74c3c; border: 1px solid rgba(231,76,60,.4); }
+    /* ══ ПОПАП НАВЫКА (разблокировка) ══ */
+    #skill-unlock-modal { position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 4200;
+      display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .skill-unlock-box { max-width: 360px; width: 100%; background: #111128;
+      border: 2px solid var(--accent-gold); border-radius: 12px; padding: 24px 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+    .skill-unlock-icon { font-size: 44px; }
+    .skill-unlock-header { font-size: 8px; color: var(--accent-gold); letter-spacing: 2px; }
+    .skill-unlock-name { font-size: 12px; color: var(--text-main); }
+    .skill-unlock-desc { font-size: 8px; color: var(--text-dim); line-height: 1.6; }
+    .skill-unlock-meta { font-size: 7px; color: var(--text-hint); }
+    #map-screen { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
     .rarity-common { color: #b0b0b0; }
     .rarity-rare { color: #4a9eff; }
     .rarity-epic { color: #f0a500; }
@@ -522,7 +672,22 @@
     .vic-xp-row { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; }
     .vic-drop-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
     .vic-drop-card { display: inline-block; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--accent-gold); font-size: 12px; color: var(--accent-gold); margin-bottom: 16px; }
-    #perk-modal, #confirm-modal { position: fixed; inset: 0; background: rgba(0,0,0,.82); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    #perk-modal, #confirm-modal, #game-alert-modal, #game-prompt-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 4000;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .game-dialog-box { max-width: 440px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .game-alert-text {
+      white-space: pre-wrap; word-break: break-word; font-size: 9px; line-height: 1.55;
+      color: var(--text-main); margin: 0; font-family: inherit;
+    }
+    .game-prompt-label { font-size: 9px; color: var(--text-dim); margin: 0; line-height: 1.45; }
+    .game-prompt-select {
+      width: 100%; padding: 8px; background: #0d0d1a; border: 1px solid var(--border);
+      color: var(--text-main); font-family: inherit; font-size: 8px; border-radius: 4px;
+    }
+    .game-dialog-btns { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
+    #confirm-modal .modal-box { display: flex; flex-direction: column; gap: 12px; }
     .perk-modal-box { background: #0d0d1a; border: 1px solid var(--border); border-radius: 10px; width: min(680px, 96vw); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
     .perk-modal-topbar { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
     .perk-modal-title { font-size: 13px; color: var(--accent-gold); letter-spacing: 1px; }
@@ -668,8 +833,17 @@
       #inv-left { border-right: 0; border-bottom: 1px solid var(--border); }
       #battle-wrap { width: 100%; overflow: auto; }
       #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
-      .map-screen-layout { grid-template-columns: 1fr; }
-      .map-panel { border-left: 0; border-top: 1px solid var(--border); }
+      .map-screen-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+      }
+      .map-panel {
+        border-left: 0;
+        border-top: 1px solid var(--border);
+        max-height: min(44vh, 360px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
       #map-screen .node-grid { min-width: 0; }
     }
     @media (max-height: 520px) and (orientation: landscape) {
@@ -690,8 +864,8 @@
       }
       .map-grid-wrap { padding: 6px; }
       #map-screen .node-grid { gap: 2px; }
-      .map-node { font-size: 12px; }
-      .map-node small { font-size: 7px; }
+      #map-screen .map-node { font-size: 10px; }
+      #map-screen .map-node small { font-size: 5px; }
       .map-panel { padding: 8px; gap: 6px; }
       .cell-info { padding: 8px; font-size: 10px; }
       .cell-info-icon { font-size: 18px; margin-bottom: 4px; }
@@ -719,7 +893,7 @@
       #ui-overlay { min-width: 0; padding: 6px; gap: 4px; }
       .br-label { font-size: 8px; margin-bottom: 2px; }
       #initiative-bar { gap: 2px; margin-bottom: 2px; }
-      .init-slot { width: 20px; height: 20px; font-size: 12px; }
+      .init-slot { width: 26px; height: 26px; font-size: 12px; }
       #battle-log { min-height: 56px; max-height: 120px; font-size: 8px; padding: 4px; }
       .battle-actions {
         display: grid;
@@ -861,7 +1035,7 @@
       #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
       #ui-overlay { min-width: 0; padding: 4px; gap: 3px; }
       .br-label { font-size: 7px; margin-bottom: 1px; }
-      .init-slot { width: 18px; height: 18px; font-size: 11px; }
+      .init-slot { width: 22px; height: 22px; font-size: 11px; }
       #battle-log { min-height: 44px; max-height: 78px; font-size: 7px; line-height: 1.25; padding: 3px; }
       #unit-stats { font-size: 8px !important; margin-bottom: 2px !important; }
       .battle-actions { gap: 3px; }
@@ -872,8 +1046,8 @@
       .map-screen-layout { grid-template-columns: 1fr 140px; flex: 1; min-height: 0; }
       .map-grid-wrap { padding: 4px; }
       #map-screen .node-grid { gap: 1px; }
-      .map-node { font-size: 10px; border-radius: 3px; }
-      .map-node small { display: none; }
+      #map-screen .map-node { font-size: 9px; border-radius: 3px; }
+      #map-screen .map-node small { display: none; }
       .map-panel { padding: 5px; gap: 4px; }
       .map-panel-title { font-size: 8px; }
       .cell-info { padding: 6px; font-size: 8px; }
@@ -939,9 +1113,7 @@
     }
     @media (max-width: 480px) and (orientation: portrait) {
       #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
-      body { font-size: 12px; }
       .btn { padding: 6px 8px; }
-      .map-node { width: 56px; height: 56px; font-size: 1rem; }
     }
   </style>
   <script src="https://yandex.ru/games/sdk/v2"></script>
@@ -1008,6 +1180,8 @@
         </div>
         <div class="map-panel">
           <div class="map-panel-title">ЛОКАЦИЯ</div>
+          <div id="map-fog-counter" class="map-fog-counter">ОТКРЫТО: 0 / 96</div>
+          <button type="button" class="btn btn-map-reveal-ad" id="btn-map-reveal-ad">Открыть карту</button>
           <div id="map-cell-info" class="cell-info">
             <div class="cell-info-icon">⚔️</div>
             <div class="cell-info-name">Выберите клетку</div>
@@ -1015,6 +1189,7 @@
           </div>
           <button class="btn btn-gold" id="btn-map-enter">▶ Войти</button>
           <button class="btn btn-dim" id="btn-map-bag">🎒 Рюкзак</button>
+          <button class="btn btn-dim" id="btn-map-bestiary">📖 Бестиарий</button>
         </div>
       </div>
     </div>
@@ -1056,6 +1231,7 @@
               <button class="btn btn-ad" id="btn-city-oracle-ad">📺 Узнать будущее</button>
             </div>
           </div>
+          <button class="btn btn-dim" id="btn-city-bestiary" style="width:100%;text-align:center">📖 Бестиарий</button>
           <button class="btn btn-dim" id="btn-leave-city" style="width:100%;margin-top:auto;text-align:center">← Покинуть город</button>
         </div>
       </div>
@@ -1179,9 +1355,37 @@
         <button class="btn" id="btn-ending-ok">Замечательно</button>
       </div>
     </div>
+
+    <div id="bestiary-screen" class="screen hidden">
+      <div class="bestiary-bar">
+        <span class="bestiary-bar-title">📖 БЕСТИАРИЙ</span>
+        <span class="bestiary-bar-count" id="bestiary-count">0 / 0</span>
+      </div>
+      <div class="bestiary-layout">
+        <div class="bestiary-list" id="bestiary-list"></div>
+        <div class="bestiary-detail" id="bestiary-detail">
+          <div class="bestiary-text" style="color:var(--text-hint)">Выберите существо из списка.</div>
+        </div>
+      </div>
+      <div style="padding:8px;flex-shrink:0">
+        <button class="btn btn-dim" id="btn-bestiary-back" style="width:100%">← Назад</button>
+      </div>
+    </div>
   </div>
 
   <div id="tooltip"></div>
+
+  <div id="skill-unlock-modal" class="hidden">
+    <div class="skill-unlock-box">
+      <div class="skill-unlock-header">НОВАЯ СПОСОБНОСТЬ!</div>
+      <div class="skill-unlock-icon" id="skill-unlock-icon">✨</div>
+      <div class="skill-unlock-name" id="skill-unlock-name">Способность</div>
+      <div class="skill-unlock-desc" id="skill-unlock-desc"></div>
+      <div class="skill-unlock-meta" id="skill-unlock-meta"></div>
+      <button class="btn btn-gold" id="btn-skill-unlock-ok" style="width:100%;margin-top:8px">Отлично!</button>
+    </div>
+  </div>
+
   <div id="perk-modal" class="hidden">
     <div class="perk-modal-box">
       <div class="perk-modal-topbar">
@@ -1197,10 +1401,28 @@
     </div>
   </div>
   <div id="confirm-modal" class="hidden">
-    <div class="modal-box">
+    <div class="modal-box game-dialog-box">
       <p id="confirm-text">Вы уверены?</p>
-      <button class="btn" id="confirm-yes">Да</button>
-      <button class="btn" id="confirm-no">Нет</button>
+      <div class="game-dialog-btns">
+        <button type="button" class="btn btn-gold" id="confirm-yes">Да</button>
+        <button type="button" class="btn" id="confirm-no">Нет</button>
+      </div>
+    </div>
+  </div>
+  <div id="game-alert-modal" class="hidden">
+    <div class="modal-box game-dialog-box">
+      <div id="game-alert-text" class="game-alert-text"></div>
+      <button type="button" class="btn btn-gold" id="game-alert-ok">OK</button>
+    </div>
+  </div>
+  <div id="game-prompt-modal" class="hidden">
+    <div class="modal-box game-dialog-box">
+      <p id="game-prompt-label" class="game-prompt-label"></p>
+      <select id="game-prompt-select" class="game-prompt-select" aria-label="Выбор"></select>
+      <div class="game-dialog-btns">
+        <button type="button" class="btn btn-gold" id="game-prompt-ok">OK</button>
+        <button type="button" class="btn" id="game-prompt-cancel">Отмена</button>
+      </div>
     </div>
   </div>
   <div id="fx-layer" style="position:fixed;inset:0;pointer-events:none;z-index:500"></div>
@@ -1226,7 +1448,9 @@
   const SAVE_KEY = 'threeHeroesSave';
   const AD_MIN_INTERVAL_MS = 3 * 60 * 1000;
   const BONUS_GOLD_CD_MS = 5 * 60 * 1000;
-  const WORLD_SIZE = 6;
+  const MAP_COLS = 12;
+  const MAP_ROWS = 8;
+  const MAP_CELL_TOTAL = MAP_COLS * MAP_ROWS;
 
   //══════════ SECTION 2: GAME_DATA ══════════
   const ENEMY_IDS = {
@@ -1238,7 +1462,7 @@
 
   function baseHeroTemplate() {
     return [
-      { id: 'garet', name: 'Гарет', emoji: '⚔️', role: 'warrior', hp: 40, maxHp: 40, armor: 5, attack: 8, range: 1, move: 3, speed: 10, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
+      { id: 'garet', name: 'Гарет', emoji: '⚔️', role: 'warrior', hp: 40, maxHp: 40, armor: 5, attack: 8, range: 1, move: 3, speed: 13, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
         cds: { shieldBash: 0, fireCall: 0, berserk: 0 }, flags: { firstAttackTurn: true } },
       { id: 'alira', name: 'Алира', emoji: '🏹', role: 'archer', hp: 25, maxHp: 25, armor: 2, attack: 10, range: 4, move: 4, speed: 11, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
         cds: { doubleShot: 0, slowArrow: 0, arrowRain: 0 }, flags: { firstAttackTurn: true } },
@@ -1326,6 +1550,47 @@
     return map[type] || map[D.SKELETON];
   }
 
+  // ══════════ HERO SKILLS (unlock by level) ══════════
+  const HERO_SKILLS = {
+    garet: [
+      { key: 'shieldBash', name: 'Удар щитом',   icon: '🛡', unlockLevel: 2, cd: 3,  cost: null, desc: 'Атакует целевого врага — оглушает на 1 ход. КД 3.' },
+      { key: 'fireCall',   name: 'Вызов огня',   icon: '🔥', unlockLevel: 3, cd: 4,  cost: null, desc: 'Поджигает всех врагов вокруг Гарета (AoE). КД 4.' },
+      { key: 'berserk',   name: 'Берсерк',       icon: '💪', unlockLevel: 5, cd: 6,  cost: null, desc: 'Ульта: ×1.5 атаки, −50% брони на 3 хода. КД 6.' }
+    ],
+    alira: [
+      { key: 'doubleShot', name: 'Двойной выстрел',   icon: '🏹', unlockLevel: 2, cd: 2, cost: null, desc: 'Два выстрела подряд по одной цели. КД 2.' },
+      { key: 'slowArrow',  name: 'Стрела замедления', icon: '🐢', unlockLevel: 3, cd: 3, cost: null, desc: 'Замедляет цель: −2 хода движения, 2 раунда. КД 3.' },
+      { key: 'arrowRain',  name: 'Дождь стрел',  icon: '🌧', unlockLevel: 5, cd: 5, cost: null, desc: 'Ульта: AoE атака по всем врагам рядом. КД 5.' }
+    ],
+    seris: [
+      { key: 'fireball', name: 'Огненный шар', icon: '🔥', unlockLevel: 2, cd: 0, cost: 3, desc: 'Взрыв по цели и соседям. Стоим. 3 MP.' },
+      { key: 'freeze',   name: 'Заморозка',   icon: '🧊', unlockLevel: 3, cd: 0, cost: 4, desc: 'Замораживает цель на 1 ход. Стоим. 4 MP.' },
+      { key: 'meteor',   name: 'Метеорит',   icon: '☄',  unlockLevel: 5, cd: 0, cost: 8, desc: 'Ульта: мощный AoE по большой области. Стоим. 8 MP.' }
+    ]
+  };
+
+  // ══════════ ENEMY BESTIARY DATA ══════════
+  const ENEMY_BESTIARY_DATA = {
+    [ENEMY_IDS.SKELETON]:     { region: 1, tactic: 'Движется прямо к ближайшему герою. Атакует в ближнем бою без хитростей.', weakness: 'Дробящее оружие, Огненный шар, Заморозка.' },
+    [ENEMY_IDS.GOBLIN_ARCHER]:{ region: 1, tactic: 'Стреляет с дистанции 3. Отступает, если герой подходит вплотную.', weakness: 'Рывок в ближний бой — Гарет с Берсерком.' },
+    [ENEMY_IDS.BOAR]:         { region: 1, tactic: 'Рвётся к цели, игнорируя рельеф. Высокий HP и броня 2.', weakness: 'Стрела замедления снижает скорость. Заморозка.' },
+    [ENEMY_IDS.ZOMBIE]:       { region: 1, tactic: 'Медленный, но взрывается при смерти — 5 урона всем ближним.', weakness: 'Держись на расстоянии! Лучник и Маг идеальны.' },
+    [ENEMY_IDS.SHAMAN]:       { region: 1, tactic: 'Мини-босс. Каждый ход лечит союзников. Убей первым!', weakness: 'Фокус-огонь сразу. Метеорит или Дождь стрел.' },
+    [ENEMY_IDS.ORC_GUARD]:    { region: 2, tactic: 'Тяжелая броня 6, двигается медленно. Держит линию.', weakness: 'Магический урон игнорирует броню. Огненный шар.' },
+    [ENEMY_IDS.SUICIDE]:      { region: 2, tactic: 'Бежит к герою и взрывается — AoE 5 урона всем рядом.', weakness: 'Уничтожь издалека до подрыва. Дождь стрел.' },
+    [ENEMY_IDS.SPIDER]:       { region: 2, tactic: 'Накладывает паутину — герой пропускает ход. Высокая скорость.', weakness: 'Заморозка блокирует паутину. Берсерк Гарета.' },
+    [ENEMY_IDS.WATCHER]:      { region: 2, tactic: 'При жизни даёт всем союзникам +2 хода движения. Убей первым!', weakness: 'Низкий HP — любой герой с фокусом.' },
+    [ENEMY_IDS.ICE_ELEM]:     { region: 2, tactic: 'При попадании замораживает героя на 1 ход. Броня 3.', weakness: 'Огненный шар снимает заморозку и даёт бонус урон.' },
+    [ENEMY_IDS.DARK_KNIGHT]:  { region: 2, tactic: 'Мини-босс. Высокие статы, только ближний бой.', weakness: 'Заморозка + Стрела замедления + Берсерк Гарета.' },
+    [ENEMY_IDS.NECRO]:        { region: 3, tactic: 'Поднимает мёртвых врагов как зомби. Убей его первым.', weakness: 'Метеорит Сэрис — уничтожить немедленно.' },
+    [ENEMY_IDS.CHAOS]:        { region: 3, tactic: 'AoE-атаки, высокая скорость. Бьёт всех рядом каждый ход.', weakness: 'Не стоять кучей! Разойтись, бить с расстояния.' },
+    [ENEMY_IDS.ASSASSIN]:     { region: 3, tactic: 'Высокая скорость и урон, низкий HP. Атакует слабейшего.', weakness: 'Дождь стрел по области. Убей до его следующего хода.' },
+    [ENEMY_IDS.HYDRA]:        { region: 3, tactic: 'Три головы — три атаки за ход. Регенерирует головы.', weakness: 'AoE-способности. Берсерк рядом с телом гидры.' },
+    [ENEMY_IDS.GHOST]:        { region: 3, tactic: 'Проходит через препятствия, высокая скорость. Слабая броня.', weakness: 'Магические атаки Сэрис наносят двойной урон.' },
+    [ENEMY_IDS.FIRE_TITAN]:   { region: 3, tactic: 'БОСС. Огненный взрыв по области каждые 2 хода. Огромный HP.', weakness: 'Заморозка останавливает. Держи героев рассредоточено.' },
+    [ENEMY_IDS.DARK_LORD]:    { region: 3, tactic: 'ФИНАЛЬНЫЙ БОСС. Телепорт, AoE, призыв миньонов. Две фазы.', weakness: 'Убей миньонов. Берсерк + Метеорит в финале.' }
+  };
+
   const SHOP_ITEMS = [
     { id: 'potion', name: 'Зелье HP +15', price: 30, use: (h) => { h.hp = Math.min(h.maxHp, h.hp + 15); } },
     { id: 'elixir', name: 'Эликсир маны +5', price: 40, use: (h) => { if (h.maxMana) h.mana = Math.min(h.maxMana, h.mana + 5); } },
@@ -1407,6 +1672,7 @@
     pendingPerks: [],
     selectedHeroDeploy: 0,
     mapGrid: [],
+    mapFogVisited: [],
     playerPos: { x: 0, y: 0 },
     regionUnlocked: 1,
     shopStock: [],
@@ -1421,7 +1687,10 @@
     wandererUsedByRegion: {},
     activeCityNode: null,
     battleReviveUsed: false,
-    lastSafeSave: null
+    lastSafeSave: null,
+    bestiary: {},
+    bestiaryKills: {},
+    pendingSkillUnlocks: []
   };
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -1451,7 +1720,18 @@
         const o = JSON.parse(s);
         Object.assign(GameState, o);
         if (!GameState.heroes || !GameState.heroes.length) initHeroesFromTemplate();
-        if (!GameState.mapGrid || !GameState.mapGrid.length) buildWorldMap();
+        if (!GameState.mapGrid || GameState.mapGrid.length !== MAP_CELL_TOTAL) buildWorldMap();
+        else {
+          if (!Array.isArray(GameState.mapFogVisited)) GameState.mapFogVisited = [];
+          if (GameState.mapFogVisited.length === 0) {
+            GameState.mapGrid.forEach(c => { if (c.visited) mapFogVisitedAdd(c.y, c.x); });
+          }
+        }
+        ensureCurrentCellFogVisited();
+        // Migration: ensure new fields exist
+        if (!GameState.bestiary) GameState.bestiary = {};
+        if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
+        if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
         return true;
       }
     } catch (e) { console.warn(e); }
@@ -1660,14 +1940,21 @@
     if (type === ENEMY_IDS.FIRE_TITAN) { u.bossVar = { aoeCounter: 0 }; }
     if (type === ENEMY_IDS.CHAOS) { u.bossVar = { aoeTurn: 0 }; }
     u.aiVar = u.aiVar || {};
+    markBestiarySeen(type);
     return u;
+  }
+
+  function regionFromMapRow(y) {
+    if (y <= 2) return 1;
+    if (y <= 5) return 2;
+    return 3;
   }
 
   function buildWorldMap() {
     const grid = [];
-    for (let y = 0; y < WORLD_SIZE; y++) {
-      for (let x = 0; x < WORLD_SIZE; x++) {
-        const region = y < 2 ? 1 : y < 4 ? 2 : 3;
+    for (let y = 0; y < MAP_ROWS; y++) {
+      for (let x = 0; x < MAP_COLS; x++) {
+        const region = regionFromMapRow(y);
         grid.push({
           id: `c_${x}_${y}`, x, y, region,
           type: 'locked', completed: false, visited: false, emoji: '🔒'
@@ -1675,9 +1962,9 @@
       }
     }
     const byRegion = {
-      1: { rows: [0, 1], mission: 6, city: 2, dungeon: 1, event: 2, boss: 1 },
-      2: { rows: [2, 3], mission: 5, city: 1, dungeon: 2, event: 2, boss: 1, wanderer: 1, arena: 1 },
-      3: { rows: [4, 5], mission: 4, city: 1, dungeon: 2, event: 1, boss: 1, wanderer: 1, final: 1, arena: 1 }
+      1: { rows: [0, 1, 2], mission: 20, city: 4, dungeon: 4, event: 6, boss: 2 },
+      2: { rows: [3, 4, 5], mission: 16, city: 3, dungeon: 4, event: 5, boss: 2, wanderer: 3, arena: 3 },
+      3: { rows: [6, 7], mission: 8, city: 2, dungeon: 3, event: 3, boss: 2, wanderer: 2, final: 1, arena: 3 }
     };
     const pick = (cells, n) => {
       const arr = cells.slice();
@@ -1707,6 +1994,8 @@
     }
     GameState.mapGrid = grid;
     GameState.playerPos = { x: 0, y: 0 };
+    GameState.mapFogVisited = [];
+    mapFogVisitedAdd(0, 0);
     const start = GameState.mapGrid.find(c => c.x === 0 && c.y === 0);
     start.type = 'mission';
     start.emoji = '⚔️';
@@ -1772,6 +2061,10 @@
     updateBattleUI();
     const b0 = GameState.currentBattle;
     b0.battleLog.push({ text: 'Герои выставлены автоматически. Перетащите их в левых 2 колонках при необходимости, затем «Начать бой».', t: 'status' });
+    if (GameState._pendingBestiaryLogs && GameState._pendingBestiaryLogs.length) {
+      GameState._pendingBestiaryLogs.forEach(msg => b0.battleLog.push({ text: msg, t: 'status' }));
+      GameState._pendingBestiaryLogs = [];
+    }
     renderBattleLog();
     buildInitiative();
     saveGame();
@@ -2005,6 +2298,7 @@
     if (!u.isHero) {
       GameState.stats.kills += 1;
       GameState._lastBattleKills = (GameState._lastBattleKills || 0) + 1;
+      markEnemyDead(u.enemyId);
 
       // Perk: killHeal (Seris) — +5 HP при убийстве
       if (b) {
@@ -2079,6 +2373,13 @@
           h.xp -= h.level * 50;
           h.level++;
           GameState.pendingPerks.push(h.id);
+          // Queue skill unlock notification if a skill is unlocked at this level
+          const heroSkills = HERO_SKILLS[h.id] || [];
+          const unlocked = heroSkills.find(s => s.unlockLevel === h.level);
+          if (unlocked) {
+            if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
+            GameState.pendingSkillUnlocks.push({ heroId: h.id, skill: unlocked });
+          }
         }
       }
     });
@@ -2113,7 +2414,11 @@
     const vx = document.getElementById('vic-xp');
     if (vx) vx.innerHTML = GameState.heroes.filter(h => h.hp > 0).map(h => `${h.emoji} ${h.name} +${xp} XP, ур.${h.level}`).join(' &nbsp;·&nbsp; ');
     showScreen('victory');
-    if (GameState.pendingPerks.length) setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
+    if (GameState.pendingPerks.length) {
+      setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
+    } else if (GameState.pendingSkillUnlocks && GameState.pendingSkillUnlocks.length) {
+      setTimeout(processSkillUnlockQueue, 400);
+    }
   }
 
   //══════════ RENDER ══════════
@@ -2337,31 +2642,31 @@
         if (t === TILE.FOREST || nearM) show = false;
       }
       if (show) {
-        // Draw sprite/emoji
+        // Draw sprite/emoji — 1.5× cell size so units visually overlap cell borders
+        const spriteSz = Math.round(CELL * 1.5);
+        const spriteOff = (CELL - spriteSz) / 2; // negative → extends beyond cell
         if (u.isHero) {
           const hTex = getHeroTexture(u.heroId);
           if (hTex) {
-            const sz = 34;
-            ctx.drawImage(hTex, px + (CELL - sz) / 2, py + (CELL - sz) / 2 - 4, sz, sz);
+            ctx.drawImage(hTex, px + spriteOff, py + spriteOff - 4, spriteSz, spriteSz);
           } else {
-            ctx.font = '30px serif';
+            ctx.font = '38px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(u.sprite, px + CELL / 2, py + CELL / 2 - 4);
           }
         } else {
           const eTex = getEnemyTexture(u.enemyId);
-          const sz = 34;
           if (eTex) {
             const cx = px + CELL / 2;
             const cy = py + CELL / 2 - 4;
             ctx.save();
             ctx.translate(cx, cy);
             ctx.scale(-1, 1);
-            ctx.drawImage(eTex, -sz / 2, -sz / 2, sz, sz);
+            ctx.drawImage(eTex, -spriteSz / 2, -spriteSz / 2, spriteSz, spriteSz);
             ctx.restore();
           } else {
-            ctx.font = '30px serif';
+            ctx.font = '38px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(u.emoji, px + CELL / 2, py + CELL / 2 - 4);
@@ -2396,12 +2701,21 @@
     bar.innerHTML = '';
     if (!b) return;
     const active = getActiveUnit();
-    b.order.forEach((unitIdx, i) => {
+    b.order.forEach((unitIdx) => {
       const u = b.units[unitIdx];
       if (!u || u.hp <= 0) return;
-      const d = document.createElement('span');
+      const d = document.createElement('div');
       d.className = 'init-slot ' + (u.isHero ? 'hero' : 'enemy') + (u === active ? ' active' : '');
-      d.textContent = u.isHero ? u.sprite : u.emoji;
+      const imgSrc = u.isHero ? HERO_TEXTURE_PATHS[u.heroId] : ENEMY_TEXTURE_PATHS[u.enemyId];
+      if (imgSrc) {
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        if (!u.isHero) img.style.transform = 'scaleX(-1)';
+        d.appendChild(img);
+      } else {
+        d.textContent = u.isHero ? u.sprite : u.emoji;
+      }
+      d.title = u.name;
       bar.appendChild(d);
     });
   }
@@ -2479,7 +2793,10 @@
   function beginCombatFromDeploy() {
     const b = GameState.currentBattle;
     if (!b || b.phase !== 'deploy') return;
-    if (countDeployedHeroes(b) < 1) { alert('Поставьте хотя бы одного героя.'); return; }
+    if (countDeployedHeroes(b) < 1) {
+      void showGameAlert('Поставьте хотя бы одного героя.');
+      return;
+    }
     b.phase = 'combat';
     b.heroMoved = false;
     b.heroActionDone = false;
@@ -2921,13 +3238,18 @@
         const mpPct = h.maxMana ? Math.max(0, Math.min(100, Math.round((h.mana / h.maxMana) * 100))) : 0;
         const manaBar = h.maxMana ? `<div class="bar-wrap"><div class="bar-label"><span>MP</span><span>${h.mana}/${h.maxMana}</span></div><div class="bar"><div class="bar-fill-mp" style="width:${mpPct}%"></div></div></div>` : '';
         const hh = GameState.heroes.find(x => x.id === h.heroId) || h;
-        const skillIcons = h.heroId === 'garet' ? ['🛡','🔥','💪'] : h.heroId === 'alira' ? ['🏹','🐢','🌧'] : ['🔥','🧊','☄'];
         const cds = hh.cds || {};
-        const cdKeys = h.heroId === 'garet' ? ['shieldBash','fireCall','inspire'] : h.heroId === 'alira' ? ['doubleShot','slowArrow','arrowRain'] : ['fireball','freeze','meteor'];
-        const skillsHtml = skillIcons.map((ic, i) => {
-          const ready = !cds[cdKeys[i]] || cds[cdKeys[i]] <= 0;
-          return `<div class="skill-btn ${ready ? 'ready' : 'used'}" title="${cdKeys[i]}">${ic}</div>`;
+        const heroSkillDefs = HERO_SKILLS[h.heroId] || [];
+        const heroLvl = hh.level || 1;
+        const skillsHtml = heroSkillDefs.map(skDef => {
+          const locked = heroLvl < skDef.unlockLevel;
+          const ready = !locked && (!cds[skDef.key] || cds[skDef.key] <= 0);
+          const cls = locked ? 'locked' : (ready ? 'ready' : 'used');
+          const tip = locked ? `${skDef.name} (ур.${skDef.unlockLevel})` : skDef.name;
+          return `<div class="skill-btn ${cls}" title="${tip}" style="${locked ? 'opacity:0.3' : ''}">${locked ? '🔒' : skDef.icon}</div>`;
         }).join('');
+        const moveLeft = getMovePoints(h, b);
+        const statsLine = `<div class="hero-mini-stats">🛡${h.armor} ⚔${h.attack} 👟${moveLeft}/${h.move}${h.maxMana ? ` 🔮${h.mana}/${h.maxMana}` : ''}</div>`;
         const deadStyle = alive ? '' : 'opacity:0.4;';
         return `<div class="hero-card ${active}" style="${deadStyle}">
           <div class="hero-card-top">
@@ -2936,6 +3258,7 @@
           </div>
           <div class="bar-wrap"><div class="bar-label"><span>HP</span><span>${h.hp}/${h.maxHp}</span></div><div class="bar"><div class="bar-fill-hp" style="width:${hpPct}%"></div></div></div>
           ${manaBar}
+          ${statsLine}
           <div class="skills-row">${skillsHtml}</div>
           <div style="font-size:9px;color:var(--text-dim);margin-top:3px">${heroEquipIcons(hh)}</div>
         </div>`;
@@ -2974,38 +3297,47 @@
     if (modeBadge) {
       modeBadge.classList.remove('hidden');
       if (b.heroActionDone) { modeBadge.className = 'm-done'; modeBadge.textContent = '✓ Ход завершён'; }
-      else if (b.pendingSkill) { modeBadge.className = 'm-skill'; modeBadge.textContent = '✦ Выбери цель скилла'; }
-      else if (b.mode === 'move' && !b.heroMoved) { modeBadge.className = 'm-move'; modeBadge.textContent = '◈ Движение → клик на клетку'; }
-      else if (b.mode === 'attack' || b.heroMoved) { modeBadge.className = 'm-attack'; modeBadge.textContent = '⚔ Атака → клик на врага'; }
-      else { modeBadge.className = 'm-move'; modeBadge.textContent = '◈ Клик: пусто=ход, враг=атака'; }
+      else if (b.pendingSkill) { modeBadge.className = 'm-skill'; modeBadge.textContent = '✦ Выбери цель'; }
+      else if (b.mode === 'move' && !b.heroMoved) { modeBadge.className = 'm-move'; modeBadge.textContent = '◈ Движение'; }
+      else if (b.mode === 'attack' || b.heroMoved) { modeBadge.className = 'm-attack'; modeBadge.textContent = '⚔ Атака'; }
+      else { modeBadge.className = 'm-move'; modeBadge.textContent = '◈'; }
     }
-    title.innerHTML = `${heroIconHtml(u.heroId, u.sprite)} <span style="margin-left:6px">${u.name}</span>`;
+    title.innerHTML = '';
+    stats.innerHTML = '';
     const hh = GameState.heroes.find(x => x.id === u.heroId);
-    let st = `HP ${u.hp}/${u.maxHp} | Брн ${u.armor} | Атк ${u.attack} | Ход ${getMovePoints(u, b)}/${u.move}`;
-    if (u.heroId === 'seris') st += ` | MP ${u.mana}/${u.maxMana}`;
-    stats.innerHTML = st;
     let html = '';
     if (!b.heroActionDone) {
-      // 6: Skill buttons with cooldown counter [N]
+      // 6: Skill buttons with cooldown, level-lock, and tooltips
       const cdLabel = (cd) => cd > 0 ? ` [${cd}]` : '';
-      const cdDisabled = (cd) => cd > 0 ? ' style="opacity:0.45"' : '';
+      const hh2 = GameState.heroes.find(x => x.id === u.heroId) || u;
+      const heroLevel = hh2.level || 1;
+      const skillMakeBtn = (id, skillKey, icon, label, cdVal, extra) => {
+        const skDef = (HERO_SKILLS[u.heroId] || []).find(s => s.key === skillKey);
+        const unlockLvl = skDef ? skDef.unlockLevel : 1;
+        const locked = heroLevel < unlockLvl;
+        const metaStr = skDef ? (skDef.cost ? `MP: ${skDef.cost}` : skDef.cd ? `КД: ${skDef.cd}` : '') : '';
+        const tooltipText = skDef ? `${skDef.name} (ур.${unlockLvl})&#10;${skDef.desc}${metaStr ? '&#10;' + metaStr : ''}` : label;
+        if (locked) {
+          return `<button class="btn" id="${id}" title="🔒 Открывается на ${unlockLvl} уровне&#10;${skDef ? skDef.desc : ''}" style="opacity:0.3;cursor:not-allowed">${icon} ${label} [ур.${unlockLvl}]</button>`;
+        }
+        const disabled = cdVal > 0 || (extra && extra.mpFail);
+        const disStyle = disabled ? 'opacity:0.45' : '';
+        return `<button class="btn" id="${id}" title="${tooltipText.replace(/"/g,'&quot;')}"${disStyle ? ` style="${disStyle}"` : ''}>${icon} ${label}${cdLabel(cdVal)}</button>`;
+      };
       if (u.heroId === 'garet') {
-        html += `<button class="btn" id="sk-shield"${cdDisabled(u.cds.shieldBash)}>🛡 Удар щитом${cdLabel(u.cds.shieldBash)}</button>`;
-        html += `<button class="btn" id="sk-firecall"${cdDisabled(u.cds.fireCall)}>🔥 Вызов огня${cdLabel(u.cds.fireCall)}</button>`;
-        html += `<button class="btn" id="sk-berz"${cdDisabled(u.cds.berserk)}>💪 Берсерк${cdLabel(u.cds.berserk)}</button>`;
+        html += skillMakeBtn('sk-shield',  'shieldBash', '🛡', 'Удар щитом',  u.cds.shieldBash, null);
+        html += skillMakeBtn('sk-firecall','fireCall',   '🔥', 'Вызов огня',  u.cds.fireCall,   null);
+        html += skillMakeBtn('sk-berz',    'berserk',    '💪', 'Берсерк',     u.cds.berserk,    null);
       }
       if (u.heroId === 'alira') {
-        html += `<button class="btn" id="sk-double"${cdDisabled(u.cds.doubleShot)}>🏹 Двойной выстрел${cdLabel(u.cds.doubleShot)}</button>`;
-        html += `<button class="btn" id="sk-slow"${cdDisabled(u.cds.slowArrow)}>🐢 Стрела замедления${cdLabel(u.cds.slowArrow)}</button>`;
-        html += `<button class="btn" id="sk-rain"${cdDisabled(u.cds.arrowRain)}>🌧 Дождь стрел${cdLabel(u.cds.arrowRain)}</button>`;
+        html += skillMakeBtn('sk-double','doubleShot','🏹','Двойной выстрел', u.cds.doubleShot, null);
+        html += skillMakeBtn('sk-slow',  'slowArrow', '🐢','Стрела замедл.',  u.cds.slowArrow,  null);
+        html += skillMakeBtn('sk-rain',  'arrowRain', '🌧','Дождь стрел',     u.cds.arrowRain,  null);
       }
       if (u.heroId === 'seris') {
-        const fb = u.mana < 3 || u.cds.fireball > 0;
-        const fr = u.mana < 4 || u.cds.freeze > 0;
-        const mt = u.mana < 8 || u.cds.meteor > 0;
-        html += `<button class="btn" id="sk-fb"${fb ? ' style="opacity:0.45"' : ''}>🔥 Огненный шар (3mp)${cdLabel(u.cds.fireball)}</button>`;
-        html += `<button class="btn" id="sk-fr"${fr ? ' style="opacity:0.45"' : ''}>🧊 Заморозка (4mp)${cdLabel(u.cds.freeze)}</button>`;
-        html += `<button class="btn" id="sk-met"${mt ? ' style="opacity:0.45"' : ''}>☄ Метеорит (8mp)${cdLabel(u.cds.meteor)}</button>`;
+        html += skillMakeBtn('sk-fb',  'fireball', '🔥','Огненный шар (3mp)', u.cds.fireball, { mpFail: u.mana < 3 });
+        html += skillMakeBtn('sk-fr',  'freeze',   '🧊','Заморозка (4mp)',     u.cds.freeze,   { mpFail: u.mana < 4 });
+        html += skillMakeBtn('sk-met', 'meteor',   '☄', 'Метеорит (8mp)',      u.cds.meteor,   { mpFail: u.mana < 8 });
       }
       if (!b.heroMoved) html += `<button class="btn btn-dim" id="btn-skip-move">⏩ Пропустить ход</button>`;
       html += `<button class="btn" id="btn-wait">⏹ Ждать</button>`;
@@ -3014,17 +3346,19 @@
     html += `<button class="btn btn-dim" id="btn-battle-inv" style="margin-top:4px">🎒 Инвентарь</button>`;
     actions.innerHTML = html;
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    const heroLvl2 = (GameState.heroes.find(x => x.id === u.heroId) || u).level || 1;
+    const skLocked = (key) => { const s = (HERO_SKILLS[u.heroId] || []).find(x => x.key === key); return s && heroLvl2 < s.unlockLevel; };
     bind('btn-skip-move', () => { b.heroMoved = true; b.mode = 'attack'; updateBattleUI(); });
     bind('btn-wait', () => { b.heroActionDone = true; endUnitTurn(); });
-    bind('sk-shield', () => { if (u.cds.shieldBash > 0) return; b.pendingSkill = 'shieldBash'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-firecall', () => { if (u.cds.fireCall > 0) return; b.pendingSkill = 'fireCall'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-berz', () => { if (u.cds.berserk > 0) return; addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
-    bind('sk-double', () => { if (u.cds.doubleShot > 0) return; b.pendingSkill = 'double'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-slow', () => { if (u.cds.slowArrow > 0) return; b.pendingSkill = 'slowArrow'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-rain', () => { if (u.cds.arrowRain > 0) return; const b2 = GameState.currentBattle; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && Math.abs(t.x - u.x) <= 1 && Math.abs(t.y - u.y) <= 1) dealDamage(u, t, u.attack, {}); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
-    bind('sk-fb', () => { if (u.mana < 3 || u.cds.fireball > 0) return; b.pendingSkill = 'fireball'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-fr', () => { if (u.mana < 4 || u.cds.freeze > 0) return; b.pendingSkill = 'freeze'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-met', () => { if (u.mana < 8 || u.cds.meteor > 0) return; b.pendingSkill = 'meteor'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-shield', () => { if (skLocked('shieldBash') || u.cds.shieldBash > 0) return; b.pendingSkill = 'shieldBash'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-firecall', () => { if (skLocked('fireCall') || u.cds.fireCall > 0) return; b.pendingSkill = 'fireCall'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-berz', () => { if (skLocked('berserk') || u.cds.berserk > 0) return; addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-double', () => { if (skLocked('doubleShot') || u.cds.doubleShot > 0) return; b.pendingSkill = 'double'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-slow', () => { if (skLocked('slowArrow') || u.cds.slowArrow > 0) return; b.pendingSkill = 'slowArrow'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; const b2 = GameState.currentBattle; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && Math.abs(t.x - u.x) <= 1 && Math.abs(t.y - u.y) <= 1) dealDamage(u, t, u.attack, {}); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-fb', () => { if (skLocked('fireball') || u.mana < 3 || u.cds.fireball > 0) return; b.pendingSkill = 'fireball'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-fr', () => { if (skLocked('freeze') || u.mana < 4 || u.cds.freeze > 0) return; b.pendingSkill = 'freeze'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-met', () => { if (skLocked('meteor') || u.mana < 8 || u.cds.meteor > 0) return; b.pendingSkill = 'meteor'; b.mode = 'skill'; updateBattleUI(); });
     // 10: Inventory from battle
     bind('btn-battle-inv', () => { GameState._returnToBattle = true; showScreen('inventory'); renderInventoryScreen(); });
   }
@@ -3203,13 +3537,235 @@
   //══════════ Map / economy / screens ══════════
   function getCellById(id) { return GameState.mapGrid.find(c => c.id === id); }
   function getCurrentCell() { return GameState.mapGrid.find(c => c.x === GameState.playerPos.x && c.y === GameState.playerPos.y); }
+  function mapFogVisitedAdd(row, col) {
+    const key = `${row},${col}`;
+    if (!GameState.mapFogVisited.includes(key)) GameState.mapFogVisited.push(key);
+  }
+  function ensureCurrentCellFogVisited() {
+    const p = GameState.playerPos;
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) mapFogVisitedAdd(p.y, p.x);
+  }
+  function revealFullMapFogVisited() {
+    const set = new Set(GameState.mapFogVisited);
+    for (let row = 0; row < MAP_ROWS; row++) {
+      for (let col = 0; col < MAP_COLS; col++) set.add(`${row},${col}`);
+    }
+    GameState.mapFogVisited = [...set];
+  }
+  /** Внутриигровое сообщение (вместо alert браузера). */
+  function showGameAlert(message) {
+    return new Promise(resolve => {
+      const el = document.getElementById('game-alert-modal');
+      const ta = document.getElementById('game-alert-text');
+      const ok = document.getElementById('game-alert-ok');
+      if (!el || !ta || !ok) { resolve(); return; }
+      ta.textContent = message;
+      el.classList.remove('hidden');
+      ok.onclick = () => {
+        el.classList.add('hidden');
+        ok.onclick = null;
+        resolve();
+      };
+    });
+  }
+  /** Внутриигровое подтверждение (вместо confirm). */
+  function showGameConfirm(message) {
+    return new Promise(resolve => {
+      const el = document.getElementById('confirm-modal');
+      const textEl = document.getElementById('confirm-text');
+      const yesBtn = document.getElementById('confirm-yes');
+      const noBtn = document.getElementById('confirm-no');
+      if (!el || !textEl || !yesBtn || !noBtn) { resolve(false); return; }
+      textEl.textContent = message;
+      el.classList.remove('hidden');
+      const cleanup = () => {
+        yesBtn.onclick = null;
+        noBtn.onclick = null;
+        el.classList.add('hidden');
+      };
+      yesBtn.onclick = () => { cleanup(); resolve(true); };
+      noBtn.onclick = () => { cleanup(); resolve(false); };
+    });
+  }
+  /** Выбор одного варианта из списка (вместо prompt). options: { value, label }[] */
+  function showGamePickOne(message, options) {
+    return new Promise(resolve => {
+      const el = document.getElementById('game-prompt-modal');
+      const lab = document.getElementById('game-prompt-label');
+      const sel = document.getElementById('game-prompt-select');
+      const okBtn = document.getElementById('game-prompt-ok');
+      const cancelBtn = document.getElementById('game-prompt-cancel');
+      if (!el || !lab || !sel || !okBtn || !cancelBtn) { resolve(null); return; }
+      lab.textContent = message;
+      sel.innerHTML = '';
+      options.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.value;
+        opt.textContent = o.label;
+        sel.appendChild(opt);
+      });
+      el.classList.remove('hidden');
+      const finish = val => {
+        okBtn.onclick = null;
+        cancelBtn.onclick = null;
+        el.classList.add('hidden');
+        resolve(val);
+      };
+      okBtn.onclick = () => finish(sel.value);
+      cancelBtn.onclick = () => finish(null);
+    });
+  }
+  // ══════════ БЕСТИАРИЙ ══════════
+  function markBestiarySeen(enemyId) {
+    if (!GameState.bestiary) GameState.bestiary = {};
+    if (!GameState.bestiary[enemyId]) {
+      GameState.bestiary[enemyId] = 'seen';
+      const d = enemyDef(enemyId);
+      const msg = `📖 ${d.name} добавлен в бестиарий`;
+      if (GameState.currentBattle) pushBattleLog(msg, 'status');
+      else {
+        if (!GameState._pendingBestiaryLogs) GameState._pendingBestiaryLogs = [];
+        GameState._pendingBestiaryLogs.push(msg);
+      }
+    }
+  }
+  function markEnemyDead(enemyId) {
+    if (!GameState.bestiary) GameState.bestiary = {};
+    if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
+    GameState.bestiaryKills[enemyId] = (GameState.bestiaryKills[enemyId] || 0) + 1;
+    if (GameState.bestiary[enemyId] !== 'dead') {
+      GameState.bestiary[enemyId] = 'dead';
+      const d = enemyDef(enemyId);
+      pushBattleLog(`📖 ${d.name} изучен — открыты способности и тактика`, 'status');
+    }
+  }
+
+  function renderBestiaryScreen() {
+    if (!GameState.bestiary) GameState.bestiary = {};
+    if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
+    const listEl = document.getElementById('bestiary-list');
+    const detailEl = document.getElementById('bestiary-detail');
+    const countEl = document.getElementById('bestiary-count');
+    const allIds = Object.keys(ENEMY_BESTIARY_DATA);
+    const knownCount = allIds.filter(id => GameState.bestiary[id]).length;
+    const deadCount = allIds.filter(id => GameState.bestiary[id] === 'dead').length;
+    if (countEl) countEl.textContent = `${deadCount} изучено / ${knownCount} встречено / ${allIds.length} всего`;
+
+    listEl.innerHTML = allIds.map(id => {
+      const st = GameState.bestiary[id] || 'new';
+      const d = enemyDef(id);
+      const statusLabel = st === 'new' ? '??? Неизвестно' : st === 'seen' ? 'Встречен' : 'Изучен';
+      const statusClass = `bs-${st}`;
+      const icon = st === 'new' ? '❓' : d.emoji;
+      const name = st === 'new' ? '??? НЕИЗВЕСТНО' : d.name;
+      return `<div class="bestiary-card" data-eid="${id}">
+        <div class="bestiary-card-icon">${icon}</div>
+        <div>
+          <div class="bestiary-card-name">${name}</div>
+          <div class="bestiary-card-status ${statusClass}">${statusLabel}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    listEl.querySelectorAll('.bestiary-card').forEach(card => {
+      card.onclick = () => {
+        listEl.querySelectorAll('.bestiary-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        renderBestiaryDetail(card.dataset.eid);
+      };
+    });
+    detailEl.innerHTML = '<div class="bestiary-text" style="color:var(--text-hint)">Выберите существо из списка.</div>';
+  }
+
+  function renderBestiaryDetail(id) {
+    const detailEl = document.getElementById('bestiary-detail');
+    if (!detailEl) return;
+    const st = GameState.bestiary[id] || 'new';
+    const d = enemyDef(id);
+    const bd = ENEMY_BESTIARY_DATA[id] || {};
+    const kills = (GameState.bestiaryKills || {})[id] || 0;
+    const regionNames = { 1: 'Регион 1 — Дикий лес', 2: 'Регион 2 — Тёмные земли', 3: 'Регион 3 — Цитадель тьмы' };
+    const regionClass = `bregion-${bd.region || 1}`;
+
+    if (st === 'new') {
+      detailEl.innerHTML = `
+        <div class="bestiary-detail-icon bs-unknown">❓</div>
+        <div class="bestiary-detail-name">??? НЕИЗВЕСТНО</div>
+        <div class="bestiary-text bestiary-locked">Это существо ещё не встречалось в бою.<br>Вступите в сражение, чтобы узнать больше.</div>`;
+      return;
+    }
+
+    const regionBadge = `<span class="bestiary-region-badge ${regionClass}">${regionNames[bd.region] || ''}</span>`;
+    const isMiniBoss = d.miniBoss ? ' · Мини-босс' : '';
+    const isBoss = d.boss ? ' · БОСС' : '';
+    const killsLine = kills > 0 ? `<div class="bestiary-stat"><b>${kills}</b>Убито</div>` : '';
+
+    let statsHtml = `
+      <div class="bestiary-stats-row">
+        <div class="bestiary-stat"><b>${d.hp}</b>HP</div>
+        <div class="bestiary-stat"><b>${d.attack}</b>Атк</div>
+        <div class="bestiary-stat"><b>${d.armor}</b>Броня</div>
+        <div class="bestiary-stat"><b>${d.speed}</b>Скор</div>
+        <div class="bestiary-stat"><b>${d.range}</b>Дальн</div>
+        ${killsLine}
+      </div>`;
+
+    const abilityHtml = st === 'dead'
+      ? `<div class="bestiary-section-label">СПОСОБНОСТЬ</div>
+         <div class="bestiary-text">${enemyAbilityText(id)}</div>
+         <div class="bestiary-section-label">ТАКТИКА</div>
+         <div class="bestiary-text">${bd.tactic || ''}</div>
+         <div class="bestiary-section-label">⚠ СЛАБОСТЬ</div>
+         <div class="bestiary-weakness">${bd.weakness || ''}</div>`
+      : `<div class="bestiary-section-label">СПОСОБНОСТЬ</div>
+         <div class="bestiary-text bestiary-locked">[Убейте существо, чтобы изучить способности и тактику]</div>`;
+
+    detailEl.innerHTML = `
+      <div class="bestiary-detail-icon">${d.emoji}</div>
+      ${regionBadge}
+      <div class="bestiary-detail-name">${d.name}${isMiniBoss}${isBoss}</div>
+      ${statsHtml}
+      ${abilityHtml}`;
+  }
+
+  // ══════════ ПОПАП РАЗБЛОКИРОВКИ НАВЫКА ══════════
+  function showSkillUnlockPopup(heroId, skillDef) {
+    return new Promise(resolve => {
+      const el = document.getElementById('skill-unlock-modal');
+      if (!el) { resolve(); return; }
+      el.classList.remove('hidden');
+      const hh = GameState.heroes.find(h => h.id === heroId);
+      const heroName = hh ? hh.name : heroId;
+      document.getElementById('skill-unlock-icon').textContent = skillDef.icon;
+      document.getElementById('skill-unlock-name').textContent = skillDef.name;
+      document.getElementById('skill-unlock-desc').textContent = skillDef.desc;
+      const meta = skillDef.cost ? `Стоимость: ${skillDef.cost} MP` : skillDef.cd ? `КД: ${skillDef.cd} хода` : '';
+      document.getElementById('skill-unlock-meta').textContent = `${heroName}: ${meta}`;
+      const okBtn = document.getElementById('btn-skill-unlock-ok');
+      const finish = () => { okBtn.onclick = null; el.classList.add('hidden'); resolve(); };
+      okBtn.onclick = finish;
+    });
+  }
+
+  async function processSkillUnlockQueue() {
+    if (!GameState.pendingSkillUnlocks) return;
+    const queue = [...GameState.pendingSkillUnlocks];
+    GameState.pendingSkillUnlocks = [];
+    for (const item of queue) {
+      await showSkillUnlockPopup(item.heroId, item.skill);
+    }
+  }
+
   function cellNeighbors(a, b) { return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1 && !(a.x === b.x && a.y === b.y); }
   function canShowAd() {
     return window.ysdk && (Date.now() - (GameState.adMeta.lastShownAt || 0) >= AD_MIN_INTERVAL_MS);
   }
   function showRewardedAd(rewardCallback) {
     if (!window.ysdk) { rewardCallback(); return; }
-    if (!canShowAd()) { alert('Реклама временно недоступна (антиспам).'); return; }
+    if (!canShowAd()) {
+      void showGameAlert('Реклама временно недоступна (антиспам).');
+      return;
+    }
     window.ysdk.adv.showRewardedVideo({
       callbacks: {
         onRewarded: () => {
@@ -3217,7 +3773,7 @@
           rewardCallback();
         },
         onClose: () => {},
-        onError: () => alert('Реклама недоступна')
+        onError: () => { void showGameAlert('Реклама недоступна'); }
       }
     });
   }
@@ -3410,36 +3966,51 @@
     </div>`;
     const equipBtn = document.getElementById('inv-equip-btn');
     equipBtn.onclick = () => {
-      if (!inventoryItemFitsHero(sel, hero)) { alert('Предмет не подходит герою.'); return; }
-      const old = hero.equipment[sel.slot];
-      if (old) {
-        if (!confirm(`Заменить ${itemById(old)?.name || old}?`)) return;
-        GameState.inventory.push(old);
+      if (!inventoryItemFitsHero(sel, hero)) {
+        void showGameAlert('Предмет не подходит герою.');
+        return;
       }
-      const idx = GameState.inventory.indexOf(sel.id);
-      if (idx >= 0) GameState.inventory.splice(idx, 1);
-      hero.equipment[sel.slot] = sel.id;
-      recalcHeroFromEquipment(hero);
-      InvState.selectedItemId = null;
-      saveGame();
-      renderInventoryScreen();
-      renderPartyStrip();
+      const old = hero.equipment[sel.slot];
+      const applyEquip = () => {
+        const idx = GameState.inventory.indexOf(sel.id);
+        if (idx >= 0) GameState.inventory.splice(idx, 1);
+        hero.equipment[sel.slot] = sel.id;
+        recalcHeroFromEquipment(hero);
+        InvState.selectedItemId = null;
+        saveGame();
+        renderInventoryScreen();
+        renderPartyStrip();
+      };
+      if (old) {
+        showGameConfirm(`Заменить ${itemById(old)?.name || old}?`).then(ok => {
+          if (!ok) return;
+          GameState.inventory.push(old);
+          applyEquip();
+        });
+        return;
+      }
+      applyEquip();
     };
     document.getElementById('inv-transfer-btn').onclick = () => {
       const others = GameState.heroes.filter(h => h.id !== hero.id);
       if (!others.length) return;
-      const pick = prompt(`Передать кому? (${others.map(h => h.name).join(', ')})`, others[0].name);
-      const target = others.find(h => h.name.toLowerCase() === (pick || '').toLowerCase()) || others[0];
-      InvState.activeHeroId = target.id;
-      renderInventoryScreen();
+      showGamePickOne('Передать кому?', others.map(h => ({ value: h.id, label: `${h.emoji} ${h.name}` }))).then(targetId => {
+        if (!targetId) return;
+        const target = GameState.heroes.find(h => h.id === targetId);
+        if (!target) return;
+        InvState.activeHeroId = target.id;
+        renderInventoryScreen();
+      });
     };
     document.getElementById('inv-drop-btn').onclick = () => {
-      if (!confirm('Выбросить предмет?')) return;
-      const idx = GameState.inventory.indexOf(sel.id);
-      if (idx >= 0) GameState.inventory.splice(idx, 1);
-      InvState.selectedItemId = null;
-      saveGame();
-      renderInventoryScreen();
+      showGameConfirm('Выбросить предмет?').then(ok => {
+        if (!ok) return;
+        const idx = GameState.inventory.indexOf(sel.id);
+        if (idx >= 0) GameState.inventory.splice(idx, 1);
+        InvState.selectedItemId = null;
+        saveGame();
+        renderInventoryScreen();
+      });
     };
   }
   function generateShopStock(region) {
@@ -3594,9 +4165,9 @@
         renderMap();
         if (out.type === 'negative' && window.ysdk && canShowAd()) {
           setTimeout(() => {
-            if (confirm('🎲 Судьба даёт второй шанс (реклама)?')) {
-              showRewardedAd(() => { GameState.pendingNegativeEvent = null; triggerEvent(cell); });
-            }
+            showGameConfirm('🎲 Судьба даёт второй шанс (реклама)?').then(ok => {
+              if (ok) showRewardedAd(() => { GameState.pendingNegativeEvent = null; triggerEvent(cell); });
+            });
           }, 300);
         }
       });
@@ -3607,7 +4178,8 @@
     const screenMap = {
       map: 'map-screen', city: 'city-screen', battle: 'battle-screen',
       inventory: 'inventory-screen', victory: 'victory-screen',
-      gameover: 'gameover-screen', ending: 'ending-screen', event: 'event-screen'
+      gameover: 'gameover-screen', ending: 'ending-screen', event: 'event-screen',
+      bestiary: 'bestiary-screen'
     };
     const mainMenu = document.getElementById('main-menu');
 
@@ -3756,7 +4328,7 @@
 
   function continueGame() {
     if (!localStorage.getItem(SAVE_KEY) && !localStorage.getItem('save')) {
-      alert('Сохранение не найдено.');
+      void showGameAlert('Сохранение не найдено.');
       return;
     }
     loadGame();
@@ -3766,7 +4338,7 @@
   }
 
   function showAbout() {
-    alert('⚔ ТРИ КЛИНКА\nТактическая RPG. Проведите отряд из трёх героев через 3 региона и победите Тёмного Лорда.\nВерсия 0.3.1');
+    void showGameAlert('⚔ ТРИ КЛИНКА\nТактическая RPG. Проведите отряд из трёх героев через 3 региона и победите Тёмного Лорда.\nВерсия 0.3.1');
   }
 
   function updateMenuMeta() {
@@ -3775,19 +4347,34 @@
   function renderMap() {
     const root = document.getElementById('map-nodes');
     const info = document.getElementById('map-cell-info');
+    const fogCounterEl = document.getElementById('map-fog-counter');
     root.innerHTML = '';
     renderPartyStrip();
     let selectedNode = getCurrentCell();
+    const px = GameState.playerPos.x;
+    const py = GameState.playerPos.y;
+    if (fogCounterEl) fogCounterEl.textContent = `ОТКРЫТО: ${GameState.mapFogVisited.length} / ${MAP_CELL_TOTAL}`;
     GameState.mapGrid.forEach(node => {
       const el = document.createElement('div');
       el.className = 'map-node';
+      el.classList.add(`map-region-${node.region}`);
+      const dist = Math.abs(node.x - px) + Math.abs(node.y - py);
+      if (dist <= 2) el.classList.add('visible');
+      else if (dist === 3) el.classList.add('fog');
+      else el.classList.add('hidden');
+
       const unlocked = node.region <= GameState.regionUnlocked && (node.type !== 'final' || GameState.defeatedBosses >= 3);
       if (!unlocked) el.classList.add('locked');
       if (node.completed) el.classList.add('done');
-      if (node.x === GameState.playerPos.x && node.y === GameState.playerPos.y) el.classList.add('current');
+      if (node.x === px && node.y === py) el.classList.add('current');
       const typeNames = { mission:'Миссия', city:'Город', dungeon:'Подземелье', event:'Событие', boss:'Босс', wanderer:'Странник', arena:'Арена', final:'Финал' };
       const typeLbl = unlocked ? (typeNames[node.type] || '') : '';
-      el.innerHTML = `<div>${node.emoji}</div>${typeLbl ? `<small>${typeLbl}</small>` : ''}`;
+      const showCellFace = dist <= 3;
+      if (showCellFace) {
+        el.innerHTML = `<div class="map-node-face">${node.emoji}</div>${typeLbl ? `<small class="map-node-lbl">${typeLbl}</small>` : ''}`;
+      } else {
+        el.innerHTML = '';
+      }
       const setInfo = (n) => {
         const t = typeNames[n.type] || n.type;
         info.innerHTML = `<div class="cell-info-icon">${n.emoji}</div>
@@ -3795,35 +4382,61 @@
           <div>${n.completed ? 'Локация зачищена.' : 'Локация активна.'}</div>`;
         selectedNode = n;
       };
-      el.onmouseenter = () => setInfo(node);
+      el.onmouseenter = () => {
+        if (!showCellFace) {
+          info.innerHTML = `<div class="cell-info-icon">?</div><div class="cell-info-name">Туман войны</div><div>Слишком далеко.</div>`;
+          return;
+        }
+        if (!unlocked) {
+          info.innerHTML = `<div class="cell-info-icon">🔒</div><div class="cell-info-name">Регион ${node.region}</div><div>Закрыто. Сначала босс предыдущего региона.</div>`;
+          return;
+        }
+        setInfo(node);
+      };
       el.onclick = () => {
-        if (!unlocked) return;
+        if (!showCellFace) return;
+        if (!unlocked) {
+          void showGameAlert('Этот регион ещё закрыт. Победите босса в текущем регионе, чтобы открыть путь дальше.');
+          return;
+        }
         setInfo(node);
         const cur = getCurrentCell();
         if (!cellNeighbors(cur, node) && !(node.x === cur.x && node.y === cur.y)) return;
         GameState.playerPos = { x: node.x, y: node.y };
+        mapFogVisitedAdd(node.y, node.x);
         node.visited = true;
         GameState.turn += 1;
         GameState.region = node.region;
         if (node.type === 'city') enterCity(node);
         else if (node.type === 'event' && !node.completed) triggerEvent(node);
         else if (node.type === 'wanderer' && !GameState.wandererUsedByRegion[node.region]) {
-          if (window.ysdk && confirm('Посмотреть товары странника за рекламу?')) {
-            showRewardedAd(() => {
-              GameState.wandererUsedByRegion[node.region] = true;
-              GameState.shopStock = [randomItem(node.region, 'epic'), randomItem(node.region, 'epic'), randomItem(node.region, 'epic')];
-              enterCity(node, true);
+          if (window.ysdk) {
+            showGameConfirm('Посмотреть товары странника за рекламу?').then(ok => {
+              if (ok) {
+                showRewardedAd(() => {
+                  GameState.wandererUsedByRegion[node.region] = true;
+                  GameState.shopStock = [randomItem(node.region, 'epic'), randomItem(node.region, 'epic'), randomItem(node.region, 'epic')];
+                  enterCity(node, true);
+                });
+              } else {
+                void showGameAlert('Странник ушёл.');
+                GameState.wandererUsedByRegion[node.region] = true;
+              }
             });
           } else {
-            alert('Странник ушёл.');
+            void showGameAlert('Странник ушёл.');
             GameState.wandererUsedByRegion[node.region] = true;
           }
         }
         else if (node.type === 'arena' && !GameState.arenaDoneByRegion[node.region]) {
-          if (window.ysdk && confirm('Войти в Арену теней за рекламу?')) {
-            showRewardedAd(() => {
-              GameState.arenaDoneByRegion[node.region] = true;
-              startBattleForCell(node, { wave: [ENEMY_IDS.CHAOS], skipDeploy: false });
+          if (window.ysdk) {
+            showGameConfirm('Войти в Арену теней за рекламу?').then(ok => {
+              if (ok) {
+                showRewardedAd(() => {
+                  GameState.arenaDoneByRegion[node.region] = true;
+                  startBattleForCell(node, { wave: [ENEMY_IDS.CHAOS], skipDeploy: false });
+                });
+              }
             });
           }
         }
@@ -3857,6 +4470,16 @@
       renderInventoryScreen();
       showScreen('inventory');
     };
+    const revealMapBtn = document.getElementById('btn-map-reveal-ad');
+    if (revealMapBtn) {
+      revealMapBtn.onclick = () => {
+        showRewardedAd(() => {
+          revealFullMapFogVisited();
+          saveGame();
+          renderMap();
+        });
+      };
+    }
   }
   function enterCity(node, strangerOnly) {
     GameState.screen = 'city';
@@ -3900,7 +4523,7 @@
           const h = GameState.heroes.find(x => x.id === btn.dataset.heal);
           if (!h || h.hp >= h.maxHp) return;
           const cost = Math.max(0, h.maxHp - h.hp) * 2;
-          if (GameState.gold < cost) { alert('Недостаточно золота.'); return; }
+          if (GameState.gold < cost) { void showGameAlert('Недостаточно золота.'); return; }
           GameState.gold -= cost;
           h.hp = h.maxHp;
           saveGame();
@@ -3950,7 +4573,7 @@
     shop.querySelectorAll('[data-buy]').forEach(card => {
       card.onclick = () => {
         const it = itemById(card.getAttribute('data-buy'));
-        if (!it || GameState.gold < it.price) { if (it) alert('Недостаточно золота.'); return; }
+        if (!it || GameState.gold < it.price) { if (it) void showGameAlert('Недостаточно золота.'); return; }
         GameState.gold -= it.price;
         GameState.inventory.push(it.id);
         saveGame();
@@ -3971,7 +4594,7 @@
         <div class="item-footer"><span class="badge badge-epic">Эпик</span><span class="item-price">${price}g</span></div>
       </div>`;
       shop.querySelector('[data-buy="__secret__"]')?.addEventListener('click', () => {
-        if (GameState.gold < price) { alert('Недостаточно золота.'); return; }
+        if (GameState.gold < price) { void showGameAlert('Недостаточно золота.'); return; }
         GameState.gold -= price; GameState.inventory.push(item.id); saveGame(); enterCity(node, strangerOnly);
       });
     });
@@ -3982,34 +4605,61 @@
     const doAlchemy = () => {
       const inv = GameState.inventory.map(itemById).filter(Boolean);
       const base = inv.find(i => i.rarity === 'common') || inv.find(i => i.rarity === 'rare');
-      if (!base) { alert('Нет подходящего предмета.'); return; }
+      if (!base) { void showGameAlert('Нет подходящего предмета.'); return; }
       const cost = base.rarity === 'common' ? 100 : 200;
       const doUpgrade = () => {
         const upgraded = upgradeItem(base, node.region || GameState.region || 1);
-        if (upgraded === base) { alert('Нет доступных улучшений.'); return; }
+        if (upgraded === base) {
+          void showGameAlert('Нет доступных улучшений.');
+          return;
+        }
         const idx = GameState.inventory.indexOf(base.id);
         if (idx >= 0) GameState.inventory[idx] = upgraded.id;
         saveGame();
-        alert(`${base.name} → ${upgraded.name}!`);
-        enterCity(node, strangerOnly);
+        showGameAlert(`${base.name} → ${upgraded.name}!`).then(() => enterCity(node, strangerOnly));
       };
-      if (GameState.gold >= cost && confirm(`Улучшить ${base.name} за ${cost}💰?`)) { GameState.gold -= cost; doUpgrade(); return; }
-      else if (window.ysdk && !GameState.cityState.adUpgradeUsed) showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
-      else alert(`Нужно ${cost}💰 для улучшения.`);
+      if (GameState.gold >= cost) {
+        showGameConfirm(`Улучшить ${base.name} за ${cost}💰?`).then(ok => {
+          if (ok) {
+            GameState.gold -= cost;
+            doUpgrade();
+          } else if (window.ysdk && !GameState.cityState.adUpgradeUsed) {
+            showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
+          } else {
+            void showGameAlert(`Нужно ${cost}💰 для улучшения.`);
+          }
+        });
+      } else if (window.ysdk && !GameState.cityState.adUpgradeUsed) {
+        showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
+      } else {
+        void showGameAlert(`Нужно ${cost}💰 для улучшения.`);
+      }
     };
     if (al) al.onclick = doAlchemy;
     const doOracle = () => showRewardedAd(() => {
       const cur = getCurrentCell();
       const next = GameState.mapGrid.find(c => c.region <= GameState.regionUnlocked && !c.completed && ['mission', 'dungeon', 'boss', 'final'].includes(c.type) && cellNeighbors(cur, c));
-      if (!next) { alert('Ближайших боёв не найдено.'); return; }
+      if (!next) {
+        void showGameAlert('Ближайших боёв не найдено.');
+        return;
+      }
       const wave = generateEnemyWaveForCell(next).map(id => `${enemyDef(id).emoji} ${enemyDef(id).name}`).join(', ');
-      alert(`Оракул видит: ${wave}`);
+      void showGameAlert(`Оракул видит: ${wave}`);
     });
     if (oracle) oracle.onclick = doOracle;
 
     // Refresh shop button
     const rer = document.getElementById('btn-reroll-shop');
-    if (rer) rer.onclick = () => { if (GameState.gold >= 20) { GameState.gold -= 20; GameState.shopStock = generateShopStock(node.region); saveGame(); enterCity(node, strangerOnly); } else alert('Нужно 20💰'); };
+    if (rer) rer.onclick = () => {
+      if (GameState.gold >= 20) {
+        GameState.gold -= 20;
+        GameState.shopStock = generateShopStock(node.region);
+        saveGame();
+        enterCity(node, strangerOnly);
+      } else {
+        void showGameAlert('Нужно 20💰');
+      }
+    };
 
     showScreen('city');
   }
@@ -4124,7 +4774,11 @@
                 document.getElementById('confirm-modal').classList.add('hidden');
                 modal.classList.add('hidden');
                 saveGame();
-                if (GameState.pendingPerks.length) openPerkModal(GameState.pendingPerks.shift());
+                if (GameState.pendingPerks.length) {
+                  openPerkModal(GameState.pendingPerks.shift());
+                } else if (GameState.pendingSkillUnlocks && GameState.pendingSkillUnlocks.length) {
+                  setTimeout(processSkillUnlockQueue, 200);
+                }
               };
               document.getElementById('confirm-no').onclick = () => document.getElementById('confirm-modal').classList.add('hidden');
             };
@@ -4368,6 +5022,12 @@
     if (legacyInvBtn) legacyInvBtn.onclick = openInventory;
     const mapInvBtn = document.getElementById('btn-map-bag');
     if (mapInvBtn) mapInvBtn.onclick = openInventory;
+    const mapBestiaryBtn = document.getElementById('btn-map-bestiary');
+    if (mapBestiaryBtn) mapBestiaryBtn.onclick = () => {
+      GameState._bestiaryReturn = 'map';
+      showScreen('bestiary');
+      renderBestiaryScreen();
+    };
     document.getElementById('btn-close-inv').onclick = () => {
       if (GameState._returnToBattle) { GameState._returnToBattle = false; showScreen('battle'); updateBattleUI(); }
       else { showScreen('map'); renderMap(); }
@@ -4379,6 +5039,16 @@
       else { showScreen('map'); renderMap(); }
     };
     document.getElementById('btn-leave-city').onclick = () => { saveGame(); showScreen('map'); renderMap(); };
+    document.getElementById('btn-city-bestiary').onclick = () => {
+      GameState._bestiaryReturn = 'city';
+      showScreen('bestiary');
+      renderBestiaryScreen();
+    };
+    document.getElementById('btn-bestiary-back').onclick = () => {
+      if (GameState._bestiaryReturn === 'city') showScreen('city');
+      else { showScreen('map'); renderMap(); }
+      GameState._bestiaryReturn = null;
+    };
     document.getElementById('btn-vic-continue').onclick = () => {
       document.getElementById('victory-screen').classList.add('hidden');
       showScreen('map');
@@ -4386,14 +5056,16 @@
       const _ss = GameState.shopStock && GameState.shopStock.stock ? GameState.shopStock.stock : (GameState.shopStock || []);
       const expensive = _ss.find(i => i.price > GameState.gold && i.price <= GameState.gold + 50);
       if (expensive && window.ysdk && Date.now() - (GameState.adMeta.lastBonusGoldAt || 0) > BONUS_GOLD_CD_MS) {
-        if (confirm('💰 Гонец нашёл клад! +50 золота за рекламу?')) {
-          showRewardedAd(() => {
-            GameState.gold += 50;
-            GameState.adMeta.lastBonusGoldAt = Date.now();
-            saveGame();
-            renderMap();
-          });
-        }
+        showGameConfirm('💰 Гонец нашёл клад! +50 золота за рекламу?').then(ok => {
+          if (ok) {
+            showRewardedAd(() => {
+              GameState.gold += 50;
+              GameState.adMeta.lastBonusGoldAt = Date.now();
+              saveGame();
+              renderMap();
+            });
+          }
+        });
       }
     };
     document.getElementById('btn-ad-revive').onclick = () => {
