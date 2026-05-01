@@ -4,7 +4,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Три Героя — Three Heroes</title>
+  <title>Три Клинка</title>
   <style>
     :root {
       --bg-dark: #0d0d1a;
@@ -326,16 +326,7 @@
       color: #f0a500;
       letter-spacing: 6px;
       text-shadow: 4px 4px 0 #7a5000, 2px 2px 0 #7a5000;
-      margin-bottom: 8px;
-    }
-    .menu-title-sub {
-      display: block;
-      text-align: center;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 8px;
-      color: #8888aa;
-      letter-spacing: 3px;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
 
     .menu-pixel-frame {
@@ -429,12 +420,6 @@
       padding-left: 12px;
     }
     .menu-btn-label { flex: 1; padding-left: 8px; }
-    .menu-btn-hint {
-      font-size: 7px;
-      color: #555577;
-      letter-spacing: 0;
-    }
-    .menu-btn:hover .menu-btn-hint { color: #8888aa; }
 
     @keyframes menu-blink {
       0%, 100% { opacity: 1; }
@@ -478,24 +463,6 @@
     .menu-diff-btn.active-hard   { color: #e74c3c; background: #1a0a0a; }
     .menu-diff-btn:hover         { color: #e8e8f0; }
 
-    .menu-version {
-      position: absolute;
-      bottom: 12px;
-      right: 16px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 6px;
-      color: #2a2a44;
-      z-index: 2;
-    }
-    .menu-copy {
-      position: absolute;
-      bottom: 12px;
-      left: 16px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 6px;
-      color: #2a2a44;
-      z-index: 2;
-    }
     #world-panel { overflow: auto; }
     #tooltip {
       position: fixed; z-index: 1000; pointer-events: none;
@@ -838,13 +805,11 @@
       #main-menu { flex: 1; min-height: 0; }
       .screen-menu { padding: 14px 10px; }
       .menu-title-icon { font-size: 22px; margin-bottom: 4px; }
-      .menu-title-main { font-size: 14px; letter-spacing: 3px; }
-      .menu-title-sub { font-size: 6px; margin-bottom: 12px; }
+      .menu-title-main { font-size: 14px; letter-spacing: 3px; margin-bottom: 14px; }
       .menu-pixel-frame { max-width: min(420px, 100%); margin-bottom: 12px; }
       .menu-btn { padding: 10px 12px; font-size: 7px; min-height: 34px; }
       .menu-diff-label { font-size: 5px; padding: 6px 6px; }
       .menu-diff-btn { font-size: 6px; padding: 6px 0; }
-      .menu-version, .menu-copy { font-size: 5px; }
 
       /* Perk modal: keep tree readable in landscape */
       .perk-modal-box { width: min(940px, 98vw); max-height: 96vh; }
@@ -958,8 +923,7 @@
 
       /* Menu + perk modal ultra-compact */
       .screen-menu { padding: 16px 10px; }
-      .menu-title-main { font-size: 14px; letter-spacing: 3px; }
-      .menu-title-sub { font-size: 6px; margin-bottom: 16px; }
+      .menu-title-main { font-size: 14px; letter-spacing: 3px; margin-bottom: 12px; }
       .menu-btn { padding: 10px 12px; font-size: 7px; min-height: 36px; }
       .perk-modal-box { width: min(960px, 99vw); max-height: 98vh; }
       .perk-modal-body { grid-template-columns: 1fr 140px; }
@@ -993,7 +957,6 @@
         <div style="position:relative;z-index:2;margin-bottom:0">
           <span class="menu-title-icon">⚔</span>
           <span class="menu-title-main">ТРИ&nbsp;&nbsp;КЛИНКА</span>
-          <span class="menu-title-sub">THREE BLADES · TACTICAL RPG</span>
         </div>
 
         <div class="menu-pixel-frame" style="position:relative;z-index:2">
@@ -1003,21 +966,18 @@
                     onclick="startNewGame()">
               <span class="menu-btn-icon">▶</span>
               <span class="menu-btn-label">Новая игра</span>
-              <span class="menu-btn-hint">NEW GAME</span>
             </button>
 
             <button type="button" class="menu-btn menu-btn-continue" id="btn-continue"
                     onclick="continueGame()">
               <span class="menu-btn-icon">↩</span>
               <span class="menu-btn-label">Продолжить</span>
-              <span class="menu-btn-hint">CONTINUE</span>
             </button>
 
             <button type="button" class="menu-btn menu-btn-about" id="btn-about"
                     onclick="showAbout()">
               <span class="menu-btn-icon">?</span>
               <span class="menu-btn-label">Об игре</span>
-              <span class="menu-btn-hint">ABOUT</span>
             </button>
 
             <div class="menu-diff-row">
@@ -1031,9 +991,6 @@
 
           </div>
         </div>
-
-        <span class="menu-version">v0.3.1</span>
-        <span class="menu-copy">© THREE BLADES 2026</span>
 
       </div>
     </div>
