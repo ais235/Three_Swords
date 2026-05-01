@@ -2661,7 +2661,7 @@
       ctx.restore();
     }
 
-    b.units.filter(u => u.hp > 0).forEach(u => {
+    b.units.filter(u => u.hp > 0).sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x).forEach(u => {
       const px = u.x * CELL, py = u.y * CELL;
       let show = true;
       if (u.enemyId === ENEMY_IDS.ASSASSIN) {
