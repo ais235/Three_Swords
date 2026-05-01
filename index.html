@@ -2877,13 +2877,13 @@
         const BAR_TOP  = CELL - 8;
         const spriteBottom = BAR_TOP - 2;
 
-        // Idle breathing: vertical bob only (constant sprite size = no canvas cache miss)
+        // Idle breathing: smooth sub-pixel bob, constant sprite size (no canvas cache miss)
         const now = performance.now();
         const phase = (u.x * 1.7 + u.y * 3.1 + (u.isHero ? 0 : 5.3));
-        const bobY = Math.round(Math.sin(now * 0.0018 + phase) * 1.5); // ±1-2px, integer
+        const bobY = Math.sin(now * 0.0018 + phase) * 1.8;     // ±1.8px, smooth float
 
-        const spriteSz   = Math.round(CELL * 1.2);             // 77px — constant
-        const spriteTopY = spriteBottom - spriteSz + bobY;
+        const spriteSz    = Math.round(CELL * 1.2);             // 77px — constant integer
+        const spriteTopY  = spriteBottom - spriteSz + bobY;
         const spriteLeftX = Math.round((CELL - spriteSz) / 2);
 
         if (u.isHero) {
