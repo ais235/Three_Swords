@@ -2666,24 +2666,27 @@
         if (t === TILE.FOREST || nearM) show = false;
       }
       if (show) {
-        // Draw sprite/emoji — 1.5× cell size so units visually overlap cell borders
-        const spriteSz = Math.round(CELL * 1.5);
-        const spriteOff = (CELL - spriteSz) / 2; // negative → extends beyond cell
+        // Sprite size: 1.2× cell. Bottom of sprite sits 2px above HP bar.
+        const spriteSz = Math.round(CELL * 1.2);          // 77px
+        const BAR_TOP  = CELL - 8;                         // 56 — HP bar top (within cell)
+        const spriteBottom = BAR_TOP - 2;                  // 54 — feet just above bar
+        const spriteTopY   = spriteBottom - spriteSz;      // -23 — extends above cell
+        const spriteLeftX  = Math.round((CELL - spriteSz) / 2); // -7 — centered horizontally
         if (u.isHero) {
           const hTex = getHeroTexture(u.heroId);
           if (hTex) {
-            ctx.drawImage(hTex, px + spriteOff, py + spriteOff - 4, spriteSz, spriteSz);
+            ctx.drawImage(hTex, px + spriteLeftX, py + spriteTopY, spriteSz, spriteSz);
           } else {
             ctx.font = '38px serif';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(u.sprite, px + CELL / 2, py + CELL / 2 - 4);
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillText(u.sprite, px + CELL / 2, py + spriteBottom);
           }
         } else {
           const eTex = getEnemyTexture(u.enemyId);
           if (eTex) {
             const cx = px + CELL / 2;
-            const cy = py + CELL / 2 - 4;
+            const cy = py + spriteTopY + spriteSz / 2;
             ctx.save();
             ctx.translate(cx, cy);
             ctx.scale(-1, 1);
@@ -2692,8 +2695,8 @@
           } else {
             ctx.font = '38px serif';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(u.emoji, px + CELL / 2, py + CELL / 2 - 4);
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillText(u.emoji, px + CELL / 2, py + spriteBottom);
           }
         }
 
