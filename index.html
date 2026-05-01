@@ -2874,11 +2874,22 @@
       }
       if (show) {
         // Sprite size: 1.2× cell. Bottom of sprite sits 2px above HP bar.
-        const spriteSz = Math.round(CELL * 1.2);          // 77px
-        const BAR_TOP  = CELL - 8;                         // 56 — HP bar top (within cell)
-        const spriteBottom = BAR_TOP - 2;                  // 54 — feet just above bar
-        const spriteTopY   = spriteBottom - spriteSz;      // -23 — extends above cell
-        const spriteLeftX  = Math.round((CELL - spriteSz) / 2); // -7 — centered horizontally
+        const BAR_TOP  = CELL - 8;
+        const spriteBottom = BAR_TOP - 2;
+
+        // Idle breathing: gentle vertical bob + subtle scale pulse
+        const now = performance.now();
+        // Each unit gets a unique phase so they don't all move in sync
+        const phase = (u.x * 1.7 + u.y * 3.1 + (u.isHero ? 0 : 5.3));
+        const breathT = now * 0.0018;                          // ~1 cycle per 3.5s
+        const bobY    = Math.sin(breathT + phase) * 1.5;       // ±1.5px vertical bob
+        const scaleB  = 1 + Math.sin(breathT + phase) * 0.018; // ±1.8% scale pulse
+
+        const spriteSzBase = Math.round(CELL * 1.2);           // 77px base
+        const spriteSz = Math.round(spriteSzBase * scaleB);
+        const spriteTopY   = spriteBottom - spriteSz + Math.round(bobY);
+        const spriteLeftX  = Math.round((CELL - spriteSz) / 2);
+
         if (u.isHero) {
           const hTex = getHeroTexture(u.heroId);
           if (hTex) {
@@ -2887,7 +2898,7 @@
             ctx.font = '38px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillText(u.sprite, px + CELL / 2, py + spriteBottom);
+            ctx.fillText(u.sprite, px + CELL / 2, py + spriteBottom + Math.round(bobY));
           }
         } else {
           const eTex = getEnemyTexture(u.enemyId);
@@ -2903,7 +2914,7 @@
             ctx.font = '38px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillText(u.emoji, px + CELL / 2, py + spriteBottom);
+            ctx.fillText(u.emoji, px + CELL / 2, py + spriteBottom + Math.round(bobY));
           }
         }
 
