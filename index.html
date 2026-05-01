@@ -2877,40 +2877,43 @@
         const BAR_TOP  = CELL - 8;
         const spriteBottom = BAR_TOP - 2;
 
-        // Idle breathing: rises UP only (abs-sine), stays grounded — no levitation
+        // Idle breathing: vertical stretch anchored at feet — body grows upward, feet stay fixed
         const now = performance.now();
         const phase = (u.x * 1.7 + u.y * 3.1 + (u.isHero ? 0 : 5.3));
-        const bobY = -(Math.abs(Math.sin(now * 0.0009 + phase)) * 1.4); // 0…-1.4px upward only
+        const scaleY = 1 + Math.sin(now * 0.0016 + phase) * 0.028; // ±2.8% vertical stretch
 
-        const spriteSz    = Math.round(CELL * 1.2);             // 77px — constant integer
-        const spriteTopY  = spriteBottom - spriteSz + bobY;
+        const spriteSz    = Math.round(CELL * 1.2);             // 77px — constant
         const spriteLeftX = Math.round((CELL - spriteSz) / 2);
+        // Feet anchor: py + spriteBottom stays fixed; top grows/shrinks upward
+        const feetY = py + spriteBottom;                        // absolute Y of feet
 
         if (u.isHero) {
           const hTex = getHeroTexture(u.heroId);
           if (hTex) {
-            ctx.drawImage(hTex, px + spriteLeftX, py + spriteTopY, spriteSz, spriteSz);
-          } else {
-            ctx.font = '38px serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'alphabetic';
-            ctx.fillText(u.sprite, px + CELL / 2, py + spriteBottom + Math.round(bobY));
-          }
-        } else {
-          const eTex = getEnemyTexture(u.enemyId);
-          if (eTex) {
-            const cx = px + CELL / 2;
-            const cy = py + spriteTopY + spriteSz / 2;
             ctx.save();
-            ctx.translate(cx, cy);
-            ctx.scale(-1, 1);
-            ctx.drawImage(eTex, -spriteSz / 2, -spriteSz / 2, spriteSz, spriteSz);
+            ctx.translate(px + CELL / 2, feetY);   // anchor at feet center
+            ctx.scale(1, scaleY);                   // stretch upward
+            ctx.drawImage(hTex, -spriteSz / 2, -spriteSz, spriteSz, spriteSz);
             ctx.restore();
           } else {
             ctx.font = '38px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillText(u.emoji, px + CELL / 2, py + spriteBottom + Math.round(bobY));
+            ctx.fillText(u.sprite, px + CELL / 2, feetY);
+          }
+        } else {
+          const eTex = getEnemyTexture(u.enemyId);
+          if (eTex) {
+            ctx.save();
+            ctx.translate(px + CELL / 2, feetY);   // anchor at feet center
+            ctx.scale(-1, scaleY);                  // flip X + stretch Y
+            ctx.drawImage(eTex, -spriteSz / 2, -spriteSz, spriteSz, spriteSz);
+            ctx.restore();
+          } else {
+            ctx.font = '38px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillText(u.emoji, px + CELL / 2, feetY);
           }
         }
 
