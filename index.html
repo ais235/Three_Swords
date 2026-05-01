@@ -142,7 +142,7 @@
     .br-section { }
     .br-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 4px; }
     .battle-actions { display: flex; flex-direction: column; gap: 4px; }
-    .battle-actions .btn { font-size: 10px; padding: 5px 8px; text-align: center; width: 100%; }
+    .battle-actions .btn { font-size: 10px; padding: 5px 8px; text-align: center; width: 100%; margin: 0; box-sizing: border-box; }
     .deploy-hint-box { font-size: 10px; color: var(--text-dim); padding: 6px; border: 1px solid var(--border); border-radius: 4px; line-height: 1.4; }
     .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .stats-line { font-size: 12px; color: var(--text-dim); margin: 4px 0; }
@@ -635,9 +635,10 @@
     /* 3: Mode indicator badge */
     #mode-badge {
       display: flex; align-items: center; justify-content: center; gap: 4px;
-      width: 100%; font-size: 10px; padding: 3px 8px; border-radius: 4px;
+      width: 100%; font-size: 8px; padding: 3px 8px; border-radius: 4px;
       margin-bottom: 4px; border: 1px solid; font-family: inherit;
       transition: all 0.1s; box-sizing: border-box;
+      white-space: nowrap; letter-spacing: 0.5px;
     }
     #mode-badge.m-move { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(74,158,255,0.08); }
     #mode-badge.m-attack { border-color: var(--accent-red); color: var(--accent-red); background: rgba(231,76,60,0.08); }
