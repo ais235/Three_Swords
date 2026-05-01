@@ -4381,7 +4381,6 @@
       el.classList.add(`map-region-${node.region}`);
       const dist = Math.abs(node.x - px) + Math.abs(node.y - py);
       if (dist <= 2) el.classList.add('visible');
-      else if (dist === 3) el.classList.add('fog');
       else el.classList.add('hidden');
 
       const unlocked = node.region <= GameState.regionUnlocked && (node.type !== 'final' || GameState.defeatedBosses >= 3);
@@ -4390,7 +4389,7 @@
       if (node.x === px && node.y === py) el.classList.add('current');
       const typeNames = { mission:'Миссия', city:'Город', dungeon:'Подземелье', event:'Событие', boss:'Босс', wanderer:'Странник', arena:'Арена', final:'Финал' };
       const typeLbl = unlocked ? (typeNames[node.type] || '') : '';
-      const showCellFace = dist <= 3;
+      const showCellFace = dist <= 2;
       if (showCellFace) {
         el.innerHTML = `<div class="map-node-face">${node.emoji}</div>${typeLbl ? `<small class="map-node-lbl">${typeLbl}</small>` : ''}`;
       } else {
