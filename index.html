@@ -2877,10 +2877,10 @@
         const BAR_TOP  = CELL - 8;
         const spriteBottom = BAR_TOP - 2;
 
-        // Idle breathing: smooth sub-pixel bob, constant sprite size (no canvas cache miss)
+        // Idle breathing: rises UP only (abs-sine), stays grounded — no levitation
         const now = performance.now();
         const phase = (u.x * 1.7 + u.y * 3.1 + (u.isHero ? 0 : 5.3));
-        const bobY = Math.sin(now * 0.0018 + phase) * 1.8;     // ±1.8px, smooth float
+        const bobY = -(Math.abs(Math.sin(now * 0.0009 + phase)) * 1.4); // 0…-1.4px upward only
 
         const spriteSz    = Math.round(CELL * 1.2);             // 77px — constant integer
         const spriteTopY  = spriteBottom - spriteSz + bobY;
