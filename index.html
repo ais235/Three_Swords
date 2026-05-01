@@ -1816,7 +1816,7 @@
       grid[y] = [];
       for (let x = 0; x < GRID_W; x++) grid[y][x] = TILE.GROUND;
     }
-    const density = 0.35 + region * 0.08;
+    const density = 0.175 + region * 0.04;
     let noise = [];
     for (let y = 0; y < GRID_H; y++) {
       noise[y] = [];
@@ -1842,7 +1842,7 @@
       const cx = randInt(2, GRID_W - 3), cy = randInt(1, GRID_H - 2);
       const r = randInt(1, 2);
       for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
-        if (inBounds(x, y) && Math.random() < 0.6) {
+        if (inBounds(x, y) && Math.random() < 0.3) {
           if (Math.random() < 0.55) grid[y][x] = TILE.MOUNTAIN;
           else grid[y][x] = TILE.WATER;
         }
@@ -5150,6 +5150,24 @@
     const adBtn = document.getElementById('btn-ad-revive');
     if (adBtn) adBtn.classList.remove('hidden');
   });
+
+  // Spacebar: "Начать бой" in deploy phase, "Ждать" in combat phase
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Space') return;
+    const tag = document.activeElement && document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    e.preventDefault();
+    const b = GameState.currentBattle;
+    if (!b) return;
+    if (b.phase === 'deploy') {
+      const sb = document.getElementById('btn-start-battle');
+      if (sb) sb.click();
+    } else if (b.phase === 'combat') {
+      const wb = document.getElementById('btn-wait');
+      if (wb) wb.click();
+    }
+  });
+
   init();
   </script>
 </body>
