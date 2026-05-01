@@ -2202,6 +2202,33 @@
     img.src = src;
     HeroTextures[heroId] = img;
   });
+
+  const ENEMY_TEXTURE_PATHS = {
+    skeleton: 'assets/enemies/skeleton.png',
+    goblin_archer: 'assets/enemies/goblin_archer.png',
+    boar: 'assets/enemies/boar.png',
+    zombie: 'assets/enemies/zombie.png',
+    shaman: 'assets/enemies/shaman.png',
+    orc_guard: 'assets/enemies/orc_guard.png',
+    suicide: 'assets/enemies/bomber.png',
+    spider: 'assets/enemies/spider.png',
+    watcher: 'assets/enemies/watcher.png',
+    ice_elem: 'assets/enemies/ice_elemental.png',
+    dark_knight: 'assets/enemies/dark_knight.png',
+    necro: 'assets/enemies/necromancer.png',
+    chaos: 'assets/enemies/chaos_beast.png',
+    assassin: 'assets/enemies/assassin.png',
+    hydra: 'assets/enemies/hydra.png',
+    ghost: 'assets/enemies/ghost.png',
+    fire_titan: 'assets/enemies/fire_titan.png',
+    dark_lord: 'assets/enemies/dark_lord.png'
+  };
+  const EnemyTextures = {};
+  Object.entries(ENEMY_TEXTURE_PATHS).forEach(([enemyId, src]) => {
+    const img = new Image();
+    img.src = src;
+    EnemyTextures[enemyId] = img;
+  });
   const TILE_TEXTURE_PATHS = {
     [TILE.GROUND]: 'assets/tiles/ground.png',
     [TILE.FOREST]: 'assets/tiles/forest.png',
@@ -2216,6 +2243,11 @@
   });
   function getHeroTexture(heroId) {
     const tex = HeroTextures[heroId];
+    if (tex && tex.complete && tex.naturalWidth > 0) return tex;
+    return null;
+  }
+  function getEnemyTexture(enemyId) {
+    const tex = EnemyTextures[enemyId];
     if (tex && tex.complete && tex.naturalWidth > 0) return tex;
     return null;
   }
@@ -2318,10 +2350,22 @@
             ctx.fillText(u.sprite, px + CELL / 2, py + CELL / 2 - 4);
           }
         } else {
-          ctx.font = '30px serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(u.emoji, px + CELL / 2, py + CELL / 2 - 4);
+          const eTex = getEnemyTexture(u.enemyId);
+          const sz = 34;
+          if (eTex) {
+            const cx = px + CELL / 2;
+            const cy = py + CELL / 2 - 4;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(-1, 1);
+            ctx.drawImage(eTex, -sz / 2, -sz / 2, sz, sz);
+            ctx.restore();
+          } else {
+            ctx.font = '30px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(u.emoji, px + CELL / 2, py + CELL / 2 - 4);
+          }
         }
 
         // 2: HP bar
