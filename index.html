@@ -169,7 +169,17 @@
     .btn-green { border-color: var(--accent-green); color: var(--accent-green); }
     .btn-red { border-color: var(--accent-red); color: var(--accent-red); }
     .btn-ad { border-color: var(--accent-purple); color: var(--accent-purple); }
-    .btn-dim { border-color: var(--border); color: var(--text-hint); cursor: not-allowed; }
+    /* Вторичные кнопки (рюкзак, бестиарий, «назад») — кликабельны; не путать с :disabled */
+    .btn-dim {
+      border-color: var(--border);
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+    .btn-dim:hover {
+      border-color: var(--accent-purple);
+      color: var(--accent-purple);
+      background: var(--bg-card-hover);
+    }
     .hidden { display: none !important; }
     .map-screen-layout {
       display: grid;
@@ -3915,7 +3925,7 @@
   function heroEquipIcons(hero) {
     hero.equipment = hero.equipment || {};
     return ['weapon', 'armor', 'artifact']
-      .map(s => hero.equipment[s] ? (itemById(hero.equipment[s])?.name.split(' ')[0] || '•') : '·')
+      .map(s => hero.equipment[s] ? (itemById(hero.equipment[s])?.emoji || '•') : '·')
       .join(' ');
   }
   function renderPartyStrip() {
