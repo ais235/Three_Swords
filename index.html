@@ -269,6 +269,8 @@
     }
     .map-panel-title { font-size: 8px; color: var(--accent-gold); letter-spacing: 1px; flex-shrink: 0; }
     .map-panel .btn { margin-left: 0; margin-right: 0; width: 100%; text-align: center; flex-shrink: 0; padding: 6px 8px; }
+    .map-panel-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .map-panel-actions .btn { margin: 0; }
     .cell-info {
       background: var(--bg-panel);
       border-radius: 6px;
@@ -843,7 +845,24 @@
         max-height: min(44vh, 360px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        gap: 4px;
+        padding: 6px 8px;
       }
+      .map-panel .btn { min-height: 30px; padding: 4px 6px; font-size: 7px; }
+      #map-cell-info {
+        flex: 0 1 auto;
+        max-height: 72px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .map-panel-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .map-panel-actions .btn { width: 100%; margin: 0; }
+      .map-panel-actions .btn-enter-full { grid-column: 1 / -1; }
       #map-screen .node-grid { min-width: 0; }
     }
     @media (max-height: 520px) and (orientation: landscape) {
@@ -866,7 +885,7 @@
       #map-screen .node-grid { gap: 2px; }
       #map-screen .map-node { font-size: 10px; }
       #map-screen .map-node small { font-size: 5px; }
-      .map-panel { padding: 8px; gap: 6px; }
+      .map-panel { padding: 8px; gap: 6px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
       .cell-info { padding: 8px; font-size: 10px; }
       .cell-info-icon { font-size: 18px; margin-bottom: 4px; }
       .cell-info-name { font-size: 11px; margin-bottom: 2px; }
@@ -1048,7 +1067,7 @@
       #map-screen .node-grid { gap: 1px; }
       #map-screen .map-node { font-size: 9px; border-radius: 3px; }
       #map-screen .map-node small { display: none; }
-      .map-panel { padding: 5px; gap: 4px; }
+      .map-panel { padding: 5px; gap: 4px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
       .map-panel-title { font-size: 8px; }
       .cell-info { padding: 6px; font-size: 8px; }
       .cell-info-icon { font-size: 14px; margin-bottom: 2px; }
@@ -1187,9 +1206,11 @@
             <div class="cell-info-name">Выберите клетку</div>
             <div>Показывает информацию о выбранной зоне.</div>
           </div>
-          <button class="btn btn-gold" id="btn-map-enter">▶ Войти</button>
-          <button class="btn btn-dim" id="btn-map-bag">🎒 Рюкзак</button>
-          <button class="btn btn-dim" id="btn-map-bestiary">📖 Бестиарий</button>
+          <div class="map-panel-actions">
+            <button class="btn btn-gold btn-enter-full" id="btn-map-enter">▶ Войти</button>
+            <button class="btn btn-dim" id="btn-map-bag">🎒 Рюкзак</button>
+            <button class="btn btn-dim" id="btn-map-bestiary">📖 Бестиарий</button>
+          </div>
         </div>
       </div>
     </div>
