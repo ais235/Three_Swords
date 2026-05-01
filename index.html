@@ -1122,34 +1122,63 @@
     { id: 'mag_stone', name: 'Камень магии (+1 атака мага)', price: 80, use: (h) => { if (h.role === 'mage') h.attack += 1; } }
   ];
   const ITEM_POOL = [
-    { id: 'steel_sword', slot: 'weapon', rarity: 'common', name: '⚔️ Стальной меч', price: 35, mods: { attack: 3 } },
-    { id: 'hunter_bow', slot: 'weapon', rarity: 'common', name: '🏹 Охотничий лук', price: 40, mods: { attack: 3, range: 1 } },
-    { id: 'magic_wand', slot: 'weapon', rarity: 'common', name: '🔮 Магический жезл', price: 40, mods: { attack: 4, mageOnly: true } },
-    { id: 'poison_blade', slot: 'weapon', rarity: 'rare', name: '🗡️ Клинок яда', price: 90, mods: { attack: 2, poisonOnHit: true } },
-    { id: 'shadow_bow', slot: 'weapon', rarity: 'rare', name: '🏹 Лук теней', price: 100, mods: { attack: 4, ignoreCover: true } },
-    { id: 'fire_staff', slot: 'weapon', rarity: 'rare', name: '🔥 Огненный посох', price: 110, mods: { attack: 5, aoePlus: true } },
-    { id: 'thunder_hammer', slot: 'weapon', rarity: 'epic', name: '⚡ Громовой молот', price: 160, mods: { attack: 4, stunOnHit: true } },
-    { id: 'moon_bow', slot: 'weapon', rarity: 'epic', name: '🌙 Лунный лук', price: 180, mods: { attack: 6, passiveDouble: true } },
-    { id: 'chaos_staff', slot: 'weapon', rarity: 'epic', name: '☄️ Посох хаоса', price: 200, mods: { attack: 7, randomAoe: true } },
-    { id: 'leather', slot: 'armor', rarity: 'common', name: '🛡️ Кожаная броня', price: 30, mods: { armor: 2 } },
-    { id: 'gloves', slot: 'armor', rarity: 'common', name: '🧤 Лёгкие перчатки', price: 35, mods: { armor: 1, move: 1 } },
-    { id: 'robe', slot: 'armor', rarity: 'common', name: '🧣 Мантия', price: 35, mods: { armor: 1, mana: 2 } },
-    { id: 'shadow_cloak', slot: 'armor', rarity: 'rare', name: '🧥 Плащ теней', price: 85, mods: { armor: 1, dodge: 0.2 } },
-    { id: 'runic_shield', slot: 'armor', rarity: 'rare', name: '🛡️ Рунический щит', price: 95, mods: { armor: 3, reflectStatus: 0.25 } },
-    { id: 'mirror_robe', slot: 'armor', rarity: 'rare', name: '🌀 Мантия отражения', price: 100, mods: { armor: 2, reflectDmg: 0.1 } },
-    { id: 'guardian_plate', slot: 'armor', rarity: 'epic', name: '💎 Доспех стражника', price: 170, mods: { armor: 4, reflectFlat: 1 } },
-    { id: 'phoenix', slot: 'armor', rarity: 'epic', name: '👘 Одеяние феникса', price: 200, mods: { armor: 3, revive5: true } },
-    { id: 'dark_mantle', slot: 'armor', rarity: 'epic', name: '🌑 Тёмная мантия', price: 190, mods: { armor: 2, attack: 3, maxHp: -5 } },
-    { id: 'luck_amulet', slot: 'artifact', rarity: 'common', name: '🧿 Амулет удачи', price: 25, mods: { goldBonus: 0.15 } },
-    { id: 'power_potion', slot: 'artifact', rarity: 'common', name: '💊 Зелье силы', price: 20, mods: { battleAttackBuff: 2 } },
-    { id: 'vision_candle', slot: 'artifact', rarity: 'common', name: '🕯️ Свеча видения', price: 30, mods: { visionForest: true } },
-    { id: 'mana_crystal', slot: 'artifact', rarity: 'rare', name: '🔮 Кристалл маны', price: 80, mods: { manaRegenBonus: 3 } },
-    { id: 'seer_eye', slot: 'artifact', rarity: 'rare', name: '👁️ Глаз провидца', price: 85, mods: { preBattleScout: true } },
-    { id: 'hourglass', slot: 'artifact', rarity: 'rare', name: '⏱️ Песочные часы', price: 95, mods: { extraAction: true } },
-    { id: 'death_ring', slot: 'artifact', rarity: 'epic', name: '☠️ Кольцо смерти', price: 175, mods: { deathExplode: true } },
-    { id: 'portal_stone', slot: 'artifact', rarity: 'epic', name: '🌀 Портальный камень', price: 185, mods: { battleTeleport: true } },
-    { id: 'crown', slot: 'artifact', rarity: 'epic', name: '👑 Корона власти', price: 195, mods: { teamAura: true } }
+    // ── ОРУЖИЕ: Гарет (warrior) ──
+    { id: 'steel_sword',    slot: 'weapon', heroClass: 'warrior', rarity: 'common', minRegion: 1, emoji: '⚔️', name: 'Стальной меч',           price: 35,  sellPrice: 17,  mods: { attack: 3 },                         desc: 'Надёжный меч из хорошей стали.' },
+    { id: 'poison_blade',   slot: 'weapon', heroClass: 'warrior', rarity: 'rare',   minRegion: 1, emoji: '🗡️', name: 'Клинок яда',               price: 90,  sellPrice: 45,  mods: { attack: 2, poisonOnHit: true },      desc: 'Отравляет цель на 2 хода.' },
+    { id: 'thunder_hammer', slot: 'weapon', heroClass: 'warrior', rarity: 'epic',   minRegion: 1, emoji: '🔨', name: 'Громовой молот',           price: 160, sellPrice: 80,  mods: { attack: 4, stunOnHit: true },        desc: 'Оглушает врага на 1 ход при попадании.' },
+    { id: 'blade_dark',     slot: 'weapon', heroClass: 'warrior', rarity: 'epic',   minRegion: 2, emoji: '⚔️', name: 'Клинок тьмы',             price: 200, sellPrice: 100, mods: { attack: 5, armor: -1 },              desc: 'Огромная сила ценой −1 брони владельца.' },
+    // ── ОРУЖИЕ: Алира (archer) ──
+    { id: 'hunter_bow',     slot: 'weapon', heroClass: 'archer',  rarity: 'common', minRegion: 1, emoji: '🏹', name: 'Охотничий лук',           price: 40,  sellPrice: 20,  mods: { attack: 3, range: 1 },               desc: 'Лёгкий лук для дальней охоты.' },
+    { id: 'shadow_bow',     slot: 'weapon', heroClass: 'archer',  rarity: 'rare',   minRegion: 1, emoji: '🏹', name: 'Лук теней',               price: 100, sellPrice: 50,  mods: { attack: 4, ignoreCover: true },      desc: 'Стрелы проходят сквозь лес и укрытия.' },
+    { id: 'moon_bow',       slot: 'weapon', heroClass: 'archer',  rarity: 'epic',   minRegion: 2, emoji: '🌙', name: 'Лунный лук',              price: 180, sellPrice: 90,  mods: { attack: 5, firstShotBonus: 0.5 },   desc: 'Первый выстрел за раунд наносит ×1.5 урона.' },
+    { id: 'crossbow_war',   slot: 'weapon', heroClass: 'archer',  rarity: 'epic',   minRegion: 2, emoji: '🏹', name: 'Боевой арбалет',          price: 220, sellPrice: 110, mods: { attack: 6, range: 2 },               desc: 'Дальнобойное оружие с большим уроном.' },
+    // ── ОРУЖИЕ: Сэрис (mage) ──
+    { id: 'magic_wand',     slot: 'weapon', heroClass: 'mage',    rarity: 'common', minRegion: 1, emoji: '🔮', name: 'Магический жезл',         price: 40,  sellPrice: 20,  mods: { attack: 4 },                         desc: 'Усиливает магические атаки.' },
+    { id: 'fire_staff',     slot: 'weapon', heroClass: 'mage',    rarity: 'rare',   minRegion: 1, emoji: '🔥', name: 'Огненный посох',          price: 110, sellPrice: 55,  mods: { attack: 5, aoePlus: true },          desc: 'Все заклинания +1 к радиусу AoE.' },
+    { id: 'chaos_staff',    slot: 'weapon', heroClass: 'mage',    rarity: 'epic',   minRegion: 2, emoji: '🌀', name: 'Посох хаоса',             price: 200, sellPrice: 100, mods: { attack: 6, chaosAoe: true },         desc: 'После заклинания случайный AoE (5 урона) по ближайшим.' },
+    { id: 'staff_ice',      slot: 'weapon', heroClass: 'mage',    rarity: 'epic',   minRegion: 2, emoji: '❄️', name: 'Посох ледяного демона',   price: 220, sellPrice: 110, mods: { attack: 6, freeze2: true },          desc: 'Заморозка длится 2 хода вместо 1.' },
+    // ── БРОНЯ (для всех или конкретных классов) ──
+    { id: 'leather',        slot: 'armor',  heroClass: 'all',     rarity: 'common', minRegion: 1, emoji: '🛡️', name: 'Кожаная броня',           price: 30,  sellPrice: 15,  mods: { armor: 2 },                          desc: 'Лёгкая защита. Подходит всем.' },
+    { id: 'shadow_cloak',   slot: 'armor',  heroClass: 'all',     rarity: 'rare',   minRegion: 1, emoji: '🧥', name: 'Плащ теней',              price: 85,  sellPrice: 42,  mods: { armor: 1, dodge: 0.20 },             desc: '20% шанс уклониться от атаки.' },
+    { id: 'runic_shield',   slot: 'armor',  heroClass: 'warrior', rarity: 'rare',   minRegion: 1, emoji: '🛡️', name: 'Рунический щит',          price: 95,  sellPrice: 47,  mods: { armor: 3, reflectStatus: 0.25 },     desc: '25% шанс отразить негативный статус атакующему.' },
+    { id: 'mirror_robe',    slot: 'armor',  heroClass: 'mage',    rarity: 'rare',   minRegion: 1, emoji: '🌀', name: 'Мантия отражения',        price: 100, sellPrice: 50,  mods: { armor: 2, reflectDmg: 0.10 },        desc: '10% входящего физ. урона отражается атакующему.' },
+    { id: 'guardian_plate', slot: 'armor',  heroClass: 'warrior', rarity: 'epic',   minRegion: 2, emoji: '💎', name: 'Доспех стражника',        price: 170, sellPrice: 85,  mods: { armor: 4, reflectFlat: 1 },          desc: 'Каждая атака по владельцу даёт 1 урона атакующему.' },
+    { id: 'phoenix',        slot: 'armor',  heroClass: 'mage',    rarity: 'epic',   minRegion: 2, emoji: '🔥', name: 'Одеяние феникса',         price: 200, sellPrice: 100, mods: { armor: 3, revive5: true },            desc: '1 раз за бой: погиб → воскрес с 5 HP.' },
+    { id: 'dark_mantle',    slot: 'armor',  heroClass: 'all',     rarity: 'epic',   minRegion: 2, emoji: '🌑', name: 'Тёмная мантия',           price: 190, sellPrice: 95,  mods: { armor: 2, attack: 3, maxHp: -5 },    desc: '+3 атаки ценой −5 макс HP.' },
+    // ── АРТЕФАКТЫ (для всех) ──
+    { id: 'luck_amulet',    slot: 'artifact', heroClass: 'all',   rarity: 'common', minRegion: 1, emoji: '🧿', name: 'Амулет удачи',            price: 25,  sellPrice: 12,  mods: { goldBonus: 0.15 },                   desc: '+15% к золоту с каждого боя.' },
+    { id: 'mana_crystal',   slot: 'artifact', heroClass: 'mage',  rarity: 'rare',   minRegion: 1, emoji: '💠', name: 'Кристалл маны',           price: 80,  sellPrice: 40,  mods: { manaRegen: 3 },                      desc: 'Маг восстанавливает +3 маны в начале каждого хода.' },
+    { id: 'seer_eye',       slot: 'artifact', heroClass: 'all',   rarity: 'rare',   minRegion: 1, emoji: '👁️', name: 'Глаз провидца',           price: 85,  sellPrice: 42,  mods: { previewEnemies: true },              desc: 'Перед боем видишь состав и способности врагов.' },
+    { id: 'hourglass',      slot: 'artifact', heroClass: 'all',   rarity: 'rare',   minRegion: 2, emoji: '⏳', name: 'Песочные часы',           price: 95,  sellPrice: 47,  mods: { extraAction: true },                 desc: '1 раз за бой: повторить последнее действие.' },
+    { id: 'death_ring',     slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 2, emoji: '💀', name: 'Кольцо смерти',           price: 175, sellPrice: 87,  mods: { deathExplode: 15 },                  desc: 'При гибели героя — взрыв 3×3, 15 урона врагам.' },
+    { id: 'portal_stone',   slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 2, emoji: '🌀', name: 'Портальный камень',       price: 185, sellPrice: 92,  mods: { battleTeleport: true },              desc: '1 раз за бой: переместить героя на любую клетку.' },
+    { id: 'crown',          slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 3, emoji: '👑', name: 'Корона власти',           price: 195, sellPrice: 97,  mods: { allyAttack: 2, allyArmor: 1 },       desc: 'Все союзники +2 атаки и +1 брони (аура).' }
   ];
+
+  const LOOT_CHANCE = {
+    skeleton: 0.25, goblin_archer: 0.30, boar: 0.35, zombie: 0.25,
+    shaman: 0.80, orc_guard: 0.40, suicide: 0.30, spider: 0.40,
+    watcher: 0.50, ice_elem: 0.45, dark_knight: 0.85, necro: 0.45,
+    chaos: 0.50, assassin: 0.50, hydra: 0.55, ghost: 0.45,
+    fire_titan: 1.00, dark_lord: 1.00
+  };
+
+  function selectLootItem(region, forceRarity = null) {
+    let rarity;
+    if (forceRarity) {
+      rarity = forceRarity;
+    } else {
+      const r = Math.random();
+      const epicChance = [0.05, 0.15, 0.30][region - 1] || 0.05;
+      const rareChance = [0.25, 0.35, 0.45][region - 1] || 0.25;
+      if (r < epicChance) rarity = 'epic';
+      else if (r < epicChance + rareChance) rarity = 'rare';
+      else rarity = 'common';
+    }
+    const pool = ITEM_POOL.filter(i => i.rarity === rarity && i.minRegion <= region);
+    if (!pool.length) return deepClone(ITEM_POOL[0]);
+    return deepClone(pool[Math.floor(Math.random() * pool.length)]);
+  }
 
   //══════════ SECTION 3: GAME_STATE helpers ══════════
   const GameState = {
@@ -1371,11 +1400,48 @@
     u.sprite = u.emoji;
     return u;
   }
+  function calculatePartyPower() {
+    return GameState.heroes.reduce((sum, h) => {
+      return sum + h.attack + h.armor + h.maxHp / 10 + h.range + h.speed / 2;
+    }, 0);
+  }
+
+  // Fixed stats for bosses — do NOT scale with partyPower
+  const BOSS_PROFILES = {
+    [ENEMY_IDS.SHAMAN]:      { hp: 35,  attack: 8,  armor: 1 },
+    [ENEMY_IDS.DARK_KNIGHT]: { hp: 65,  attack: 14, armor: 5 },
+    [ENEMY_IDS.FIRE_TITAN]:  { hp: 110, attack: 16, armor: 4 },
+    [ENEMY_IDS.DARK_LORD]:   { hp: 180, attack: 20, armor: 6 }
+  };
+
+  function scaleEnemy(base, partyPower, region) {
+    const scale = Math.max(1, Math.min(2.5,
+      (partyPower / 70) * (1 + (region - 1) * 0.1)
+    ));
+    return {
+      hp:     Math.round(base.hp     * scale),
+      attack: Math.round(base.attack * scale * 0.65),
+      armor:  Math.round(base.armor  * scale * 0.5)
+    };
+  }
+
   function spawnEnemy(type, x, y) {
     const d = enemyDef(type);
+    const region = GameState.region || 1;
+    const pp = calculatePartyPower();
+
+    let hp, attack, armor;
+    if (BOSS_PROFILES[type]) {
+      // Bosses: fixed stats
+      ({ hp, attack, armor } = BOSS_PROFILES[type]);
+    } else {
+      // Regular enemies: scale with partyPower
+      ({ hp, attack, armor } = scaleEnemy(d, pp, region));
+    }
+
     const u = {
       isHero: false, enemyId: type, name: d.name, emoji: d.emoji,
-      x, y, hp: d.hp, maxHp: d.hp, armor: d.armor, attack: d.attack,
+      x, y, hp, maxHp: hp, armor, attack,
       move: d.move, range: d.range, speed: d.speed, activeStatuses: [],
       aiVar: {}
     };
@@ -1613,10 +1679,32 @@
     const b = GameState.currentBattle;
     opts = opts || {};
     let dmg = rawDmg;
+    // Item mod: weapon attack bonus applied to rawDmg (if not already factored by caller)
+    if (attacker.isHero && !opts.noWeaponBonus) {
+      const wep = getEquippedItem(attacker, 'weapon');
+      if (wep && wep.mods.attack) dmg += wep.mods.attack;
+      // firstShotBonus (moon_bow) — only if first attack this round
+      if (wep && wep.mods.firstShotBonus && attacker.flags && attacker.flags.firstAttackTurn)
+        dmg = Math.floor(dmg * (1 + wep.mods.firstShotBonus));
+    }
     if (target.isHero && target.heroId === 'garet' && target.flags && target.flags.fireCallMitigateActive) dmg = Math.floor(dmg * 0.5);
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags && attacker.flags.firstAttackTurn) dmg = Math.floor(dmg * 1.5);
     if (attacker.activeStatuses && attacker.activeStatuses.find(s => s.type === STATUS.BERSERK)) dmg = Math.floor(dmg * 2);
     let armor = target.armor + tileDefenseBonus(b.grid[target.y][target.x]);
+    // Perk: auraArmor (Garet) — союзник рядом с Гаретом получает +1 брони
+    if (target.isHero && b) {
+      const garetAura = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
+        u.heroId !== target.heroId && u.perks && u.perks.includes('auraArmor'));
+      if (garetAura && Math.abs(target.x - garetAura.x) + Math.abs(target.y - garetAura.y) <= 1)
+        armor += 1;
+    }
+    // Item armor bonus from equipped armor slot
+    if (target.isHero) {
+      const eqArm = getEquippedItem(target, 'armor');
+      if (eqArm && eqArm.mods.armor) armor += eqArm.mods.armor;
+      const eqWep = getEquippedItem(target, 'weapon');
+      if (eqWep && eqWep.mods.armor) armor += eqWep.mods.armor;
+    }
     if (attacker.isHero && attacker.heroId === 'garet' && attacker.perks && attacker.perks.includes('armorPierce')) armor = Math.max(0, armor - 2);
     if (attacker.enemyId === ENEMY_IDS.ORC_GUARD && !opts.ignoreOrc) armor = Math.max(0, armor - 2);
     dmg = Math.max(0, dmg - armor);
@@ -1636,8 +1724,64 @@
       pushBattleLog(`[${target.emoji} ${target.name}] Щитовой блок!`, 'status');
       return 0;
     }
+
+    // ── Perk: crit15 (Garet) — 15% шанс ×1.5 ──
+    if (attacker.isHero && attacker.perks && attacker.perks.includes('crit15') && Math.random() < 0.15) {
+      dmg = Math.floor(dmg * 1.5);
+      pushBattleLog(`💥 ${attacker.name}: Критический удар!`, 'status');
+    }
+
+    // ── Perk: auraDmg (Garet) — союзник получает +10% урона если рядом Гарет ──
+    if (attacker.isHero && b) {
+      const garetUnit = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
+        u.heroId !== attacker.heroId && u.perks && u.perks.includes('auraDmg'));
+      if (garetUnit && Math.abs(attacker.x - garetUnit.x) + Math.abs(attacker.y - garetUnit.y) <= 2)
+        dmg = Math.floor(dmg * 1.1);
+    }
+
+    // ── Item mod: dodge (armor) — 20% уклонение цели ──
+    if (!opts.magic && !opts.blockIgnore) {
+      const tArmorItem = target.isHero ? getEquippedItem(target, 'armor') : null;
+      if (tArmorItem && tArmorItem.mods.dodge && Math.random() < tArmorItem.mods.dodge) {
+        pushBattleLog(`💨 ${target.name} уклонился!`, 'status');
+        return 0;
+      }
+    }
+
     target.hp -= dmg;
-    spawnDamageFx(target.x, target.y, dmg);
+    if (dmg > 0) spawnDamageFx(target.x, target.y, dmg);
+
+    // ── Perk: reflect1 (Garet) — цель отражает 1 урона атакующему ──
+    if (target.isHero && target.perks && target.perks.includes('reflect1') && dmg > 0 && !opts.magic) {
+      attacker.hp = Math.max(0, attacker.hp - 1);
+      pushBattleLog(`🔄 ${target.name}: Отражение 1 урона!`, 'status');
+    }
+
+    // ── Item mod: reflectFlat (armor) — фиксированное отражение ──
+    if (!opts.magic) {
+      const tArmItem = target.isHero ? getEquippedItem(target, 'armor') : null;
+      if (tArmItem && tArmItem.mods.reflectFlat && dmg > 0) {
+        attacker.hp = Math.max(0, attacker.hp - tArmItem.mods.reflectFlat);
+      }
+      // ── Item mod: reflectDmg (armor) — 10% физ. урона назад ──
+      if (tArmItem && tArmItem.mods.reflectDmg && dmg > 0) {
+        const reflected = Math.max(1, Math.floor(dmg * tArmItem.mods.reflectDmg));
+        attacker.hp = Math.max(0, attacker.hp - reflected);
+      }
+    }
+
+    // ── Item mod: stunOnHit (weapon) — оглушение при ударе ──
+    if (attacker.isHero && target.hp > 0) {
+      const wepItem = getEquippedItem(attacker, 'weapon');
+      if (wepItem && wepItem.mods.stunOnHit) addStatus(target, STATUS.STUN, 1);
+      if (wepItem && wepItem.mods.poisonOnHit) addStatus(target, STATUS.POISON, 2);
+    }
+
+    // ── Item mod: burnSpell perk + burnSpell weapon ──
+    if (attacker.isHero && opts.magic && target.hp > 0) {
+      if (attacker.perks && attacker.perks.includes('burnSpell')) addStatus(target, STATUS.BURN, 2);
+    }
+
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags) attacker.flags.firstAttackTurn = false;
     if (target.hp <= 0) onUnitDeath(target);
     if (b && allEnemiesDead(b)) checkBattleEnd();
@@ -1648,16 +1792,64 @@
   function onUnitDeath(u) {
     const b = GameState.currentBattle;
     pushBattleLog(`☠️ ${u.emoji} ${u.name} повержен!`, 'enemy');
-    if (!u.isHero) { GameState.stats.kills += 1; GameState._lastBattleKills = (GameState._lastBattleKills || 0) + 1; }
-    // 12: Death skull fx
-    spawnSkullFx(u.x, u.y);
-    if (!u.isHero && u.enemyId === ENEMY_IDS.ZOMBIE) {
-      for (const t of b.units) {
-        if (!t.isHero || t.hp <= 0) continue;
-        if (Math.abs(t.x - u.x) + Math.abs(t.y - u.y) <= 1) dealDamage(u, t, 5, { blockIgnore: true, magic: true });
+    if (!u.isHero) {
+      GameState.stats.kills += 1;
+      GameState._lastBattleKills = (GameState._lastBattleKills || 0) + 1;
+
+      // Perk: killHeal (Seris) — +5 HP при убийстве
+      if (b) {
+        const serisUnit = b.units.find(uu => uu.isHero && uu.heroId === 'seris' && uu.hp > 0 && uu.perks && uu.perks.includes('killHeal'));
+        if (serisUnit) { serisUnit.hp = Math.min(serisUnit.maxHp, serisUnit.hp + 5); pushBattleLog(`💚 Сэрис: +5 HP за убийство`, 'status'); }
       }
     }
-    if (!u.isHero && u.enemyId === ENEMY_IDS.WATCHER) b.globalBuffs.watcherDeadMove = 2;
+
+    // Item: revive5 (phoenix armor) — воскрешение с 5 HP один раз за бой
+    if (u.isHero) {
+      const armorItem = getEquippedItem(u, 'armor');
+      if (armorItem && armorItem.mods.revive5 && !u._reviveUsed) {
+        u._reviveUsed = true;
+        u.hp = 5;
+        pushBattleLog(`🔥 ${u.name}: Одеяние феникса! Воскрешён с 5 HP!`, 'status');
+        return; // не умирает
+      }
+    }
+
+    // Item: deathExplode (death_ring) — взрыв 3×3 при гибели героя
+    if (u.isHero && b) {
+      const artItem = getEquippedItem(u, 'artifact');
+      if (artItem && artItem.mods.deathExplode) {
+        const dmgVal = artItem.mods.deathExplode;
+        for (const t of b.units) {
+          if (t.isHero || t.hp <= 0) continue;
+          if (Math.abs(t.x - u.x) <= 1 && Math.abs(t.y - u.y) <= 1)
+            dealDamage(u, t, dmgVal, { blockIgnore: true, magic: true, noWeaponBonus: true });
+        }
+        pushBattleLog(`💀 ${u.name}: Кольцо смерти — взрыв 3×3!`, 'status');
+      }
+    }
+
+    spawnSkullFx(u.x, u.y);
+
+    if (!u.isHero && u.enemyId === ENEMY_IDS.ZOMBIE) {
+      for (const t of (b ? b.units : [])) {
+        if (!t.isHero || t.hp <= 0) continue;
+        if (Math.abs(t.x - u.x) + Math.abs(t.y - u.y) <= 1) dealDamage(u, t, 5, { blockIgnore: true, magic: true, noWeaponBonus: true });
+      }
+    }
+    if (!u.isHero && u.enemyId === ENEMY_IDS.WATCHER && b) b.globalBuffs.watcherDeadMove = 2;
+  }
+
+  function getXpForBattle(cell) {
+    const region = (cell && cell.region) || GameState.region || 1;
+    const base = 30 + (region - 1) * 10;
+    const typeBonus = {
+      mission:  0,
+      dungeon:  20,
+      miniboss: 30,
+      boss:     70,
+      final:    120
+    }[cell && (cell.bossType || cell.type)] || 0;
+    return base + typeBonus;
   }
 
   function endBattleVictory() {
@@ -1669,12 +1861,12 @@
     GameState.gold += gold;
     GameState.stats.battles += 1;
     GameState.stats.goldEarned += gold;
-    const xpEach = 20 + GameState.region * 10;
+    const xpEach = getXpForBattle(cell);
     GameState.heroes.forEach(h => {
       if (h.hp > 0) {
         h.xp = (h.xp || 0) + xpEach;
-        while (h.xp >= h.level * 40 && h.level < 8) {
-          h.xp -= h.level * 40;
+        while (h.xp >= h.level * 50 && h.level < 8) {
+          h.xp -= h.level * 50;
           h.level++;
           GameState.pendingPerks.push(h.id);
         }
@@ -2115,7 +2307,11 @@
       if (b.grid[nu.y] && b.grid[nu.y][nu.x] === TILE.FIRE) applyGroundEffects(nu);
       if (nu.hp <= 0) continue;
       if (nu.isHero) {
-        nu.mana = Math.min(nu.maxMana, (nu.mana || 0) + 2);
+        let manaGain = 2;
+        // Item: manaRegen from crystal artifact
+        const manaArt = getEquippedItem(nu, 'artifact');
+        if (manaArt && manaArt.mods.manaRegen) manaGain += manaArt.mods.manaRegen;
+        nu.mana = Math.min(nu.maxMana, (nu.mana || 0) + manaGain);
         Object.keys(nu.cds || {}).forEach(k => { if (nu.cds[k] > 0) nu.cds[k]--; });
         const hh = GameState.heroes.find(x => x.id === nu.heroId);
         if (hh) hh.cds = { ...nu.cds };
@@ -2774,10 +2970,7 @@
   function itemById(id) { return ITEM_POOL.find(i => i.id === id); }
   let InvState = { activeHeroId: 'garet', selectedItemId: null };
   function randomItem(region, minRarity) {
-    const rarOrder = { common: 1, rare: 2, epic: 3 };
-    const min = rarOrder[minRarity || 'common'];
-    const pool = ITEM_POOL.filter(i => rarOrder[i.rarity] >= min && (region >= 2 || i.rarity === 'common'));
-    return deepClone(pool[randInt(0, pool.length - 1)]);
+    return selectLootItem(region, minRarity || null);
   }
   function equipItem(hero, item) {
     hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
@@ -2996,9 +3189,47 @@
     };
   }
   function generateShopStock(region) {
+    const byRegion = ITEM_POOL.filter(i => i.minRegion <= region);
+    const commons = byRegion.filter(i => i.rarity === 'common');
+    const rares   = byRegion.filter(i => i.rarity === 'rare');
+    const epics   = byRegion.filter(i => i.rarity === 'epic');
+    const pick = arr => deepClone(arr[Math.floor(Math.random() * arr.length)]);
     const stock = [];
-    for (let i = 0; i < 4; i++) stock.push(randomItem(region, region === 1 ? 'common' : Math.random() < 0.6 ? 'common' : 'rare'));
-    return stock;
+    // 2 обычных
+    stock.push(pick(commons));
+    stock.push(pick(commons));
+    // 1-2 редких (вероятность растёт с регионом)
+    if (Math.random() < 0.4 + (region - 1) * 0.2) stock.push(pick(rares));
+    if (Math.random() < 0.2 + (region - 1) * 0.15) stock.push(pick(rares));
+    // Тайный epic-слот
+    const secretItem = pick(epics);
+    const unique = [...new Map(stock.map(i => [i.id, i])).values()].slice(0, 4);
+    return { stock: unique, secretItem };
+  }
+
+  function upgradeItem(item, region) {
+    const nextRarity = { common: 'rare', rare: 'epic' }[item.rarity];
+    if (!nextRarity) return item;
+    const pool = ITEM_POOL.filter(i =>
+      i.rarity === nextRarity &&
+      i.slot === item.slot &&
+      (i.heroClass === item.heroClass || i.heroClass === 'all' || item.heroClass === 'all') &&
+      i.minRegion <= region
+    );
+    return pool.length ? deepClone(pool[Math.floor(Math.random() * pool.length)]) : item;
+  }
+
+  function shouldShowBonusGoldAd() {
+    const stock = (GameState.shopStock && GameState.shopStock.stock) || GameState.shopStock;
+    if (!stock || !stock.length) return false;
+    const cheapest = Math.min(...stock.map(i => i.price));
+    const mostWanted = Math.max(...stock.map(i => i.price));
+    return GameState.gold >= cheapest && GameState.gold < mostWanted && (mostWanted - GameState.gold) <= 60;
+  }
+
+  function getHealCost() {
+    const missing = GameState.heroes.reduce((s, h) => s + Math.max(0, h.maxHp - h.hp), 0);
+    return Math.max(10, missing * 2);
   }
   function generateEnemyWaveForCell(cell) {
     if (!cell) return [ENEMY_IDS.SKELETON];
@@ -3033,19 +3264,38 @@
     }
   }
   function applyBattleRewards(cell) {
-    let gMin = 20, gMax = 35, minR = 'common';
-    if (cell.type === 'dungeon') { gMin = 45; gMax = 80; minR = 'rare'; }
-    if (cell.type === 'boss') { gMin = 120; gMax = 160; minR = 'epic'; }
-    if (cell.type === 'final') { gMin = 200; gMax = 300; minR = 'epic'; }
+    const region = (cell && cell.region) || GameState.region || 1;
+    // Gold by cell type
+    const goldRanges = {
+      mission:  [25, 45], dungeon: [60, 100], miniboss: [50, 90],
+      boss:     [150, 150], final: [300, 300]
+    };
+    const [gMin, gMax] = goldRanges[cell && cell.type] || [25, 45];
     const gold = randInt(gMin, gMax);
-    GameState.gold += gold;
-    GameState.stats.goldEarned += gold;
-    const drop = randomItem(cell.region, minR);
+    // Gold bonus from amulet_luck artifact
+    const goldMult = GameState.heroes.reduce((m, h) => {
+      const item = getEquippedItem(h, 'artifact');
+      return item && item.mods.goldBonus ? m + item.mods.goldBonus : m;
+    }, 1);
+    const finalGold = Math.round(gold * goldMult);
+    GameState.gold += finalGold;
+    GameState.stats.goldEarned += finalGold;
+    // Loot drop based on boss type
+    let forceRarity = null;
+    if (cell && (cell.type === 'boss' || cell.type === 'final')) forceRarity = 'epic';
+    else if (cell && cell.type === 'dungeon') forceRarity = 'rare';
+    const drop = selectLootItem(region, forceRarity);
+    // Store by id
     GameState.inventory.push(drop.id);
     const vItems = document.getElementById('vic-items');
     const rarLabel = { common: 'Обычн.', rare: 'Редкий', epic: 'Эпический' };
     const rarBadgeClass = { common: 'badge-common', rare: 'badge-rare', epic: 'badge-epic' };
-    if (vItems) vItems.innerHTML = `<div class="vic-drop-card rarity-${drop.rarity}">${drop.name} <span class="badge ${rarBadgeClass[drop.rarity] || 'badge-common'}">${rarLabel[drop.rarity] || ''}</span></div>`;
+    if (vItems) vItems.innerHTML = `<div class="vic-drop-card rarity-${drop.rarity}">${drop.emoji || ''} ${drop.name} <span class="badge ${rarBadgeClass[drop.rarity] || 'badge-common'}">${rarLabel[drop.rarity] || ''}</span></div>`;
+  }
+
+  function getEquippedItem(hero, slot) {
+    if (!hero.equipment || !hero.equipment[slot]) return null;
+    return ITEM_POOL.find(i => i.id === hero.equipment[slot]) || null;
   }
   // 8: Styled event screen with icon/type
   const EVENT_ICONS = { positive: '✨', negative: '💀', neutral: '🎲', ambush: '⚔', treasure: '💰', heal: '💚', smith: '🔨', curse: '☠', refugees: '👥', fog: '🌫', blessing: '🌟', trade: '🛒' };
@@ -3260,11 +3510,16 @@
   function enterCity(node, strangerOnly) {
     GameState.screen = 'city';
     GameState.activeCityNode = node.id;
-    if (!strangerOnly) GameState.shopStock = generateShopStock(node.region);
-    GameState.cityState = GameState.cityState || {};
-    GameState.cityState.adUpgradeUsed = GameState.cityState.adUpgradeUsed || false;
-    GameState.cityState.secretRevealed = false;
-    GameState.cityState.secretItemId = randomItem(node.region, 'epic').id;
+    if (!strangerOnly) {
+      const stockResult = generateShopStock(node.region);
+      GameState.shopStock = stockResult;
+      GameState.cityState = GameState.cityState || {};
+      GameState.cityState.adUpgradeUsed = GameState.cityState.adUpgradeUsed || false;
+      GameState.cityState.secretRevealed = false;
+      GameState.cityState.secretItemId = stockResult.secretItem ? stockResult.secretItem.id : selectLootItem(node.region, 'epic').id;
+    } else {
+      GameState.cityState = GameState.cityState || {};
+    }
 
     // === Left panel: NPC list + heroes bar ===
     const hbox = document.getElementById('city-heroes');
@@ -3328,7 +3583,7 @@
         <div style="font-size:9px;color:#9b59b6;margin-bottom:8px">Посмотри рекламу — узнай что скрыто</div>
         <button class="btn btn-ad" id="btn-secret" style="font-size:9px;padding:4px 8px;width:100%">📺 Открыть</button>
       </div>` : '';
-    shop.innerHTML = GameState.shopStock.map(it => {
+    shop.innerHTML = (GameState.shopStock && GameState.shopStock.stock ? GameState.shopStock.stock : (GameState.shopStock || [])).map(it => {
       const canBuy = GameState.gold >= it.price;
       const ic = it.name.split(' ')[0];
       const nm = it.name.split(' ').slice(1).join(' ');
@@ -3379,13 +3634,12 @@
       if (!base) { alert('Нет подходящего предмета.'); return; }
       const cost = base.rarity === 'common' ? 100 : 200;
       const doUpgrade = () => {
-        const next = base.rarity === 'common' ? 'rare' : 'epic';
-        const cand = ITEM_POOL.find(i => i.slot === base.slot && i.rarity === next);
-        if (!cand) return;
+        const upgraded = upgradeItem(base, node.region || GameState.region || 1);
+        if (upgraded === base) { alert('Нет доступных улучшений.'); return; }
         const idx = GameState.inventory.indexOf(base.id);
-        if (idx >= 0) GameState.inventory[idx] = cand.id;
+        if (idx >= 0) GameState.inventory[idx] = upgraded.id;
         saveGame();
-        alert(`${base.name} → ${cand.name}!`);
+        alert(`${base.name} → ${upgraded.name}!`);
         enterCity(node, strangerOnly);
       };
       if (GameState.gold >= cost && confirm(`Улучшить ${base.name} за ${cost}💰?`)) { GameState.gold -= cost; doUpgrade(); return; }
@@ -3747,7 +4001,8 @@
       buildWorldMap();
       GameState.gold = 150;
       GameState.turn = 1;
-      GameState.inventory = [];
+      // Стартовый инвентарь по документации баланса
+      GameState.inventory = ['steel_sword', 'hunter_bow', 'magic_wand', 'leather', 'luck_amulet'];
       saveGame();
     }
     GameState.inventory = GameState.inventory || [];
@@ -3808,7 +4063,8 @@
       document.getElementById('victory-screen').classList.add('hidden');
       showScreen('map');
       renderMap();
-      const expensive = GameState.shopStock.find(i => i.price > GameState.gold && i.price <= GameState.gold + 50);
+      const _ss = GameState.shopStock && GameState.shopStock.stock ? GameState.shopStock.stock : (GameState.shopStock || []);
+      const expensive = _ss.find(i => i.price > GameState.gold && i.price <= GameState.gold + 50);
       if (expensive && window.ysdk && Date.now() - (GameState.adMeta.lastBonusGoldAt || 0) > BONUS_GOLD_CD_MS) {
         if (confirm('💰 Гонец нашёл клад! +50 золота за рекламу?')) {
           showRewardedAd(() => {
