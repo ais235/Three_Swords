@@ -775,6 +775,7 @@
     #inv-hero-card { display: flex; flex-direction: column; gap: 0; }
     .inv-portrait { text-align: center; padding: 12px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
     .inv-portrait-icon { font-size: 40px; }
+    .inv-portrait-img { width: 80px; height: 80px; object-fit: contain; border-radius: 8px; border: 2px solid #3a3a6a; display: block; margin: 0 auto; }
     .inv-portrait-name { font-size: 13px; color: var(--text-main); margin-top: 6px; font-weight: bold; letter-spacing: 1px; }
     .inv-portrait-class { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
     .inv-stats { background: #0a0a14; border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
@@ -3868,7 +3869,7 @@
     });
   }
   function itemById(id) { return ITEM_POOL.find(i => i.id === id); }
-  let InvState = { activeHeroId: 'garet', selectedItemId: null };
+  let InvState = { activeHeroId: 'garet', selectedItemId: null, selectedItemIdx: -1 };
   function randomItem(region, minRarity) {
     return selectLootItem(region, minRarity || null);
   }
@@ -3950,8 +3951,8 @@
     const hpPct = Math.round(hero.hp / hero.maxHp * 100);
     const hpBar = `<div style="height:4px;border-radius:2px;background:#1a1a2e;overflow:hidden;margin-top:2px"><div style="height:100%;width:${hpPct}%;background:${hpPct>50?'#2ecc71':hpPct>25?'#f39c12':'#e74c3c'}"></div></div>`;
     card.innerHTML = `<div class="inv-portrait">
-      ${heroIconHtml(hero.id, hero.emoji, 'hero-icon-large-img') !== hero.emoji
-        ? heroIconHtml(hero.id, hero.emoji, 'hero-icon-large-img')
+      ${HERO_TEXTURE_PATHS[hero.id]
+        ? `<img src="${HERO_TEXTURE_PATHS[hero.id]}" class="inv-portrait-img" alt="${hero.name}" />`
         : `<div class="inv-portrait-icon">${hero.emoji}</div>`}
       <div class="inv-portrait-name">${hero.name}</div>
       <div class="inv-portrait-class">${roleLabel2[hero.id] || ''} · Ур. ${hero.level}</div>
@@ -4015,44 +4016,53 @@
       };
     });
 
-    // Backpack grid
+    // Backpack grid (index-based selection to avoid duplicate-ID bug)
     const bag = document.getElementById('bag-grid');
     const invList = (GameState.inventory || []).filter(id => itemById(id));
     if (invList.length === 0) {
       bag.innerHTML = '<div style="grid-column:1/-1;color:var(--text-dim);text-align:center;padding:20px;">Рюкзак пуст</div>';
+      InvState.selectedItemIdx = -1;
+      InvState.selectedItemId = null;
     } else {
-      bag.innerHTML = invList.map(id => {
+      bag.innerHTML = invList.map((id, idx) => {
         const it = itemById(id);
-        const active = id === InvState.selectedItemId ? 'selected' : '';
+        const active = idx === InvState.selectedItemIdx ? 'selected' : '';
         const ic = it.name.split(' ')[0];
-        const nm = it.name.split(' ').slice(1).join(' ');
-        return `<div class="inv-item-card ${active}" data-item="${id}">
+        return `<div class="inv-item-card ${active}" data-idx="${idx}" title="${it.name.split(' ').slice(1).join(' ')}">
           <div class="inv-item-icon">${ic}</div>
-          <div class="inv-item-name">${nm}</div>
-          <div style="font-size:9px;color:var(--accent-gold)">${it.price}g</div>
+          <div style="font-size:9px;color:var(--accent-gold);margin-top:2px">${it.price}g</div>
         </div>`;
       }).join('');
       bag.querySelectorAll('.inv-item-card').forEach(el => {
-        el.onclick = () => { InvState.selectedItemId = el.getAttribute('data-item'); renderInventoryScreen(); };
+        el.onclick = () => {
+          const idx = parseInt(el.getAttribute('data-idx'));
+          InvState.selectedItemIdx = idx;
+          InvState.selectedItemId = invList[idx];
+          renderInventoryScreen();
+        };
       });
     }
 
     // Detail panel
     const detail = document.getElementById('inv-detail');
     const sel = itemById(InvState.selectedItemId);
-    if (!sel) { detail.innerHTML = '<div style="color:var(--text-dim)">Выберите предмет в рюкзаке.</div>'; return; }
-    const statLines = Object.entries(sel.mods || {}).filter(([k,v]) => typeof v === 'number' && v !== 0).map(([k,v]) => `${v > 0 ? '+' : ''}${v} ${k}`).join(' · ') || 'особый эффект';
+    if (!sel) { detail.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:20px 0">Выберите предмет в рюкзаке</div>'; return; }
+    const statLines = Object.entries(sel.mods || {}).filter(([k,v]) => typeof v === 'number' && v !== 0).map(([k,v]) => `${v > 0 ? '+' : ''}${v} ${k}`).join('  ') || '— особый эффект';
     const forRole = sel.id.includes('bow') ? 'Лучник' : sel.id.includes('staff') || sel.id.includes('wand') ? 'Маг' : sel.id.includes('sword') || sel.id.includes('hammer') ? 'Воин' : 'Все';
-    detail.innerHTML = `<div class="item-detail-head">
-      <div class="item-detail-icon">${sel.name.split(' ')[0]}</div>
-      <div><div class="item-detail-title">${sel.name.split(' ').slice(1).join(' ')}</div><div class="item-detail-sub">${slotNames[sel.slot] || sel.slot} · ${forRole} · ${rarBadge(sel.rarity)}</div></div>
+    const itemEmoji = sel.name.split(' ')[0];
+    const itemName = sel.name.split(' ').slice(1).join(' ');
+    detail.innerHTML = `
+    <div style="text-align:center;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px">
+      <div style="font-size:36px;line-height:1.1;margin-bottom:6px">${itemEmoji}</div>
+      <div class="item-detail-title">${itemName}</div>
+      <div class="item-detail-sub" style="margin-top:4px">${slotNames[sel.slot] || sel.slot} · ${forRole}</div>
+      <div style="margin-top:4px">${rarBadge(sel.rarity)}</div>
     </div>
-    <div class="item-detail-stats">${statLines}</div>
-    <div class="item-detail-desc">Предмет повышает боевую эффективность героя.</div>
-    <div class="item-detail-btns">
-      <button class="btn btn-green" id="inv-equip-btn">Надеть</button>
-      <button class="btn" id="inv-transfer-btn">Передать</button>
-      <button class="btn btn-red" id="inv-drop-btn">✕ Убрать</button>
+    <div class="item-detail-stats" style="text-align:center;margin-bottom:8px">${statLines}</div>
+    <div class="item-detail-btns" style="display:flex;flex-direction:column;gap:6px">
+      <button class="btn btn-green" id="inv-equip-btn" style="width:100%;margin:0">✓ Надеть</button>
+      <button class="btn" id="inv-transfer-btn" style="width:100%;margin:0">⇄ Передать</button>
+      <button class="btn btn-red" id="inv-drop-btn" style="width:100%;margin:0">✕ Убрать</button>
     </div>`;
     const equipBtn = document.getElementById('inv-equip-btn');
     equipBtn.onclick = () => {
@@ -4066,7 +4076,7 @@
         if (idx >= 0) GameState.inventory.splice(idx, 1);
         hero.equipment[sel.slot] = sel.id;
         recalcHeroFromEquipment(hero);
-        InvState.selectedItemId = null;
+        InvState.selectedItemId = null; InvState.selectedItemIdx = -1;
         saveGame();
         renderInventoryScreen();
         renderPartyStrip();
@@ -4095,9 +4105,9 @@
     document.getElementById('inv-drop-btn').onclick = () => {
       showGameConfirm('Выбросить предмет?').then(ok => {
         if (!ok) return;
-        const idx = GameState.inventory.indexOf(sel.id);
-        if (idx >= 0) GameState.inventory.splice(idx, 1);
-        InvState.selectedItemId = null;
+        const dropIdx = InvState.selectedItemIdx >= 0 ? InvState.selectedItemIdx : GameState.inventory.indexOf(sel.id);
+        if (dropIdx >= 0) GameState.inventory.splice(dropIdx, 1);
+        InvState.selectedItemId = null; InvState.selectedItemIdx = -1;
         saveGame();
         renderInventoryScreen();
       });
