@@ -277,6 +277,32 @@
       overflow: hidden;
     }
 
+    #menu-ash {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .menu-ash-flake {
+      position: absolute;
+      top: -6vh;
+      width: 2px;
+      height: 4px;
+      border-radius: 0;
+      background: rgba(210, 200, 190, 0.55);
+      box-shadow: 0 0 2px rgba(255, 250, 245, 0.12);
+      opacity: 0;
+      animation: menu-ash-fall linear infinite;
+      will-change: transform, opacity;
+    }
+    @keyframes menu-ash-fall {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+      7% { opacity: 0.75; }
+      93% { opacity: 0.35; }
+      100% { transform: translate3d(var(--ash-drift, 0px), 115vh, 0) rotate(240deg); opacity: 0; }
+    }
+
     .menu-star {
       position: absolute;
       width: 2px;
@@ -285,16 +311,6 @@
       pointer-events: none;
     }
     .menu-star.big { width: 4px; height: 4px; }
-
-    .menu-mountains {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 120px;
-      pointer-events: none;
-      z-index: 1;
-    }
 
     .menu-title-icon {
       font-size: 28px;
@@ -461,38 +477,6 @@
     .menu-diff-btn.active-normal { color: #2ecc71; background: #0a1a0a; }
     .menu-diff-btn.active-hard   { color: #e74c3c; background: #1a0a0a; }
     .menu-diff-btn:hover         { color: #e8e8f0; }
-
-    .screen-menu .menu-meta {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      max-width: 420px;
-      text-align: center;
-    }
-    .menu-meta-row {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 6px;
-      color: #444466;
-      letter-spacing: 0.5px;
-      line-height: 2.2;
-    }
-    .menu-meta-row .m-val  { color: #666688; }
-    .menu-meta-row .m-gold { color: #f0a500; }
-    .menu-meta-row .m-kill { color: #2ecc71; }
-
-    .menu-divider {
-      width: 100%;
-      max-width: 420px;
-      height: 2px;
-      background: repeating-linear-gradient(
-        90deg,
-        #f0a500 0, #f0a500 4px,
-        transparent 4px, transparent 8px
-      );
-      margin: 16px 0 12px;
-      z-index: 2;
-      opacity: 0.35;
-    }
 
     .menu-version {
       position: absolute;
@@ -860,8 +844,6 @@
       .menu-btn { padding: 10px 12px; font-size: 7px; min-height: 34px; }
       .menu-diff-label { font-size: 5px; padding: 6px 6px; }
       .menu-diff-btn { font-size: 6px; padding: 6px 0; }
-      .menu-meta-row { font-size: 5px; line-height: 2; }
-      .menu-mountains { height: 56px; }
       .menu-version, .menu-copy { font-size: 5px; }
 
       /* Perk modal: keep tree readable in landscape */
@@ -979,8 +961,6 @@
       .menu-title-main { font-size: 14px; letter-spacing: 3px; }
       .menu-title-sub { font-size: 6px; margin-bottom: 16px; }
       .menu-btn { padding: 10px 12px; font-size: 7px; min-height: 36px; }
-      .menu-meta-row { font-size: 5px; }
-      .menu-mountains { height: 72px; }
       .perk-modal-box { width: min(960px, 99vw); max-height: 98vh; }
       .perk-modal-body { grid-template-columns: 1fr 140px; }
       .perk-branches { padding: 6px; gap: 2px; }
@@ -1008,16 +988,7 @@
       <div class="screen-menu" id="screen-menu">
 
         <div id="menu-stars"></div>
-
-        <svg class="menu-mountains" viewBox="0 0 680 120"
-             preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="0,120 60,60 120,90 200,30 280,80 360,20 440,70 520,40 600,75 680,35 680,120"
-                   fill="#0f0f1e"/>
-          <polygon points="0,120 0,90 80,50 160,80 240,40 320,70 400,30 480,60 560,45 640,65 680,50 680,120"
-                   fill="#12122a"/>
-          <polygon points="0,120 0,105 100,75 180,95 260,65 340,85 420,60 500,80 580,70 660,85 680,80 680,120"
-                   fill="#161630"/>
-        </svg>
+        <div id="menu-ash" aria-hidden="true"></div>
 
         <div style="position:relative;z-index:2;margin-bottom:0">
           <span class="menu-title-icon">⚔</span>
@@ -1060,13 +1031,6 @@
 
           </div>
         </div>
-
-        <div class="menu-meta" style="position:relative;z-index:2">
-          <div class="menu-meta-row" id="menu-last-game">ЗАГРУЗКА...</div>
-          <div class="menu-meta-row" id="menu-best">&nbsp;</div>
-        </div>
-
-        <div class="menu-divider" style="position:relative;z-index:2"></div>
 
         <span class="menu-version">v0.3.1</span>
         <span class="menu-copy">© THREE BLADES 2026</span>
@@ -3738,30 +3702,25 @@
       save = raw ? JSON.parse(raw) : null;
     } catch (_) { save = null; }
 
-    let best = null;
-    try {
-      const br = localStorage.getItem('threeBladesBest');
-      best = br ? JSON.parse(br) : null;
-    } catch (_) { best = null; }
-
-    const lastEl = document.getElementById('menu-last-game');
-    const bestEl = document.getElementById('menu-best');
-
-    if (save && lastEl) {
-      lastEl.innerHTML =
-        'ПОСЛЕДНЯЯ: РЕГ <span class="m-val">' + (save.region || 1) + '</span>' +
-        ' · ХОД <span class="m-val">' + (save.turn || 1) + '</span>' +
-        ' · <span class="m-gold">' + (save.gold || 0) + 'G</span>';
-    } else if (lastEl) {
-      lastEl.innerHTML = '<span class="m-val">НЕТ СОХРАНЕНИЙ</span>';
-    }
-
-    if (best && bestEl) {
-      bestEl.innerHTML =
-        'РЕКОРД: <span class="m-gold">' + (best.gold || 0) + 'G</span>' +
-        ' · <span class="m-kill">' + (best.kills || 0) + ' УБИЙСТВ</span>';
-    } else if (bestEl) {
-      bestEl.innerHTML = '&nbsp;';
+    const ashEl = document.getElementById('menu-ash');
+    if (ashEl && ashEl.children.length === 0) {
+      const flakes = 52;
+      for (let i = 0; i < flakes; i++) {
+        const f = document.createElement('div');
+        f.className = 'menu-ash-flake';
+        const drift = (Math.random() - 0.5) * 100;
+        const dur = 26 + Math.random() * 34;
+        const delay = -(Math.random() * dur);
+        const w = 1 + Math.random() * 2;
+        const h = 3 + Math.random() * 4;
+        f.style.left = Math.random() * 100 + '%';
+        f.style.width = w + 'px';
+        f.style.height = h + 'px';
+        f.style.setProperty('--ash-drift', drift + 'px');
+        f.style.animationDuration = dur + 's';
+        f.style.animationDelay = delay + 's';
+        ashEl.appendChild(f);
+      }
     }
 
     const contBtn = document.querySelector('.menu-btn-continue');
