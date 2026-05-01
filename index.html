@@ -4027,9 +4027,8 @@
       bag.innerHTML = invList.map((id, idx) => {
         const it = itemById(id);
         const active = idx === InvState.selectedItemIdx ? 'selected' : '';
-        const ic = it.name.split(' ')[0];
-        return `<div class="inv-item-card ${active}" data-idx="${idx}" title="${it.name.split(' ').slice(1).join(' ')}">
-          <div class="inv-item-icon">${ic}</div>
+        return `<div class="inv-item-card ${active}" data-idx="${idx}" title="${it.name}">
+          <div class="inv-item-icon">${it.emoji || '📦'}</div>
           <div style="font-size:9px;color:var(--accent-gold);margin-top:2px">${it.price}g</div>
         </div>`;
       }).join('');
@@ -4049,8 +4048,8 @@
     if (!sel) { detail.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:20px 0">Выберите предмет в рюкзаке</div>'; return; }
     const statLines = Object.entries(sel.mods || {}).filter(([k,v]) => typeof v === 'number' && v !== 0).map(([k,v]) => `${v > 0 ? '+' : ''}${v} ${k}`).join('  ') || '— особый эффект';
     const forRole = sel.id.includes('bow') ? 'Лучник' : sel.id.includes('staff') || sel.id.includes('wand') ? 'Маг' : sel.id.includes('sword') || sel.id.includes('hammer') ? 'Воин' : 'Все';
-    const itemEmoji = sel.name.split(' ')[0];
-    const itemName = sel.name.split(' ').slice(1).join(' ');
+    const itemEmoji = sel.emoji || '📦';
+    const itemName = sel.name;
     detail.innerHTML = `
     <div style="text-align:center;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px">
       <div style="font-size:36px;line-height:1.1;margin-bottom:6px">${itemEmoji}</div>
