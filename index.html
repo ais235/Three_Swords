@@ -2877,18 +2877,14 @@
         const BAR_TOP  = CELL - 8;
         const spriteBottom = BAR_TOP - 2;
 
-        // Idle breathing: gentle vertical bob + subtle scale pulse
+        // Idle breathing: vertical bob only (constant sprite size = no canvas cache miss)
         const now = performance.now();
-        // Each unit gets a unique phase so they don't all move in sync
         const phase = (u.x * 1.7 + u.y * 3.1 + (u.isHero ? 0 : 5.3));
-        const breathT = now * 0.0018;                          // ~1 cycle per 3.5s
-        const bobY    = Math.sin(breathT + phase) * 1.5;       // ±1.5px vertical bob
-        const scaleB  = 1 + Math.sin(breathT + phase) * 0.018; // ±1.8% scale pulse
+        const bobY = Math.round(Math.sin(now * 0.0018 + phase) * 1.5); // ±1-2px, integer
 
-        const spriteSzBase = Math.round(CELL * 1.2);           // 77px base
-        const spriteSz = Math.round(spriteSzBase * scaleB);
-        const spriteTopY   = spriteBottom - spriteSz + Math.round(bobY);
-        const spriteLeftX  = Math.round((CELL - spriteSz) / 2);
+        const spriteSz   = Math.round(CELL * 1.2);             // 77px — constant
+        const spriteTopY = spriteBottom - spriteSz + bobY;
+        const spriteLeftX = Math.round((CELL - spriteSz) / 2);
 
         if (u.isHero) {
           const hTex = getHeroTexture(u.heroId);
