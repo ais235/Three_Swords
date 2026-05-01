@@ -3429,11 +3429,11 @@
         html += skillMakeBtn('sk-fr',  'freeze',   '🧊','Заморозка (4mp)',     u.cds.freeze,   { mpFail: u.mana < 4 });
         html += skillMakeBtn('sk-met', 'meteor',   '☄', 'Метеорит (8mp)',      u.cds.meteor,   { mpFail: u.mana < 8 });
       }
-      if (!b.heroMoved) html += `<button class="btn btn-dim" id="btn-skip-move">⏩ Пропустить ход</button>`;
+      if (!b.heroMoved) html += `<button class="btn" id="btn-skip-move">⏩ Пропустить ход</button>`;
       html += `<button class="btn" id="btn-wait">⏹ Ждать</button>`;
     }
     // 10: Inventory button always visible in battle
-    html += `<button class="btn btn-dim" id="btn-battle-inv" style="margin-top:4px">🎒 Инвентарь</button>`;
+    html += `<button class="btn" id="btn-battle-inv" style="margin-top:4px">🎒 Инвентарь</button>`;
     actions.innerHTML = html;
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     const heroLvl2 = (GameState.heroes.find(x => x.id === u.heroId) || u).level || 1;
