@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Три Героя — Three Heroes</title>
@@ -236,19 +237,268 @@
     .rarity-common { color: #b0b0b0; }
     .rarity-rare { color: #4a9eff; }
     .rarity-epic { color: #f0a500; }
-    #main-menu { text-align: center; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; background: var(--bg-dark); }
-    .menu-screen { padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
-    .menu-logo { text-align: center; }
-    .menu-logo-icon { font-size: 40px; margin-bottom: 8px; }
-    .menu-logo-title { font-size: 30px; color: var(--accent-gold); letter-spacing: 4px; font-weight: 700; }
-    .menu-logo-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 6px; margin-top: 4px; }
-    .menu-btns { display: flex; flex-direction: column; gap: 10px; width: 220px; }
-    .menu-btns .btn { text-align: center; padding: 10px 16px; font-size: 13px; }
-    .menu-diff { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-dim); }
-    .diff-toggle { display: flex; gap: 4px; }
-    .diff-opt { padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; border: 1px solid var(--border); color: var(--text-dim); font-family: 'Courier New', monospace; transition: all .15s; }
-    .diff-opt.active { border-color: var(--accent-gold); color: var(--accent-gold); background: #1a0a00; }
-    .menu-meta { font-size: 10px; color: #555577; text-align: center; }
+    #main-menu {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0;
+      background: transparent;
+    }
+    #main-menu .screen-menu {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+    }
+
+    .screen-menu {
+      background: #0a0a14;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      font-family: 'Press Start 2P', monospace;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .menu-star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      pointer-events: none;
+    }
+    .menu-star.big { width: 4px; height: 4px; }
+
+    .menu-mountains {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      pointer-events: none;
+    }
+
+    .menu-title-icon {
+      font-size: 28px;
+      display: block;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .menu-title-main {
+      display: block;
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 22px;
+      color: #f0a500;
+      letter-spacing: 6px;
+      text-shadow: 4px 4px 0 #7a5000, 2px 2px 0 #7a5000;
+      margin-bottom: 8px;
+    }
+    .menu-title-sub {
+      display: block;
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: #8888aa;
+      letter-spacing: 3px;
+      margin-bottom: 32px;
+    }
+
+    .menu-pixel-frame {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 20px;
+      padding: 3px;
+      background:
+        linear-gradient(#f0a500,#f0a500) top left/8px 3px no-repeat,
+        linear-gradient(#f0a500,#f0a500) top left/3px 8px no-repeat,
+        linear-gradient(#f0a500,#f0a500) top right/8px 3px no-repeat,
+        linear-gradient(#f0a500,#f0a500) top right/3px 8px no-repeat,
+        linear-gradient(#f0a500,#f0a500) bottom left/8px 3px no-repeat,
+        linear-gradient(#f0a500,#f0a500) bottom left/3px 8px no-repeat,
+        linear-gradient(#f0a500,#f0a500) bottom right/8px 3px no-repeat,
+        linear-gradient(#f0a500,#f0a500) bottom right/3px 8px no-repeat;
+    }
+    .menu-pixel-frame-inner {
+      border: 1px solid #3a3a5a;
+      background: #12121e;
+      padding: 4px;
+    }
+
+    .menu-btn {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 14px 20px;
+      background: #0d0d1a;
+      border: 2px solid #2a2a4a;
+      color: #c8c8e8;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      position: relative;
+      margin-bottom: 2px;
+      text-align: left;
+    }
+    .menu-btn:last-child { margin-bottom: 0; }
+
+    .menu-btn::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      color: #f0a500;
+      font-size: 8px;
+    }
+    .menu-btn.menu-btn-active::before,
+    .menu-btn:hover::before {
+      content: '►';
+      animation: menu-blink 0.6s step-end infinite;
+    }
+    .menu-btn:hover,
+    .menu-btn.menu-btn-active {
+      background: #1a1a2e;
+      border-color: #f0a500;
+      color: #f0a500;
+    }
+    .menu-btn-new:hover,
+    .menu-btn-new.menu-btn-active {
+      border-color: #2ecc71;
+      color: #2ecc71;
+    }
+    .menu-btn-new:hover::before,
+    .menu-btn-new.menu-btn-active::before { color: #2ecc71; }
+
+    .menu-btn-continue:hover,
+    .menu-btn-continue.menu-btn-active {
+      border-color: #4a9eff;
+      color: #4a9eff;
+    }
+    .menu-btn-continue:hover::before,
+    .menu-btn-continue.menu-btn-active::before { color: #4a9eff; }
+
+    .menu-btn-about:hover,
+    .menu-btn-about.menu-btn-active {
+      border-color: #9b59b6;
+      color: #9b59b6;
+    }
+    .menu-btn-about:hover::before,
+    .menu-btn-about.menu-btn-active::before { color: #9b59b6; }
+
+    .menu-btn-icon {
+      margin-right: 12px;
+      font-size: 12px;
+      width: 16px;
+      text-align: center;
+      padding-left: 12px;
+    }
+    .menu-btn-label { flex: 1; padding-left: 8px; }
+    .menu-btn-hint {
+      font-size: 7px;
+      color: #555577;
+      letter-spacing: 0;
+    }
+    .menu-btn:hover .menu-btn-hint { color: #8888aa; }
+
+    @keyframes menu-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .menu-diff-row {
+      display: flex;
+      align-items: center;
+      border: 1px solid #2a2a4a;
+      background: #0a0a14;
+      margin-top: 2px;
+    }
+    .menu-diff-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      color: #555577;
+      padding: 8px 10px;
+      letter-spacing: 1px;
+      border-right: 1px solid #2a2a4a;
+      white-space: nowrap;
+    }
+    .menu-diff-btn {
+      flex: 1;
+      padding: 8px 0;
+      text-align: center;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      cursor: pointer;
+      color: #555577;
+      border: none;
+      background: none;
+      letter-spacing: 1px;
+    }
+    .menu-diff-sep {
+      width: 1px;
+      background: #2a2a4a;
+      align-self: stretch;
+    }
+    .menu-diff-btn.active-normal { color: #2ecc71; background: #0a1a0a; }
+    .menu-diff-btn.active-hard   { color: #e74c3c; background: #1a0a0a; }
+    .menu-diff-btn:hover         { color: #e8e8f0; }
+
+    .screen-menu .menu-meta {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+    .menu-meta-row {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      color: #444466;
+      letter-spacing: 0.5px;
+      line-height: 2.2;
+    }
+    .menu-meta-row .m-val  { color: #666688; }
+    .menu-meta-row .m-gold { color: #f0a500; }
+    .menu-meta-row .m-kill { color: #2ecc71; }
+
+    .menu-divider {
+      width: 100%;
+      max-width: 420px;
+      height: 2px;
+      background: repeating-linear-gradient(
+        90deg,
+        #f0a500 0, #f0a500 4px,
+        transparent 4px, transparent 8px
+      );
+      margin: 16px 0 12px;
+      z-index: 2;
+      opacity: 0.35;
+    }
+
+    .menu-version {
+      position: absolute;
+      bottom: 12px;
+      right: 16px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      color: #2a2a44;
+      z-index: 2;
+    }
+    .menu-copy {
+      position: absolute;
+      bottom: 12px;
+      left: 16px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      color: #2a2a44;
+      z-index: 2;
+    }
     #world-panel { overflow: auto; }
     #tooltip {
       position: fixed; z-index: 1000; pointer-events: none;
@@ -589,36 +839,17 @@
 
       /* Main menu: horizontal phone composition */
       #main-menu { flex: 1; min-height: 0; }
-      .menu-screen { padding: 14px 10px; gap: 10px; width: 100%; }
-      .menu-logo-icon { font-size: 24px; margin-bottom: 2px; }
-      .menu-logo-title { font-size: 18px; letter-spacing: 2px; }
-      .menu-logo-sub { font-size: 8px; letter-spacing: 3px; margin-top: 2px; }
-      .menu-btns {
-        width: min(520px, 100%);
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 6px;
-      }
-      .menu-btns .btn {
-        min-height: 36px;
-        margin: 0;
-        padding: 6px 8px;
-        font-size: 10px;
-      }
-      .menu-diff {
-        font-size: 9px;
-        gap: 6px;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .diff-opt {
-        min-height: 28px;
-        padding: 5px 8px;
-        font-size: 9px;
-        display: inline-flex;
-        align-items: center;
-      }
-      .menu-meta { font-size: 8px; line-height: 1.35; }
+      .screen-menu { padding: 14px 10px; }
+      .menu-title-icon { font-size: 22px; margin-bottom: 4px; }
+      .menu-title-main { font-size: 14px; letter-spacing: 3px; }
+      .menu-title-sub { font-size: 6px; margin-bottom: 12px; }
+      .menu-pixel-frame { max-width: min(420px, 100%); margin-bottom: 12px; }
+      .menu-btn { padding: 10px 12px; font-size: 7px; min-height: 34px; }
+      .menu-diff-label { font-size: 5px; padding: 6px 6px; }
+      .menu-diff-btn { font-size: 6px; padding: 6px 0; }
+      .menu-meta-row { font-size: 5px; line-height: 2; }
+      .menu-mountains { height: 56px; }
+      .menu-version, .menu-copy { font-size: 5px; }
 
       /* Perk modal: keep tree readable in landscape */
       .perk-modal-box { width: min(940px, 98vw); max-height: 96vh; }
@@ -731,14 +962,12 @@
       .item-detail-btns .btn { min-height: 24px; font-size: 7px; padding: 2px 4px; }
 
       /* Menu + perk modal ultra-compact */
-      .menu-screen { padding: 10px 8px; gap: 7px; }
-      .menu-logo-icon { font-size: 18px; }
-      .menu-logo-title { font-size: 14px; letter-spacing: 1px; }
-      .menu-logo-sub { display: none; }
-      .menu-btns .btn { min-height: 30px; font-size: 8px; padding: 4px 6px; }
-      .menu-diff { font-size: 8px; gap: 4px; }
-      .diff-opt { min-height: 24px; font-size: 8px; padding: 3px 6px; }
-      .menu-meta { font-size: 7px; }
+      .screen-menu { padding: 16px 10px; }
+      .menu-title-main { font-size: 14px; letter-spacing: 3px; }
+      .menu-title-sub { font-size: 6px; margin-bottom: 16px; }
+      .menu-btn { padding: 10px 12px; font-size: 7px; min-height: 36px; }
+      .menu-meta-row { font-size: 5px; }
+      .menu-mountains { height: 72px; }
       .perk-modal-box { width: min(960px, 99vw); max-height: 98vh; }
       .perk-modal-body { grid-template-columns: 1fr 140px; }
       .perk-branches { padding: 6px; gap: 2px; }
@@ -763,25 +992,72 @@
 <body>
   <div id="game-container">
     <div id="main-menu" class="screen">
-      <div class="menu-screen">
-        <div class="menu-logo">
-          <div class="menu-logo-icon">⚔</div>
-          <div class="menu-logo-title">ТРИ КЛИНКА</div>
-          <div class="menu-logo-sub">THREE BLADES</div>
+      <div class="screen-menu" id="screen-menu">
+
+        <div id="menu-stars"></div>
+
+        <svg class="menu-mountains" viewBox="0 0 680 120"
+             preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="0,120 60,60 120,90 200,30 280,80 360,20 440,70 520,40 600,75 680,35 680,120"
+                   fill="#0f0f1e"/>
+          <polygon points="0,120 0,90 80,50 160,80 240,40 320,70 400,30 480,60 560,45 640,65 680,50 680,120"
+                   fill="#12122a"/>
+          <polygon points="0,120 0,105 100,75 180,95 260,65 340,85 420,60 500,80 580,70 660,85 680,80 680,120"
+                   fill="#161630"/>
+        </svg>
+
+        <div style="position:relative;z-index:2;margin-bottom:0">
+          <span class="menu-title-icon">⚔</span>
+          <span class="menu-title-main">ТРИ&nbsp;&nbsp;КЛИНКА</span>
+          <span class="menu-title-sub">THREE BLADES · TACTICAL RPG</span>
         </div>
-        <div class="menu-btns">
-          <button class="btn btn-gold" id="btn-new-game">▶ Новая игра</button>
-          <button class="btn" id="btn-continue">↩ Продолжить</button>
-          <button class="btn btn-dim" id="btn-about">? Об игре</button>
-        </div>
-        <div class="menu-diff">
-          <span>Сложность:</span>
-          <div class="diff-toggle">
-            <div class="diff-opt active" id="diff-normal" data-diff="normal">Обычная</div>
-            <div class="diff-opt" id="diff-hardcore" data-diff="hardcore">Хардкор</div>
+
+        <div class="menu-pixel-frame" style="position:relative;z-index:2">
+          <div class="menu-pixel-frame-inner">
+
+            <button type="button" class="menu-btn menu-btn-new menu-btn-active" id="btn-new-game"
+                    onclick="startNewGame()">
+              <span class="menu-btn-icon">▶</span>
+              <span class="menu-btn-label">Новая игра</span>
+              <span class="menu-btn-hint">NEW GAME</span>
+            </button>
+
+            <button type="button" class="menu-btn menu-btn-continue" id="btn-continue"
+                    onclick="continueGame()">
+              <span class="menu-btn-icon">↩</span>
+              <span class="menu-btn-label">Продолжить</span>
+              <span class="menu-btn-hint">CONTINUE</span>
+            </button>
+
+            <button type="button" class="menu-btn menu-btn-about" id="btn-about"
+                    onclick="showAbout()">
+              <span class="menu-btn-icon">?</span>
+              <span class="menu-btn-label">Об игре</span>
+              <span class="menu-btn-hint">ABOUT</span>
+            </button>
+
+            <div class="menu-diff-row">
+              <span class="menu-diff-label">СЛОЖНОСТЬ</span>
+              <button type="button" class="menu-diff-btn active-normal" id="diff-normal"
+                      onclick="setDifficulty('normal')">ОБЫЧНАЯ</button>
+              <div class="menu-diff-sep"></div>
+              <button type="button" class="menu-diff-btn" id="diff-hard"
+                      onclick="setDifficulty('hardcore')">ХАРДКОР</button>
+            </div>
+
           </div>
         </div>
-        <div id="menu-meta" class="menu-meta"></div>
+
+        <div class="menu-meta" style="position:relative;z-index:2">
+          <div class="menu-meta-row" id="menu-last-game">ЗАГРУЗКА...</div>
+          <div class="menu-meta-row" id="menu-best">&nbsp;</div>
+        </div>
+
+        <div class="menu-divider" style="position:relative;z-index:2"></div>
+
+        <span class="menu-version">v0.3.1</span>
+        <span class="menu-copy">© THREE BLADES 2026</span>
+
       </div>
     </div>
     <div id="hud-top" class="panel stats-line">
@@ -3368,7 +3644,11 @@
         document.getElementById('hud-top').classList.add('hidden');
         mainMenu.classList.remove('hidden');
         mainMenu.style.opacity = '0';
-        requestAnimationFrame(() => { mainMenu.style.transition = 'opacity 0.15s ease'; mainMenu.style.opacity = '1'; });
+        requestAnimationFrame(() => {
+          mainMenu.style.transition = 'opacity 0.15s ease';
+          mainMenu.style.opacity = '1';
+          initMenuScreen();
+        });
       } else {
         document.getElementById('hud-top').classList.remove('hidden');
         const targetId = screenMap[name];
@@ -3405,21 +3685,119 @@
   function closeGameMenu() {
     document.getElementById('game-menu-overlay').classList.remove('show');
   }
-  function updateMenuMeta() {
-    const last = localStorage.getItem(SAVE_KEY) || localStorage.getItem('save');
-    const bestRaw = localStorage.getItem('threeBladesBest');
-    const best = bestRaw ? JSON.parse(bestRaw) : { gold: 0, kills: 0, region: 0 };
-    const meta = document.getElementById('menu-meta');
-    if (!meta) return;
-    let lines = [];
-    if (last) {
-      try {
-        const s = JSON.parse(last);
-        lines.push(`Последняя игра: Регион ${s.region || 1} · Ход ${s.turn || 1} · ${s.gold || 0}💰`);
-      } catch (_) {}
+  function setDifficulty(mode) {
+    GameState.difficulty = mode;
+    const dn = document.getElementById('diff-normal');
+    const dh = document.getElementById('diff-hard');
+    if (!dn || !dh) return;
+    dn.className = 'menu-diff-btn' + (mode === 'normal' ? ' active-normal' : '');
+    dh.className = 'menu-diff-btn' + (mode === 'hardcore' ? ' active-hard' : '');
+  }
+
+  function initMenuScreen() {
+    const starsEl = document.getElementById('menu-stars');
+    if (starsEl && starsEl.children.length === 0) {
+      for (let i = 0; i < 60; i++) {
+        const s = document.createElement('div');
+        s.className = 'menu-star' + (Math.random() < 0.15 ? ' big' : '');
+        s.style.left = Math.random() * 100 + '%';
+        s.style.top = Math.random() * 65 + '%';
+        s.style.opacity = (0.2 + Math.random() * 0.7).toFixed(2);
+        s.style.position = 'absolute';
+        starsEl.appendChild(s);
+      }
     }
-    lines.push(`Лучший результат: Регион ${best.region || 1} · ${best.gold || 0}💰 · ${best.kills || 0} убийств`);
-    meta.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+
+    const mainMenu = document.getElementById('main-menu');
+    if (mainMenu && !mainMenu.dataset.menuHoverBound) {
+      mainMenu.dataset.menuHoverBound = '1';
+      mainMenu.addEventListener('mouseover', e => {
+        const btn = e.target.closest('.menu-btn');
+        if (!btn || !mainMenu.contains(btn)) return;
+        mainMenu.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('menu-btn-active'));
+        btn.classList.add('menu-btn-active');
+      });
+    }
+
+    let save = null;
+    try {
+      const raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem('save');
+      save = raw ? JSON.parse(raw) : null;
+    } catch (_) { save = null; }
+
+    let best = null;
+    try {
+      const br = localStorage.getItem('threeBladesBest');
+      best = br ? JSON.parse(br) : null;
+    } catch (_) { best = null; }
+
+    const lastEl = document.getElementById('menu-last-game');
+    const bestEl = document.getElementById('menu-best');
+
+    if (save && lastEl) {
+      lastEl.innerHTML =
+        'ПОСЛЕДНЯЯ: РЕГ <span class="m-val">' + (save.region || 1) + '</span>' +
+        ' · ХОД <span class="m-val">' + (save.turn || 1) + '</span>' +
+        ' · <span class="m-gold">' + (save.gold || 0) + 'G</span>';
+    } else if (lastEl) {
+      lastEl.innerHTML = '<span class="m-val">НЕТ СОХРАНЕНИЙ</span>';
+    }
+
+    if (best && bestEl) {
+      bestEl.innerHTML =
+        'РЕКОРД: <span class="m-gold">' + (best.gold || 0) + 'G</span>' +
+        ' · <span class="m-kill">' + (best.kills || 0) + ' УБИЙСТВ</span>';
+    } else if (bestEl) {
+      bestEl.innerHTML = '&nbsp;';
+    }
+
+    const contBtn = document.querySelector('.menu-btn-continue');
+    if (contBtn) {
+      if (!save) {
+        contBtn.style.opacity = '0.4';
+        contBtn.style.cursor = 'not-allowed';
+        contBtn.onclick = null;
+      } else {
+        contBtn.style.opacity = '';
+        contBtn.style.cursor = '';
+        contBtn.onclick = continueGame;
+      }
+    }
+
+    setDifficulty(GameState.difficulty === 'hardcore' ? 'hardcore' : 'normal');
+  }
+
+  function startNewGame() {
+    initHeroesFromTemplate();
+    buildWorldMap();
+    GameState.gold = 150;
+    GameState.turn = 1;
+    GameState.inventory = ['steel_sword', 'hunter_bow', 'magic_wand', 'leather', 'luck_amulet'];
+    GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
+    if (!GameState.difficulty) GameState.difficulty = 'normal';
+    saveGame();
+    showScreen('map');
+    renderMap();
+    updateMenuMeta();
+  }
+
+  function continueGame() {
+    if (!localStorage.getItem(SAVE_KEY) && !localStorage.getItem('save')) {
+      alert('Сохранение не найдено.');
+      return;
+    }
+    loadGame();
+    showScreen('map');
+    renderMap();
+    updateMenuMeta();
+  }
+
+  function showAbout() {
+    alert('⚔ ТРИ КЛИНКА\nТактическая RPG. Проведите отряд из трёх героев через 3 региона и победите Тёмного Лорда.\nВерсия 0.3.1');
+  }
+
+  function updateMenuMeta() {
+    initMenuScreen();
   }
   function renderMap() {
     const root = document.getElementById('map-nodes');
@@ -4009,37 +4387,6 @@
     showScreen('menu');
     updateMenuMeta();
     requestAnimationFrame(loop);
-    const mk = () => {
-      initHeroesFromTemplate();
-      buildWorldMap();
-      GameState.gold = 150;
-      GameState.turn = 1;
-      GameState.inventory = ['steel_sword', 'leather', 'luck_amulet'];
-      GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
-      GameState.difficulty = document.querySelector('.diff-opt.active')?.dataset.diff || 'normal';
-      saveGame();
-      showScreen('map');
-      renderMap();
-      updateMenuMeta();
-    };
-    // Difficulty toggle
-    document.querySelectorAll('.diff-opt').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('.diff-opt').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      };
-    });
-    // About button
-    const aboutBtn = document.getElementById('btn-about');
-    if (aboutBtn) aboutBtn.onclick = () => alert('⚔ ТРИ КЛИНКА\nТактическая RPG. Проведите отряд из трёх героев через 3 региона и победите Тёмного Лорда.\nВерсия 1.0');
-    document.getElementById('btn-new-game').onclick = mk;
-    document.getElementById('btn-continue').onclick = () => {
-      if (!localStorage.getItem(SAVE_KEY) && !localStorage.getItem('save')) { alert('Сохранение не найдено.'); return; }
-      loadGame();
-      showScreen('map');
-      renderMap();
-      updateMenuMeta();
-    };
     const openInventory = () => {
       renderInventoryScreen();
       showScreen('inventory');
@@ -4099,7 +4446,7 @@
     document.getElementById('btn-go-title').onclick = () => {
       localStorage.removeItem(SAVE_KEY);
       localStorage.removeItem('save');
-      mk();
+      startNewGame();
     };
     document.getElementById('btn-ending-ok').onclick = () => { showScreen('map'); renderMap(); };
     document.querySelectorAll('[data-hero-tab]').forEach(btn => {
