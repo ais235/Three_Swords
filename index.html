@@ -910,24 +910,25 @@
       .skill-btn { width: 20px; height: 20px; font-size: 10px; }
       #battle-wrap { border-width: 1px; }
       #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
-      #ui-overlay { min-width: 0; padding: 6px; gap: 4px; }
-      .br-label { font-size: 8px; margin-bottom: 2px; }
-      #initiative-bar { gap: 2px; margin-bottom: 2px; }
-      .init-slot { width: 26px; height: 26px; font-size: 12px; }
-      #battle-log { min-height: 56px; max-height: 120px; font-size: 8px; padding: 4px; }
+      #ui-overlay { min-width: 0; padding: 6px; gap: 3px; overflow: hidden; display: flex; flex-direction: column; }
+      .br-label { font-size: 8px; margin-bottom: 1px; }
+      #initiative-bar { gap: 2px; margin-bottom: 1px; }
+      .init-slot { width: 24px; height: 24px; font-size: 11px; }
+      #battle-log { min-height: 36px; max-height: 72px; font-size: 8px; padding: 3px; }
+      #unit-panel { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
       .battle-actions {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 4px;
+        gap: 3px;
       }
       .battle-actions .btn {
         margin: 0;
-        min-height: 34px;
-        padding: 4px 6px;
-        font-size: 9px;
+        min-height: 26px;
+        padding: 2px 4px;
+        font-size: 8px;
       }
       .battle-actions #btn-start-battle { grid-column: 1 / -1; }
-      .deploy-hint-box { font-size: 9px; padding: 5px; }
+      .deploy-hint-box { display: none; }
 
       /* City: keep center gameplay, compress side columns */
       .city-body {
@@ -1054,15 +1055,16 @@
       .skills-row { gap: 2px; margin-top: 2px; }
       .skill-btn { width: 18px; height: 18px; font-size: 9px; }
       #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
-      #ui-overlay { min-width: 0; padding: 4px; gap: 3px; }
-      .br-label { font-size: 7px; margin-bottom: 1px; }
-      .init-slot { width: 22px; height: 22px; font-size: 11px; }
-      #battle-log { min-height: 44px; max-height: 78px; font-size: 7px; line-height: 1.25; padding: 3px; }
-      #unit-stats { font-size: 8px !important; margin-bottom: 2px !important; }
-      .battle-actions { gap: 3px; }
-      .battle-actions .btn { min-height: 28px; padding: 2px 4px; font-size: 8px; }
+      #ui-overlay { min-width: 0; padding: 4px; gap: 2px; overflow: hidden; display: flex; flex-direction: column; }
+      .br-label { font-size: 7px; margin-bottom: 0; }
+      .init-slot { width: 20px; height: 20px; font-size: 10px; }
+      #battle-log { min-height: 28px; max-height: 56px; font-size: 7px; line-height: 1.25; padding: 2px; }
+      #unit-panel { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+      #unit-stats { font-size: 7px !important; margin-bottom: 1px !important; }
+      .battle-actions { gap: 2px; }
+      .battle-actions .btn { min-height: 22px; padding: 1px 3px; font-size: 7px; }
       .battle-actions #btn-start-battle { grid-column: 1 / -1; }
-      .deploy-hint-box { font-size: 8px; padding: 4px; line-height: 1.25; }
+      .deploy-hint-box { display: none; }
 
       /* Map ultra-compact */
       .map-screen-layout { grid-template-columns: 1fr 140px; flex: 1; min-height: 0; }
@@ -2700,13 +2702,18 @@
           }
         }
 
-        // 2: HP bar
-        const barW = CELL - 6, barH = 5, bx = px + 3, by = py + CELL - 8;
+        // 2: HP bar + hp text
+        const barW = CELL - 6, barH = 4, bx = px + 3, by = py + CELL - 7;
         ctx.fillStyle = '#1a1a2e';
         ctx.fillRect(bx, by, barW, barH);
         const hpFrac = Math.max(0, Math.min(1, u.hp / u.maxHp));
         ctx.fillStyle = hpFrac > 0.5 ? '#2ecc71' : hpFrac > 0.25 ? '#f39c12' : '#e74c3c';
         ctx.fillRect(bx, by, Math.round(barW * hpFrac), barH);
+        ctx.font = 'bold 7px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`${u.hp}/${u.maxHp}`, px + CELL / 2, by - 1);
 
         // 15: Compact status icons — up to 3 in bottom-left corner
         if (u.activeStatuses && u.activeStatuses.length) {
@@ -2742,7 +2749,15 @@
       } else {
         d.textContent = u.isHero ? u.sprite : u.emoji;
       }
-      d.title = u.name;
+      const tipLines = [
+        u.name,
+        `HP: ${u.hp}/${u.maxHp}`,
+        `⚔ Атака: ${u.attack}`,
+        u.armor ? `🛡 Броня: ${u.armor}` : '',
+        `👟 Движение: ${u.move}`,
+        u.range > 1 ? `🎯 Дальность: ${u.range}` : '',
+      ].filter(Boolean);
+      d.title = tipLines.join('\n');
       bar.appendChild(d);
     });
   }
