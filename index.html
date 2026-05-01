@@ -773,10 +773,10 @@
     .inv-tab.active { border-color: var(--accent-gold); color: var(--accent-gold); background: #1a1000; box-shadow: 0 0 8px rgba(240,165,0,.2); }
     .inv-tab:hover:not(.active) { border-color: var(--text-dim); }
     #inv-hero-card { display: flex; flex-direction: column; gap: 0; }
-    .inv-portrait { text-align: center; padding: 12px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .inv-portrait { text-align: center; padding: 6px 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
     .inv-portrait-icon { font-size: 40px; }
     .inv-portrait-img { width: 80px; height: 80px; object-fit: contain; border-radius: 8px; border: 2px solid #3a3a6a; display: block; margin: 0 auto; }
-    .inv-portrait-name { font-size: 13px; color: var(--text-main); margin-top: 6px; font-weight: bold; letter-spacing: 1px; }
+    .inv-portrait-name { font-size: 13px; color: var(--text-main); margin-top: 0; font-weight: bold; letter-spacing: 1px; }
     .inv-portrait-class { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
     .inv-stats { background: #0a0a14; border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
     .stat-row { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-dim); margin-bottom: 5px; border-bottom: 1px solid #1a1a2a; padding-bottom: 4px; }
@@ -1307,9 +1307,9 @@
         <!-- Колонка 1: Герой + статы -->
         <div id="inv-sidebar">
           <div class="inv-hero-tabs" id="inv-tabs">
-            <button class="inv-tab active" data-hero-tab="garet">⚔</button>
-            <button class="inv-tab" data-hero-tab="alira">🏹</button>
-            <button class="inv-tab" data-hero-tab="seris">🔮</button>
+            <button class="inv-tab active" data-hero-tab="garet"><img src="assets/heroes/garet.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('⚔'))"></button>
+            <button class="inv-tab" data-hero-tab="alira"><img src="assets/heroes/alira.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('🏹'))"></button>
+            <button class="inv-tab" data-hero-tab="seris"><img src="assets/heroes/seris.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('🔮'))"></button>
           </div>
           <div id="inv-hero-card"></div>
         </div>
@@ -3951,9 +3951,6 @@
     const hpPct = Math.round(hero.hp / hero.maxHp * 100);
     const hpBar = `<div style="height:4px;border-radius:2px;background:#1a1a2e;overflow:hidden;margin-top:2px"><div style="height:100%;width:${hpPct}%;background:${hpPct>50?'#2ecc71':hpPct>25?'#f39c12':'#e74c3c'}"></div></div>`;
     card.innerHTML = `<div class="inv-portrait">
-      ${HERO_TEXTURE_PATHS[hero.id]
-        ? `<img src="${HERO_TEXTURE_PATHS[hero.id]}" class="inv-portrait-img" alt="${hero.name}" />`
-        : `<div class="inv-portrait-icon">${hero.emoji}</div>`}
       <div class="inv-portrait-name">${hero.name}</div>
       <div class="inv-portrait-class">${roleLabel2[hero.id] || ''} · Ур. ${hero.level}</div>
     </div>
@@ -3988,10 +3985,9 @@
       const it = itemById(id);
       zone.className = 'eq-zone' + (it ? ' eq-filled eq-rarity-' + it.rarity : '');
       if (it) {
-        const nameParts = it.name.split(' ');
         zone.innerHTML = `
-          <div class="eq-zone-item-icon">${nameParts[0]}</div>
-          <div class="eq-zone-item-name">${nameParts.slice(1).join(' ')}</div>
+          <div class="eq-zone-item-icon">${it.emoji || '📦'}</div>
+          <div class="eq-zone-item-name">${it.name}</div>
           <div class="eq-zone-unequip" title="Снять">✕</div>`;
       } else {
         zone.innerHTML = `<div class="eq-zone-def-icon">${slotDefIcons[slot]}</div><div class="eq-zone-label">${slot === 'weapon' ? 'Оружие' : slot === 'armor' ? 'Броня' : 'Артефакт'}</div>`;
@@ -4046,7 +4042,12 @@
     const detail = document.getElementById('inv-detail');
     const sel = itemById(InvState.selectedItemId);
     if (!sel) { detail.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:20px 0">Выберите предмет в рюкзаке</div>'; return; }
-    const statLines = Object.entries(sel.mods || {}).filter(([k,v]) => typeof v === 'number' && v !== 0).map(([k,v]) => `${v > 0 ? '+' : ''}${v} ${k}`).join('  ') || '— особый эффект';
+    const statNameRu = { attack:'Атака', armor:'Броня', range:'Дальность', move:'Ход', maxHp:'Макс.HP', mana:'Мана', maxMana:'Макс.Мана', goldBonus:'Бонус золота', speed:'Скорость', firstShotBonus:'Первый выстрел', armorPierce:'Пробитие брони' };
+    const statLines = Object.entries(sel.mods || {}).filter(([k,v]) => typeof v === 'number' && v !== 0).map(([k,v]) => {
+      const label = statNameRu[k] || k;
+      const val = k === 'goldBonus' ? `+${Math.round(v*100)}%` : `${v > 0 ? '+' : ''}${v}`;
+      return `${val} ${label}`;
+    }).join('  ') || '— особый эффект';
     const forRole = sel.id.includes('bow') ? 'Лучник' : sel.id.includes('staff') || sel.id.includes('wand') ? 'Маг' : sel.id.includes('sword') || sel.id.includes('hammer') ? 'Воин' : 'Все';
     const itemEmoji = sel.emoji || '📦';
     const itemName = sel.name;
