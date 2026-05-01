@@ -3069,13 +3069,18 @@
     // Choose target: priority first, fallback nearest
     const target = aiChooseTarget(b, u);
 
-    // Helper: pick best in-range target (priority order, but only among reachable)
+    // Expected damage this unit can deal to a hero (ignoring procs/perks)
+    const effectiveDmg = (tgt) => Math.max(0, u.attack - tgt.armor);
+
+    // Helper: pick best in-range target — prefer damageable heroes, then priority order
     const bestInRangeTarget = (ax, ay) => {
       const inR = heroes.filter(h => inRange(ax, ay, h));
       if (!inR.length) return null;
-      return inR.find(h => h.heroId === 'seris')
-        || inR.find(h => h.heroId === 'alira')
-        || inR.reduce((a, b) => a.hp < b.hp ? a : b); // lowest HP
+      const damageable = inR.filter(h => effectiveDmg(h) > 0);
+      const pool = damageable.length ? damageable : inR; // fall back if all armoured
+      return pool.find(h => h.heroId === 'seris')
+        || pool.find(h => h.heroId === 'alira')
+        || pool.reduce((a, b) => a.hp < b.hp ? a : b); // lowest HP
     };
 
     // If already in range — attack immediately without moving
@@ -3091,10 +3096,19 @@
     if (movePoints > 0) {
       const prevX = u.x, prevY = u.y;
 
+      // Sort heroes: damageable first (by effective dmg desc), then by distance
+      const heroesSorted = [...heroes].sort((a, b) => {
+        const da = effectiveDmg(a), db = effectiveDmg(b);
+        if (da !== db) return db - da; // prefer damageable
+        const distA = Math.abs(a.x - u.x) + Math.abs(a.y - u.y);
+        const distB = Math.abs(b.x - u.x) + Math.abs(b.y - u.y);
+        return distA - distB;
+      });
+
       // Try A* toward each hero, walk the path
       let bestPath = null;
       let bestTarget = null;
-      for (const h of heroes) {
+      for (const h of heroesSorted) {
         const p = astar(
           b.grid,
           { x: u.x, y: u.y },
