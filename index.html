@@ -681,21 +681,21 @@
     #victory-screen { position: relative; overflow: hidden; }
     .victory-particles { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
     .victory-particle { position: absolute; top: -5%; font-size: 16px; animation: vic-particle linear infinite; opacity: 0; }
-    .screen-victory { position: relative; z-index: 1; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 14px 10px 20px; gap: 10px; }
+    .screen-victory { position: relative; z-index: 1; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 16px 12px 24px; gap: 14px; }
     .victory-topbar { display: none; }
     /* Title */
-    .victory-title-area { text-align: center; }
+    .victory-title-area { text-align: center; padding-bottom: 4px; }
     .victory-trophy { font-size: 38px; line-height: 1; animation: vic-pulse 1.6s ease-in-out infinite; display: inline-block; }
     .victory-title-text { font-size: 18px; color: var(--accent-gold); letter-spacing: 3px; margin: 6px 0 4px; }
-    .victory-subtitle-text { font-size: 7px; color: var(--text-dim); letter-spacing: 2px; }
+    .victory-subtitle-text { font-size: 7px; color: var(--text-dim); letter-spacing: 1px; }
     /* Stats grid */
-    .victory-stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; width: 100%; max-width: 560px; }
+    .victory-stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; width: 100%; max-width: 560px; margin-top: 18px; }
     .vic-stat-card { background: #0a0a14; border-radius: 10px; border: 2px solid; padding: 10px 6px 8px; text-align: center; position: relative; overflow: visible; }
-    .vic-stat-card-icon { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-size: 20px; background: #0a0a14; padding: 0 4px; }
-    .vic-stat-card-val { font-size: 20px; color: var(--text-main); display: block; margin-top: 8px; }
+    .vic-stat-card-icon { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 20px; background: #0a0a14; padding: 0 4px; line-height: 1.4; }
+    .vic-stat-card-val { font-size: 20px; color: var(--text-main); display: block; margin-top: 6px; }
     .vic-stat-card-lbl { font-size: 6px; color: var(--text-dim); display: block; margin-top: 4px; letter-spacing: 1px; }
     /* Divider */
-    .victory-divider { width: 100%; max-width: 560px; height: 2px; background: repeating-linear-gradient(90deg,#2a2a4a 0,#2a2a4a 8px,transparent 8px,transparent 14px); flex-shrink: 0; }
+    .victory-divider { width: 100%; max-width: 560px; height: 2px; background: repeating-linear-gradient(90deg,#2a2a4a 0,#2a2a4a 8px,transparent 8px,transparent 14px); flex-shrink: 0; margin: 4px 0; }
     /* Hero cards (portrait) */
     .victory-heroes-portrait { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; width: 100%; max-width: 560px; }
     /* Hero cards (landscape left col) */
@@ -711,7 +711,7 @@
     .vic-hero-hp-text { font-size: 6px; color: var(--text-dim); }
     .vic-levelup-badge { font-size: 6px; color: var(--accent-gold); margin-top: 3px; animation: vic-levelup .8s ease-in-out infinite; }
     /* Loot */
-    .victory-loot { width: 100%; max-width: 560px; }
+    .victory-loot { width: 100%; max-width: 560px; margin-top: 4px; }
     .vic-loot-title { font-size: 7px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px; }
     .vic-loot-item { display: flex; align-items: center; gap: 8px; background: #0e0e20; border-radius: 8px; border: 1px solid #2a2a4a; padding: 8px 10px; }
     .vic-loot-icon { font-size: 22px; flex-shrink: 0; }
@@ -739,7 +739,7 @@
       .victory-heroes-portrait { display: none; }
       .victory-center { grid-column: 2; grid-row: 2; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 4px 8px; align-items: stretch; }
       .victory-title-area { display: none; }
-      .victory-stats-grid { max-width: none; }
+      .victory-stats-grid { max-width: none; margin-top: 0; }
       .victory-divider { max-width: none; display: none; }
       .victory-loot { max-width: none; }
       .victory-bestiary-row { max-width: none; }
@@ -1200,16 +1200,21 @@
       .menu-title-main { font-size: 14px; letter-spacing: 3px; margin-bottom: 12px; }
       .menu-btn { padding: 10px 12px; font-size: 7px; min-height: 36px; }
       .perk-modal-box { width: min(960px, 99vw); max-height: 98vh; }
-      .perk-modal-body { grid-template-columns: 1fr 140px; }
-      .perk-branches { padding: 6px; gap: 2px; }
-      .perk-col-header { font-size: 7px; padding: 2px 3px; margin-bottom: 3px; }
-      .perk-skill { width: 52px; min-height: 45px; }
-      .perk-skill-icon { font-size: 10px; }
-      .perk-skill-name { font-size: 6px; }
-      .perk-detail-panel { padding: 5px; }
-      .perk-detail-name { font-size: 8px; }
-      .perk-detail-branch, .perk-detail-effect, .perk-detail-desc { font-size: 7px; }
-      #perk-detail-panel .btn { min-height: 24px; font-size: 7px; }
+      .perk-modal-topbar { padding: 5px 10px; }
+      .perk-modal-title { font-size: 10px; }
+      .perk-modal-hint { font-size: 8px; }
+      .perk-modal-body { grid-template-columns: 1fr 160px; }
+      .perk-branches { padding: 8px 6px; gap: 4px; }
+      .perk-col-header { font-size: 8px; padding: 3px 5px; margin-bottom: 5px; }
+      .perk-skill { width: 72px; min-height: 58px; padding: 4px; }
+      .perk-skill-icon { font-size: 14px; margin-bottom: 3px; }
+      .perk-skill-name { font-size: 7px; line-height: 1.3; }
+      .perk-connector { height: 8px; }
+      .perk-detail-panel { padding: 8px; gap: 5px; }
+      .perk-detail-icon { font-size: 20px; }
+      .perk-detail-name { font-size: 9px; }
+      .perk-detail-branch, .perk-detail-effect, .perk-detail-desc { font-size: 8px; }
+      #perk-detail-panel .btn { min-height: 26px; font-size: 7px; }
     }
     @media (max-width: 480px) and (orientation: portrait) {
       #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
