@@ -2713,7 +2713,7 @@
         ctx.fillRect(bx, by, Math.round(barW * hpFrac), barH);
         // HP text with dark background for readability
         const hpText = `${u.hp}/${u.maxHp}`;
-        ctx.font = 'bold 7px sans-serif';
+        ctx.font = '7px Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         const textW = ctx.measureText(hpText).width;
