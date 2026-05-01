@@ -4,7 +4,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Три Клинка</title>
+  <title>Three Blades</title>
   <style>
     :root {
       --bg-dark: #0d0d1a;
@@ -51,8 +51,7 @@
       font-size: 7px;
       line-height: 1.35;
     }
-    #topbar-left { min-width: 140px; font-weight: bold; }
-    #topbar-center { text-align: center; flex: 1; font-size: 7px; line-height: 1.4; }
+    #topbar-center { text-align: center; flex: 1; font-size: 7px; line-height: 1.4; min-width: 0; }
     #topbar-right { min-width: 110px; text-align: right; }
     #btn-open-menu { padding: 4px 8px; margin: 0; }
     .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
@@ -675,16 +674,83 @@
     .event-main-text { font-size: 14px; color: var(--text-main); line-height: 1.6; margin-bottom: 20px; }
     #event-screen { display: flex; align-items: center; justify-content: center; }
     /* 9: Victory screen card */
-    .vic-screen-wrap { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
-    .vic-card { background: var(--bg-panel); border: 2px solid var(--accent-gold); border-radius: 14px; padding: 28px 24px; max-width: 520px; text-align: center; }
-    .vic-header { font-size: 22px; color: var(--accent-gold); margin-bottom: 16px; }
-    .vic-stats-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
-    .vic-stat { background: #0a0a14; border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; }
-    .vic-stat-val { font-size: 22px; color: var(--accent-gold); font-weight: bold; display: block; }
-    .vic-stat-lbl { font-size: 9px; color: var(--text-dim); display: block; margin-top: 2px; }
-    .vic-xp-row { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; }
-    .vic-drop-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
-    .vic-drop-card { display: inline-block; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--accent-gold); font-size: 12px; color: var(--accent-gold); margin-bottom: 16px; }
+    /* ═══ VICTORY SCREEN ═══ */
+    @keyframes vic-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+    @keyframes vic-levelup { 0%,100%{opacity:1} 50%{opacity:.35} }
+    @keyframes vic-particle { 0%{transform:translateY(-10%) rotate(0deg);opacity:var(--op)} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+    #victory-screen { position: relative; overflow: hidden; }
+    .victory-particles { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+    .victory-particle { position: absolute; top: -5%; font-size: 16px; animation: vic-particle linear infinite; opacity: 0; }
+    .screen-victory { position: relative; z-index: 1; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 14px 10px 20px; gap: 10px; }
+    .victory-topbar { display: none; }
+    /* Title */
+    .victory-title-area { text-align: center; }
+    .victory-trophy { font-size: 38px; line-height: 1; animation: vic-pulse 1.6s ease-in-out infinite; display: inline-block; }
+    .victory-title-text { font-size: 18px; color: var(--accent-gold); letter-spacing: 3px; margin: 6px 0 4px; }
+    .victory-subtitle-text { font-size: 7px; color: var(--text-dim); letter-spacing: 2px; }
+    /* Stats grid */
+    .victory-stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; width: 100%; max-width: 560px; }
+    .vic-stat-card { background: #0a0a14; border-radius: 10px; border: 2px solid; padding: 10px 6px 8px; text-align: center; position: relative; overflow: visible; }
+    .vic-stat-card-icon { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-size: 20px; background: #0a0a14; padding: 0 4px; }
+    .vic-stat-card-val { font-size: 20px; color: var(--text-main); display: block; margin-top: 8px; }
+    .vic-stat-card-lbl { font-size: 6px; color: var(--text-dim); display: block; margin-top: 4px; letter-spacing: 1px; }
+    /* Divider */
+    .victory-divider { width: 100%; max-width: 560px; height: 2px; background: repeating-linear-gradient(90deg,#2a2a4a 0,#2a2a4a 8px,transparent 8px,transparent 14px); flex-shrink: 0; }
+    /* Hero cards (portrait) */
+    .victory-heroes-portrait { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; width: 100%; max-width: 560px; }
+    /* Hero cards (landscape left col) */
+    .victory-heroes { display: none; flex-direction: column; gap: 6px; overflow-y: auto; padding: 4px; }
+    .vic-hero-card { background: #0e0e20; border: 2px solid var(--border); border-radius: 8px; padding: 8px 6px; text-align: center; }
+    .vic-hero-card.levelup { border-color: var(--accent-gold); }
+    .vic-hero-icon { font-size: 22px; line-height: 1; }
+    .vic-hero-name { font-size: 7px; color: var(--text-main); margin: 4px 0 2px; }
+    .vic-hero-xp { font-size: 6px; color: var(--accent-green); margin-bottom: 4px; }
+    .vic-hero-hp-bar { height: 4px; background: #1a1a2e; border-radius: 2px; overflow: hidden; margin: 2px 0; }
+    .vic-hero-hp-fill { height: 100%; background: var(--accent-green); border-radius: 2px; transition: width .6s; }
+    .vic-hero-hp-fill.low { background: var(--accent-red); }
+    .vic-hero-hp-text { font-size: 6px; color: var(--text-dim); }
+    .vic-levelup-badge { font-size: 6px; color: var(--accent-gold); margin-top: 3px; animation: vic-levelup .8s ease-in-out infinite; }
+    /* Loot */
+    .victory-loot { width: 100%; max-width: 560px; }
+    .vic-loot-title { font-size: 7px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px; }
+    .vic-loot-item { display: flex; align-items: center; gap: 8px; background: #0e0e20; border-radius: 8px; border: 1px solid #2a2a4a; padding: 8px 10px; }
+    .vic-loot-icon { font-size: 22px; flex-shrink: 0; }
+    .vic-loot-info { flex: 1; min-width: 0; }
+    .vic-loot-name { font-size: 8px; color: var(--text-main); }
+    .vic-loot-stat { font-size: 6px; color: var(--accent-green); margin-top: 2px; }
+    .vic-loot-badge { margin-left: auto; font-size: 6px; padding: 2px 5px; border-radius: 4px; }
+    .vic-loot-badge.common { background: #1a1a2e; color: var(--text-dim); border: 1px solid #2a2a4a; }
+    .vic-loot-badge.rare { background: #0d1a2e; color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+    .vic-loot-badge.epic { background: #1a0d20; color: #c39bd3; border: 1px solid var(--accent-purple); }
+    /* Bestiary row */
+    .victory-bestiary-row { width: 100%; max-width: 560px; background: #0a140e; border: 1px solid var(--accent-green); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .vic-bestiary-label { font-size: 6px; color: var(--accent-green); letter-spacing: 1px; flex-shrink: 0; }
+    .vic-bestiary-enemy { font-size: 18px; }
+    /* Buttons */
+    .victory-buttons { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 6px; }
+    .vic-btn-ad { border-color: var(--accent-purple); color: var(--accent-purple); }
+    .vic-btn-continue { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .vic-btn-bestiary { border-color: var(--text-hint); color: var(--text-dim); }
+    /* ── Landscape mobile ── */
+    @media (max-height: 430px) and (orientation: landscape) {
+      .screen-victory { display: grid; grid-template-columns: 130px 1fr 120px; grid-template-rows: 28px 1fr; height: 100vh; overflow: hidden; padding: 0; gap: 0; align-items: stretch; }
+      .victory-topbar { display: flex; grid-column: 1/-1; grid-row: 1; align-items: center; justify-content: center; background: #111128; border-bottom: 1px solid var(--border); padding: 0 10px; gap: 8px; font-size: 7px; color: var(--accent-gold); letter-spacing: 2px; flex-shrink: 0; }
+      .victory-heroes { display: flex; grid-column: 1; grid-row: 2; padding: 4px; }
+      .victory-heroes-portrait { display: none; }
+      .victory-center { grid-column: 2; grid-row: 2; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 4px 8px; align-items: stretch; }
+      .victory-title-area { display: none; }
+      .victory-stats-grid { max-width: none; }
+      .victory-divider { max-width: none; display: none; }
+      .victory-loot { max-width: none; }
+      .victory-bestiary-row { max-width: none; }
+      .victory-buttons { grid-column: 3; grid-row: 2; display: flex; flex-direction: column; gap: 4px; padding: 4px; justify-content: center; max-width: none; }
+      .victory-particles { display: none; }
+      .vic-stat-card-val { font-size: 14px; }
+      .vic-stat-card { padding: 6px 4px 4px; }
+      .vic-stat-card-icon { font-size: 14px; top: -10px; }
+      .vic-hero-card { padding: 4px; }
+      .vic-hero-icon { font-size: 16px; }
+    }
     #perk-modal, #confirm-modal, #game-alert-modal, #game-prompt-modal {
       position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 4000;
       display: flex; align-items: center; justify-content: center; padding: 16px;
@@ -838,8 +904,6 @@
     .party-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 11px; }
     .eq-mini { font-size: 10px; opacity: 0.9; margin-left: 3px; }
     @media (max-width: 768px) {
-      #topbar-title { display: none; }
-      #topbar-left { min-width: 56px; }
       #topbar-right { min-width: 74px; }
       #topbar-center { font-size: 11px; }
       .btn { min-height: 36px; }
@@ -1049,7 +1113,6 @@
         margin: -4px -4px 4px;
         padding: 0 5px;
       }
-      #topbar-left { min-width: 42px; font-size: 10px; }
       #topbar-right { min-width: 58px; }
       #topbar-center { font-size: 9px; }
       #btn-open-menu { min-height: 24px; padding: 1px 6px; font-size: 9px; }
@@ -1204,7 +1267,6 @@
       </div>
     </div>
     <div id="hud-top" class="panel stats-line">
-      <div id="topbar-left">⚔ <span id="topbar-title">ТРИ КЛИНКА</span></div>
       <div id="topbar-center">Золото: <span id="gold-display">150</span> | Регион: <span id="region-display">1</span> | Ход: <span id="turn-display">1</span></div>
       <div id="topbar-right"><button class="btn" id="btn-open-menu">☰ Меню</button></div>
     </div>
@@ -1317,9 +1379,9 @@
         <!-- Колонка 1: Герой + статы -->
         <div id="inv-sidebar">
           <div class="inv-hero-tabs" id="inv-tabs">
-            <button class="inv-tab active" data-hero-tab="garet"><img src="assets/heroes/garet.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('⚔'))"></button>
-            <button class="inv-tab" data-hero-tab="alira"><img src="assets/heroes/alira.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('🏹'))"></button>
-            <button class="inv-tab" data-hero-tab="seris"><img src="assets/heroes/seris.png" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('🔮'))"></button>
+            <button class="inv-tab active" data-hero-tab="garet" title="Гарет"><img src="assets/heroes/garet.png" alt="Гарет" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('⚔'))"></button>
+            <button class="inv-tab" data-hero-tab="alira" title="Алира"><img src="assets/heroes/alira.png" alt="Алира" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('🏹'))"></button>
+            <button class="inv-tab" data-hero-tab="seris" title="Сэрис"><img src="assets/heroes/seris.png" alt="Сэрис" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('🔮'))"></button>
           </div>
           <div id="inv-hero-card"></div>
         </div>
@@ -1364,14 +1426,27 @@
     </div>
 
     <div id="victory-screen" class="screen hidden">
-      <div class="vic-screen-wrap">
-        <div class="vic-card">
-          <div class="vic-header">⚔ ПОБЕДА!</div>
-          <div id="vic-stats-row" class="vic-stats-row"></div>
-          <div id="vic-xp" class="vic-xp-row"></div>
-          <div class="vic-drop-label">ДОБЫЧА</div>
-          <div id="vic-items"></div>
-          <button class="btn btn-primary" id="btn-vic-continue" style="width:100%;margin-top:4px">Продолжить →</button>
+      <div class="victory-particles" id="victory-particles"></div>
+      <div class="screen-victory">
+        <!-- Landscape topbar -->
+        <div class="victory-topbar" id="victory-topbar"></div>
+        <!-- Left column (landscape) / hidden (portrait) -->
+        <div class="victory-heroes" id="victory-heroes"></div>
+        <!-- Center -->
+        <div class="victory-center">
+          <div class="victory-title-area" id="victory-title-area"></div>
+          <div class="victory-stats-grid" id="victory-stats"></div>
+          <div class="victory-divider"></div>
+          <!-- Hero cards — portrait only (inside center) -->
+          <div class="victory-heroes-portrait" id="victory-heroes-portrait"></div>
+          <div class="victory-loot" id="victory-loot"></div>
+          <div class="victory-bestiary-row" id="victory-bestiary"></div>
+        </div>
+        <!-- Right column (landscape) / bottom (portrait) -->
+        <div class="victory-buttons" id="victory-buttons">
+          <button class="btn vic-btn-ad" id="btn-vic-ad">📺 ×2 ЗОЛОТО [РЕКЛАМА]</button>
+          <button class="btn vic-btn-continue" id="btn-vic-continue">▶ ПРОДОЛЖИТЬ</button>
+          <button class="btn vic-btn-bestiary" id="btn-vic-bestiary">📖 БЕСТИАРИЙ</button>
         </div>
       </div>
     </div>
@@ -2405,6 +2480,16 @@
     GameState.stats.battles += 1;
     GameState.stats.goldEarned += gold;
     const xpEach = getXpForBattle(cell);
+
+    // Snapshot enemy IDs and battle label BEFORE clearing battle
+    const btTypeNames = { mission:'Миссия', city:'Город', dungeon:'Подземелье', event:'Событие', boss:'Босс', wanderer:'Странник', arena:'Арена', final:'Финал' };
+    GameState._lastBattleLabel = cell ? `Регион ${cell.region} · ${btTypeNames[cell.type] || 'Миссия'}` : 'Миссия завершена';
+    GameState._lastBattleEnemyIds = b ? [...new Set(b.units.filter(u => !u.isHero).map(u => u.enemyId))] : [];
+
+    // Snapshot levels before XP for level-up detection
+    const levelsBefore = {};
+    GameState.heroes.forEach(h => { levelsBefore[h.id] = h.level; });
+
     GameState.heroes.forEach(h => {
       if (h.hp > 0) {
         h.xp = (h.xp || 0) + xpEach;
@@ -2412,7 +2497,6 @@
           h.xp -= h.level * 50;
           h.level++;
           GameState.pendingPerks.push(h.id);
-          // Queue skill unlock notification if a skill is unlocked at this level
           const heroSkills = HERO_SKILLS[h.id] || [];
           const unlocked = heroSkills.find(s => s.unlockLevel === h.level);
           if (unlocked) {
@@ -2422,6 +2506,11 @@
         }
       }
     });
+
+    // Detect level-ups after XP
+    GameState._lastBattleLevelUps = {};
+    GameState.heroes.forEach(h => { if (h.level > levelsBefore[h.id]) GameState._lastBattleLevelUps[h.id] = h.level; });
+
     if (cell) {
       cell.completed = true;
       if (cell.type === 'boss') {
@@ -2440,18 +2529,116 @@
 
   // 9: Victory screen with stats
   function showVictoryUI(gold, xp) {
-    const b = GameState.currentBattle; // may be null here, stored kills separately
     const kills = GameState._lastBattleKills || 0;
     const rounds = GameState._lastBattleRounds || 1;
+    const label = GameState._lastBattleLabel || 'Миссия завершена';
+    GameState._lastBattleAdGold = gold;
+    const drop = GameState._lastBattleDrop || null;
+    const enemyIds = GameState._lastBattleEnemyIds || [];
+    const levelUps = GameState._lastBattleLevelUps || {};
+    const statNameRu2 = { attack:'Атака', armor:'Броня', range:'Дальность', move:'Ход', maxHp:'Макс.HP', mana:'Мана', maxMana:'Макс.Мана', goldBonus:'Бонус золота', speed:'Скорость' };
     GameState._lastBattleKills = 0; GameState._lastBattleRounds = 0;
-    const statsRow = document.getElementById('vic-stats-row');
-    if (statsRow) statsRow.innerHTML = `
-      <div class="vic-stat"><span class="vic-stat-val">+${gold}</span><span class="vic-stat-lbl">💰 Золото</span></div>
-      <div class="vic-stat"><span class="vic-stat-val">${kills}</span><span class="vic-stat-lbl">⚔ Убито</span></div>
-      <div class="vic-stat"><span class="vic-stat-val">${rounds}</span><span class="vic-stat-lbl">🔄 Раундов</span></div>
-    `;
-    const vx = document.getElementById('vic-xp');
-    if (vx) vx.innerHTML = GameState.heroes.filter(h => h.hp > 0).map(h => `${h.emoji} ${h.name} +${xp} XP, ур.${h.level}`).join(' &nbsp;·&nbsp; ');
+
+    // ── Particles ──
+    const particlesCont = document.getElementById('victory-particles');
+    if (particlesCont) {
+      const emojis = ['⚔','💰','⭐','⚔','💰','⭐','✨','🏆'];
+      particlesCont.innerHTML = Array.from({length: 18}, (_,i) => {
+        const op = (0.15 + Math.random() * 0.25).toFixed(2);
+        const dur = (3 + Math.random() * 4).toFixed(1);
+        const left = (Math.random() * 96).toFixed(1);
+        const delay = (Math.random() * 5).toFixed(1);
+        const em = emojis[i % emojis.length];
+        return `<div class="victory-particle" style="left:${left}%;--op:${op};animation-duration:${dur}s;animation-delay:-${delay}s">${em}</div>`;
+      }).join('');
+    }
+
+    // ── Topbar (landscape) ──
+    const topbar = document.getElementById('victory-topbar');
+    if (topbar) topbar.innerHTML = `🏆 ПОБЕДА! &nbsp;·&nbsp; <span style="color:var(--text-dim)">${label}</span>`;
+
+    // ── Title area (portrait) ──
+    const titleArea = document.getElementById('victory-title-area');
+    if (titleArea) titleArea.innerHTML = `
+      <div class="victory-trophy">🏆</div>
+      <div class="victory-title-text">ПОБЕДА!</div>
+      <div class="victory-subtitle-text">${label.toUpperCase()} · МИССИЯ ЗАВЕРШЕНА</div>`;
+
+    // ── Stats cards ──
+    const statsEl = document.getElementById('victory-stats');
+    if (statsEl) statsEl.innerHTML = `
+      <div class="vic-stat-card" style="border-color:#f0a500">
+        <div class="vic-stat-card-icon">💰</div>
+        <span class="vic-stat-card-val">+${gold}</span>
+        <span class="vic-stat-card-lbl">ЗОЛОТО</span>
+      </div>
+      <div class="vic-stat-card" style="border-color:#e74c3c">
+        <div class="vic-stat-card-icon">⚔</div>
+        <span class="vic-stat-card-val">${kills}</span>
+        <span class="vic-stat-card-lbl">УБИТО</span>
+      </div>
+      <div class="vic-stat-card" style="border-color:#4a9eff">
+        <div class="vic-stat-card-icon">🔄</div>
+        <span class="vic-stat-card-val">${rounds}</span>
+        <span class="vic-stat-card-lbl">РАУНДОВ</span>
+      </div>`;
+
+    // ── Hero cards builder ──
+    function buildHeroCards() {
+      return GameState.heroes.map(h => {
+        const hpPct = Math.round((h.hp / h.maxHp) * 100);
+        const isLow = hpPct < 40;
+        const lvlUp = levelUps[h.id];
+        const xpGained = h.hp > 0 ? `+${xp} XP` : '—';
+        const tex = HERO_TEXTURE_PATHS[h.id];
+        const iconHtml = tex
+          ? `<img src="${tex}" style="width:32px;height:32px;object-fit:contain;border-radius:4px">`
+          : `<div class="vic-hero-icon">${h.emoji}</div>`;
+        return `<div class="vic-hero-card${lvlUp ? ' levelup' : ''}">
+          ${iconHtml}
+          <div class="vic-hero-name">${h.name}</div>
+          <div class="vic-hero-xp">${xpGained}</div>
+          <div class="vic-hero-hp-bar"><div class="vic-hero-hp-fill${isLow ? ' low' : ''}" style="width:${hpPct}%"></div></div>
+          <div class="vic-hero-hp-text">${h.hp}/${h.maxHp}</div>
+          ${lvlUp ? `<div class="vic-levelup-badge">УРОВЕНЬ ${lvlUp}!</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+    const heroHtml = buildHeroCards();
+    const heroPortrait = document.getElementById('victory-heroes-portrait');
+    if (heroPortrait) heroPortrait.innerHTML = heroHtml;
+    const heroLandscape = document.getElementById('victory-heroes');
+    if (heroLandscape) heroLandscape.innerHTML = heroHtml;
+
+    // ── Loot ──
+    const lootEl = document.getElementById('victory-loot');
+    if (lootEl && drop) {
+      const rarLabel = { common: 'ОБЫЧН.', rare: 'РЕДКИЙ', epic: 'ЭПИЧЕСКИЙ' };
+      const statLine = Object.entries(drop.mods || {}).filter(([,v]) => typeof v === 'number' && v !== 0)
+        .map(([k,v]) => `${v>0?'+':''}${v} ${statNameRu2[k]||k}`).join(' · ') || '';
+      lootEl.innerHTML = `
+        <div class="vic-loot-title">ДОБЫЧА</div>
+        <div class="vic-loot-item rarity-${drop.rarity}" style="border-color:${drop.rarity==='epic'?'#9b59b6':drop.rarity==='rare'?'#4a9eff':'#2a2a4a'}">
+          <div class="vic-loot-icon">${drop.emoji||'📦'}</div>
+          <div class="vic-loot-info">
+            <div class="vic-loot-name">${drop.name}</div>
+            ${statLine ? `<div class="vic-loot-stat">${statLine}</div>` : ''}
+          </div>
+          <span class="vic-loot-badge ${drop.rarity||'common'}">${rarLabel[drop.rarity]||''}</span>
+        </div>`;
+    } else if (lootEl) lootEl.innerHTML = '';
+
+    // ── Bestiary row ──
+    const bestiaryEl = document.getElementById('victory-bestiary');
+    if (bestiaryEl && enemyIds.length) {
+      const icons = enemyIds.map(id => {
+        const def = enemyDef(id);
+        return def ? `<span class="vic-bestiary-enemy" title="${def.name}">${def.emoji}</span>` : '';
+      }).filter(Boolean).join('');
+      bestiaryEl.innerHTML = `<span class="vic-bestiary-label">ИЗУЧЕНО:</span>${icons}`;
+      bestiaryEl.style.display = '';
+    } else if (bestiaryEl) bestiaryEl.style.display = 'none';
+
     showScreen('victory');
     if (GameState.pendingPerks.length) {
       setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
@@ -4220,12 +4407,8 @@
     if (cell && (cell.type === 'boss' || cell.type === 'final')) forceRarity = 'epic';
     else if (cell && cell.type === 'dungeon') forceRarity = 'rare';
     const drop = selectLootItem(region, forceRarity);
-    // Store by id
     GameState.inventory.push(drop.id);
-    const vItems = document.getElementById('vic-items');
-    const rarLabel = { common: 'Обычн.', rare: 'Редкий', epic: 'Эпический' };
-    const rarBadgeClass = { common: 'badge-common', rare: 'badge-rare', epic: 'badge-epic' };
-    if (vItems) vItems.innerHTML = `<div class="vic-drop-card rarity-${drop.rarity}">${drop.emoji || ''} ${drop.name} <span class="badge ${rarBadgeClass[drop.rarity] || 'badge-common'}">${rarLabel[drop.rarity] || ''}</span></div>`;
+    GameState._lastBattleDrop = drop;
   }
 
   function getEquippedItem(hero, slot) {
@@ -4448,7 +4631,7 @@
   }
 
   function showAbout() {
-    void showGameAlert('⚔ ТРИ КЛИНКА\nТактическая RPG. Проведите отряд из трёх героев через 3 региона и победите Тёмного Лорда.\nВерсия 0.3.1');
+    void showGameAlert('Тактическая RPG. Проведите отряд из трёх героев через 3 региона и победите Тёмного Лорда.\nВерсия 0.3.1');
   }
 
   function updateMenuMeta() {
@@ -5157,6 +5340,17 @@
       if (GameState._bestiaryReturn === 'city') showScreen('city');
       else { showScreen('map'); renderMap(); }
       GameState._bestiaryReturn = null;
+    };
+    document.getElementById('btn-vic-bestiary').onclick = () => { showScreen('bestiary'); renderBestiary(); };
+    document.getElementById('btn-vic-ad').onclick = () => {
+      showRewardedAd(() => {
+        const bonus = Math.round(GameState.gold * 1); // double last battle gold bonus
+        GameState.gold += (GameState._lastBattleAdGold || 0);
+        saveGame();
+        showGameAlert(`+${GameState._lastBattleAdGold || 0} 💰 золота!`);
+        document.getElementById('btn-vic-ad').disabled = true;
+        document.getElementById('btn-vic-ad').style.opacity = '0.4';
+      });
     };
     document.getElementById('btn-vic-continue').onclick = () => {
       document.getElementById('victory-screen').classList.add('hidden');
