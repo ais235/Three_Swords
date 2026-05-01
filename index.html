@@ -2711,19 +2711,16 @@
         const hpFrac = Math.max(0, Math.min(1, u.hp / u.maxHp));
         ctx.fillStyle = hpFrac > 0.5 ? '#2ecc71' : hpFrac > 0.25 ? '#f39c12' : '#e74c3c';
         ctx.fillRect(bx, by, Math.round(barW * hpFrac), barH);
-        // HP text with dark background for readability
+        // HP text — integer coords, no stroke (stroke blurs small text)
         const hpText = `${u.hp}/${u.maxHp}`;
-        ctx.font = '7px Arial, sans-serif';
+        ctx.font = '10px Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         const textW = ctx.measureText(hpText).width;
-        const tx = px + CELL / 2, ty = by - 1;
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        ctx.fillRect(Math.round(tx - textW / 2 - 1), ty - 7, Math.round(textW + 2), 7);
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 2;
-        ctx.lineJoin = 'round';
-        ctx.strokeText(hpText, tx, ty);
+        const tx = Math.round(px + CELL / 2);
+        const ty = by - 1;
+        ctx.fillStyle = 'rgba(0,0,0,0.72)';
+        ctx.fillRect(Math.round(tx - textW / 2 - 2), ty - 10, Math.round(textW + 4), 10);
         ctx.fillStyle = '#ffffff';
         ctx.fillText(hpText, tx, ty);
 
