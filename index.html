@@ -334,10 +334,10 @@
       font-size: 8px; color: var(--text-hint); letter-spacing: 0.5px; padding: 6px 8px; border-radius: 6px; border: 1px dashed var(--border);
       background: #0a0a14; flex-shrink: 0; line-height: 1.4;
     }
-    .items-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; min-height: 0; align-content: start; }
+    .items-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; flex: 1; min-height: 0; padding: 4px 0; }
     .item-card {
-      background: var(--bg-panel); border-radius: 7px; padding: 9px; border: 1px solid var(--border); cursor: pointer; position: relative;
-      overflow: hidden; min-height: 88px; display: flex; flex-direction: column;
+      background: var(--bg-panel); border-radius: 7px; padding: 10px; border: 1px solid var(--border); cursor: pointer; position: relative;
+      overflow: hidden; height: 100%; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;
     }
     .item-card:hover:not(.cant-buy):not(.secret-pending) { border-color: var(--accent-blue); }
     .item-card:hover:not(.cant-buy):not(.secret-pending) .buy-overlay { opacity: 1; }
@@ -351,10 +351,10 @@
     }
     .item-card.cant-buy .buy-overlay { pointer-events: none; }
     .item-card.selected { border-color: var(--accent-gold); background: #150f00; }
-    .item-card.secret { border-color: #9b59b6; background: #0f0a1a; text-align: center; min-height: 88px; }
-    .item-card.secret .item-icon { font-size: 20px; margin-bottom: 4px; }
+    .item-card.secret { border-color: #9b59b6; background: #0f0a1a; text-align: center; grid-column: auto !important; align-items: center; justify-content: center; gap: 5px; }
+    .item-card.secret .item-icon { font-size: 20px; margin-bottom: 2px; }
     .item-card.secret .ic-name { font-size: 6px; }
-    .item-card.secret .ic-stat { font-size: 5px; margin-bottom: 6px; }
+    .item-card.secret .ic-stat { font-size: 5px; margin-bottom: 5px; }
     .item-card.secret .btn-ad { padding: 3px 8px; font-size: 5px; width: 100%; }
     .item-card.secret.secret-reveal-play { animation: secretRevealFlash 0.65s ease forwards; }
     @keyframes secretRevealFlash {
@@ -362,9 +362,9 @@
       40% { filter: brightness(1.4); transform: scale(1.03); box-shadow: 0 0 20px rgba(155, 89, 182, 0.7); }
       100% { filter: brightness(1); transform: scale(1); }
     }
-    .item-icon { font-size: 22px; margin-bottom: 4px; display: block; }
+    .item-icon { font-size: 22px; margin-bottom: 5px; display: block; line-height: 1; }
     .item-name, .ic-name { font-size: 7px; color: var(--text-main); margin-bottom: 3px; line-height: 1.4; white-space: normal; word-break: break-word; overflow: visible; }
-    .item-stats, .ic-stat { font-size: 7px; color: var(--accent-green); margin-bottom: 4px; }
+    .item-stats, .ic-stat { font-size: 6px; color: var(--accent-green); margin-bottom: 4px; }
     .item-footer { display: flex; align-items: center; justify-content: space-between; }
     .item-price { font-size: 11px; color: var(--accent-gold); font-weight: 700; }
     .item-price.cant { color: var(--accent-red); }
@@ -1236,12 +1236,18 @@
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 1fr 1fr;
         padding: 5px;
-        gap: 3px;
+        gap: 4px;
       }
-      .item-card { padding: 5px; }
+      .item-card { padding: 5px; height: 100%; }
       .item-card .ic-name { font-size: 5px; }
       .item-card .ic-stat { font-size: 4px; }
+      .item-card .item-icon { font-size: 14px !important; }
+      .item-card .item-price { font-size: 7px; }
       .item-card .buy-overlay, .item-card .di-overlay { display: none; }
+      .item-card.secret { grid-column: auto !important; height: 100%; }
+      .item-card.secret .item-icon { font-size: 14px !important; }
+      .item-card.secret .ic-name { font-size: 4px; }
+      .item-card.secret .btn-ad { font-size: 4px; padding: 3px; }
       .item-name, .item-stats, .item-price, .badge { font-size: 7px; }
       .service-card .service-desc, .sc-desc { display: none; }
       .city-shortcuts .sc-btn { font-size: 4px; padding: 6px 2px; min-height: auto; }
@@ -4414,18 +4420,20 @@
     const commons = byRegion.filter(i => i.rarity === 'common');
     const rares   = byRegion.filter(i => i.rarity === 'rare');
     const epics   = byRegion.filter(i => i.rarity === 'epic');
-    const pick = arr => deepClone(arr[Math.floor(Math.random() * arr.length)]);
+    const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
     const stock = [];
-    // 2 обычных
-    stock.push(pick(commons));
-    stock.push(pick(commons));
-    // 1-2 редких (вероятность растёт с регионом)
-    if (Math.random() < 0.4 + (region - 1) * 0.2) stock.push(pick(rares));
-    if (Math.random() < 0.2 + (region - 1) * 0.15) stock.push(pick(rares));
+    // 2 разных обычных предмета
+    const sc = shuffle(commons);
+    if (sc[0]) stock.push(deepClone(sc[0]));
+    if (sc[1]) stock.push(deepClone(sc[1]));
+    // Минимум 1 редкий, иногда 2
+    const sr = shuffle(rares);
+    if (sr[0]) stock.push(deepClone(sr[0]));
+    if (sr[1] && Math.random() < 0.3 + (region - 1) * 0.15) stock.push(deepClone(sr[1]));
     // Тайный epic-слот
-    const secretItem = pick(epics);
-    const unique = [...new Map(stock.map(i => [i.id, i])).values()].slice(0, 4);
-    return { stock: unique, secretItem };
+    const se = shuffle(epics.length ? epics : byRegion);
+    const secretItem = deepClone(se[0]);
+    return { stock: stock.slice(0, 4), secretItem };
   }
 
   function upgradeItem(item, region) {
