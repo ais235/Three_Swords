@@ -294,18 +294,29 @@
     .cell-info-icon { font-size: 18px; margin-bottom: 4px; }
     .cell-info-name { color: var(--text-main); font-size: 7px; margin-bottom: 3px; line-height: 1.35; }
     .city-body { display: grid; grid-template-columns: 170px 1fr 200px; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
-    .city-left { background: #111128; border-right: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
-    .city-center { padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-dark); overflow-y: auto; }
-    .city-right { background: #111128; border-left: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .city-name { font-size: 13px; color: var(--accent-gold); letter-spacing: 1px; margin-bottom: 2px; }
-    .city-desc { font-size: 9px; color: var(--text-dim); line-height: 1.5; margin-bottom: 6px; }
-    .npc-list { display: flex; flex-direction: column; gap: 4px; }
-    .npc { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: #0d0d1a; }
-    .npc:hover, .npc.active { border-color: var(--accent-gold); background: #1a1500; }
-    .npc-icon { font-size: 20px; width: 30px; text-align: center; }
-    .npc-name { font-size: 11px; color: var(--text-main); }
-    .npc-role { font-size: 9px; color: var(--text-dim); }
-    .heroes-bar { margin-top: auto; border-top: 1px solid var(--border); padding-top: 8px; }
+    .city-left { background: #111128; border-right: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden; }
+    .city-left .city-banner { flex-shrink: 0; }
+    .city-left .npc-tabs { flex-shrink: 0; }
+    .city-left .heroes-bar { flex: 1; min-height: 0; overflow: hidden; margin-top: auto; }
+    .city-center { padding: 12px; display: flex; flex-direction: column; gap: 0; background: var(--bg-dark); overflow-y: auto; min-height: 0; }
+    .city-right { background: #111128; border-left: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .city-banner {
+      display: flex; align-items: flex-start; gap: 8px; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
+      background: #0d0d1a; flex-shrink: 0;
+    }
+    .city-banner-icon { font-size: 26px; line-height: 1; flex-shrink: 0; }
+    .city-banner-text { min-width: 0; }
+    .city-banner-title { font-size: 11px; color: var(--accent-gold); letter-spacing: 1px; margin-bottom: 4px; line-height: 1.2; }
+    .city-banner-desc { font-size: 8px; color: var(--text-dim); line-height: 1.45; }
+    .npc-tabs { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .npc-tab {
+      display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
+      background: #0d0d1a; cursor: pointer; font-family: inherit; font-size: 9px; color: var(--text-dim); text-align: left; transition: border-color .15s, background .15s;
+    }
+    .npc-tab:hover { border-color: var(--accent-teal); color: var(--text-main); }
+    .npc-tab.active { border-color: var(--accent-gold); background: #1a1208; color: var(--accent-gold); }
+    .npc-tab-text { flex: 1; font-weight: bold; letter-spacing: 0.5px; }
+    .heroes-bar { margin-top: auto; border-top: 1px solid var(--border); padding-top: 8px; flex-shrink: 0; }
     .heroes-bar-title { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
     .hero-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
     .hero-icon-s { font-size: 14px; }
@@ -315,16 +326,45 @@
     .bar-hp { background: var(--accent-green); height: 100%; border-radius: 2px; }
     .hero-heal-btn { font-size: 9px; padding: 2px 6px; border-radius: 3px; border: 1px solid var(--accent-green); color: var(--accent-green); cursor: pointer; white-space: nowrap; background: transparent; font-family: inherit; }
     .hero-heal-btn.grey { border-color: var(--border); color: #555577; cursor: default; }
-    .shop-header { display: flex; align-items: center; justify-content: space-between; }
+    .city-panel { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+    .city-panel.hidden { display: none !important; }
+    .shop-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
     .shop-title { font-size: 13px; color: var(--text-main); letter-spacing: 1px; }
-    .items-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .item-card { background: var(--bg-panel); border-radius: 7px; padding: 9px; border: 1px solid var(--border); cursor: pointer; position: relative; }
-    .item-card:hover { border-color: var(--accent-blue); }
+    .shop-footer {
+      font-size: 8px; color: var(--text-hint); letter-spacing: 0.5px; padding: 6px 8px; border-radius: 6px; border: 1px dashed var(--border);
+      background: #0a0a14; flex-shrink: 0; line-height: 1.4;
+    }
+    .items-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; min-height: 0; align-content: start; }
+    .item-card {
+      background: var(--bg-panel); border-radius: 7px; padding: 9px; border: 1px solid var(--border); cursor: pointer; position: relative;
+      overflow: hidden; min-height: 88px; display: flex; flex-direction: column;
+    }
+    .item-card:hover:not(.cant-buy):not(.secret-pending) { border-color: var(--accent-blue); }
+    .item-card:hover:not(.cant-buy):not(.secret-pending) .buy-overlay { opacity: 1; }
+    .item-card.cant-buy { cursor: default; }
+    .item-card.cant-buy .buy-overlay { opacity: 1; background: rgba(120, 20, 20, 0.92); color: #ffb3b3; }
+    .item-card.cant-buy:hover { border-color: var(--accent-red); }
+    .buy-overlay, .di-overlay {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+      font-size: 9px; font-weight: bold; letter-spacing: 0.5px; color: #fff; background: rgba(26, 42, 90, 0.88);
+      opacity: 0; transition: opacity .18s ease; pointer-events: none; padding: 6px; line-height: 1.25;
+    }
+    .item-card.cant-buy .buy-overlay { pointer-events: none; }
     .item-card.selected { border-color: var(--accent-gold); background: #150f00; }
-    .item-card.secret { border-color: #9b59b6; background: #0f0a1a; text-align: center; }
-    .item-icon { font-size: 22px; margin-bottom: 4px; }
-    .item-name { font-size: 10px; color: var(--text-main); margin-bottom: 3px; line-height: 1.3; }
-    .item-stats { font-size: 9px; color: var(--accent-green); margin-bottom: 4px; }
+    .item-card.secret { border-color: #9b59b6; background: #0f0a1a; text-align: center; min-height: 88px; }
+    .item-card.secret .item-icon { font-size: 20px; margin-bottom: 4px; }
+    .item-card.secret .ic-name { font-size: 6px; }
+    .item-card.secret .ic-stat { font-size: 5px; margin-bottom: 6px; }
+    .item-card.secret .btn-ad { padding: 3px 8px; font-size: 5px; width: 100%; }
+    .item-card.secret.secret-reveal-play { animation: secretRevealFlash 0.65s ease forwards; }
+    @keyframes secretRevealFlash {
+      0% { filter: brightness(1); transform: scale(1); }
+      40% { filter: brightness(1.4); transform: scale(1.03); box-shadow: 0 0 20px rgba(155, 89, 182, 0.7); }
+      100% { filter: brightness(1); transform: scale(1); }
+    }
+    .item-icon { font-size: 22px; margin-bottom: 4px; display: block; }
+    .item-name, .ic-name { font-size: 7px; color: var(--text-main); margin-bottom: 3px; line-height: 1.4; white-space: normal; word-break: break-word; overflow: visible; }
+    .item-stats, .ic-stat { font-size: 7px; color: var(--accent-green); margin-bottom: 4px; }
     .item-footer { display: flex; align-items: center; justify-content: space-between; }
     .item-price { font-size: 11px; color: var(--accent-gold); font-weight: 700; }
     .item-price.cant { color: var(--accent-red); }
@@ -340,6 +380,28 @@
     .service-desc { font-size: 9px; color: var(--text-dim); line-height: 1.4; margin-bottom: 8px; }
     .service-btns { display: flex; flex-direction: column; gap: 4px; }
     .service-btns .btn { font-size: 9px; padding: 5px 8px; text-align: center; width: 100%; }
+    .city-shortcuts-title { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 2px; text-transform: uppercase; }
+    .city-shortcuts { gap: 6px; }
+    .city-shortcuts .sc-btn { font-size: 9px; padding: 8px 6px; text-align: center; width: 100%; }
+    .heal-all-row { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .alchemist-panel-title { font-size: 11px; color: var(--accent-teal); letter-spacing: 1px; margin-bottom: 4px; }
+    .alchemist-help { font-size: 8px; color: var(--text-dim); line-height: 1.45; margin-bottom: 8px; }
+    .alchemist-list { display: flex; flex-direction: column; gap: 6px; }
+    .alchemist-row {
+      display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: #0d0d1a;
+      flex-wrap: wrap;
+    }
+    .alchemist-row-info { flex: 1; min-width: 0; font-size: 9px; color: var(--text-main); }
+    .alchemist-row-meta { font-size: 8px; color: var(--text-dim); margin-top: 2px; }
+    .oracle-view { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; text-align: center; min-height: 200px; }
+    .oracle-crystal { font-size: 48px; line-height: 1; filter: drop-shadow(0 0 12px rgba(155, 89, 182, 0.5)); }
+    .oracle-hint { font-size: 10px; color: var(--text-dim); max-width: 280px; line-height: 1.5; }
+    .btn-oracle-main { font-size: 11px; padding: 12px 20px; }
+    .oracle-result {
+      font-size: 12px; color: var(--accent-gold); line-height: 1.5; padding: 14px 16px; border-radius: 8px; border: 1px solid var(--accent-gold);
+      background: #1a1208; max-width: 100%; word-break: break-word;
+    }
+    .oracle-result.hidden { display: none; }
     #battle-screen, #city-screen, #inventory-screen, #map-screen, #event-screen, #victory-screen, #gameover-screen, #ending-screen, #bestiary-screen { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
     /* ══ БЕСТИАРИЙ ══ */
     .bestiary-layout { display: grid; grid-template-columns: 260px 1fr; flex: 1; min-height: 0; overflow: hidden; border: 1px solid var(--border); }
@@ -1013,12 +1075,11 @@
         flex: 1; min-height: 0;
       }
       .city-left, .city-center, .city-right { padding: 6px; gap: 6px; }
-      .city-name { font-size: 11px; }
-      .city-desc { display: none; }
-      .npc { padding: 5px; gap: 5px; }
-      .npc-icon { font-size: 15px; width: 18px; }
-      .npc-name { font-size: 9px; }
-      .npc-role { font-size: 8px; }
+      .city-banner { padding: 6px; gap: 6px; }
+      .city-banner-icon { font-size: 20px; }
+      .city-banner-title { font-size: 10px; }
+      .city-banner-desc, .city-desc { display: none; }
+      .npc-tab { padding: 6px 8px; font-size: 8px; }
       .heroes-bar { padding-top: 5px; }
       .heroes-bar-title { font-size: 8px; margin-bottom: 4px; }
       .hero-row { gap: 4px; margin-bottom: 3px; }
@@ -1159,18 +1220,33 @@
       .eq-mini { display: none; }
 
       /* City + Inventory ultra-compact */
-      .city-body { grid-template-columns: 116px 1fr 128px; flex: 1; min-height: 0; }
+      .city-body { grid-template-columns: 100px 1fr 88px; flex: 1; min-height: 0; }
       .city-left, .city-center, .city-right { padding: 4px; gap: 4px; }
-      .city-name { font-size: 9px; }
-      .npc { padding: 4px; }
-      .npc-role, .heroes-bar-title { display: none; }
+      .city-banner { padding: 4px; }
+      .city-banner-title { font-size: 8px; }
+      .city-desc, .city-banner-desc { display: none; }
+      .npc-tab-text { display: none; }
+      .npc-tab { padding: 4px 2px; font-size: 10px; justify-content: center; }
+      .heroes-bar-title { display: none; }
       .hero-heal-btn { font-size: 7px; padding: 1px 3px; }
-      .items-grid { grid-template-columns: 1fr 1fr; gap: 3px; }
-      .item-card { padding: 4px; }
-      .item-icon { font-size: 13px; }
+      .heal-all-row { flex-direction: row; gap: 3px; }
+      .btn-heal-all { flex: 1; font-size: 4px; padding: 5px 2px; }
+      .btn-heal-ad { flex: 0 0 28px; font-size: 8px; padding: 5px; }
+      .items-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        padding: 5px;
+        gap: 3px;
+      }
+      .item-card { padding: 5px; }
+      .item-card .ic-name { font-size: 5px; }
+      .item-card .ic-stat { font-size: 4px; }
+      .item-card .buy-overlay, .item-card .di-overlay { display: none; }
       .item-name, .item-stats, .item-price, .badge { font-size: 7px; }
-      .service-desc { display: none; }
-      .service-btns .btn { min-height: 26px; font-size: 7px; padding: 2px 4px; }
+      .service-card .service-desc, .sc-desc { display: none; }
+      .city-shortcuts .sc-btn { font-size: 4px; padding: 6px 2px; min-height: auto; }
+      .btn-leave::before { content: '← КАРТА'; }
+      .btn-leave .btn-leave-text { display: none; }
 
       #inventory-layout { grid-template-columns: 122px 1fr; flex: 1; min-height: 0; }
       #inv-left, #inv-right { padding: 4px; gap: 4px; }
@@ -1303,42 +1379,49 @@
     <div id="city-screen" class="screen hidden">
       <div class="city-body">
         <div class="city-left">
-          <div class="city-name" id="city-name-label">🏘 ЛЕСНОЙ ПРИЮТ</div>
-          <div class="city-desc">Торговый пост на краю Тёмного леса. Отдых, снаряжение, мудрый совет.</div>
-          <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">ЖИТЕЛИ</div>
-          <div class="npc-list">
-            <div class="npc active"><span class="npc-icon">🛒</span><div class="npc-info"><div class="npc-name">Торговец Борн</div><div class="npc-role">Оружие · Броня · Зелья</div></div></div>
-            <div class="npc"><span class="npc-icon">⚗</span><div class="npc-info"><div class="npc-name">Алхимик Рута</div><div class="npc-role">Улучшение предметов</div></div></div>
-            <div class="npc"><span class="npc-icon">🔮</span><div class="npc-info"><div class="npc-name">Оракул</div><div class="npc-role">Инфо о следующем бое</div></div></div>
+          <div class="city-banner" id="city-banner">
+            <div class="city-banner-icon" id="city-banner-icon">🏘</div>
+            <div class="city-banner-text">
+              <div class="city-banner-title" id="city-name-label">ЛЕСНОЙ ПРИЮТ</div>
+              <div class="city-banner-desc city-desc" id="city-desc-label">Торговый пост на краю Тёмного леса. Отдых, снаряжение, мудрый совет.</div>
+            </div>
+          </div>
+          <div class="npc-tabs" role="tablist" aria-label="Услуги города">
+            <button type="button" class="npc-tab active" data-city-tab="trader" id="npc-tab-trader">🛒 <span class="npc-tab-text">Торговец</span></button>
+            <button type="button" class="npc-tab" data-city-tab="alchemist" id="npc-tab-alchemist">⚗ <span class="npc-tab-text">Алхимик</span></button>
+            <button type="button" class="npc-tab" data-city-tab="oracle" id="npc-tab-oracle">🔮 <span class="npc-tab-text">Оракул</span></button>
           </div>
           <div class="heroes-bar" id="city-heroes"></div>
         </div>
-        <div class="city-center">
-          <div class="shop-header">
-            <span class="shop-title">🛒 ТОРГОВЕЦ БОРН</span>
-            <button class="btn btn-dim" id="btn-reroll-shop" style="font-size:9px;padding:3px 10px">↺ Обновить (20g)</button>
+        <div class="city-center" id="city-center-wrap">
+          <div id="city-panel-trader" class="city-panel city-panel-trader">
+            <div class="shop-header">
+              <span class="shop-title">🛒 ТОРГОВЕЦ БОРН</span>
+              <button type="button" class="btn btn-dim" id="btn-reroll-shop" style="font-size:9px;padding:3px 10px">↺ Обновить (20g)</button>
+            </div>
+            <div id="shop-list" class="items-grid"></div>
+            <div class="shop-footer">Наведите на товар — подсказка покупки. Клик по карточке покупает предмет.</div>
           </div>
-          <div id="shop-list" class="items-grid"></div>
-          <div id="city-actions"></div>
+          <div id="city-panel-alchemist" class="city-panel city-panel-alchemist hidden">
+            <div class="alchemist-panel-title">⚗ АЛХИМИК РУТА</div>
+            <div class="alchemist-help">Обычный → редкий: 100💰 · Редкий → эпический: 200💰. Выберите предмет в рюкзаке или посмотрите рекламу у алхимика (справа).</div>
+            <div id="alchemist-list" class="alchemist-list"></div>
+          </div>
+          <div id="city-panel-oracle" class="city-panel city-panel-oracle hidden">
+            <div class="oracle-view" id="oracle-view-wrap">
+              <div class="oracle-crystal" aria-hidden="true">🔮</div>
+              <p class="oracle-hint">Оракул заглянет в ближайший бой на карте: состав врагов после просмотра рекламы.</p>
+              <button type="button" class="btn btn-ad btn-oracle-main" id="btn-oracle-center-ad">📺 Узнать предсказание</button>
+              <div id="oracle-result" class="oracle-result hidden" role="status"></div>
+            </div>
+          </div>
         </div>
-        <div class="city-right">
-          <div class="services-title">УСЛУГИ</div>
-          <div class="service-card">
-            <div class="service-card-head"><span class="service-icon">⚗</span><span class="service-name">Алхимик Рута</span></div>
-            <div class="service-desc">Обычн.→Редкий: 100g<br>Редкий→Эпический: 200g</div>
-            <div class="service-btns">
-              <button class="btn btn-ad" id="btn-city-alch-ad">📺 Улучшить бесплатно</button>
-            </div>
-          </div>
-          <div class="service-card">
-            <div class="service-card-head"><span class="service-icon">🔮</span><span class="service-name">Оракул</span></div>
-            <div class="service-desc">Покажет врагов следующей миссии</div>
-            <div class="service-btns">
-              <button class="btn btn-ad" id="btn-city-oracle-ad">📺 Узнать будущее</button>
-            </div>
-          </div>
-          <button class="btn btn-dim" id="btn-city-bestiary" style="width:100%;text-align:center">📖 Бестиарий</button>
-          <button class="btn btn-dim" id="btn-leave-city" style="width:100%;margin-top:auto;text-align:center">← Покинуть город</button>
+        <div class="city-right city-shortcuts">
+          <div class="city-shortcuts-title">Быстро</div>
+          <button type="button" class="btn btn-ad sc-btn" id="btn-short-alch" title="К алхимику">⚗ Алхимик</button>
+          <button type="button" class="btn btn-ad sc-btn" id="btn-short-oracle" title="К оракулу">🔮 Оракул</button>
+          <button type="button" class="btn btn-dim sc-btn" id="btn-city-bestiary">📖 Бестиарий</button>
+          <button type="button" class="btn btn-dim btn-leave sc-btn" id="btn-leave-city"><span class="btn-leave-text">← Покинуть город</span></button>
         </div>
       </div>
     </div>
@@ -1805,6 +1888,7 @@
     arenaDoneByRegion: {},
     wandererUsedByRegion: {},
     activeCityNode: null,
+    cityNpcTab: 'trader',
     battleReviveUsed: false,
     lastSafeSave: null,
     bestiary: {},
@@ -4788,9 +4872,246 @@
       };
     }
   }
+  function cityItemRarBadge(r) {
+    return r === 'epic' ? `<span class="badge badge-epic">Эпик</span>` : r === 'rare' ? `<span class="badge badge-rare">Редкий</span>` : `<span class="badge badge-common">Обычн.</span>`;
+  }
+
+  function buildCityShopItemCard(it) {
+    const canBuy = GameState.gold >= it.price;
+    const statNameRu = { attack:'Атака', armor:'Броня', range:'Дальн.', move:'Ход', maxHp:'HP', mana:'Мана', speed:'Скор.', armorPierce:'Пробитие', goldBonus:'Золото', dodge:'Уклон' };
+    const statText = Object.entries(it.mods || {}).filter(([k, v]) => typeof v === 'number' && v !== 0)
+      .map(([k, v]) => `${v > 0 ? '+' : ''}${v} ${statNameRu[k] || k}`).join(' · ');
+    const overlayTxt = canBuy ? `▶ КУПИТЬ · ${it.price}g` : `НЕ ХВАТАЕТ · ${it.price}g`;
+    return `<div class="item-card${canBuy ? '' : ' cant-buy'}" data-buy="${it.id}">
+      <div class="buy-overlay di-overlay">${overlayTxt}</div>
+      <div class="item-icon">${it.emoji || '📦'}</div>
+      <div class="item-name ic-name">${it.name}</div>
+      <div class="item-stats ic-stat">${statText}</div>
+      <div class="item-footer">${cityItemRarBadge(it.rarity)}<span class="item-price${canBuy ? '' : ' cant'}">${it.price}g</span></div>
+    </div>`;
+  }
+
+  function buildCitySecretEpicCardHTML(item, price) {
+    const canBuy = GameState.gold >= price;
+    const overlayTxt = canBuy ? `▶ КУПИТЬ · ${price}g` : `НЕ ХВАТАЕТ · ${price}g`;
+    return `<div class="item-card secret-revealed${canBuy ? '' : ' cant-buy'}" data-buy="__secret__">
+      <div class="buy-overlay di-overlay">${overlayTxt}</div>
+      <div class="item-icon">${item.emoji || '📦'}</div>
+      <div class="item-name ic-name">${item.name}</div>
+      <div class="item-footer">${cityItemRarBadge('epic')}<span class="item-price${canBuy ? '' : ' cant'}">${price}g</span></div>
+    </div>`;
+  }
+
+  function bindCityShopClicks(shopEl, node, strangerOnly) {
+    shopEl.querySelectorAll('.item-card[data-buy]').forEach(card => {
+      const bid = card.getAttribute('data-buy');
+      if (bid === '__secret__') {
+        card.onclick = () => {
+          const item = itemById(GameState.cityState.secretItemId);
+          const price = Math.floor(item.price * 0.7);
+          if (GameState.gold < price) { void showGameAlert('Недостаточно золота.'); return; }
+          GameState.gold -= price;
+          GameState.inventory.push(item.id);
+          saveGame();
+          enterCity(node, strangerOnly);
+        };
+        return;
+      }
+      card.onclick = () => {
+        const it = itemById(bid);
+        if (!it || GameState.gold < it.price) { if (it) void showGameAlert('Недостаточно золота.'); return; }
+        GameState.gold -= it.price;
+        GameState.inventory.push(it.id);
+        saveGame();
+        enterCity(node, strangerOnly);
+      };
+    });
+    const secretBtn = document.getElementById('btn-secret');
+    const secretCardEl = document.getElementById('city-secret-card');
+    if (secretBtn && secretCardEl) {
+      secretBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        showRewardedAd(() => {
+          GameState.cityState.secretRevealed = true;
+          saveGame();
+          secretCardEl.classList.add('secret-reveal-play');
+          window.setTimeout(() => {
+            const item = itemById(GameState.cityState.secretItemId);
+            const price = Math.floor(item.price * 0.7);
+            secretCardEl.outerHTML = buildCitySecretEpicCardHTML(item, price);
+            const shop = document.getElementById('shop-list');
+            if (shop) bindCityShopClicks(shop, node, strangerOnly);
+          }, 680);
+        });
+      };
+    }
+  }
+
+  function tryUpgradeInventoryItem(itemId, node, strangerOnly) {
+    const base = itemById(itemId);
+    if (!base || !['common', 'rare'].includes(base.rarity)) return;
+    const idx = GameState.inventory.indexOf(itemId);
+    if (idx < 0) return;
+    const cost = base.rarity === 'common' ? 100 : 200;
+    const region = node.region || GameState.region || 1;
+    const doUpgrade = () => {
+      const upgraded = upgradeItem(base, region);
+      if (upgraded === base) {
+        void showGameAlert('Нет доступных улучшений.');
+        return;
+      }
+      const ix = GameState.inventory.indexOf(base.id);
+      if (ix >= 0) GameState.inventory[ix] = upgraded.id;
+      saveGame();
+      showGameAlert(`${base.name} → ${upgraded.name}!`).then(() => renderCityUI(node, GameState._cityStrangerOnly));
+    };
+    if (GameState.gold >= cost) {
+      showGameConfirm(`Улучшить ${base.name} за ${cost}💰?`).then(ok => {
+        if (ok) {
+          GameState.gold -= cost;
+          doUpgrade();
+        } else if (window.ysdk && !GameState.cityState.adUpgradeUsed) {
+          showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
+        } else {
+          void showGameAlert(`Нужно ${cost}💰 для улучшения.`);
+        }
+      });
+    } else if (window.ysdk && !GameState.cityState.adUpgradeUsed) {
+      showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
+    } else {
+      void showGameAlert(`Нужно ${cost}💰 для улучшения.`);
+    }
+  }
+
+  function renderCityAlchemistPanel(node, strangerOnly) {
+    const root = document.getElementById('alchemist-list');
+    if (!root) return;
+    const seen = new Set();
+    const rows = [];
+    (GameState.inventory || []).forEach(id => {
+      if (seen.has(id)) return;
+      seen.add(id);
+      const it = itemById(id);
+      if (!it || !['common', 'rare'].includes(it.rarity)) return;
+      const cost = it.rarity === 'common' ? 100 : 200;
+      const ic = it.name.split(' ')[0];
+      const nm = it.name.split(' ').slice(1).join(' ');
+      rows.push(`<div class="alchemist-row">
+        <div class="alchemist-row-info"><span>${ic}</span> ${nm}<div class="alchemist-row-meta">${cityItemRarBadge(it.rarity)} · улучшение ${cost}💰</div></div>
+        <button type="button" class="btn btn-green" style="font-size:9px;padding:6px 10px" data-alch-up="${it.id}">Улучшить</button>
+      </div>`);
+    });
+    root.innerHTML = rows.length ? rows.join('') : '<div style="font-size:9px;color:var(--text-hint);padding:8px;">Нет предметов common/rare в рюкзаке.</div>';
+    root.querySelectorAll('[data-alch-up]').forEach(btn => {
+      btn.onclick = () => tryUpgradeInventoryItem(btn.getAttribute('data-alch-up'), node, GameState._cityStrangerOnly);
+    });
+  }
+
+  function runOraclePrediction(node) {
+    showRewardedAd(() => {
+      const resEl = document.getElementById('oracle-result');
+      const cur = getCurrentCell();
+      const next = GameState.mapGrid.find(c => c.region <= GameState.regionUnlocked && !c.completed && ['mission', 'dungeon', 'boss', 'final'].includes(c.type) && cellNeighbors(cur, c));
+      if (!next) {
+        if (resEl) {
+          resEl.classList.remove('hidden');
+          resEl.textContent = 'Ближайших боёв не найдено.';
+        }
+        return;
+      }
+      const wave = generateEnemyWaveForCell(next).map(id => `${enemyDef(id).emoji} ${enemyDef(id).name}`).join(', ');
+      if (resEl) {
+        resEl.classList.remove('hidden');
+        resEl.textContent = `Оракул видит: ${wave}`;
+      }
+    });
+  }
+
+  function setCityNpcTab(tab, node, strangerOnly) {
+    if (['trader', 'alchemist', 'oracle'].includes(tab)) GameState.cityNpcTab = tab;
+    const n = node || getActiveCityNode();
+    if (!n) return;
+    renderCityUI(n, strangerOnly);
+  }
+
+  function renderCityUI(node, strangerOnly) {
+    const n = node || getActiveCityNode();
+    if (!n) return;
+    const tab = GameState.cityNpcTab || 'trader';
+    document.querySelectorAll('.npc-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-city-tab') === tab);
+    });
+    const pt = document.getElementById('city-panel-trader');
+    const pa = document.getElementById('city-panel-alchemist');
+    const po = document.getElementById('city-panel-oracle');
+    if (pt) pt.classList.toggle('hidden', tab !== 'trader');
+    if (pa) pa.classList.toggle('hidden', tab !== 'alchemist');
+    if (po) po.classList.toggle('hidden', tab !== 'oracle');
+
+    const shop = document.getElementById('shop-list');
+    if (shop && tab === 'trader') {
+      const stock = GameState.shopStock && GameState.shopStock.stock ? GameState.shopStock.stock : (GameState.shopStock || []);
+      let html = stock.map(buildCityShopItemCard).join('');
+      if (window.ysdk && GameState.cityState.secretItemId) {
+        if (GameState.cityState.secretRevealed) {
+          const item = itemById(GameState.cityState.secretItemId);
+          const price = Math.floor(item.price * 0.7);
+          html += buildCitySecretEpicCardHTML(item, price);
+        } else {
+          html += `<div class="item-card secret" id="city-secret-card">
+            <div class="item-icon">❓</div>
+            <div class="item-name ic-name" style="color:#9b59b6">Тайный товар</div>
+            <div class="ic-stat" style="color:#9b59b6">Эпик за рекламу</div>
+            <button type="button" class="btn btn-ad" id="btn-secret">📺 Открыть</button>
+          </div>`;
+        }
+      }
+      shop.innerHTML = html;
+      bindCityShopClicks(shop, n, strangerOnly);
+    }
+
+    if (tab === 'alchemist') renderCityAlchemistPanel(n, strangerOnly);
+
+    const navNode = n;
+    const sn = typeof strangerOnly === 'boolean' ? strangerOnly : GameState._cityStrangerOnly;
+    document.querySelectorAll('.npc-tab').forEach(btn => {
+      btn.onclick = () => setCityNpcTab(btn.getAttribute('data-city-tab'), navNode, sn);
+    });
+    const sa = document.getElementById('btn-short-alch');
+    const so = document.getElementById('btn-short-oracle');
+    if (sa) sa.onclick = () => setCityNpcTab('alchemist', navNode, sn);
+    if (so) so.onclick = () => setCityNpcTab('oracle', navNode, sn);
+
+    const oracleBtn = document.getElementById('btn-oracle-center-ad');
+    if (oracleBtn) oracleBtn.onclick = () => runOraclePrediction(navNode);
+
+    const rer = document.getElementById('btn-reroll-shop');
+    if (rer) rer.onclick = () => {
+      if (GameState.gold >= 20) {
+        GameState.gold -= 20;
+        GameState.shopStock = generateShopStock(n.region);
+        saveGame();
+        enterCity(n, sn);
+      } else {
+        void showGameAlert('Нужно 20💰');
+      }
+    };
+  }
+
+  function getActiveCityNode() {
+    const id = GameState.activeCityNode;
+    if (id && GameState.mapGrid && GameState.mapGrid.length) {
+      const c = GameState.mapGrid.find(x => x.id === id);
+      if (c) return c;
+    }
+    return typeof getCurrentCell === 'function' ? getCurrentCell() : null;
+  }
+
   function enterCity(node, strangerOnly) {
     GameState.screen = 'city';
     GameState.activeCityNode = node.id;
+    GameState._cityStrangerOnly = !!strangerOnly;
+    if (!GameState.cityNpcTab) GameState.cityNpcTab = 'trader';
     if (!strangerOnly) {
       const stockResult = generateShopStock(node.region);
       GameState.shopStock = stockResult;
@@ -4802,7 +5123,6 @@
       GameState.cityState = GameState.cityState || {};
     }
 
-    // === Left panel: NPC list + heroes bar ===
     const hbox = document.getElementById('city-heroes');
     if (hbox) {
       const healCost = GameState.heroes.reduce((sum, h) => sum + Math.max(0, h.maxHp - h.hp) * 2, 0);
@@ -4819,11 +5139,13 @@
               <div class="hero-hp-name">${h.name} · ${h.hp}/${h.maxHp}</div>
               <div class="bar"><div class="bar-hp" style="width:${pct}%"></div></div>
             </div>
-            <div class="hero-heal-btn${full ? ' grey' : ''}" data-heal="${h.id}">${full ? 'полн.' : `-${indivCost}g`}</div>
+            <button type="button" class="hero-heal-btn${full ? ' grey' : ''}" data-heal="${h.id}">${full ? '✓' : `💚 ${indivCost}g`}</button>
           </div>`;
         }).join('')}
-        <button class="btn btn-green" id="btn-heal-full" ${allHealthy ? 'disabled' : ''} style="width:100%;margin-top:8px;font-size:10px;text-align:center">${allHealthy ? '✓ Все здоровы' : `+ Лечить всех · ${healCost}g`}</button>
-        ${window.ysdk ? '<button class="btn btn-ad" id="btn-heal-ad" style="width:100%;margin-top:4px;font-size:9px;text-align:center">📺 Лечить всех бесплатно</button>' : ''}
+        <div class="heal-all-row">
+          <button type="button" class="btn btn-green btn-heal-all" id="btn-heal-full" ${allHealthy ? 'disabled' : ''} style="font-size:10px;text-align:center">${allHealthy ? '✓ Все здоровы' : `+ Всех · ${healCost}g`}</button>
+          ${window.ysdk ? '<button type="button" class="btn btn-ad btn-heal-ad" id="btn-heal-ad" title="Реклама">📺</button>' : ''}
+        </div>
       `;
       hbox.querySelectorAll('[data-heal]').forEach(btn => {
         btn.onclick = () => {
@@ -4854,120 +5176,7 @@
       });
     }
 
-    // === Center panel: shop ===
-    const shop = document.getElementById('shop-list');
-    const rarBadge2 = r => r === 'epic' ? `<span class="badge badge-epic">Эпик</span>` : r === 'rare' ? `<span class="badge badge-rare">Редкий</span>` : `<span class="badge badge-common">Обычн.</span>`;
-    const secretCard = window.ysdk ? `
-      <div class="item-card secret">
-        <div class="item-icon" style="font-size:28px">❓</div>
-        <div class="item-name" style="color:#9b59b6">Тайный товар</div>
-        <div style="font-size:9px;color:#9b59b6;margin-bottom:8px">Посмотри рекламу — узнай что скрыто</div>
-        <button class="btn btn-ad" id="btn-secret" style="font-size:9px;padding:4px 8px;width:100%">📺 Открыть</button>
-      </div>` : '';
-    shop.innerHTML = (GameState.shopStock && GameState.shopStock.stock ? GameState.shopStock.stock : (GameState.shopStock || [])).map(it => {
-      const canBuy = GameState.gold >= it.price;
-      const ic = it.name.split(' ')[0];
-      const nm = it.name.split(' ').slice(1).join(' ');
-      const statText = Object.entries(it.mods || {}).filter(([k,v]) => typeof v === 'number' && v !== 0).map(([k,v]) => `${v>0?'+':''}${v} ${k}`).join(' · ');
-      return `<div class="item-card" data-buy="${it.id}">
-        <div class="item-icon">${ic}</div>
-        <div class="item-name">${nm}</div>
-        <div class="item-stats">${statText}</div>
-        <div class="item-footer">${rarBadge2(it.rarity)}<span class="item-price${canBuy ? '' : ' cant'}">${it.price}g</span></div>
-      </div>`;
-    }).join('') + secretCard;
-
-    shop.querySelectorAll('[data-buy]').forEach(card => {
-      card.onclick = () => {
-        const it = itemById(card.getAttribute('data-buy'));
-        if (!it || GameState.gold < it.price) { if (it) void showGameAlert('Недостаточно золота.'); return; }
-        GameState.gold -= it.price;
-        GameState.inventory.push(it.id);
-        saveGame();
-        enterCity(node, strangerOnly);
-      };
-    });
-    const bs = document.getElementById('btn-secret');
-    if (bs) bs.onclick = () => showRewardedAd(() => {
-      GameState.cityState.secretRevealed = true;
-      const item = itemById(GameState.cityState.secretItemId);
-      const price = Math.floor(item.price * 0.7);
-      const ic2 = item.name.split(' ')[0];
-      const nm2 = item.name.split(' ').slice(1).join(' ');
-      const secretEl = shop.querySelector('.secret');
-      if (secretEl) secretEl.outerHTML = `<div class="item-card" data-buy="__secret__">
-        <div class="item-icon">${ic2}</div>
-        <div class="item-name">${nm2}</div>
-        <div class="item-footer"><span class="badge badge-epic">Эпик</span><span class="item-price">${price}g</span></div>
-      </div>`;
-      shop.querySelector('[data-buy="__secret__"]')?.addEventListener('click', () => {
-        if (GameState.gold < price) { void showGameAlert('Недостаточно золота.'); return; }
-        GameState.gold -= price; GameState.inventory.push(item.id); saveGame(); enterCity(node, strangerOnly);
-      });
-    });
-
-    // === Right panel: alchemist + oracle ===
-    const al = document.getElementById('btn-city-alch-ad');
-    const oracle = document.getElementById('btn-city-oracle-ad');
-    const doAlchemy = () => {
-      const inv = GameState.inventory.map(itemById).filter(Boolean);
-      const base = inv.find(i => i.rarity === 'common') || inv.find(i => i.rarity === 'rare');
-      if (!base) { void showGameAlert('Нет подходящего предмета.'); return; }
-      const cost = base.rarity === 'common' ? 100 : 200;
-      const doUpgrade = () => {
-        const upgraded = upgradeItem(base, node.region || GameState.region || 1);
-        if (upgraded === base) {
-          void showGameAlert('Нет доступных улучшений.');
-          return;
-        }
-        const idx = GameState.inventory.indexOf(base.id);
-        if (idx >= 0) GameState.inventory[idx] = upgraded.id;
-        saveGame();
-        showGameAlert(`${base.name} → ${upgraded.name}!`).then(() => enterCity(node, strangerOnly));
-      };
-      if (GameState.gold >= cost) {
-        showGameConfirm(`Улучшить ${base.name} за ${cost}💰?`).then(ok => {
-          if (ok) {
-            GameState.gold -= cost;
-            doUpgrade();
-          } else if (window.ysdk && !GameState.cityState.adUpgradeUsed) {
-            showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
-          } else {
-            void showGameAlert(`Нужно ${cost}💰 для улучшения.`);
-          }
-        });
-      } else if (window.ysdk && !GameState.cityState.adUpgradeUsed) {
-        showRewardedAd(() => { GameState.cityState.adUpgradeUsed = true; doUpgrade(); });
-      } else {
-        void showGameAlert(`Нужно ${cost}💰 для улучшения.`);
-      }
-    };
-    if (al) al.onclick = doAlchemy;
-    const doOracle = () => showRewardedAd(() => {
-      const cur = getCurrentCell();
-      const next = GameState.mapGrid.find(c => c.region <= GameState.regionUnlocked && !c.completed && ['mission', 'dungeon', 'boss', 'final'].includes(c.type) && cellNeighbors(cur, c));
-      if (!next) {
-        void showGameAlert('Ближайших боёв не найдено.');
-        return;
-      }
-      const wave = generateEnemyWaveForCell(next).map(id => `${enemyDef(id).emoji} ${enemyDef(id).name}`).join(', ');
-      void showGameAlert(`Оракул видит: ${wave}`);
-    });
-    if (oracle) oracle.onclick = doOracle;
-
-    // Refresh shop button
-    const rer = document.getElementById('btn-reroll-shop');
-    if (rer) rer.onclick = () => {
-      if (GameState.gold >= 20) {
-        GameState.gold -= 20;
-        GameState.shopStock = generateShopStock(node.region);
-        saveGame();
-        enterCity(node, strangerOnly);
-      } else {
-        void showGameAlert('Нужно 20💰');
-      }
-    };
-
+    renderCityUI(node, strangerOnly);
     showScreen('city');
   }
 
