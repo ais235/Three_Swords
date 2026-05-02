@@ -463,6 +463,24 @@
     .city-shortcuts-title { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 2px; text-transform: uppercase; }
     .city-shortcuts { gap: 6px; }
     .city-shortcuts .sc-btn { font-size: 10px; padding: 5px 8px; text-align: center; width: 100%; }
+    .city-shortcuts .sc-btn-npc {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      text-align: left;
+    }
+    .city-shortcuts .sc-btn-face {
+      width: 24px;
+      height: 24px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      display: block;
+      background: #0a0a14;
+    }
+    .city-shortcuts .sc-btn-label { flex: 1; min-width: 0; text-align: left; line-height: 1.35; }
     .heal-all-row { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
     .alchemist-panel-title { font-size: 11px; color: var(--accent-teal); letter-spacing: 1px; margin-bottom: 4px; }
     .oracle-panel-title { font-size: 11px; color: var(--accent-purple); letter-spacing: 1px; margin-bottom: 4px; flex-shrink: 0; }
@@ -1172,6 +1190,8 @@
       .service-desc { font-size: 8px; margin-bottom: 4px; }
       .service-btns .btn { min-height: 30px; padding: 3px 5px; font-size: 8px; }
       .city-shortcuts .sc-btn { font-size: 8px; padding: 2px 4px; min-height: 26px; }
+      .city-shortcuts .sc-btn-npc { gap: 6px; }
+      .city-shortcuts .sc-btn-face { width: 20px; height: 20px; }
       .npc-tab-img { width: 22px; height: 22px; }
       .npc-inline-face { width: 28px; height: 28px; }
 
@@ -1325,6 +1345,8 @@
       #shop-list .btn-buy-ad { font-size: 5px; padding: 4px 2px; }
       .service-card .service-desc, .sc-desc { display: none; }
       .city-shortcuts .sc-btn { font-size: 7px; padding: 1px 3px; min-height: 22px; }
+      .city-shortcuts .sc-btn-npc { gap: 4px; padding: 2px 4px; }
+      .city-shortcuts .sc-btn-face { width: 18px; height: 18px; border-radius: 3px; }
       .npc-tab-img { width: 20px; height: 20px; border-radius: 3px; }
       .npc-inline-face { width: 24px; height: 24px; border-radius: 4px; }
       .btn-leave::before { content: '← КАРТА'; }
@@ -1510,8 +1532,18 @@
         </div>
         <div class="city-right city-shortcuts">
           <div class="city-shortcuts-title">Быстро</div>
-          <button type="button" class="btn btn-ad sc-btn" id="btn-short-alch" title="К алхимику">⚗ Алхимик</button>
-          <button type="button" class="btn btn-ad sc-btn" id="btn-short-oracle" title="К оракулу Вейре">🔮 Оракул</button>
+          <button type="button" class="btn btn-ad sc-btn sc-btn-npc" id="btn-short-trader" title="К торговцу Борну">
+            <img class="sc-btn-face" src="assets/npc/born.png" alt="" />
+            <span class="sc-btn-label">Торговец</span>
+          </button>
+          <button type="button" class="btn btn-ad sc-btn sc-btn-npc" id="btn-short-alch" title="К алхимику Руте">
+            <img class="sc-btn-face" src="assets/npc/ruta.png" alt="" />
+            <span class="sc-btn-label">Алхимик</span>
+          </button>
+          <button type="button" class="btn btn-ad sc-btn sc-btn-npc" id="btn-short-oracle" title="К оракулу Вейре">
+            <img class="sc-btn-face" src="assets/npc/veira.png" alt="" />
+            <span class="sc-btn-label">Оракул</span>
+          </button>
           <button type="button" class="btn btn-dim sc-btn" id="btn-city-bestiary">📖 Бестиарий</button>
           <button type="button" class="btn btn-dim btn-leave sc-btn" id="btn-leave-city"><span class="btn-leave-text">← Покинуть город</span></button>
         </div>
@@ -5198,8 +5230,10 @@
     document.querySelectorAll('.npc-tab').forEach(btn => {
       btn.onclick = () => setCityNpcTab(btn.getAttribute('data-city-tab'), navNode, sn);
     });
+    const st = document.getElementById('btn-short-trader');
     const sa = document.getElementById('btn-short-alch');
     const so = document.getElementById('btn-short-oracle');
+    if (st) st.onclick = () => setCityNpcTab('trader', navNode, sn);
     if (sa) sa.onclick = () => setCityNpcTab('alchemist', navNode, sn);
     if (so) so.onclick = () => setCityNpcTab('oracle', navNode, sn);
 
