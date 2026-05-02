@@ -310,13 +310,15 @@
     .city-banner-desc { font-size: 8px; color: var(--text-dim); line-height: 1.45; }
     .npc-tabs { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
     .npc-tab {
-      display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: flex-start; gap: 8px;
+      width: 100%; box-sizing: border-box;
+      padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
       background: #0d0d1a; cursor: pointer; font-family: inherit; font-size: 9px; color: var(--text-dim); text-align: left; transition: border-color .15s, background .15s;
     }
     .npc-tab:hover { border-color: var(--accent-teal); color: var(--text-main); }
     .npc-tab.active { border-color: var(--accent-gold); background: #1a1208; color: var(--accent-gold); }
     .npc-tab.active .npc-tab-img { border-color: var(--accent-gold); }
-    .npc-tab-text { flex: 1; font-weight: bold; letter-spacing: 0.5px; }
+    .npc-tab-text { flex: 1; min-width: 0; font-weight: bold; letter-spacing: 0.5px; text-align: left; }
     .npc-tab-img {
       width: 26px;
       height: 26px;
@@ -1299,8 +1301,8 @@
       .city-banner { padding: 4px; }
       .city-banner-title { font-size: 8px; }
       .city-desc, .city-banner-desc { display: none; }
-      .npc-tab-text { display: none; }
-      .npc-tab { padding: 4px 2px; font-size: 10px; justify-content: center; }
+      .npc-tab { padding: 4px 5px; font-size: 7px; justify-content: flex-start; gap: 5px; }
+      .npc-tab-text { display: block; font-size: 6px; line-height: 1.2; }
       .heroes-bar-title { display: none; }
       .hero-heal-btn { font-size: 7px; padding: 1px 3px; }
       .heal-all-row { flex-direction: row; gap: 3px; }
