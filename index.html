@@ -315,7 +315,39 @@
     }
     .npc-tab:hover { border-color: var(--accent-teal); color: var(--text-main); }
     .npc-tab.active { border-color: var(--accent-gold); background: #1a1208; color: var(--accent-gold); }
+    .npc-tab.active .npc-tab-img { border-color: var(--accent-gold); }
     .npc-tab-text { flex: 1; font-weight: bold; letter-spacing: 0.5px; }
+    .npc-tab-img {
+      width: 26px;
+      height: 26px;
+      object-fit: cover;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      display: block;
+      background: #0a0a14;
+    }
+    .shop-title-wrap,
+    .alchemist-head-with-face,
+    .oracle-head-with-face {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+    .alchemist-head-with-face { margin-bottom: 4px; }
+    .oracle-head-with-face { width: 100%; justify-content: center; text-align: left; }
+    .npc-inline-face {
+      width: 32px;
+      height: 32px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      display: block;
+      background: #0a0a14;
+    }
     .heroes-bar { margin-top: auto; border-top: 1px solid var(--border); padding-top: 8px; flex-shrink: 0; }
     .heroes-bar-title { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
     .hero-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -328,7 +360,7 @@
     .hero-heal-btn.grey { border-color: var(--border); color: #555577; cursor: default; }
     .city-panel { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
     .city-panel.hidden { display: none !important; }
-    .shop-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .shop-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 8px; }
     .shop-title { font-size: 13px; color: var(--text-main); letter-spacing: 1px; }
     .shop-footer {
       font-size: 8px; color: var(--text-hint); letter-spacing: 0.5px; padding: 6px 8px; border-radius: 6px; border: 1px dashed var(--border);
@@ -451,9 +483,6 @@
       background: #1a1208; max-width: 100%; word-break: break-word;
     }
     .oracle-result.hidden { display: none; }
-    /* ── NPC avatar ── */
-    .npc-avatar-area { flex-shrink: 0; text-align: center; padding: 6px 4px 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
-    .npc-avatar-img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border); display: block; margin: 0 auto 4px; }
     /* ── Hero portrait in city heroes bar ── */
     .hero-icon-s-img { width: 22px; height: 22px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); flex-shrink: 0; display: block; }
     #battle-screen, #city-screen, #inventory-screen, #map-screen, #event-screen, #victory-screen, #gameover-screen, #ending-screen, #bestiary-screen { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
@@ -1143,7 +1172,8 @@
       .service-desc { font-size: 8px; margin-bottom: 4px; }
       .service-btns .btn { min-height: 30px; padding: 3px 5px; font-size: 8px; }
       .city-shortcuts .sc-btn { font-size: 8px; padding: 2px 4px; min-height: 26px; }
-      .npc-avatar-img { width: 48px; height: 48px; }
+      .npc-tab-img { width: 22px; height: 22px; }
+      .npc-inline-face { width: 28px; height: 28px; }
 
       /* Inventory: horizontal-first compact layout */
       #inventory-layout {
@@ -1295,8 +1325,8 @@
       #shop-list .btn-buy-ad { font-size: 5px; padding: 4px 2px; }
       .service-card .service-desc, .sc-desc { display: none; }
       .city-shortcuts .sc-btn { font-size: 7px; padding: 1px 3px; min-height: 22px; }
-      .npc-avatar-area { padding: 3px 2px 4px; margin-bottom: 4px; }
-      .npc-avatar-img { width: 32px; height: 32px; border-radius: 4px; }
+      .npc-tab-img { width: 20px; height: 20px; border-radius: 3px; }
+      .npc-inline-face { width: 24px; height: 24px; border-radius: 4px; }
       .btn-leave::before { content: '← КАРТА'; }
       .btn-leave .btn-leave-text { display: none; }
 
@@ -1439,38 +1469,38 @@
             </div>
           </div>
           <div class="npc-tabs" role="tablist" aria-label="Услуги города">
-            <button type="button" class="npc-tab active" data-city-tab="trader" id="npc-tab-trader">🛒 <span class="npc-tab-text">Торговец</span></button>
-            <button type="button" class="npc-tab" data-city-tab="alchemist" id="npc-tab-alchemist">⚗ <span class="npc-tab-text">Алхимик</span></button>
-            <button type="button" class="npc-tab" data-city-tab="oracle" id="npc-tab-oracle">🔮 <span class="npc-tab-text">Оракул Вейра</span></button>
+            <button type="button" class="npc-tab active" data-city-tab="trader" id="npc-tab-trader"><img class="npc-tab-img" src="assets/npc/born.png" alt="" /><span class="npc-tab-text">Торговец</span></button>
+            <button type="button" class="npc-tab" data-city-tab="alchemist" id="npc-tab-alchemist"><img class="npc-tab-img" src="assets/npc/ruta.png" alt="" /><span class="npc-tab-text">Алхимик</span></button>
+            <button type="button" class="npc-tab" data-city-tab="oracle" id="npc-tab-oracle"><img class="npc-tab-img" src="assets/npc/veira.png" alt="" /><span class="npc-tab-text">Оракул Вейра</span></button>
           </div>
           <div class="heroes-bar" id="city-heroes"></div>
         </div>
         <div class="city-center" id="city-center-wrap">
           <div id="city-panel-trader" class="city-panel city-panel-trader">
-            <div class="npc-avatar-area">
-              <img src="assets/npc/born.png" class="npc-avatar-img" alt="Торговец Борн" onerror="this.parentElement.style.display='none'">
-            </div>
             <div class="shop-header">
-              <span class="shop-title">🛒 ТОРГОВЕЦ БОРН</span>
+              <div class="shop-title-wrap">
+                <img class="npc-inline-face" src="assets/npc/born.png" alt="" />
+                <span class="shop-title">ТОРГОВЕЦ БОРН</span>
+              </div>
               <button type="button" class="btn btn-dim" id="btn-reroll-shop" style="font-size:9px;padding:3px 10px">↺ Обновить (20g)</button>
             </div>
             <div id="shop-list" class="items-grid"></div>
             <div class="shop-footer">Выберите товар и нажмите «Купить».</div>
           </div>
           <div id="city-panel-alchemist" class="city-panel city-panel-alchemist hidden">
-            <div class="npc-avatar-area">
-              <img src="assets/npc/ruta.png" class="npc-avatar-img" alt="Алхимик Рута" onerror="this.parentElement.style.display='none'">
+            <div class="alchemist-head-with-face">
+              <img class="npc-inline-face" src="assets/npc/ruta.png" alt="" />
+              <div class="alchemist-panel-title">АЛХИМИК РУТА</div>
             </div>
-            <div class="alchemist-panel-title">⚗ АЛХИМИК РУТА</div>
             <div class="alchemist-help">Обычный → редкий: 100💰 · Редкий → эпический: 200💰. Выберите предмет в рюкзаке или посмотрите рекламу у алхимика (справа).</div>
             <div id="alchemist-list" class="alchemist-list"></div>
           </div>
           <div id="city-panel-oracle" class="city-panel city-panel-oracle hidden">
             <div class="oracle-view" id="oracle-view-wrap">
-              <div class="npc-avatar-area" style="border-bottom:none;margin-bottom:0">
-                <img src="assets/npc/veira.png" class="npc-avatar-img" alt="Оракул Вейра" onerror="this.parentElement.style.display='none'">
+              <div class="oracle-head-with-face">
+                <img class="npc-inline-face" src="assets/npc/veira.png" alt="" />
+                <div class="oracle-panel-title">ОРАКУЛ ВЕЙРА</div>
               </div>
-              <div class="oracle-panel-title">🔮 ОРАКУЛ ВЕЙРА</div>
               <div class="oracle-crystal" aria-hidden="true">🔮</div>
               <p class="oracle-hint">Вейра заглянет в ближайший бой на карте: состав врагов после просмотра рекламы.</p>
               <button type="button" class="btn btn-ad btn-oracle-main" id="btn-oracle-center-ad">📺 Узнать предсказание</button>
