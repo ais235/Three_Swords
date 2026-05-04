@@ -293,13 +293,13 @@
     }
     .cell-info-icon { font-size: 18px; margin-bottom: 4px; }
     .cell-info-name { color: var(--text-main); font-size: 7px; margin-bottom: 3px; line-height: 1.35; }
-    .city-body { display: grid; grid-template-columns: 190px 1fr 118px; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
+    .city-body { display: grid; grid-template-columns: 190px 1fr 190px; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
     .city-left { background: #111128; border-right: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden; }
     .city-left .city-banner { flex-shrink: 0; }
     .city-left .npc-tabs { flex-shrink: 0; }
     .city-left .heroes-bar { flex: 1; min-height: 0; overflow: hidden; margin-top: auto; }
     .city-center { padding: 12px; display: flex; flex-direction: column; gap: 0; background: var(--bg-dark); overflow-y: auto; min-height: 0; }
-    .city-right { background: #111128; border-left: 1px solid var(--border); padding: 8px 6px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .city-right { background: #111128; border-left: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
     .city-banner {
       display: flex; align-items: flex-start; gap: 8px; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
       background: #0d0d1a; flex-shrink: 0;
@@ -329,14 +329,20 @@
       display: block;
       background: #0a0a14;
     }
-    .shop-title-wrap,
+    .shop-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
     .alchemist-head-with-face,
     .oracle-head-with-face {
       display: flex;
       align-items: center;
       gap: 8px;
       min-width: 0;
-      flex: 1;
+      flex: 0 0 auto;
     }
     .alchemist-head-with-face { margin-bottom: 4px; }
     .oracle-head-with-face { width: 100%; justify-content: center; text-align: left; }
@@ -469,7 +475,7 @@
     .alchemist-panel-title { font-size: 11px; color: var(--accent-teal); letter-spacing: 1px; margin-bottom: 4px; }
     .oracle-panel-title { font-size: 11px; color: var(--accent-purple); letter-spacing: 1px; margin-bottom: 4px; flex-shrink: 0; }
     .alchemist-help { font-size: 8px; color: var(--text-dim); line-height: 1.45; margin-bottom: 8px; }
-    .alchemist-list { display: flex; flex-direction: column; gap: 6px; }
+    .alchemist-list { display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow-y: auto; }
     .alchemist-row {
       display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: #0d0d1a;
       flex-wrap: wrap;
@@ -1142,7 +1148,7 @@
 
       /* City: keep center gameplay, compress side columns */
       .city-body {
-        grid-template-columns: 156px 1fr 104px;
+        grid-template-columns: 156px 1fr 156px;
         flex: 1; min-height: 0;
       }
       .city-left, .city-center, .city-right { padding: 6px; gap: 6px; }
@@ -1296,7 +1302,7 @@
       .eq-mini { display: none; }
 
       /* City + Inventory ultra-compact */
-      .city-body { grid-template-columns: 124px 1fr 96px; flex: 1; min-height: 0; }
+      .city-body { grid-template-columns: 124px 1fr 124px; flex: 1; min-height: 0; }
       .city-left, .city-center, .city-right { padding: 4px; gap: 4px; }
       .city-banner { padding: 4px; }
       .city-banner-title { font-size: 8px; }
