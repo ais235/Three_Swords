@@ -293,13 +293,13 @@
     }
     .cell-info-icon { font-size: 18px; margin-bottom: 4px; }
     .cell-info-name { color: var(--text-main); font-size: 7px; margin-bottom: 3px; line-height: 1.35; }
-    .city-body { display: grid; grid-template-columns: 190px 1fr 190px; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
+    .city-body { display: grid; grid-template-columns: 190px 1fr 118px; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
     .city-left { background: #111128; border-right: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden; }
     .city-left .city-banner { flex-shrink: 0; }
     .city-left .npc-tabs { flex-shrink: 0; }
     .city-left .heroes-bar { flex: 1; min-height: 0; overflow: hidden; margin-top: auto; }
     .city-center { padding: 12px; display: flex; flex-direction: column; gap: 0; background: var(--bg-dark); overflow-y: auto; min-height: 0; }
-    .city-right { background: #111128; border-left: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .city-right { background: #111128; border-left: 1px solid var(--border); padding: 8px 6px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
     .city-banner {
       display: flex; align-items: flex-start; gap: 8px; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
       background: #0d0d1a; flex-shrink: 0;
@@ -1142,7 +1142,7 @@
 
       /* City: keep center gameplay, compress side columns */
       .city-body {
-        grid-template-columns: 156px 1fr 156px;
+        grid-template-columns: 156px 1fr 104px;
         flex: 1; min-height: 0;
       }
       .city-left, .city-center, .city-right { padding: 6px; gap: 6px; }
@@ -1296,7 +1296,7 @@
       .eq-mini { display: none; }
 
       /* City + Inventory ultra-compact */
-      .city-body { grid-template-columns: 124px 1fr 124px; flex: 1; min-height: 0; }
+      .city-body { grid-template-columns: 124px 1fr 96px; flex: 1; min-height: 0; }
       .city-left, .city-center, .city-right { padding: 4px; gap: 4px; }
       .city-banner { padding: 4px; }
       .city-banner-title { font-size: 8px; }
@@ -1512,8 +1512,6 @@
         </div>
         <div class="city-right city-shortcuts">
           <div class="city-shortcuts-title">Быстро</div>
-          <button type="button" class="btn btn-ad sc-btn" id="btn-short-alch" title="К алхимику">⚗ Алхимик</button>
-          <button type="button" class="btn btn-ad sc-btn" id="btn-short-oracle" title="К оракулу Вейре">🔮 Оракул</button>
           <button type="button" class="btn btn-dim sc-btn" id="btn-city-bestiary">📖 Бестиарий</button>
           <button type="button" class="btn btn-dim btn-leave sc-btn" id="btn-leave-city"><span class="btn-leave-text">← Покинуть город</span></button>
         </div>
@@ -5200,11 +5198,6 @@
     document.querySelectorAll('.npc-tab').forEach(btn => {
       btn.onclick = () => setCityNpcTab(btn.getAttribute('data-city-tab'), navNode, sn);
     });
-    const sa = document.getElementById('btn-short-alch');
-    const so = document.getElementById('btn-short-oracle');
-    if (sa) sa.onclick = () => setCityNpcTab('alchemist', navNode, sn);
-    if (so) so.onclick = () => setCityNpcTab('oracle', navNode, sn);
-
     const oracleBtn = document.getElementById('btn-oracle-center-ad');
     if (oracleBtn) oracleBtn.onclick = () => runOraclePrediction(navNode);
 
