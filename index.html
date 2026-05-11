@@ -414,6 +414,7 @@
     #shop-list .card-icon .item-icon-img { width: 30px !important; height: 30px !important; }
     #shop-list .card-name { font-size: 8px; color: #e8e8f0; line-height: 1.5; word-break: break-word; }
     #shop-list .card-stat { font-size: 7px; color: #2ecc71; line-height: 1.7; }
+    #shop-list .card-desc { font-size: 6px; color: #888aa0; line-height: 1.5; margin-top: 3px; font-style: italic; }
     #shop-list .card-footer {
       border-top: 2px solid #1a1a2e;
       padding: 7px 8px;
@@ -1160,8 +1161,9 @@
     .item-detail-icon { font-size: 30px; }
     .item-detail-title { font-size: 13px; color: var(--text-main); font-weight: bold; }
     .item-detail-sub { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
-    .item-detail-stats { font-size: 11px; color: var(--accent-green); margin-bottom: 8px; font-weight: bold; }
-    .item-detail-desc { font-size: 9px; color: #666688; line-height: 1.5; margin-bottom: 8px; }
+    .item-detail-stats { font-size: 11px; color: var(--accent-green); margin-bottom: 8px; font-weight: bold; line-height: 1.45; }
+    .item-detail-stats > div { display: block; }
+    .item-detail-desc { font-size: 9px; color: #888aa0; line-height: 1.5; margin-bottom: 8px; font-style: italic; padding: 6px 8px; background: #0e0e1d; border-left: 2px solid var(--border); border-radius: 0 4px 4px 0; }
     .item-detail-btns { display: flex; gap: 5px; flex-wrap: wrap; }
     .item-detail-btns .btn { font-size: 10px; padding: 5px 10px; margin: 0; }
     .bag-item { border: 1px solid var(--border); border-radius: 6px; padding: 6px; cursor: pointer; }
@@ -1301,6 +1303,7 @@
       #shop-list .card-icon .item-icon-img { width: 22px !important; height: 22px !important; }
       #shop-list .card-name { font-size: 7px; }
       #shop-list .card-stat { font-size: 6px; }
+      #shop-list .card-desc { font-size: 5px; }
       #shop-list .card-footer { padding: 5px 6px; gap: 4px; }
       #shop-list .btn-buy { font-size: 5px; padding: 4px 3px; }
       #shop-list .card-price, #shop-list .card-footer .badge { font-size: 8px; }
@@ -1458,6 +1461,7 @@
       #shop-list .card-icon .item-icon-img { width: 20px !important; height: 20px !important; }
       #shop-list .card-name { font-size: 6px; }
       #shop-list .card-stat { font-size: 5px; }
+      #shop-list .card-desc { font-size: 5px; }
       #shop-list .card-footer { padding: 4px 5px; gap: 3px; }
       #shop-list .btn-buy { font-size: 5px; padding: 4px 2px; }
       #shop-list .card-price { font-size: 8px; }
@@ -3287,7 +3291,6 @@
     const drop = GameState._lastBattleDrop || null;
     const enemyIds = GameState._lastBattleEnemyIds || [];
     const levelUps = GameState._lastBattleLevelUps || {};
-    const statNameRu2 = { attack:'Атака', armor:'Броня', range:'Дальность', move:'Ход', maxHp:'Макс.HP', mana:'Мана', maxMana:'Макс.Мана', goldBonus:'Бонус золота', speed:'Скорость' };
     GameState._lastBattleKills = 0; GameState._lastBattleRounds = 0;
 
     // ── Particles ──
@@ -3365,8 +3368,7 @@
     const lootEl = document.getElementById('victory-loot');
     if (lootEl && drop) {
       const rarLabel = { common: 'ОБЫЧН.', rare: 'РЕДКИЙ', epic: 'ЭПИЧЕСКИЙ' };
-      const statLine = Object.entries(drop.mods || {}).filter(([,v]) => typeof v === 'number' && v !== 0)
-        .map(([k,v]) => `${v>0?'+':''}${v} ${statNameRu2[k]||k}`).join(' · ') || '';
+      const statLine = formatItemMods(drop).join(' · ');
       lootEl.innerHTML = `
         <div class="vic-loot-title">ДОБЫЧА</div>
         <div class="vic-loot-item rarity-${drop.rarity}" style="border-color:${drop.rarity==='epic'?'#9b59b6':drop.rarity==='rare'?'#4a9eff':'#2a2a4a'}">
@@ -4852,6 +4854,61 @@
     }
     return '<span style="font-size:' + sizePx + 'px;line-height:1;display:inline-block">' + (item.emoji || '📦') + '</span>';
   }
+
+  function escapeHtmlAttr(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  // Единое форматирование характеристик предмета: возвращает массив строк
+  // ("+3 Атака", "Яд при ударе (2 хода)", "20% уклонение", "Аура: +2 атаки союзникам", ...).
+  // Использовать везде, где показываются статы предмета (магазин, рюкзак, лут победы).
+  function formatItemMods(item) {
+    if (!item || !item.mods) return [];
+    const m = item.mods;
+    const out = [];
+    const numLabels = {
+      attack: 'Атака',
+      armor: 'Броня',
+      range: 'Дальность',
+      move: 'Ход',
+      maxHp: 'Макс.HP',
+      mana: 'Макс.Мана',
+      maxMana: 'Макс.Мана',
+      speed: 'Скорость',
+      armorPierce: 'Пробитие брони',
+      manaRegen: 'Реген. маны/ход',
+      reflectFlat: 'Шипы (урон атакующему)'
+    };
+    for (const [k, v] of Object.entries(m)) {
+      if (typeof v !== 'number' || v === 0) continue;
+      if (k in numLabels) out.push(`${v > 0 ? '+' : ''}${v} ${numLabels[k]}`);
+    }
+    if (typeof m.goldBonus === 'number' && m.goldBonus !== 0) out.push(`+${Math.round(m.goldBonus * 100)}% золота с боя`);
+    if (typeof m.dodge === 'number' && m.dodge !== 0) out.push(`${Math.round(m.dodge * 100)}% уклонение`);
+    if (typeof m.reflectDmg === 'number' && m.reflectDmg !== 0) out.push(`${Math.round(m.reflectDmg * 100)}% отражение физ. урона`);
+    if (typeof m.reflectStatus === 'number' && m.reflectStatus !== 0) out.push(`${Math.round(m.reflectStatus * 100)}% отражение статуса`);
+    if (typeof m.firstShotBonus === 'number' && m.firstShotBonus !== 0) out.push(`Первый выстрел ×${(1 + m.firstShotBonus).toFixed(1)}`);
+    if (typeof m.deathExplode === 'number' && m.deathExplode !== 0) out.push(`Взрыв 3×3 при гибели (${m.deathExplode} урона)`);
+    if (m.poisonOnHit) out.push('Яд при ударе (2 хода)');
+    if (m.stunOnHit) out.push('Оглушение при ударе (1 ход)');
+    if (m.ignoreCover) out.push('Игнор укрытий (лес/союзники)');
+    if (m.aoePlus) out.push('AoE заклинания: +1 радиус');
+    if (m.chaosAoe) out.push('Случайный AoE 5 урона после заклинания');
+    if (m.freeze2) out.push('Заморозка: 2 хода вместо 1');
+    if (m.revive5) out.push('1× воскрешение с 5 HP');
+    if (m.extraAction) out.push('1× повтор действия за бой');
+    if (m.previewEnemies) out.push('Превью врагов перед боем');
+    if (m.battleTeleport) out.push('1× телепорт героя за бой');
+    if (typeof m.allyAttack === 'number' && m.allyAttack !== 0) out.push(`Аура: +${m.allyAttack} атаки союзникам`);
+    if (typeof m.allyArmor === 'number' && m.allyArmor !== 0) out.push(`Аура: +${m.allyArmor} брони союзникам`);
+    return out;
+  }
+
   let InvState = { activeHeroId: 'garet', selectedItemId: null, selectedItemIdx: -1 };
   function randomItem(region, minRarity) {
     return selectLootItem(region, minRarity || null);
@@ -4903,7 +4960,9 @@
         if (!id) return '<span class="eq-mini-dot">·</span>';
         const it = itemById(id);
         if (!it) return '<span class="eq-mini-dot">•</span>';
-        return '<span class="eq-mini-icon">' + itemIconMarkup(it, 11) + '</span>';
+        const fx = formatItemMods(it).join(' · ');
+        const tip = [it.name, fx, it.desc].filter(Boolean).join('\n');
+        return '<span class="eq-mini-icon" title="' + escapeHtmlAttr(tip) + '">' + itemIconMarkup(it, 11) + '</span>';
       })
       .join('');
   }
@@ -4976,10 +5035,14 @@
       zone.className = 'eq-zone' + (it ? ' eq-filled eq-rarity-' + it.rarity : '');
       if (nameEl) nameEl.textContent = it ? it.name : '';
       if (it) {
+        const fx = formatItemMods(it).join(' · ');
+        const tip = [it.name, fx, it.desc].filter(Boolean).join('\n');
+        zone.title = tip;
         zone.innerHTML = `
           <div class="eq-zone-fill">${itemIconMarkup(it, 60)}</div>
           <div class="eq-zone-unequip" title="Снять">✕</div>`;
       } else {
+        zone.title = '';
         zone.innerHTML = `<div class="eq-zone-fill eq-zone-empty"><span class="eq-zone-def-icon">${slotDefIcons[slot]}</span></div>`;
       }
       zone.onclick = () => {
@@ -5013,7 +5076,9 @@
       bag.innerHTML = invList.map((id, idx) => {
         const it = itemById(id);
         const active = idx === InvState.selectedItemIdx ? 'selected' : '';
-        return `<div class="inv-item-card ${active}" data-idx="${idx}" title="${it.name}">
+        const fx = formatItemMods(it).join(' · ');
+        const tip = [it.name, fx, it.desc].filter(Boolean).join('\n');
+        return `<div class="inv-item-card ${active}" data-idx="${idx}" title="${escapeHtmlAttr(tip)}">
           <div class="inv-item-thumb">
             ${itemIconMarkup(it, 56)}
             <span class="inv-item-price">${it.price}g</span>
@@ -5034,12 +5099,11 @@
     const detail = document.getElementById('inv-detail');
     const sel = itemById(InvState.selectedItemId);
     if (!sel) { detail.innerHTML = '<div style="color:var(--text-dim);text-align:center;padding:20px 0">Выберите предмет в рюкзаке</div>'; return; }
-    const statNameRu = { attack:'Атака', armor:'Броня', range:'Дальность', move:'Ход', maxHp:'Макс.HP', mana:'Мана', maxMana:'Макс.Мана', goldBonus:'Бонус золота', speed:'Скорость', firstShotBonus:'Первый выстрел', armorPierce:'Пробитие брони' };
-    const statLines = Object.entries(sel.mods || {}).filter(([k,v]) => typeof v === 'number' && v !== 0).map(([k,v]) => {
-      const label = statNameRu[k] || k;
-      const val = k === 'goldBonus' ? `+${Math.round(v*100)}%` : `${v > 0 ? '+' : ''}${v}`;
-      return `${val} ${label}`;
-    }).join('  ') || '— особый эффект';
+    const effects = formatItemMods(sel);
+    const statLinesHtml = effects.length
+      ? effects.map(e => `<div>${e}</div>`).join('')
+      : '<div>— особый эффект</div>';
+    const descHtml = sel.desc ? `<div class="item-detail-desc">${sel.desc}</div>` : '';
     const forRole = sel.id.includes('bow') ? 'Лучник' : sel.id.includes('staff') || sel.id.includes('wand') ? 'Маг' : sel.id.includes('sword') || sel.id.includes('hammer') ? 'Воин' : 'Все';
     const itemName = sel.name;
     detail.innerHTML = `
@@ -5049,7 +5113,8 @@
       <div class="item-detail-sub" style="margin-top:4px">${slotNames[sel.slot] || sel.slot} · ${forRole}</div>
       <div style="margin-top:4px">${rarBadge(sel.rarity)}</div>
     </div>
-    <div class="item-detail-stats" style="text-align:center;margin-bottom:8px">${statLines}</div>
+    <div class="item-detail-stats" style="text-align:center;margin-bottom:6px">${statLinesHtml}</div>
+    ${descHtml}
     <div class="item-detail-btns" style="display:flex;flex-direction:column;gap:6px">
       <button class="btn btn-green" id="inv-equip-btn" style="width:100%;margin:0">✓ Надеть</button>
       <button class="btn" id="inv-transfer-btn" style="width:100%;margin:0">⇄ Передать</button>
@@ -5577,18 +5642,20 @@
   function buildCityShopItemCard(it) {
     const canBuy = GameState.gold >= it.price;
     const shortfall = Math.max(0, it.price - GameState.gold);
-    const statNameRu = { attack:'Атака', armor:'Броня', range:'Дальн.', move:'Ход', maxHp:'HP', mana:'Мана', speed:'Скор.', armorPierce:'Пробитие', goldBonus:'Золото', dodge:'Уклон' };
-    const statText = Object.entries(it.mods || {}).filter(([k, v]) => typeof v === 'number' && v !== 0)
-      .map(([k, v]) => `${v > 0 ? '+' : ''}${v} ${statNameRu[k] || k}`).join(' · ');
+    const effects = formatItemMods(it);
+    const statText = effects.join(' · ');
+    const descText = it.desc ? String(it.desc) : '';
     const r = it.rarity === 'epic' ? 'epic' : it.rarity === 'rare' ? 'rare' : 'common';
     const btnLabel = canBuy ? 'КУПИТЬ' : `−${shortfall}g`;
-    return `<div class="item-card ${r}${canBuy ? '' : ' cant'}">
+    const tooltip = [it.name, statText, descText].filter(Boolean).join(' — ');
+    return `<div class="item-card ${r}${canBuy ? '' : ' cant'}" title="${escapeHtmlAttr(tooltip)}">
       <div class="card-body">
         <div class="card-icon-name">
           <span class="card-icon">${itemIconMarkup(it, 30)}</span>
           <span class="card-name">${it.name}</span>
         </div>
         <div class="card-stat">${statText}</div>
+        ${descText ? `<div class="card-desc">${descText}</div>` : ''}
       </div>
       <div class="card-footer">
         ${cityItemRarBadge(it.rarity)}
