@@ -410,7 +410,8 @@
       min-height: 0;
     }
     #shop-list .card-icon-name { display: flex; align-items: center; gap: 10px; }
-    #shop-list .card-icon { font-size: 30px; flex-shrink: 0; line-height: 1; }
+    #shop-list .card-icon { font-size: 30px; flex-shrink: 0; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    #shop-list .card-icon .item-icon-img { width: 30px !important; height: 30px !important; }
     #shop-list .card-name { font-size: 8px; color: #e8e8f0; line-height: 1.5; word-break: break-word; }
     #shop-list .card-stat { font-size: 7px; color: #2ecc71; line-height: 1.7; }
     #shop-list .card-footer {
@@ -510,7 +511,16 @@
       background: #0d0d1a; transition: border-color .15s;
     }
     .bestiary-card:hover, .bestiary-card.active { border-color: var(--accent-gold); background: #1a1000; }
-    .bestiary-card-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+    .bestiary-card-icon {
+      width: 32px; height: 32px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 50% 40%, rgba(40,40,70,.9) 0%, rgba(8,8,18,.95) 100%);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;
+    }
+    .bestiary-card-icon .bestiary-portrait { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+    .bestiary-card-icon .bestiary-portrait-img { max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; object-fit: contain; }
+    .bestiary-card-unknown { font-size: 18px; line-height: 1; opacity: 0.65; }
+    .bestiary-portrait-fallback { display: none; text-align: center; }
     .bestiary-card-name { font-size: 8px; color: var(--text-main); line-height: 1.3; }
     .bestiary-card-status { font-size: 7px; margin-top: 2px; }
     .bs-new { color: var(--text-hint); }
@@ -520,8 +530,17 @@
       padding: 18px 20px; overflow-y: auto; background: var(--bg-dark);
       display: flex; flex-direction: column; gap: 14px;
     }
-    .bestiary-detail-icon { font-size: 52px; text-align: center; line-height: 1; }
-    .bestiary-detail-icon.bs-unknown { font-size: 40px; color: var(--text-hint); text-align: center; }
+    .bestiary-detail-icon {
+      text-align: center; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 96px;
+      padding: 8px;
+      background: radial-gradient(circle at 50% 38%, rgba(50,50,85,.35) 0%, rgba(10,10,22,.85) 65%);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+    }
+    .bestiary-detail-icon .bestiary-portrait { display: flex; align-items: center; justify-content: center; }
+    .bestiary-detail-icon .bestiary-portrait-img { width: 88px !important; height: 88px !important; max-width: min(88px, 100%); max-height: 88px; object-fit: contain; }
+    .bestiary-detail-icon.bs-unknown { font-size: 40px; color: var(--text-hint); align-items: center; justify-content: center; min-height: 96px; background: transparent; border: 1px dashed rgba(255,255,255,0.12); }
     .bestiary-detail-name { font-size: 14px; color: var(--text-main); letter-spacing: 1px; }
     .bestiary-stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
     .bestiary-stat { background: #0a0a14; border: 1px solid var(--border); border-radius: 6px;
@@ -930,7 +949,43 @@
     .victory-loot { width: 100%; max-width: 560px; margin-top: 4px; }
     .vic-loot-title { font-size: 7px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px; }
     .vic-loot-item { display: flex; align-items: center; gap: 8px; background: #0e0e20; border-radius: 8px; border: 1px solid #2a2a4a; padding: 8px 10px; }
-    .vic-loot-icon { font-size: 22px; flex-shrink: 0; }
+    .vic-loot-icon { font-size: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-width: 28px; }
+    .vic-loot-icon .item-icon-img { display: block; }
+
+    /* ─── Универсальная подложка под иконку предмета ─── */
+    .item-icon-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.08) 38%, rgba(0,0,0,0.32) 72%, rgba(0,0,0,0.55) 100%),
+        linear-gradient(180deg, #1a1a30 0%, #0a0a18 100%);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.35);
+      padding: 2px;
+      box-sizing: content-box;
+    }
+    .item-icon-wrap .item-icon-img { filter: drop-shadow(0 1px 1px rgba(0,0,0,0.55)); }
+    .item-icon-wrap.rar-common { border-color: rgba(180,180,200,0.30); }
+    .item-icon-wrap.rar-rare {
+      border-color: rgba(74,158,255,0.55);
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.55), 0 0 6px rgba(74,158,255,0.25);
+    }
+    .item-icon-wrap.rar-epic {
+      border-color: rgba(240,165,0,0.65);
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.55), 0 0 8px rgba(240,165,0,0.35);
+    }
+    /* В микрослотах полоски отряда — без подложки, иначе плотно */
+    .eq-mini .item-icon-wrap { background: none; border: 0; box-shadow: none; padding: 0; }
+    /* Компактные места: тонкая подложка */
+    .eq-zone-fill .item-icon-wrap,
+    .inv-item-thumb .item-icon-wrap { padding: 1px; border-radius: 6px; }
+    /* В крупном превью карточки предмета подложка крупнее и мягче */
+    #inv-detail .item-icon-wrap { padding: 6px; border-radius: 12px; }
+    /* В магазине подложка немного крупнее для солидной карточки */
+    #shop-list .card-icon .item-icon-wrap { padding: 3px; border-radius: 8px; }
     .vic-loot-info { flex: 1; min-width: 0; }
     .vic-loot-name { font-size: 8px; color: var(--text-main); }
     .vic-loot-stat { font-size: 6px; color: var(--accent-green); margin-top: 2px; }
@@ -941,7 +996,8 @@
     /* Bestiary row */
     .victory-bestiary-row { width: 100%; max-width: 560px; background: #0a140e; border: 1px solid var(--accent-green); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .vic-bestiary-label { font-size: 6px; color: var(--accent-green); letter-spacing: 1px; flex-shrink: 0; }
-    .vic-bestiary-enemy { font-size: 18px; }
+    .vic-bestiary-enemy { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; margin: 0 3px; }
+    .vic-bestiary-enemy .bestiary-portrait-img { width: 22px !important; height: 22px !important; object-fit: contain; vertical-align: middle; }
     /* Buttons */
     .victory-buttons { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 6px; }
     .vic-btn-ad { border-color: var(--accent-purple); color: var(--accent-purple); }
@@ -1069,26 +1125,35 @@
     .paperdoll-row { display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; z-index: 1; }
     #inv-hero-figure { font-size: 72px; line-height: 1; text-align: center; filter: drop-shadow(0 0 18px rgba(74,158,255,0.35)) drop-shadow(0 4px 8px rgba(0,0,0,.8)); transition: filter .3s; }
     #inv-hero-figure img { width: 72px; height: 72px; border-radius: 6px; border: 2px solid #3a3a6a; }
-    .eq-zone { width: 64px; height: 64px; background: #0a0a1c; border: 2px solid #2a2a4a; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: border-color .2s, box-shadow .2s, background .2s; flex-shrink: 0; }
+    .eq-slot-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; max-width: 76px; }
+    .eq-slot-heading { font-size: 7px; color: var(--text-hint); letter-spacing: 1px; text-transform: uppercase; text-align: center; line-height: 1.2; }
+    .eq-slot-item-name { font-size: 7px; color: var(--text-dim); text-align: center; line-height: 1.25; max-width: 76px; min-height: 1.25em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+    .eq-slot-item-name:empty { min-height: 0; }
+    .eq-zone { width: 64px; height: 64px; background: #0a0a1c; border: 2px solid #2a2a4a; border-radius: 8px; display: flex; flex-direction: column; align-items: stretch; justify-content: stretch; cursor: pointer; position: relative; transition: border-color .2s, box-shadow .2s, background .2s; flex-shrink: 0; padding: 0; overflow: hidden; }
     .eq-zone:hover { border-color: var(--accent-gold); background: #141410; box-shadow: 0 0 12px rgba(240,165,0,.2); }
     .eq-zone.eq-filled { border-color: #4a4a7a; background: #0e0e20; }
     .eq-zone.eq-filled:hover { border-color: var(--accent-red); box-shadow: 0 0 10px rgba(231,76,60,.2); }
     .eq-zone.eq-rarity-rare { border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(74,158,255,.25); }
     .eq-zone.eq-rarity-epic { border-color: var(--accent-gold); box-shadow: 0 0 12px rgba(240,165,0,.3); }
-    .eq-zone-def-icon { font-size: 24px; opacity: 0.25; }
-    .eq-zone-label { font-size: 7px; color: var(--text-hint); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
-    .eq-zone-item-icon { font-size: 28px; line-height: 1; }
-    .eq-zone-item-name { font-size: 7px; color: var(--text-dim); margin-top: 3px; text-align: center; line-height: 1.2; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .eq-zone-unequip { position: absolute; top: 2px; right: 3px; font-size: 9px; color: #555577; line-height: 1; }
+    .eq-zone-fill { width: 100%; height: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 2px; }
+    .eq-zone-fill.eq-zone-empty .eq-zone-def-icon { font-size: 28px; opacity: 0.28; line-height: 1; }
+    .eq-zone-fill .item-icon-wrap { width: 100%; height: 100%; max-width: none; max-height: none; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 1px; }
+    .eq-zone-fill .item-icon-img { width: 100% !important; height: 100% !important; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .eq-zone-fill > span:not(.item-icon-wrap) { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 30px; line-height: 1; }
+    .eq-zone-unequip { position: absolute; top: 1px; right: 2px; font-size: 9px; color: #8899aa; line-height: 1; text-shadow: 0 0 3px #000; z-index: 2; }
     #inv-slot-info { font-size: 9px; color: var(--text-hint); text-align: center; min-height: 20px; }
     /* Backpack */
     #inv-backpack { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; background: #09090f; }
     .inv-pack-header { font-size: 9px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; padding-bottom: 6px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     #bag-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; flex-shrink: 0; }
-    .inv-item-card { background: #0d0d1a; border-radius: 6px; padding: 6px 4px; border: 1px solid var(--border); cursor: pointer; text-align: center; transition: border-color .15s; }
+    .inv-item-card { background: #0d0d1a; border-radius: 6px; padding: 0; border: 1px solid var(--border); cursor: pointer; text-align: center; transition: border-color .15s; overflow: hidden; }
     .inv-item-card:hover { border-color: var(--accent-blue); background: #10102a; }
     .inv-item-card.selected { border-color: var(--accent-gold); background: #150f00; box-shadow: 0 0 8px rgba(240,165,0,.2); }
-    .inv-item-icon { font-size: 22px; margin-bottom: 3px; display: block; }
+    .inv-item-thumb { position: relative; aspect-ratio: 1; width: 100%; display: flex; align-items: stretch; justify-content: stretch; min-height: 0; }
+    .inv-item-thumb .item-icon-wrap { flex: 1; width: 100%; height: 100%; min-height: 0; border-radius: 5px; box-sizing: border-box; }
+    .inv-item-thumb > span:not(.inv-item-price):not(.item-icon-wrap) { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 28px; line-height: 1; min-height: 0; }
+    .inv-item-thumb .item-icon-img { width: 100% !important; height: 100% !important; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .inv-item-price { position: absolute; right: 3px; bottom: 2px; font-size: 8px; font-weight: bold; color: #e8c860; line-height: 1; pointer-events: none; text-shadow: 0 0 4px #000, 0 1px 2px #000, 0 -1px 2px #000; letter-spacing: 0.5px; z-index: 2; }
     .inv-item-name { font-size: 8px; color: var(--text-dim); line-height: 1.2; display: block; }
     #inv-detail { background: #0d0d1a; border-radius: 8px; padding: 10px; border: 1px solid var(--border); flex: 1; min-height: 0; overflow-y: auto; font-size: 10px; color: var(--text-dim); }
     .item-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -1104,7 +1169,9 @@
     .bonus { color: var(--accent-green); }
     #party-strip { display: flex; gap: 6px; margin-bottom: 6px; flex-shrink: 0; }
     .party-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 11px; }
-    .eq-mini { font-size: 10px; opacity: 0.9; margin-left: 3px; }
+    .eq-mini { font-size: 10px; opacity: 0.9; margin-left: 3px; display: inline-flex; align-items: center; gap: 3px; flex-wrap: nowrap; vertical-align: middle; }
+    .eq-mini-icon { display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
+    .eq-mini-dot { opacity: 0.85; font-size: 10px; }
     @media (max-width: 768px) {
       #topbar-right { min-width: 74px; }
       #topbar-center { font-size: 11px; }
@@ -1231,6 +1298,7 @@
       .items-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
       #shop-list .card-body { padding: 8px; gap: 5px; }
       #shop-list .card-icon { font-size: 22px; }
+      #shop-list .card-icon .item-icon-img { width: 22px !important; height: 22px !important; }
       #shop-list .card-name { font-size: 7px; }
       #shop-list .card-stat { font-size: 6px; }
       #shop-list .card-footer { padding: 5px 6px; gap: 4px; }
@@ -1267,8 +1335,9 @@
       .equip-slot-name, .equip-slot-type { font-size: 8px; }
       .inv-right-title { font-size: 9px; }
       #bag-grid { grid-template-columns: repeat(4, minmax(54px, 1fr)); gap: 4px; }
-      .inv-item-card { padding: 5px; }
-      .inv-item-icon { font-size: 14px; margin-bottom: 1px; }
+      .inv-item-card { padding: 0; }
+      .inv-item-thumb .item-icon-img { width: 100% !important; height: 100% !important; }
+      .inv-item-price { font-size: 7px; right: 2px; bottom: 1px; }
       .inv-item-name { font-size: 7px; line-height: 1.15; }
       #inv-detail { padding: 8px; font-size: 8px; }
       .item-detail-icon { font-size: 18px; }
@@ -1386,6 +1455,7 @@
       #shop-list .item-card { height: 100%; }
       #shop-list .card-body { padding: 5px 5px 4px; gap: 4px; }
       #shop-list .card-icon { font-size: 20px; }
+      #shop-list .card-icon .item-icon-img { width: 20px !important; height: 20px !important; }
       #shop-list .card-name { font-size: 6px; }
       #shop-list .card-stat { font-size: 5px; }
       #shop-list .card-footer { padding: 4px 5px; gap: 3px; }
@@ -1413,8 +1483,9 @@
       .equip-slot-icon { width: 16px; height: 16px; font-size: 10px; }
       .equip-slot-name { font-size: 7px; }
       #bag-grid { grid-template-columns: repeat(5, minmax(40px, 1fr)); gap: 3px; }
-      .inv-item-card { padding: 3px; }
-      .inv-item-icon { font-size: 11px; }
+      .inv-item-card { padding: 0; }
+      .inv-item-thumb > span:not(.inv-item-price):not(.item-icon-wrap) { font-size: 20px; }
+      .inv-item-price { font-size: 6px; }
       .inv-item-name { font-size: 6px; }
       #inv-detail { padding: 5px; font-size: 7px; }
       .item-detail-head { gap: 5px; margin-bottom: 3px; }
@@ -1516,7 +1587,14 @@
             <span style="flex-shrink:0">Громкость</span>
             <input type="range" id="setting-music-volume" min="0" max="100" value="70" step="1" aria-label="Громкость музыки" />
           </div>
-          <p class="menu-settings-hint">При сворачивании вкладки или окна музыка ставится на паузу (требование площадки).</p>
+          <div class="menu-settings-row">
+            <label><input type="checkbox" id="setting-sfx-enabled" checked /> Звуки боя (удары, выстрелы, магия)</label>
+          </div>
+          <div class="menu-settings-row">
+            <span style="flex-shrink:0">Громкость SFX</span>
+            <input type="range" id="setting-sfx-volume" min="0" max="100" value="75" step="1" aria-label="Громкость звуков боя" />
+          </div>
+          <p class="menu-settings-hint">При сворачивании вкладки или окна музыка и звуки боя останавливаются (требование площадки).</p>
           <button type="button" class="menu-btn menu-btn-continue" id="btn-menu-settings-back" style="margin-top:4px">
             <span class="menu-btn-icon">←</span>
             <span class="menu-btn-label">Назад</span>
@@ -1665,21 +1743,30 @@
           <div id="inv-paperdoll-area">
             <!-- Верхний ряд: оружие | фигура | артефакт -->
             <div class="paperdoll-row paperdoll-row-mid">
-              <div class="eq-zone" id="eq-slot-weapon" data-slot="weapon">
-                <div class="eq-zone-def-icon">⚔</div>
-                <div class="eq-zone-label">Оружие</div>
+              <div class="eq-slot-wrap">
+                <div class="eq-slot-heading">Оружие</div>
+                <div class="eq-zone" id="eq-slot-weapon" data-slot="weapon">
+                  <div class="eq-zone-fill eq-zone-empty"><span class="eq-zone-def-icon">⚔</span></div>
+                </div>
+                <div class="eq-slot-item-name" id="eq-name-weapon"></div>
               </div>
               <div id="inv-hero-figure"></div>
-              <div class="eq-zone" id="eq-slot-artifact" data-slot="artifact">
-                <div class="eq-zone-def-icon">✨</div>
-                <div class="eq-zone-label">Артефакт</div>
+              <div class="eq-slot-wrap">
+                <div class="eq-slot-heading">Артефакт</div>
+                <div class="eq-zone" id="eq-slot-artifact" data-slot="artifact">
+                  <div class="eq-zone-fill eq-zone-empty"><span class="eq-zone-def-icon">✨</span></div>
+                </div>
+                <div class="eq-slot-item-name" id="eq-name-artifact"></div>
               </div>
             </div>
             <!-- Нижний ряд: броня по центру -->
             <div class="paperdoll-row paperdoll-row-bot">
-              <div class="eq-zone" id="eq-slot-armor" data-slot="armor">
-                <div class="eq-zone-def-icon">🛡</div>
-                <div class="eq-zone-label">Броня</div>
+              <div class="eq-slot-wrap">
+                <div class="eq-slot-heading">Броня</div>
+                <div class="eq-zone" id="eq-slot-armor" data-slot="armor">
+                  <div class="eq-zone-fill eq-zone-empty"><span class="eq-zone-def-icon">🛡</span></div>
+                </div>
+                <div class="eq-slot-item-name" id="eq-name-armor"></div>
               </div>
             </div>
           </div>
@@ -1849,14 +1936,16 @@
   };
 
   function loadAudioSettings() {
-    const def = { musicEnabled: true, musicVolume: 0.7 };
+    const def = { musicEnabled: true, musicVolume: 0.7, sfxEnabled: true, sfxVolume: 0.75 };
     try {
       const raw = localStorage.getItem(AUDIO_SETTINGS_KEY);
       if (!raw) return def;
       const o = JSON.parse(raw);
       return {
         musicEnabled: o.musicEnabled !== false,
-        musicVolume: Math.min(1, Math.max(0, typeof o.musicVolume === 'number' ? o.musicVolume : def.musicVolume))
+        musicVolume: Math.min(1, Math.max(0, typeof o.musicVolume === 'number' ? o.musicVolume : def.musicVolume)),
+        sfxEnabled: o.sfxEnabled !== false,
+        sfxVolume: Math.min(1, Math.max(0, typeof o.sfxVolume === 'number' ? o.sfxVolume : def.sfxVolume))
       };
     } catch (_) { return def; }
   }
@@ -1895,7 +1984,10 @@
       });
       const gc = document.getElementById('game-container');
       if (gc) {
-        gc.addEventListener('pointerdown', () => { this.unlock(); }, { capture: true, once: true });
+        gc.addEventListener('pointerdown', () => {
+          this.unlock();
+          if (typeof BattleSfx !== 'undefined') BattleSfx.unlock();
+        }, { capture: true, once: true });
       }
     },
 
@@ -1979,6 +2071,182 @@
     ORC_GUARD: 'orc_guard', SUICIDE: 'suicide', SPIDER: 'spider', WATCHER: 'watcher', ICE_ELEM: 'ice_elem',
     DARK_KNIGHT: 'dark_knight', NECRO: 'necro', CHAOS: 'chaos', ASSASSIN: 'assassin', HYDRA: 'hydra', GHOST: 'ghost',
     FIRE_TITAN: 'fire_titan', DARK_LORD: 'dark_lord'
+  };
+
+  function inferAttackSfxKind(attacker, opts) {
+    opts = opts || {};
+    if (opts.magic || opts.fire) return 'magic';
+    if (attacker.isHero && attacker.heroId === 'alira') return 'bow';
+    if (attacker.isHero && attacker.heroId === 'seris') return 'magic';
+    if (!attacker.isHero) {
+      const mid = attacker.enemyId;
+      if (mid === ENEMY_IDS.SHAMAN || mid === ENEMY_IDS.NECRO || mid === ENEMY_IDS.ICE_ELEM || mid === ENEMY_IDS.CHAOS) return 'magic';
+      if (attacker.range > 1) return 'bow';
+    }
+    return 'melee';
+  }
+
+  const BattleSfx = {
+    ctx: null,
+    master: null,
+    _noiseBuf: null,
+
+    init() {
+      document.addEventListener('visibilitychange', () => this.onVisibility());
+      window.addEventListener('pagehide', () => { if (this.ctx) this.ctx.suspend().catch(() => {}); });
+    },
+
+    onVisibility() {
+      if (!this.ctx) return;
+      if (document.hidden) this.ctx.suspend().catch(() => {});
+      else this.ctx.resume().catch(() => {});
+    },
+
+    unlock() {
+      const ctx = this.ensureCtx();
+      if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    },
+
+    ensureCtx() {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      if (!this.ctx) {
+        this.ctx = new Ctx();
+        this.master = this.ctx.createGain();
+        this.master.connect(this.ctx.destination);
+      }
+      return this.ctx;
+    },
+
+    _sfxGain() {
+      const s = loadAudioSettings();
+      if (s.sfxEnabled === false) return 0;
+      return Math.min(1, Math.max(0, s.sfxVolume));
+    },
+
+    damageEvent(attacker, target, opts, dmg) {
+      const ctx = this.ensureCtx();
+      if (!ctx || !this.master) return;
+      const g = this._sfxGain();
+      if (g <= 0) return;
+      const t0 = ctx.currentTime;
+      const mul = Math.min(1.15, 0.5 + Math.min(dmg, 45) * 0.014);
+      const kind = inferAttackSfxKind(attacker, opts);
+      this._attack(ctx, t0, kind, g * mul);
+      this._hit(ctx, t0 + 0.032, g * mul * 0.92);
+    },
+
+    death() {
+      const ctx = this.ensureCtx();
+      if (!ctx || !this.master) return;
+      const g = this._sfxGain();
+      if (g <= 0) return;
+      this._death(ctx, ctx.currentTime, g);
+    },
+
+    _attack(ctx, t0, kind, vol) {
+      const m = this.master;
+      if (kind === 'bow') {
+        const o = ctx.createOscillator();
+        const o2 = ctx.createOscillator();
+        const gn = ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(620, t0);
+        o.frequency.exponentialRampToValueAtTime(180, t0 + 0.052);
+        o2.type = 'sine';
+        o2.frequency.setValueAtTime(1180, t0);
+        o2.frequency.exponentialRampToValueAtTime(380, t0 + 0.038);
+        gn.gain.setValueAtTime(0.0001, t0);
+        gn.gain.exponentialRampToValueAtTime(vol * 0.2, t0 + 0.006);
+        gn.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.062);
+        o.connect(gn); o2.connect(gn); gn.connect(m);
+        o.start(t0); o2.start(t0);
+        o.stop(t0 + 0.07); o2.stop(t0 + 0.07);
+      } else if (kind === 'magic') {
+        const o = ctx.createOscillator();
+        const o3 = ctx.createOscillator();
+        const gn = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(200, t0);
+        o.frequency.linearRampToValueAtTime(920, t0 + 0.075);
+        o3.type = 'triangle';
+        o3.frequency.setValueAtTime(420, t0);
+        gn.gain.setValueAtTime(0.0001, t0);
+        gn.gain.exponentialRampToValueAtTime(vol * 0.17, t0 + 0.018);
+        gn.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.11);
+        o.connect(gn); o3.connect(gn); gn.connect(m);
+        o.start(t0); o3.start(t0);
+        o.stop(t0 + 0.12); o3.stop(t0 + 0.12);
+      } else {
+        const o = ctx.createOscillator();
+        const f = ctx.createBiquadFilter();
+        const gn = ctx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(88, t0);
+        o.frequency.exponentialRampToValueAtTime(42, t0 + 0.055);
+        f.type = 'lowpass';
+        f.frequency.setValueAtTime(700, t0);
+        f.Q.setValueAtTime(0.6, t0);
+        gn.gain.setValueAtTime(0.0001, t0);
+        gn.gain.exponentialRampToValueAtTime(vol * 0.11, t0 + 0.01);
+        gn.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.072);
+        o.connect(f); f.connect(gn); gn.connect(m);
+        o.start(t0); o.stop(t0 + 0.08);
+      }
+    },
+
+    _hit(ctx, t0, vol) {
+      const m = this.master;
+      const buf = this._getNoise(ctx);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.setValueAtTime(680, t0);
+      bp.Q.setValueAtTime(1.1, t0);
+      const gn = ctx.createGain();
+      gn.gain.setValueAtTime(0.0001, t0);
+      gn.gain.exponentialRampToValueAtTime(vol * 0.26, t0 + 0.003);
+      gn.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.085);
+      src.connect(bp); bp.connect(gn); gn.connect(m);
+      src.start(t0, 0, 0.09);
+    },
+
+    _death(ctx, t0, vol) {
+      const m = this.master;
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(165, t0);
+      o.frequency.exponentialRampToValueAtTime(48, t0 + 0.36);
+      const gn = ctx.createGain();
+      gn.gain.setValueAtTime(0.0001, t0);
+      gn.gain.exponentialRampToValueAtTime(vol * 0.14, t0 + 0.035);
+      gn.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.42);
+      o.connect(gn); gn.connect(m);
+      o.start(t0); o.stop(t0 + 0.44);
+      const buf = this._getNoise(ctx);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const f = ctx.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.setValueAtTime(1200, t0);
+      f.frequency.exponentialRampToValueAtTime(100, t0 + 0.18);
+      const gn2 = ctx.createGain();
+      gn2.gain.setValueAtTime(vol * 0.1, t0);
+      gn2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.2);
+      src.connect(f); f.connect(gn2); gn2.connect(m);
+      src.start(t0, 0, 0.2);
+    },
+
+    _getNoise(ctx) {
+      if (this._noiseBuf && Math.abs(this._noiseBuf.sampleRate - ctx.sampleRate) < 1) return this._noiseBuf;
+      const len = Math.ceil(ctx.sampleRate * 0.16);
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this._noiseBuf = buf;
+      return buf;
+    }
   };
 
   function baseHeroTemplate() {
@@ -2071,6 +2339,26 @@
     return map[type] || map[D.SKELETON];
   }
 
+  const ENEMY_ICON_BASE = 'assets/enemies/';
+  const ENEMY_ICON_FILE = {
+    ice_elem: 'ice_elemental.png',
+    suicide: 'bomber.png',
+    necro: 'necromancer.png',
+    chaos: 'chaos_beast.png'
+  };
+  function enemyIconUrl(enemyId) {
+    const file = ENEMY_ICON_FILE[enemyId] || (enemyId + '.png');
+    return ENEMY_ICON_BASE + file;
+  }
+  /** Портрет врага для бестиария; при ошибке загрузки — эмодзи из enemyDef. */
+  function bestiaryEnemyPortraitHtml(enemyId, sizePx) {
+    const d = enemyDef(enemyId);
+    const em = d && d.emoji ? d.emoji : '👾';
+    const src = enemyIconUrl(enemyId);
+    const px = sizePx + 'px';
+    return '<span class="bestiary-portrait"><img class="bestiary-portrait-img" src="' + src + '" alt="" width="' + sizePx + '" height="' + sizePx + '" style="width:' + px + ';height:' + px + ';object-fit:contain;display:block" loading="lazy" decoding="async" onerror="this.style.display=\'none\';var n=this.nextElementSibling;if(n)n.style.display=\'block\'"/><span class="bestiary-portrait-fallback" style="display:none;font-size:' + px + ';line-height:1">' + em + '</span></span>';
+  }
+
   // ══════════ HERO SKILLS (unlock by level) ══════════
   const HERO_SKILLS = {
     garet: [
@@ -2150,6 +2438,36 @@
     { id: 'portal_stone',   slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 2, emoji: '🌀', name: 'Портальный камень',       price: 185, sellPrice: 92,  mods: { battleTeleport: true },              desc: '1 раз за бой: переместить героя на любую клетку.' },
     { id: 'crown',          slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 3, emoji: '👑', name: 'Корона власти',           price: 195, sellPrice: 97,  mods: { allyAttack: 2, allyArmor: 1 },       desc: 'Все союзники +2 атаки и +1 брони (аура).' }
   ];
+
+  /** PNG иконки предметов: единый размер файла 64×64 (scripts/normalize_item_icons.py). Значение — путь относительно assets/items/. */
+  const ITEM_ICON_BASE = 'assets/items/';
+  const ITEM_ICON_MAP = {
+    steel_sword: 'weapons/iron_sword.png',
+    poison_blade: 'weapons/poison_sword.png',
+    blade_dark: 'weapons/shadow_sword.png',
+    hunter_bow: 'weapons/hunter_bow.png',
+    shadow_bow: 'weapons/shadow_bow.png',
+    moon_bow: 'weapons/moon_bow.png',
+    crossbow_war: 'weapons/war_crossbow.png',
+    magic_wand: 'weapons/arcane_staff.png',
+    fire_staff: 'weapons/fire_staff.png',
+    chaos_staff: 'weapons/shadow_staff.png',
+    staff_ice: 'weapons/frost_staff.png',
+    leather: 'armor/leather_armor.png',
+    shadow_cloak: 'armor/shadow_cloak.png',
+    runic_shield: 'armor/runic_shield.png',
+    mirror_robe: 'armor/mage_cloak_blue.png',
+    guardian_plate: 'armor/plate_armor.png',
+    phoenix: 'armor/magister_robe.png',
+    dark_mantle: 'armor/assassin_cloak.png',
+    luck_amulet: 'accessories/amulet_clover.png',
+    mana_crystal: 'materials/mana_crystal.png',
+    seer_eye: 'accessories/amulet_evil_eye.png',
+    hourglass: 'misc/hourglass.png',
+    death_ring: 'accessories/ring_of_skulls.png',
+    portal_stone: 'misc/rune_stone.png',
+    crown: 'accessories/royal_crown.png'
+  };
 
   const LOOT_CHANCE = {
     skeleton: 0.25, goblin_archer: 0.30, boar: 0.35, zombie: 0.25,
@@ -2618,14 +2936,30 @@
     return b.units[idx];
   }
 
+  function unitAtExcluding(b, x, y, self) {
+    return b.units.find(u => u.hp > 0 && u.x === x && u.y === y && u !== self);
+  }
+  function sameSide(a, b) {
+    if (!a || !b) return false;
+    return !!a.isHero === !!b.isHero;
+  }
+  // Можно ли пройти по клетке во время движения: союзников проходим насквозь, врагов — нет.
   function passableForUnit(b, x, y, self) {
     if (!inBounds(x, y)) return false;
     if (tileBlocksMove(b.grid[y][x], self)) return false;
-    const occ = b.units.find(u => u.hp > 0 && u.x === x && u.y === y && u !== self);
+    const occ = unitAtExcluding(b, x, y, self);
     if (occ) {
-      if (self && self.enemyId === ENEMY_IDS.GHOST && occ) return true;
-      return false;
+      if (self && self.enemyId === ENEMY_IDS.GHOST) return true;
+      return sameSide(self, occ);
     }
+    return true;
+  }
+  // Можно ли закончить ход на клетке: занятая клетка всегда блокирует (кроме GHOST).
+  function canEndOnTile(b, x, y, self) {
+    if (!inBounds(x, y)) return false;
+    if (tileBlocksMove(b.grid[y][x], self)) return false;
+    const occ = unitAtExcluding(b, x, y, self);
+    if (occ) return !!(self && self.enemyId === ENEMY_IDS.GHOST);
     return true;
   }
 
@@ -2648,7 +2982,6 @@
       for (const d of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
         const nx = cur.x + d.x, ny = cur.y + d.y;
         if (!inBounds(nx, ny)) continue;
-        const fake = { enemyId: u.enemyId, heroId: u.heroId };
         if (!passableForUnit(b, nx, ny, u)) continue;
         const tile = b.grid[ny][nx];
         if (tile === TILE.MOUNTAIN) continue;
@@ -2661,6 +2994,12 @@
           q.push({ x: nx, y: ny, c: nc });
         }
       }
+    }
+    // Сквозь союзников можно идти, но НЕЛЬЗЯ остановиться на их клетке.
+    for (const k of Object.keys(dist)) {
+      const [kx, ky] = k.split(',').map(Number);
+      if (kx === u.x && ky === u.y) continue;
+      if (!canEndOnTile(b, kx, ky, u)) delete dist[k];
     }
     return dist;
   }
@@ -2774,7 +3113,10 @@
     }
 
     target.hp -= dmg;
-    if (dmg > 0) spawnDamageFx(target.x, target.y, dmg);
+    if (dmg > 0) {
+      spawnDamageFx(target.x, target.y, dmg);
+      if (b) BattleSfx.damageEvent(attacker, target, opts, dmg);
+    }
 
     // ── Perk: reflect1 (Garet) — цель отражает 1 урона атакующему ──
     if (target.isHero && target.perks && target.perks.includes('reflect1') && dmg > 0 && !opts.magic) {
@@ -2854,6 +3196,7 @@
       }
     }
 
+    BattleSfx.death();
     spawnSkullFx(u.x, u.y);
 
     if (!u.isHero && u.enemyId === ENEMY_IDS.ZOMBIE) {
@@ -3027,7 +3370,7 @@
       lootEl.innerHTML = `
         <div class="vic-loot-title">ДОБЫЧА</div>
         <div class="vic-loot-item rarity-${drop.rarity}" style="border-color:${drop.rarity==='epic'?'#9b59b6':drop.rarity==='rare'?'#4a9eff':'#2a2a4a'}">
-          <div class="vic-loot-icon">${drop.emoji||'📦'}</div>
+          <div class="vic-loot-icon">${itemIconMarkup(drop, 22)}</div>
           <div class="vic-loot-info">
             <div class="vic-loot-name">${drop.name}</div>
             ${statLine ? `<div class="vic-loot-stat">${statLine}</div>` : ''}
@@ -3041,7 +3384,7 @@
     if (bestiaryEl && enemyIds.length) {
       const icons = enemyIds.map(id => {
         const def = enemyDef(id);
-        return def ? `<span class="vic-bestiary-enemy" title="${def.name}">${def.emoji}</span>` : '';
+        return def ? `<span class="vic-bestiary-enemy" title="${def.name}">${bestiaryEnemyPortraitHtml(id, 22)}</span>` : '';
       }).filter(Boolean).join('');
       bestiaryEl.innerHTML = `<span class="vic-bestiary-label">ИЗУЧЕНО:</span>${icons}`;
       bestiaryEl.style.display = '';
@@ -3617,9 +3960,10 @@
   function enemyPassable(b, x, y, self) {
     if (!inBounds(x, y)) return false;
     if (self.enemyId !== ENEMY_IDS.GHOST && tileBlocksMove(b.grid[y][x], self)) return false;
-    if (b.units.some(u => u.hp > 0 && u.x === x && u.y === y && u !== self)) {
+    const occ = unitAtExcluding(b, x, y, self);
+    if (occ) {
       if (self.enemyId === ENEMY_IDS.GHOST) return true;
-      return false;
+      return sameSide(self, occ);
     }
     return true;
   }
@@ -3742,14 +4086,18 @@
         let spent = 0;
         for (let i = 1; i < bestPath.length; i++) {
           const step = bestPath[i];
+          // Героев насквозь не проходим
           if (b.units.some(h => h.isHero && h.hp > 0 && h.x === step.x && h.y === step.y)) break;
           if (!enemyPassable(b, step.x, step.y, u)) break;
           const cost = tileMoveCost(b.grid[step.y][step.x], u);
           if (spent + cost > movePoints) break;
           spent += cost;
-          u.x = step.x;
-          u.y = step.y;
-          if (bestTarget && inRange(u.x, u.y, bestTarget)) break;
+          // Можно проходить сквозь союзных врагов, но не останавливаться на их клетке
+          if (canEndOnTile(b, step.x, step.y, u)) {
+            u.x = step.x;
+            u.y = step.y;
+            if (bestTarget && inRange(u.x, u.y, bestTarget)) break;
+          }
         }
       }
 
@@ -3762,7 +4110,6 @@
         for (const key of Object.keys(reachable)) {
           const [rx, ry] = key.split(',').map(Number);
           if (rx === u.x && ry === u.y) continue;
-          if (b.units.some(h => h.hp > 0 && h.x === rx && h.y === ry && h !== u)) continue;
           const d = Math.abs(rx - tgt.x) + Math.abs(ry - tgt.y);
           if (d < bestDist) { bestDist = d; bestCell = { x: rx, y: ry }; }
         }
@@ -3811,8 +4158,10 @@
         const cost = tileMoveCost(b.grid[step.y][step.x], u);
         if (spent + cost > movePoints) break;
         spent += cost;
-        u.x = step.x;
-        u.y = step.y;
+        if (canEndOnTile(b, step.x, step.y, u)) {
+          u.x = step.x;
+          u.y = step.y;
+        }
       }
     }
   }
@@ -3918,7 +4267,9 @@
             const cost = tileMoveCost(b.grid[step.y][step.x], u);
             if (spent + cost > u.move) break;
             spent += cost;
-            u.x = step.x; u.y = step.y;
+            if (canEndOnTile(b, step.x, step.y, u)) {
+              u.x = step.x; u.y = step.y;
+            }
           }
           if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) aiAttack(u, tgt);
         }
@@ -4093,7 +4444,7 @@
   function moveDeployHeroToCell(b, heroUnit, gx, gy) {
     if (!b || !heroUnit) return false;
     if (!inBounds(gx, gy) || gx > 1) return false;
-    if (!passableForUnit(b, gx, gy, heroUnit)) return false;
+    if (!canEndOnTile(b, gx, gy, heroUnit)) return false;
     heroUnit.x = gx;
     heroUnit.y = gy;
     return true;
@@ -4362,10 +4713,12 @@
       const d = enemyDef(id);
       const statusLabel = st === 'new' ? '??? Неизвестно' : st === 'seen' ? 'Встречен' : 'Изучен';
       const statusClass = `bs-${st}`;
-      const icon = st === 'new' ? '❓' : d.emoji;
       const name = st === 'new' ? '??? НЕИЗВЕСТНО' : d.name;
+      const iconHtml = st === 'new'
+        ? '<span class="bestiary-card-unknown">❓</span>'
+        : bestiaryEnemyPortraitHtml(id, 28);
       return `<div class="bestiary-card" data-eid="${id}">
-        <div class="bestiary-card-icon">${icon}</div>
+        <div class="bestiary-card-icon">${iconHtml}</div>
         <div>
           <div class="bestiary-card-name">${name}</div>
           <div class="bestiary-card-status ${statusClass}">${statusLabel}</div>
@@ -4427,7 +4780,7 @@
          <div class="bestiary-text bestiary-locked">[Убейте существо, чтобы изучить способности и тактику]</div>`;
 
     detailEl.innerHTML = `
-      <div class="bestiary-detail-icon">${d.emoji}</div>
+      <div class="bestiary-detail-icon">${bestiaryEnemyPortraitHtml(id, 88)}</div>
       ${regionBadge}
       <div class="bestiary-detail-name">${d.name}${isMiniBoss}${isBoss}</div>
       ${statsHtml}
@@ -4484,6 +4837,21 @@
     });
   }
   function itemById(id) { return ITEM_POOL.find(i => i.id === id); }
+  function itemIconPath(itemId) {
+    const rel = ITEM_ICON_MAP[itemId];
+    return rel ? ITEM_ICON_BASE + rel : null;
+  }
+  function itemIconMarkup(item, sizePx) {
+    if (!item) return '<span style="font-size:' + sizePx + 'px;line-height:1;display:inline-block">📦</span>';
+    const src = itemIconPath(item.id);
+    if (src) {
+      const px = sizePx + 'px';
+      const rarCls = item.rarity ? ' rar-' + item.rarity : '';
+      const img = '<img class="item-icon-img" src="' + src + '" alt="" width="' + sizePx + '" height="' + sizePx + '" decoding="async" loading="lazy" style="width:' + px + ';height:' + px + ';object-fit:contain;vertical-align:middle;display:block" />';
+      return '<span class="item-icon-wrap' + rarCls + '">' + img + '</span>';
+    }
+    return '<span style="font-size:' + sizePx + 'px;line-height:1;display:inline-block">' + (item.emoji || '📦') + '</span>';
+  }
   let InvState = { activeHeroId: 'garet', selectedItemId: null, selectedItemIdx: -1 };
   function randomItem(region, minRarity) {
     return selectLootItem(region, minRarity || null);
@@ -4530,8 +4898,14 @@
   function heroEquipIcons(hero) {
     hero.equipment = hero.equipment || {};
     return ['weapon', 'armor', 'artifact']
-      .map(s => hero.equipment[s] ? (itemById(hero.equipment[s])?.emoji || '•') : '·')
-      .join(' ');
+      .map(s => {
+        const id = hero.equipment[s];
+        if (!id) return '<span class="eq-mini-dot">·</span>';
+        const it = itemById(id);
+        if (!it) return '<span class="eq-mini-dot">•</span>';
+        return '<span class="eq-mini-icon">' + itemIconMarkup(it, 11) + '</span>';
+      })
+      .join('');
   }
   function renderPartyStrip() {
     const root = document.getElementById('party-strip');
@@ -4595,17 +4969,18 @@
 
     ['weapon', 'armor', 'artifact'].forEach(slot => {
       const zone = document.getElementById('eq-slot-' + slot);
+      const nameEl = document.getElementById('eq-name-' + slot);
       if (!zone) return;
       const id = hero.equipment[slot];
       const it = itemById(id);
       zone.className = 'eq-zone' + (it ? ' eq-filled eq-rarity-' + it.rarity : '');
+      if (nameEl) nameEl.textContent = it ? it.name : '';
       if (it) {
         zone.innerHTML = `
-          <div class="eq-zone-item-icon">${it.emoji || '📦'}</div>
-          <div class="eq-zone-item-name">${it.name}</div>
+          <div class="eq-zone-fill">${itemIconMarkup(it, 60)}</div>
           <div class="eq-zone-unequip" title="Снять">✕</div>`;
       } else {
-        zone.innerHTML = `<div class="eq-zone-def-icon">${slotDefIcons[slot]}</div><div class="eq-zone-label">${slot === 'weapon' ? 'Оружие' : slot === 'armor' ? 'Броня' : 'Артефакт'}</div>`;
+        zone.innerHTML = `<div class="eq-zone-fill eq-zone-empty"><span class="eq-zone-def-icon">${slotDefIcons[slot]}</span></div>`;
       }
       zone.onclick = () => {
         if (!id) return;
@@ -4639,8 +5014,10 @@
         const it = itemById(id);
         const active = idx === InvState.selectedItemIdx ? 'selected' : '';
         return `<div class="inv-item-card ${active}" data-idx="${idx}" title="${it.name}">
-          <div class="inv-item-icon">${it.emoji || '📦'}</div>
-          <div style="font-size:9px;color:var(--accent-gold);margin-top:2px">${it.price}g</div>
+          <div class="inv-item-thumb">
+            ${itemIconMarkup(it, 56)}
+            <span class="inv-item-price">${it.price}g</span>
+          </div>
         </div>`;
       }).join('');
       bag.querySelectorAll('.inv-item-card').forEach(el => {
@@ -4664,11 +5041,10 @@
       return `${val} ${label}`;
     }).join('  ') || '— особый эффект';
     const forRole = sel.id.includes('bow') ? 'Лучник' : sel.id.includes('staff') || sel.id.includes('wand') ? 'Маг' : sel.id.includes('sword') || sel.id.includes('hammer') ? 'Воин' : 'Все';
-    const itemEmoji = sel.emoji || '📦';
     const itemName = sel.name;
     detail.innerHTML = `
     <div style="text-align:center;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px">
-      <div style="font-size:36px;line-height:1.1;margin-bottom:6px">${itemEmoji}</div>
+      <div style="display:flex;justify-content:center;align-items:center;margin-bottom:6px;min-height:40px">${itemIconMarkup(sel, 36)}</div>
       <div class="item-detail-title">${itemName}</div>
       <div class="item-detail-sub" style="margin-top:4px">${slotNames[sel.slot] || sel.slot} · ${forRole}</div>
       <div style="margin-top:4px">${rarBadge(sel.rarity)}</div>
@@ -5209,7 +5585,7 @@
     return `<div class="item-card ${r}${canBuy ? '' : ' cant'}">
       <div class="card-body">
         <div class="card-icon-name">
-          <span class="card-icon">${it.emoji || '📦'}</span>
+          <span class="card-icon">${itemIconMarkup(it, 30)}</span>
           <span class="card-name">${it.name}</span>
         </div>
         <div class="card-stat">${statText}</div>
@@ -5229,7 +5605,7 @@
     return `<div class="item-card epic secret-revealed${canBuy ? '' : ' cant'}" id="city-secret-card">
       <div class="card-body">
         <div class="card-icon-name">
-          <span class="card-icon">${item.emoji || '📦'}</span>
+          <span class="card-icon">${itemIconMarkup(item, 30)}</span>
           <span class="card-name">${item.name}</span>
         </div>
       </div>
@@ -5861,6 +6237,7 @@
   //══════════ INIT ══════════
   function init() {
     GameBGM.init();
+    BattleSfx.init();
     const hasSave = loadGame();
     if (!hasSave) {
       initHeroesFromTemplate();
@@ -5910,7 +6287,7 @@
       else { showScreen('map'); renderMap(); }
       GameState._bestiaryReturn = null;
     };
-    document.getElementById('btn-vic-bestiary').onclick = () => { showScreen('bestiary'); renderBestiary(); };
+    document.getElementById('btn-vic-bestiary').onclick = () => { showScreen('bestiary'); renderBestiaryScreen(); };
     document.getElementById('btn-vic-ad').onclick = () => {
       showRewardedAd(() => {
         const bonus = Math.round(GameState.gold * 1); // double last battle gold bonus
@@ -5978,11 +6355,15 @@
     const btnMenuSettingsBack = document.getElementById('btn-menu-settings-back');
     const settingMusicEnabled = document.getElementById('setting-music-enabled');
     const settingMusicVolume = document.getElementById('setting-music-volume');
+    const settingSfxEnabled = document.getElementById('setting-sfx-enabled');
+    const settingSfxVolume = document.getElementById('setting-sfx-volume');
     if (btnMenuSettings && menuSettingsOverlay) {
       btnMenuSettings.onclick = () => {
         const s = loadAudioSettings();
         if (settingMusicEnabled) settingMusicEnabled.checked = s.musicEnabled;
         if (settingMusicVolume) settingMusicVolume.value = String(Math.round(s.musicVolume * 100));
+        if (settingSfxEnabled) settingSfxEnabled.checked = s.sfxEnabled;
+        if (settingSfxVolume) settingSfxVolume.value = String(Math.round(s.sfxVolume * 100));
         menuSettingsOverlay.classList.add('show');
         menuSettingsOverlay.setAttribute('aria-hidden', 'false');
       };
@@ -6005,6 +6386,17 @@
         const v = Math.min(1, Math.max(0, Number(e.target.value) / 100));
         saveAudioSettings({ musicVolume: v });
         GameBGM.applyVolumeFromSettings();
+      };
+    }
+    if (settingSfxEnabled) {
+      settingSfxEnabled.onchange = e => {
+        saveAudioSettings({ sfxEnabled: !!e.target.checked });
+      };
+    }
+    if (settingSfxVolume) {
+      settingSfxVolume.oninput = e => {
+        const v = Math.min(1, Math.max(0, Number(e.target.value) / 100));
+        saveAudioSettings({ sfxVolume: v });
       };
     }
     document.getElementById('btn-menu-continue').onclick = closeGameMenu;
