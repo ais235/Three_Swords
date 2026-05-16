@@ -4479,6 +4479,8 @@
       if (dMin === 2) BattleSfx.playSampledUrl(BSX.enemies_suicide_attack, 0.45);
     }
   }
+
+  function aiAttack(attacker, target) {
     let dmg = attacker.attack;
     if (attacker.enemyId === ENEMY_IDS.DARK_LORD) {
       if (attacker.phase === 2) dmg = 18;
