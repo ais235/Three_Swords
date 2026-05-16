@@ -2090,10 +2090,79 @@
     return 'melee';
   }
 
+  /** Сэмплы боя (импорт из assets/audio/battle/sfx/…); префлоад в Web Audio, без замены синтеза ударов/смерти. */
+  const BATTLE_SFX_SAMPLE_URLS = [
+    'assets/audio/battle/sfx/common/hit.wav',
+    'assets/audio/battle/sfx/common/death.wav',
+    'assets/audio/battle/sfx/common/critical_hit.mp3',
+    'assets/audio/battle/sfx/common/victory.mp3',
+    'assets/audio/battle/sfx/common/defeat.mp3',
+    'assets/audio/battle/sfx/heroes/garet_melee.wav',
+    'assets/audio/battle/sfx/heroes/alira_bow.wav',
+    'assets/audio/battle/sfx/heroes/alira_bow_draw.wav',
+    'assets/audio/battle/sfx/heroes/seris_magic.wav',
+    'assets/audio/battle/sfx/heroes/garet_shield_bash.mp3',
+    'assets/audio/battle/sfx/heroes/garet_fire_call.wav',
+    'assets/audio/battle/sfx/heroes/garet_berserk.wav',
+    'assets/audio/battle/sfx/heroes/alira_double_shot.mp3',
+    'assets/audio/battle/sfx/heroes/alira_slow_arrow.wav',
+    'assets/audio/battle/sfx/heroes/alira_arrow_rain.wav',
+    'assets/audio/battle/sfx/heroes/seris_fireball.ogg',
+    'assets/audio/battle/sfx/heroes/seris_freeze.wav',
+    'assets/audio/battle/sfx/heroes/seris_meteor.wav',
+    'assets/audio/battle/sfx/enemies/skeleton_attack.wav',
+    'assets/audio/battle/sfx/enemies/goblin_archer_attack.wav',
+    'assets/audio/battle/sfx/enemies/boar_attack.wav',
+    'assets/audio/battle/sfx/enemies/zombie_attack.wav',
+    'assets/audio/battle/sfx/enemies/zombie_explosion.ogg',
+    'assets/audio/battle/sfx/enemies/shaman_attack.ogg',
+    'assets/audio/battle/sfx/enemies/shaman_heal.wav',
+    'assets/audio/battle/sfx/enemies/orc_guard_attack.mp3',
+    'assets/audio/battle/sfx/enemies/suicide_attack.wav',
+    'assets/audio/battle/sfx/enemies/suicide_explosion.ogg',
+    'assets/audio/battle/sfx/enemies/spider_attack.wav',
+    'assets/audio/battle/sfx/enemies/spider_web.ogg',
+    'assets/audio/battle/sfx/enemies/watcher_attack.wav',
+    'assets/audio/battle/sfx/enemies/watcher_buff.wav',
+    'assets/audio/battle/sfx/enemies/ice_elem_attack.wav',
+    'assets/audio/battle/sfx/enemies/ice_freeze_touch.wav',
+    'assets/audio/battle/sfx/enemies/dark_knight_attack.wav',
+    'assets/audio/battle/sfx/enemies/necro_attack.mp3',
+    'assets/audio/battle/sfx/enemies/necro_raise.wav',
+    'assets/audio/battle/sfx/enemies/chaos_attack.mp3',
+    'assets/audio/battle/sfx/enemies/assassin_attack.wav',
+    'assets/audio/battle/sfx/enemies/hydra_attack.wav',
+    'assets/audio/battle/sfx/enemies/ghost_attack.wav',
+    'assets/audio/battle/sfx/enemies/fire_titan_attack.ogg',
+    'assets/audio/battle/sfx/enemies/fire_titan_aoe.ogg',
+    'assets/audio/battle/sfx/enemies/dark_lord_attack.wav',
+    'assets/audio/battle/sfx/enemies/dark_lord_teleport.mp3',
+    'assets/audio/battle/sfx/enemies/dark_lord_summon.mp3',
+    'assets/audio/battle/sfx/enemies/dark_lord_aoe.mp3',
+    'assets/audio/battle/sfx/status/apply_stun.mp3',
+    'assets/audio/battle/sfx/status/apply_freeze.wav',
+    'assets/audio/battle/sfx/status/apply_web.wav',
+    'assets/audio/battle/sfx/status/apply_poison.mp3',
+    'assets/audio/battle/sfx/status/tick_poison.wav',
+    'assets/audio/battle/sfx/status/apply_burn.ogg',
+    'assets/audio/battle/sfx/status/tick_burn.ogg',
+    'assets/audio/battle/sfx/status/apply_slow.mp3',
+    'assets/audio/battle/sfx/status/apply_blind.mp3',
+    'assets/audio/battle/sfx/status/apply_curse.wav',
+    'assets/audio/battle/sfx/status/apply_berserk.mp3',
+    'assets/audio/battle/sfx/ui/select_unit.wav',
+    'assets/audio/battle/sfx/ui/end_turn.wav',
+    'assets/audio/battle/sfx/ui/skill_ready.wav',
+    'assets/audio/battle/sfx/ui/victory_screen.mp3',
+    'assets/audio/battle/sfx/ui/defeat_screen.wav'
+  ];
+
   const BattleSfx = {
     ctx: null,
     master: null,
     _noiseBuf: null,
+    _sampleBuffers: null,
+    _sampleLoadPromise: null,
 
     init() {
       document.addEventListener('visibilitychange', () => this.onVisibility());
@@ -2120,6 +2189,47 @@
         this.master.connect(this.ctx.destination);
       }
       return this.ctx;
+    },
+
+    /** Фоновая загрузка всех импортированных сэмплов в память (один раз за сессию). */
+    ensureSampleBuffers() {
+      if (this._sampleLoadPromise) return this._sampleLoadPromise;
+      const ctx = this.ensureCtx();
+      if (!ctx) return Promise.resolve();
+      if (!this._sampleBuffers) this._sampleBuffers = new Map();
+      const map = this._sampleBuffers;
+      this._sampleLoadPromise = (async () => {
+        for (const url of BATTLE_SFX_SAMPLE_URLS) {
+          if (map.has(url)) continue;
+          try {
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            const ab = await res.arrayBuffer();
+            const buf = await ctx.decodeAudioData(ab.slice(0));
+            map.set(url, buf);
+          } catch (e) { /* пропуск битого/неподдерживаемого файла */ }
+        }
+      })();
+      return this._sampleLoadPromise;
+    },
+
+    /** Воспроизвести заранее загруженный сэмпл по полному URL из BATTLE_SFX_SAMPLE_URLS (громкость 0..1). */
+    playSampledUrl(url, gainMul) {
+      const ctx = this.ensureCtx();
+      if (!ctx || !this.master || !this._sampleBuffers) return;
+      const g0 = this._sfxGain();
+      if (g0 <= 0) return;
+      const buf = this._sampleBuffers.get(url);
+      if (!buf) return;
+      const t0 = ctx.currentTime;
+      const gn = ctx.createGain();
+      const mul = typeof gainMul === 'number' && gainMul > 0 ? gainMul : 1;
+      gn.gain.setValueAtTime(g0 * Math.min(1.2, mul), t0);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(gn);
+      gn.connect(this.master);
+      src.start(t0);
     },
 
     _sfxGain() {
@@ -2912,6 +3022,7 @@
     renderBattleLog();
     buildInitiative();
     saveGame();
+    if (typeof BattleSfx !== 'undefined') BattleSfx.ensureSampleBuffers();
   }
 
   function unitAt(b, x, y) { return b.units.find(u => u.hp > 0 && u.x === x && u.y === y); }
