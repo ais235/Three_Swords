@@ -2100,6 +2100,10 @@
     'assets/audio/battle/sfx/common/critical_hit.mp3',
     'assets/audio/battle/sfx/common/victory.mp3',
     'assets/audio/battle/sfx/common/defeat.mp3',
+    'assets/audio/battle/sfx/movement/step_grass.wav',
+    'assets/audio/battle/sfx/movement/step_rock.wav',
+    'assets/audio/battle/sfx/movement/step_wood.wav',
+    'assets/audio/battle/sfx/movement/step_water.wav',
     'assets/audio/battle/sfx/heroes/garet_melee.wav',
     'assets/audio/battle/sfx/heroes/alira_bow.wav',
     'assets/audio/battle/sfx/heroes/alira_bow_draw.wav',
@@ -2168,6 +2172,10 @@
       common_critical_hit: r('common/critical_hit.mp3'),
       common_victory: r('common/victory.mp3'),
       common_defeat: r('common/defeat.mp3'),
+      move_step_grass: r('movement/step_grass.wav'),
+      move_step_rock: r('movement/step_rock.wav'),
+      move_step_wood: r('movement/step_wood.wav'),
+      move_step_water: r('movement/step_water.wav'),
       heroes_garet_melee: r('heroes/garet_melee.wav'),
       heroes_alira_bow: r('heroes/alira_bow.wav'),
       heroes_alira_bow_draw: r('heroes/alira_bow_draw.wav'),
@@ -2387,6 +2395,26 @@
         break;
       }
       if (anyReady) this.playSampledUrl(BSX.ui_skill_ready, 0.55, 0.06);
+    },
+
+    tileStepUrl(tile) {
+      if (tile === TILE.WATER) return BSX.move_step_water;
+      if (tile === TILE.MOUNTAIN || tile === TILE.FORT) return BSX.move_step_rock;
+      if (tile === TILE.FOREST) return BSX.move_step_wood;
+      return BSX.move_step_grass;
+    },
+
+    unitMoved(unit, fromX, fromY, toX, toY, grid) {
+      if (!unit || fromX === toX && fromY === toY) return;
+      const dist = Math.abs(toX - fromX) + Math.abs(toY - fromY);
+      if (dist <= 0) return;
+      const tile = grid && grid[toY] ? grid[toY][toX] : TILE.GROUND;
+      const url = this.tileStepUrl(tile);
+      const steps = Math.max(1, Math.min(3, dist));
+      const gain = unit.isHero ? 0.58 : 0.42;
+      for (let i = 0; i < steps; i++) {
+        this.playSampledUrl(url, gain, i * 0.105);
+      }
     },
 
     damageEvent(attacker, target, opts, dmg) {
@@ -3195,6 +3223,15 @@
   function allEnemiesDead(b) { return !b.units.some(u => !u.isHero && u.hp > 0); }
   function allHeroesDead(b) { return !b.units.some(u => u.isHero && u.hp > 0); }
 
+  /** Завершить бой, если все враги или все герои мертвы (в т.ч. после DoT между ходами). */
+  function resolveBattleIfOver() {
+    const b = GameState.currentBattle;
+    if (!b || b._victoryHandled) return false;
+    if (allEnemiesDead(b)) { checkBattleEnd(); return true; }
+    if (allHeroesDead(b)) { checkBattleEnd(); return true; }
+    return false;
+  }
+
   function getSpeed(u) {
     let s = u.speed || 10;
     if (u.activeStatuses) {
@@ -3310,6 +3347,7 @@
       if (s.type === STATUS.POISON || s.type === STATUS.BURN) { s.turns--; return s.turns > 0; }
       return true;
     });
+    if (u.hp <= 0) onUnitDeath(u);
   }
   function tickStatusesEndTurn(u) {
     if (!u.activeStatuses) return;
@@ -3451,6 +3489,8 @@
   }
 
   function onUnitDeath(u) {
+    if (u._deathHandled) return;
+    u._deathHandled = true;
     const b = GameState.currentBattle;
     pushBattleLog(`☠️ ${u.emoji} ${u.name} повержен!`, 'enemy');
     if (!u.isHero) {
@@ -3503,6 +3543,7 @@
       }
     }
     if (!u.isHero && u.enemyId === ENEMY_IDS.WATCHER && b) b.globalBuffs.watcherDeadMove = 2;
+    resolveBattleIfOver();
   }
 
   function getXpForBattle(cell) {
@@ -3520,6 +3561,8 @@
 
   function endBattleVictory() {
     const b = GameState.currentBattle;
+    if (!b || b._victoryHandled) return;
+    b._victoryHandled = true;
     const cell = getCellById(b.nodeId);
     let gold = cell?.type === 'dungeon' ? randInt(45, 80) : randInt(20, 35);
     if (cell?.type === 'boss') gold = randInt(120, 160);
@@ -3571,12 +3614,18 @@
     GameState._lastBattleRounds = b ? b.round : 1;
     saveGame();
     GameState.currentBattle = null;
-    GameState.screen = 'map';
-    showVictoryUI(gold, xpEach);
+    GameState.screen = 'victory';
+    try {
+      showVictoryUI(gold, xpEach);
+    } catch (e) {
+      console.error('showVictoryUI failed', e);
+      showScreen('victory');
+    }
   }
 
   // 9: Victory screen with stats
   function showVictoryUI(gold, xp) {
+    showScreen('victory');
     if (typeof BattleSfx !== 'undefined') {
       BattleSfx.playSampledUrl(BSX.common_victory, 0.72);
       BattleSfx.playSampledUrl(BSX.ui_victory_screen, 0.78, 0.06);
@@ -3689,7 +3738,6 @@
       bestiaryEl.style.display = '';
     } else if (bestiaryEl) bestiaryEl.style.display = 'none';
 
-    showScreen('victory');
     if (GameState.pendingPerks.length) {
       setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
     } else if (GameState.pendingSkillUnlocks && GameState.pendingSkillUnlocks.length) {
@@ -3730,7 +3778,7 @@
     }
   }
   function resetBattleView() {
-    // Auto-fit: start zoom so entire 8x8 grid fills the canvas nicely
+    // Auto-fit: start zoom so entire 12x8 grid fills the canvas nicely
     BattleView.zoom = 1;
     BattleView.offsetX = 0;
     BattleView.offsetY = 0;
@@ -4182,11 +4230,16 @@
 
     for (;;) {
       const nu = advanceSingleTurn();
-      if (!nu) { checkBattleEnd(); return; }
+      if (!nu) { resolveBattleIfOver(); return; }
+      if (resolveBattleIfOver()) return;
       if (nu.isHero && nu.heroId === 'garet' && nu.flags) nu.flags.fireCallMitigateActive = false;
       tickStatusesStart(nu);
       if (b.grid[nu.y] && b.grid[nu.y][nu.x] === TILE.FIRE) applyGroundEffects(nu);
-      if (nu.hp <= 0) continue;
+      if (nu.hp <= 0) {
+        if (!nu._deathHandled) onUnitDeath(nu);
+        if (resolveBattleIfOver()) return;
+        continue;
+      }
       if (nu.isHero) {
         let manaGain = 2;
         // Item: manaRegen from crystal artifact
@@ -4215,7 +4268,7 @@
   }
   function checkBattleEnd() {
     const b = GameState.currentBattle;
-    if (!b) return;
+    if (!b || b._victoryHandled) return;
     if (allEnemiesDead(b)) {
       const node = getCellById(b.nodeId);
       if (node?.type === 'final') {
@@ -4318,8 +4371,26 @@
           const dist = Math.abs(nx - threat.x) + Math.abs(ny - threat.y);
           if (dist > bestDist) { bestDist = dist; bestDir = { x: nx, y: ny }; }
         }
-        if (bestDir) { u.x = bestDir.x; u.y = bestDir.y; }
+        if (bestDir) {
+          const fromX = u.x, fromY = u.y;
+          u.x = bestDir.x; u.y = bestDir.y;
+          if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, u.x, u.y, b.grid);
+        }
         endUnitTurn(); return;
+      }
+    }
+
+    if (u.enemyId === ENEMY_IDS.CHAOS) {
+      u.bossVar = u.bossVar || { aoeTurn: 0 };
+      u.bossVar.aoeTurn = (u.bossVar.aoeTurn || 0) + 1;
+      const nearby = heroes.filter(h => Math.abs(h.x - u.x) + Math.abs(h.y - u.y) <= 1);
+      if (nearby.length) {
+        if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_chaos_attack, 0.82);
+        nearby.forEach(h => {
+          dealDamage(u, h, 7, { magic: true, sfxImpactOnly: true });
+          if (h.hp > 0 && u.bossVar.aoeTurn % 2 === 0) addStatus(h, STATUS.CURSE, 1);
+        });
+        pushBattleLog(`🌀 ${u.name} искажает пространство вокруг себя`, 'enemy');
       }
     }
 
@@ -4421,6 +4492,7 @@
         }
         if (bestCell) { u.x = bestCell.x; u.y = bestCell.y; }
       }
+      if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, prevX, prevY, u.x, u.y, b.grid);
     }
 
     // After moving, attack nearest in-range hero (respecting priority)
@@ -4452,6 +4524,7 @@
       return;
     }
     const movePoints = getMovePoints(u, b);
+    const fromX = u.x, fromY = u.y;
     const path = astar(b.grid, { x: u.x, y: u.y }, { x: nearest.x, y: nearest.y },
       (x, y) => enemyPassable(b, x, y, u) || (x === nearest.x && y === nearest.y),
       (x, y) => tileMoveCost(b.grid[y][x], u));
@@ -4470,6 +4543,7 @@
         }
       }
     }
+    if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, u.x, u.y, b.grid);
     if (typeof BattleSfx !== 'undefined') {
       let dMin = 999;
       for (const h of heroes) {
@@ -4516,7 +4590,7 @@
       if (u.teleportCd % 2 === 0) {
         let moved = false;
         for (let t = 0; t < 20; t++) {
-          const x = randInt(0, GRID_W - 1), y = randInt(0, GRID_W - 1);
+          const x = randInt(0, GRID_W - 1), y = randInt(0, GRID_H - 1);
           if (enemyPassable(b, x, y, u) && !unitAt(b, x, y)) { u.x = x; u.y = y; moved = true; break; }
         }
         if (moved && typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_dark_lord_teleport, 0.85);
@@ -4559,7 +4633,7 @@
     const b = GameState.currentBattle;
     const nFire = u.hp < u.maxHp * 0.5 ? 4 : 2;
     for (let k = 0; k < nFire; k++) {
-      const x = randInt(0, GRID_W - 1), y = randInt(0, GRID_W - 1);
+      const x = randInt(0, GRID_W - 1), y = randInt(0, GRID_H - 1);
       b.grid[y][x] = TILE.FIRE;
     }
     u.bossVar.aoeCounter = (u.bossVar.aoeCounter || 0) + 1;
@@ -4577,6 +4651,7 @@
       if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) {
         aiAttack(u, tgt);
       } else {
+        const fromX = u.x, fromY = u.y;
         const path = astar(b.grid, { x: u.x, y: u.y }, { x: tgt.x, y: tgt.y },
           (x, y) => enemyPassable(b, x, y, u) || (x === tgt.x && y === tgt.y),
           (x, y) => tileMoveCost(b.grid[y][x], u));
@@ -4593,6 +4668,7 @@
               u.x = step.x; u.y = step.y;
             }
           }
+          if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, u.x, u.y, b.grid);
           if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) aiAttack(u, tgt);
         }
       }
@@ -4838,7 +4914,9 @@
       if (isEmpty && !b.heroMoved && !blind) {
         const reach = floodReachable(b, u);
         if (reach[gx + ',' + gy] !== undefined) {
+          const fromX = u.x, fromY = u.y;
           u.x = gx; u.y = gy;
+          if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, gx, gy, b.grid);
           b.heroMoved = true;
           b.mode = 'attack'; // automatically switch to attack mode after moving
           syncHeroFromUnit(u);
@@ -4853,7 +4931,9 @@
     if (b.mode === 'move' && !b.heroMoved && !blind) {
       const reach = floodReachable(b, u);
       if (reach[gx + ',' + gy] === undefined) return;
+      const fromX = u.x, fromY = u.y;
       u.x = gx; u.y = gy;
+      if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, gx, gy, b.grid);
       b.heroMoved = true;
       b.mode = 'attack';
       syncHeroFromUnit(u);
@@ -4864,7 +4944,7 @@
       if (b.pendingSkill === 'fireCall' && u.heroId === 'garet') {
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_fire_call, 0.95);
         b.units.filter(e => !e.isHero && e.hp > 0).forEach(e => {
-          if (Math.abs(e.x - u.x) + Math.abs(e.y - u.y) <= 2) dealDamage(e, u, Math.max(1, Math.floor(e.attack * 0.5)), { blockIgnore: true, sfxImpactOnly: true });
+          if (Math.abs(e.x - u.x) + Math.abs(e.y - u.y) <= 2) dealDamage(u, e, Math.max(1, Math.floor(u.attack * 0.5)), { fire: true, magic: true, sfxImpactOnly: true });
         });
         u.flags = u.flags || {};
         u.flags.fireCallMitigateActive = true;
