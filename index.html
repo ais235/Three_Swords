@@ -382,8 +382,27 @@
     .hero-heal-btn.grey { border-color: var(--border); color: #555577; cursor: default; }
     .city-panel { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
     .city-panel.hidden { display: none !important; }
-    .shop-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 8px; }
+    .city-panel-trader { gap: 8px; }
+    .shop-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 8px; flex-wrap: wrap; }
     .shop-title { font-size: 13px; color: var(--text-main); letter-spacing: 1px; }
+    .trader-mode-tabs {
+      display: flex; gap: 6px; flex-shrink: 0; width: 100%;
+    }
+    .trader-mode-tab {
+      flex: 1; min-width: 0; padding: 6px 8px; font-size: 9px; letter-spacing: 0.5px;
+      border: 1px solid var(--border); border-radius: 5px; background: #0d0d1a;
+      color: var(--text-dim); cursor: pointer; font-family: inherit; text-align: center;
+    }
+    .trader-mode-tab:hover { border-color: var(--text-dim); color: var(--text-main); }
+    .trader-mode-tab.active { border-color: var(--accent-gold); background: #1a1208; color: var(--accent-gold); }
+    .trader-stock-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .trader-stock-wrap.hidden { display: none !important; }
+    #shop-sell-list.items-grid-scroll {
+      grid-template-rows: none;
+      align-content: start;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     .shop-footer {
       font-size: 8px; color: var(--text-hint); letter-spacing: 0.5px; padding: 6px 8px; border-radius: 6px; border: 1px dashed var(--border);
       background: #0a0a14; flex-shrink: 0; line-height: 1.4;
@@ -394,8 +413,9 @@
       40% { filter: brightness(1.4); transform: scale(1.03); box-shadow: 0 0 20px rgba(155, 89, 182, 0.7); }
       100% { filter: brightness(1); transform: scale(1); }
     }
-    /* ══ City shop item cards (#shop-list only) ══ */
-    #shop-list .item-card {
+    /* ══ City shop item cards (buy + sell) ══ */
+    #shop-list .item-card,
+    #shop-sell-list .item-card {
       background: #0d0d1a;
       border: 2px solid #1e1e38;
       display: flex;
@@ -408,14 +428,20 @@
       margin: 0;
       border-radius: 0;
     }
-    #shop-list .item-card:hover:not(.cant) { border-color: #4a9eff; background: #06101e; }
-    #shop-list .item-card.rare { border-color: #1a3a6a; }
-    #shop-list .item-card.epic { border-color: #4a2800; }
-    #shop-list .item-card.cant:hover { border-color: #e74c3c; }
-    #shop-list .item-card.selected { border-color: var(--accent-gold); background: #150f00; }
+    #shop-list .item-card:hover:not(.cant),
+    #shop-sell-list .item-card:hover:not(.cant) { border-color: #4a9eff; background: #06101e; }
+    #shop-list .item-card.rare,
+    #shop-sell-list .item-card.rare { border-color: #1a3a6a; }
+    #shop-list .item-card.epic,
+    #shop-sell-list .item-card.epic { border-color: #4a2800; }
+    #shop-list .item-card.cant:hover,
+    #shop-sell-list .item-card.cant:hover { border-color: #e74c3c; }
+    #shop-list .item-card.selected,
+    #shop-sell-list .item-card.selected { border-color: var(--accent-gold); background: #150f00; }
     #shop-list .item-card.secret { border-color: #9b59b6; background: #0f0a1a; grid-column: auto !important; }
     #shop-list .item-card.secret.secret-reveal-play { animation: secretRevealFlash 0.65s ease forwards; }
-    #shop-list .card-body {
+    #shop-list .card-body,
+    #shop-sell-list .card-body {
       padding: 12px 12px 10px;
       display: flex;
       flex-direction: column;
@@ -423,13 +449,20 @@
       flex: 1;
       min-height: 0;
     }
-    #shop-list .card-icon-name { display: flex; align-items: center; gap: 10px; }
-    #shop-list .card-icon { font-size: 30px; flex-shrink: 0; line-height: 1; display: flex; align-items: center; justify-content: center; }
-    #shop-list .card-icon .item-icon-img { width: 30px !important; height: 30px !important; }
-    #shop-list .card-name { font-size: 8px; color: #e8e8f0; line-height: 1.5; word-break: break-word; }
-    #shop-list .card-stat { font-size: 7px; color: #2ecc71; line-height: 1.7; }
-    #shop-list .card-desc { font-size: 6px; color: #888aa0; line-height: 1.5; margin-top: 3px; font-style: italic; }
-    #shop-list .card-footer {
+    #shop-list .card-icon-name,
+    #shop-sell-list .card-icon-name { display: flex; align-items: center; gap: 10px; }
+    #shop-list .card-icon,
+    #shop-sell-list .card-icon { font-size: 30px; flex-shrink: 0; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    #shop-list .card-icon .item-icon-img,
+    #shop-sell-list .card-icon .item-icon-img { width: 30px !important; height: 30px !important; }
+    #shop-list .card-name,
+    #shop-sell-list .card-name { font-size: 8px; color: #e8e8f0; line-height: 1.5; word-break: break-word; }
+    #shop-list .card-stat,
+    #shop-sell-list .card-stat { font-size: 7px; color: #2ecc71; line-height: 1.7; }
+    #shop-list .card-desc,
+    #shop-sell-list .card-desc { font-size: 6px; color: #888aa0; line-height: 1.5; margin-top: 3px; font-style: italic; }
+    #shop-list .card-footer,
+    #shop-sell-list .card-footer {
       border-top: 2px solid #1a1a2e;
       padding: 7px 8px;
       display: flex;
@@ -438,7 +471,8 @@
       background: #0a0a18;
       flex-shrink: 0;
     }
-    #shop-list .btn-buy {
+    #shop-list .btn-buy,
+    #shop-sell-list .btn-sell {
       flex: 1;
       padding: 6px 4px;
       font-family: 'Press Start 2P', monospace;
@@ -446,20 +480,30 @@
       cursor: pointer;
       letter-spacing: 1px;
       text-align: center;
-      border: 1px solid #4a9eff;
-      background: #060e18;
-      color: #4a9eff;
       border-radius: 0;
       margin: 0;
     }
+    #shop-list .btn-buy {
+      border: 1px solid #4a9eff;
+      background: #060e18;
+      color: #4a9eff;
+    }
+    #shop-sell-list .btn-sell {
+      border: 1px solid #6a5020;
+      background: #1a1408;
+      color: #e8c860;
+    }
     #shop-list .btn-buy:hover:not(:disabled) { background: #0d1e38; }
-    #shop-list .item-card.cant .btn-buy {
+    #shop-sell-list .btn-sell:hover:not(:disabled) { background: #2a2010; }
+    #shop-list .item-card.cant .btn-buy,
+    #shop-sell-list .item-card.cant .btn-sell {
       border-color: #e74c3c;
       color: #e74c3c;
       background: #100808;
       cursor: not-allowed;
     }
-    #shop-list .item-card.epic:not(.cant) .btn-buy {
+    #shop-list .item-card.epic:not(.cant) .btn-buy,
+    #shop-sell-list .item-card.epic:not(.cant) .btn-sell {
       border-color: #f0a500;
       color: #f0a500;
       background: #120800;
@@ -470,8 +514,15 @@
       background: #0f0a14;
     }
     #shop-list .btn-buy-ad:hover:not(:disabled) { background: #1a0f22; }
-    #shop-list .card-price { font-size: 11px; color: #f0a500; flex-shrink: 0; font-weight: 700; }
-    #shop-list .card-price.cant { color: #e74c3c; }
+    #shop-list .card-price,
+    #shop-sell-list .card-price { font-size: 11px; color: #f0a500; flex-shrink: 0; font-weight: 700; }
+    #shop-list .card-price.cant,
+    #shop-sell-list .card-price.cant { color: #e74c3c; }
+    #shop-sell-list .card-price.sell-gain { color: #2ecc71; }
+    .city-sell-empty {
+      grid-column: 1 / -1; padding: 16px 8px; text-align: center; font-size: 9px;
+      color: var(--text-dim); line-height: 1.5;
+    }
     .badge { font-size: 9px; padding: 2px 5px; border-radius: 3px; }
     .badge-common { background: #1a1a2e; color: #8888aa; border: 1px solid var(--border); }
     .badge-rare { background: #0d1520; color: var(--accent-blue); border: 1px solid var(--accent-blue); }
@@ -1565,8 +1616,12 @@
       #shop-list .card-stat { font-size: 6px; }
       #shop-list .card-desc { font-size: 5px; }
       #shop-list .card-footer { padding: 5px 6px; gap: 4px; }
-      #shop-list .btn-buy { font-size: 5px; padding: 4px 3px; }
-      #shop-list .card-price, #shop-list .card-footer .badge { font-size: 8px; }
+      #shop-list .btn-buy, #shop-sell-list .btn-sell { font-size: 5px; padding: 4px 3px; }
+      .trader-mode-tab { font-size: 7px; padding: 5px 4px; }
+      #shop-list .card-price, #shop-sell-list .card-price, #shop-list .card-footer .badge { font-size: 8px; }
+      #shop-sell-list .card-body { padding: 8px; gap: 5px; }
+      #shop-sell-list .card-icon { font-size: 22px; }
+      #shop-sell-list .card-icon .item-icon-img { width: 22px !important; height: 22px !important; }
       .services-title { font-size: 9px; margin-bottom: 0; }
       .service-card { padding: 7px; }
       .service-icon { font-size: 14px; }
@@ -1723,9 +1778,13 @@
       #shop-list .card-stat { font-size: 5px; }
       #shop-list .card-desc { font-size: 5px; }
       #shop-list .card-footer { padding: 4px 5px; gap: 3px; }
-      #shop-list .btn-buy { font-size: 5px; padding: 4px 2px; }
-      #shop-list .card-price { font-size: 8px; }
+      #shop-list .btn-buy, #shop-sell-list .btn-sell { font-size: 5px; padding: 4px 2px; }
+      .trader-mode-tab { font-size: 6px; padding: 4px 3px; }
+      #shop-list .card-price, #shop-sell-list .card-price { font-size: 8px; }
       #shop-list .card-footer .badge { font-size: 5px; }
+      #shop-sell-list .card-body { padding: 5px 5px 4px; gap: 4px; }
+      #shop-sell-list .card-icon { font-size: 20px; }
+      #shop-sell-list .card-icon .item-icon-img { width: 20px !important; height: 20px !important; }
       #shop-list .item-card.secret { grid-column: auto !important; height: 100%; }
       #shop-list .btn-buy-ad { font-size: 5px; padding: 4px 2px; }
       .service-card .service-desc, .sc-desc { display: none; }
@@ -1926,8 +1985,17 @@
               </div>
               <button type="button" class="btn btn-dim" id="btn-reroll-shop" style="font-size:9px;padding:3px 10px">↺ Обновить (20g)</button>
             </div>
-            <div id="shop-list" class="items-grid"></div>
-            <div class="shop-footer">Выберите товар и нажмите «Купить».</div>
+            <div class="trader-mode-tabs" role="tablist" aria-label="Торговля">
+              <button type="button" class="trader-mode-tab active" data-trader-tab="buy" id="trader-tab-buy">Покупка</button>
+              <button type="button" class="trader-mode-tab" data-trader-tab="sell" id="trader-tab-sell">Продажа</button>
+            </div>
+            <div id="shop-buy-wrap" class="trader-stock-wrap">
+              <div id="shop-list" class="items-grid"></div>
+            </div>
+            <div id="shop-sell-wrap" class="trader-stock-wrap hidden">
+              <div id="shop-sell-list" class="items-grid items-grid-scroll"></div>
+            </div>
+            <div class="shop-footer" id="shop-footer-text">Выберите товар и нажмите «Купить».</div>
           </div>
           <div id="city-panel-alchemist" class="city-panel city-panel-alchemist hidden">
             <div class="alchemist-head-with-face">
@@ -3337,6 +3405,7 @@
     wandererUsedByRegion: {},
     activeCityNode: null,
     cityNpcTab: 'trader',
+    cityTraderTab: 'buy',
     battleReviveUsed: false,
     lastSafeSave: null,
     bestiary: {},
@@ -6831,6 +6900,133 @@
     return r === 'epic' ? `<span class="badge badge-epic">Эпик</span>` : r === 'rare' ? `<span class="badge badge-rare">Редкий</span>` : `<span class="badge badge-common">Обычн.</span>`;
   }
 
+  function getItemSellPrice(it) {
+    if (!it) return 0;
+    return typeof it.sellPrice === 'number' ? it.sellPrice : Math.floor((it.price || 0) * 0.5);
+  }
+
+  function isItemEquippedAnywhere(itemId) {
+    return (GameState.heroes || []).some(h => {
+      const eq = h.equipment || {};
+      return eq.weapon === itemId || eq.armor === itemId || eq.artifact === itemId;
+    });
+  }
+
+  function getSellableInventoryEntries() {
+    const out = [];
+    (GameState.inventory || []).forEach((id, idx) => {
+      const it = itemById(id);
+      if (it && !isItemEquippedAnywhere(id)) out.push({ id, idx, item: it });
+    });
+    return out;
+  }
+
+  function buildCitySellItemCard(entry) {
+    const it = entry.item;
+    const price = getItemSellPrice(it);
+    const effects = formatItemMods(it);
+    const statText = effects.join(' · ');
+    const descText = it.desc ? String(it.desc) : '';
+    const r = it.rarity === 'epic' ? 'epic' : it.rarity === 'rare' ? 'rare' : 'common';
+    const roleHint = itemHeroClassLabel(it);
+    const tooltip = [it.name, roleHint, statText, descText].filter(Boolean).join(' — ');
+    return `<div class="item-card ${r}" title="${escapeHtmlAttr(tooltip)}">
+      <div class="card-body">
+        <div class="card-icon-name">
+          <span class="card-icon">${itemIconMarkup(it, 30)}</span>
+          <span class="card-name">${it.name}</span>
+        </div>
+        <div class="card-stat">${statText}</div>
+        ${descText ? `<div class="card-desc">${descText}</div>` : ''}
+      </div>
+      <div class="card-footer">
+        ${cityItemRarBadge(it.rarity)}
+        <button type="button" class="btn-sell" data-sell-idx="${entry.idx}">ПРОДАТЬ</button>
+        <span class="card-price sell-gain">+${price}g</span>
+      </div>
+    </div>`;
+  }
+
+  function bindCitySellClicks(shopEl, node, strangerOnly) {
+    if (!shopEl) return;
+    shopEl.querySelectorAll('.btn-sell[data-sell-idx]').forEach(btn => {
+      btn.onclick = (ev) => {
+        ev.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-sell-idx'), 10);
+        const inv = GameState.inventory || [];
+        const id = inv[idx];
+        const it = itemById(id);
+        if (!it) return;
+        if (isItemEquippedAnywhere(id)) {
+          void showGameAlert('Сначала снимите предмет с героя.');
+          renderCityUI(node, strangerOnly);
+          return;
+        }
+        const gain = getItemSellPrice(it);
+        showGameConfirm(`Продать «${it.name}» за ${gain} 💰?`).then(ok => {
+          if (!ok) return;
+          if (!GameState.inventory || GameState.inventory[idx] !== id) {
+            renderCityUI(node, strangerOnly);
+            return;
+          }
+          GameState.inventory.splice(idx, 1);
+          GameState.gold += gain;
+          GameState.stats.goldEarned = (GameState.stats.goldEarned || 0) + gain;
+          saveGame();
+          renderCityUI(node, strangerOnly);
+        });
+      };
+    });
+  }
+
+  function renderCityTraderSellPanel(node, strangerOnly) {
+    const sellList = document.getElementById('shop-sell-list');
+    if (!sellList) return;
+    const entries = getSellableInventoryEntries();
+    if (!entries.length) {
+      sellList.innerHTML = `<div class="city-sell-empty">В рюкзаке нет предметов для продажи.<br>Надетое снять в рюкзаке (двойной клик по слоту).</div>`;
+      return;
+    }
+    sellList.innerHTML = entries.map(buildCitySellItemCard).join('');
+    bindCitySellClicks(sellList, node, strangerOnly);
+  }
+
+  function renderCityTraderBuyPanel(node, strangerOnly) {
+    const shop = document.getElementById('shop-list');
+    if (!shop) return;
+    const stock = GameState.shopStock && GameState.shopStock.stock ? GameState.shopStock.stock : (GameState.shopStock || []);
+    let html = stock.map(buildCityShopItemCard).join('');
+    if (window.ysdk && GameState.cityState.secretItemId) {
+      if (GameState.cityState.secretRevealed) {
+        const item = itemById(GameState.cityState.secretItemId);
+        const price = Math.floor(item.price * 0.7);
+        html += buildCitySecretEpicCardHTML(item, price);
+      } else {
+        html += `<div class="item-card epic secret" id="city-secret-card">
+            <div class="card-body">
+              <div class="card-icon-name">
+                <span class="card-icon">❓</span>
+                <span class="card-name" style="color:#b57edc">Тайный товар</span>
+              </div>
+              <div class="card-stat" style="color:#b57edc">Эпик за рекламу</div>
+            </div>
+            <div class="card-footer">
+              <span class="badge badge-epic">Тайна</span>
+              <button type="button" class="btn-buy btn-buy-ad" id="btn-secret">📺 Открыть</button>
+              <span class="card-price">—</span>
+            </div>
+          </div>`;
+      }
+    }
+    shop.innerHTML = html;
+    bindCityShopClicks(shop, node, strangerOnly);
+  }
+
+  function setCityTraderTab(traderTab, node, strangerOnly) {
+    if (traderTab === 'buy' || traderTab === 'sell') GameState.cityTraderTab = traderTab;
+    renderCityUI(node, strangerOnly);
+  }
+
   function buildCityShopItemCard(it) {
     const canBuy = GameState.gold >= it.price;
     const shortfall = Math.max(0, it.price - GameState.gold);
@@ -7024,40 +7220,35 @@
     if (pa) pa.classList.toggle('hidden', tab !== 'alchemist');
     if (po) po.classList.toggle('hidden', tab !== 'oracle');
 
-    const shop = document.getElementById('shop-list');
-    if (shop && tab === 'trader') {
-      const stock = GameState.shopStock && GameState.shopStock.stock ? GameState.shopStock.stock : (GameState.shopStock || []);
-      let html = stock.map(buildCityShopItemCard).join('');
-      if (window.ysdk && GameState.cityState.secretItemId) {
-        if (GameState.cityState.secretRevealed) {
-          const item = itemById(GameState.cityState.secretItemId);
-          const price = Math.floor(item.price * 0.7);
-          html += buildCitySecretEpicCardHTML(item, price);
-        } else {
-          html += `<div class="item-card epic secret" id="city-secret-card">
-            <div class="card-body">
-              <div class="card-icon-name">
-                <span class="card-icon">❓</span>
-                <span class="card-name" style="color:#b57edc">Тайный товар</span>
-              </div>
-              <div class="card-stat" style="color:#b57edc">Эпик за рекламу</div>
-            </div>
-            <div class="card-footer">
-              <span class="badge badge-epic">Тайна</span>
-              <button type="button" class="btn-buy btn-buy-ad" id="btn-secret">📺 Открыть</button>
-              <span class="card-price">—</span>
-            </div>
-          </div>`;
-        }
+    const navNode = n;
+    const sn = typeof strangerOnly === 'boolean' ? strangerOnly : GameState._cityStrangerOnly;
+
+    if (tab === 'trader') {
+      const traderTab = GameState.cityTraderTab || 'buy';
+      document.querySelectorAll('.trader-mode-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-trader-tab') === traderTab);
+      });
+      const buyWrap = document.getElementById('shop-buy-wrap');
+      const sellWrap = document.getElementById('shop-sell-wrap');
+      if (buyWrap) buyWrap.classList.toggle('hidden', traderTab !== 'buy');
+      if (sellWrap) sellWrap.classList.toggle('hidden', traderTab !== 'sell');
+      const rer = document.getElementById('btn-reroll-shop');
+      if (rer) rer.style.display = traderTab === 'buy' ? '' : 'none';
+      const footer = document.getElementById('shop-footer-text');
+      if (footer) {
+        footer.textContent = traderTab === 'buy'
+          ? 'Выберите товар и нажмите «Купить».'
+          : 'Продайте лишнее снаряжение из рюкзака. Надетое снять в рюкзаке.';
       }
-      shop.innerHTML = html;
-      bindCityShopClicks(shop, n, strangerOnly);
+      if (traderTab === 'buy') renderCityTraderBuyPanel(n, strangerOnly);
+      else renderCityTraderSellPanel(n, strangerOnly);
+      document.querySelectorAll('.trader-mode-tab').forEach(btn => {
+        btn.onclick = () => setCityTraderTab(btn.getAttribute('data-trader-tab'), navNode, sn);
+      });
     }
 
     if (tab === 'alchemist') renderCityAlchemistPanel(n, strangerOnly);
 
-    const navNode = n;
-    const sn = typeof strangerOnly === 'boolean' ? strangerOnly : GameState._cityStrangerOnly;
     document.querySelectorAll('.npc-tab').forEach(btn => {
       btn.onclick = () => setCityNpcTab(btn.getAttribute('data-city-tab'), navNode, sn);
     });
@@ -7091,6 +7282,7 @@
     GameState.activeCityNode = node.id;
     GameState._cityStrangerOnly = !!strangerOnly;
     if (!GameState.cityNpcTab) GameState.cityNpcTab = 'trader';
+    if (!GameState.cityTraderTab) GameState.cityTraderTab = 'buy';
     if (!strangerOnly) {
       const stockResult = generateShopStock(node.region);
       GameState.shopStock = stockResult;
