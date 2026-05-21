@@ -809,6 +809,94 @@
       margin-top: -6px;
     }
 
+    #sfx-auditor-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 4600;
+      background: rgba(0,0,0,.86);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      box-sizing: border-box;
+    }
+    #sfx-auditor-modal.show { display: flex; }
+    .sfx-auditor-box {
+      width: min(940px, 96vw);
+      max-height: 92vh;
+      background: #0d0d1a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+    .sfx-auditor-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+    .sfx-auditor-title { color: var(--accent-gold); font-size: 12px; letter-spacing: 1px; }
+    .sfx-auditor-sub { color: var(--text-dim); font-size: 8px; margin-top: 3px; }
+    .sfx-auditor-body {
+      overflow: auto;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .sfx-group {
+      border: 1px solid var(--border);
+      background: #111128;
+      border-radius: 7px;
+      padding: 9px;
+      min-width: 0;
+    }
+    .sfx-group-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .sfx-group-title { font-size: 10px; color: var(--text-main); }
+    .sfx-group-current { font-size: 7px; color: var(--text-hint); text-align: right; word-break: break-word; }
+    .sfx-candidate {
+      display: grid;
+      grid-template-columns: 30px 1fr 68px;
+      gap: 6px;
+      align-items: center;
+      border-top: 1px solid rgba(42,42,74,.75);
+      padding: 6px 0;
+    }
+    .sfx-candidate:first-of-type { border-top: 0; }
+    .sfx-play-btn {
+      width: 30px;
+      height: 28px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sfx-candidate-name { font-size: 8px; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sfx-candidate-src { font-size: 6px; color: var(--text-hint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+    .sfx-apply-btn { padding: 6px 8px; font-size: 7px; }
+    .sfx-apply-btn.active { border-color: var(--accent-green); color: var(--accent-green); }
+    .sfx-auditor-foot {
+      border-top: 1px solid var(--border);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: #111128;
+    }
+    .sfx-auditor-status { font-size: 8px; color: var(--text-dim); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
     .menu-btn-icon {
       margin-right: 12px;
       font-size: 12px;
@@ -912,6 +1000,22 @@
     /* 9: Victory screen card */
     /* ═══ VICTORY SCREEN ═══ */
     @keyframes vic-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+    @keyframes vic-inventory-glow {
+      0%, 100% {
+        box-shadow: 0 0 6px rgba(46, 204, 113, 0.35), inset 0 0 0 0 rgba(46, 204, 113, 0.08);
+        border-color: var(--accent-green);
+        background: rgba(46, 204, 113, 0.07);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(46, 204, 113, 0.75), 0 0 8px rgba(240, 165, 0, 0.35);
+        border-color: #6effb8;
+        background: rgba(46, 204, 113, 0.16);
+      }
+    }
+    @keyframes vic-inventory-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
     @keyframes vic-levelup { 0%,100%{opacity:1} 50%{opacity:.35} }
     @keyframes vic-particle { 0%{transform:translateY(-10%) rotate(0deg);opacity:var(--op)} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
     #victory-screen { position: relative; overflow: hidden; }
@@ -1003,7 +1107,27 @@
     .victory-buttons { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 6px; }
     .vic-btn-ad { border-color: var(--accent-purple); color: var(--accent-purple); }
     .vic-btn-continue { border-color: var(--accent-gold); color: var(--accent-gold); }
+    .vic-btn-inventory { border-color: var(--accent-blue); color: var(--accent-blue); }
+    .vic-btn-inventory.vic-btn-inventory-loot {
+      border-color: var(--accent-green);
+      color: #b8ffd4;
+      border-width: 2px;
+      font-weight: bold;
+      animation: vic-inventory-glow 1.35s ease-in-out infinite, vic-inventory-pulse 1.35s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .vic-btn-inventory.vic-btn-inventory-loot {
+        animation: none;
+        box-shadow: 0 0 14px rgba(46, 204, 113, 0.5);
+      }
+    }
     .vic-btn-bestiary { border-color: var(--text-hint); color: var(--text-dim); }
+    .victory-buttons .btn {
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     /* ── Landscape mobile ── */
     @media (max-height: 430px) and (orientation: landscape) {
       .screen-victory { display: grid; grid-template-columns: 130px 1fr 120px; grid-template-rows: 28px 1fr; height: 100vh; overflow: hidden; padding: 0; gap: 0; align-items: stretch; }
@@ -1016,7 +1140,8 @@
       .victory-divider { max-width: none; display: none; }
       .victory-loot { max-width: none; }
       .victory-bestiary-row { max-width: none; }
-      .victory-buttons { grid-column: 3; grid-row: 2; display: flex; flex-direction: column; gap: 4px; padding: 4px; justify-content: center; max-width: none; }
+      .victory-buttons { grid-column: 3; grid-row: 2; display: flex; flex-direction: column; gap: 3px; padding: 4px; justify-content: center; max-width: none; overflow-y: auto; }
+      .victory-buttons .btn { font-size: 6px; padding: 5px 4px; min-height: 26px; letter-spacing: 0; }
       .victory-particles { display: none; }
       .vic-stat-card-val { font-size: 14px; }
       .vic-stat-card { padding: 6px 4px 4px; }
@@ -1125,7 +1250,9 @@
     #inv-paperdoll-area::before { content: ''; position: absolute; inset: 6px; border: 1px solid #1e1e3a; border-radius: 8px; pointer-events: none; }
     .paperdoll-row { display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; z-index: 1; }
     #inv-hero-figure { font-size: 72px; line-height: 1; text-align: center; filter: drop-shadow(0 0 18px rgba(74,158,255,0.35)) drop-shadow(0 4px 8px rgba(0,0,0,.8)); transition: filter .3s; }
-    #inv-hero-figure img { width: 72px; height: 72px; border-radius: 6px; border: 2px solid #3a3a6a; }
+    #inv-hero-figure img,
+    .inv-hero-figure-img { width: 72px; height: 72px; border-radius: 8px; border: 2px solid #3a3a6a; display: block; object-fit: contain; }
+    .inv-hero-figure-emoji { font-size: 72px; line-height: 1; display: block; }
     .eq-slot-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; max-width: 76px; }
     .eq-slot-heading { font-size: 7px; color: var(--text-hint); letter-spacing: 1px; text-transform: uppercase; text-align: center; line-height: 1.2; }
     .eq-slot-item-name { font-size: 7px; color: var(--text-dim); text-align: center; line-height: 1.25; max-width: 76px; min-height: 1.25em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
@@ -1174,6 +1301,91 @@
     .eq-mini { font-size: 10px; opacity: 0.9; margin-left: 3px; display: inline-flex; align-items: center; gap: 3px; flex-wrap: nowrap; vertical-align: middle; }
     .eq-mini-icon { display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
     .eq-mini-dot { opacity: 0.85; font-size: 10px; }
+
+    /* Inventory paperdoll — PC / мышь (не трогает touch-мобилку) */
+    @media (min-width: 900px) and (min-height: 520px) and (hover: hover) and (pointer: fine) {
+      #inv-layout {
+        grid-template-columns: 210px minmax(420px, 1.45fr) 300px;
+      }
+      #inv-sidebar { padding: 12px 10px; }
+      .inv-portrait-img { width: 100px; height: 100px; }
+      .inv-portrait-icon { font-size: 52px; }
+      .inv-portrait-name { font-size: 15px; }
+      .inv-stats { padding: 10px; }
+      .stat-row { font-size: 11px; margin-bottom: 6px; }
+      #inv-paperdoll {
+        padding: 18px 20px 14px;
+        gap: 10px;
+      }
+      #inv-paperdoll-title {
+        font-size: 11px;
+        letter-spacing: 3px;
+      }
+      #inv-paperdoll-area {
+        max-width: min(600px, 75vh, 100%);
+        width: 100%;
+        flex: 1;
+        min-height: min(420px, 62vh);
+        padding: 36px 28px;
+        gap: 36px;
+        border-radius: 14px;
+      }
+      #inv-paperdoll-area::before {
+        inset: 10px;
+        border-radius: 10px;
+      }
+      .paperdoll-row { gap: 40px; }
+      #inv-hero-figure {
+        font-size: clamp(96px, 14vh, 152px);
+      }
+      #inv-hero-figure img,
+      .inv-hero-figure-img {
+        width: clamp(96px, 14vh, 152px);
+        height: clamp(96px, 14vh, 152px);
+        border-width: 3px;
+      }
+      .inv-hero-figure-emoji {
+        font-size: clamp(96px, 14vh, 152px);
+      }
+      .eq-slot-wrap {
+        max-width: 130px;
+        gap: 8px;
+      }
+      .eq-slot-heading {
+        font-size: 10px;
+        letter-spacing: 1.5px;
+      }
+      .eq-slot-item-name {
+        font-size: 10px;
+        max-width: 130px;
+      }
+      .eq-zone {
+        width: clamp(88px, 11vh, 112px);
+        height: clamp(88px, 11vh, 112px);
+        border-radius: 10px;
+        border-width: 2px;
+      }
+      .eq-zone-fill.eq-zone-empty .eq-zone-def-icon { font-size: 44px; }
+      .eq-zone-fill > span:not(.item-icon-wrap) { font-size: 46px; }
+      #inv-slot-info { font-size: 10px; min-height: 26px; }
+    }
+    @media (min-width: 1200px) and (min-height: 600px) and (hover: hover) and (pointer: fine) {
+      #inv-layout {
+        grid-template-columns: 220px minmax(480px, 1.55fr) 320px;
+      }
+      #inv-paperdoll-area {
+        max-width: min(680px, 78vh, 100%);
+        min-height: min(480px, 68vh);
+        padding: 44px 32px;
+        gap: 44px;
+      }
+      .paperdoll-row { gap: 48px; }
+      .eq-zone {
+        width: clamp(96px, 12vh, 120px);
+        height: clamp(96px, 12vh, 120px);
+      }
+    }
+
     @media (max-width: 768px) {
       #topbar-right { min-width: 74px; }
       #topbar-center { font-size: 11px; }
@@ -1598,6 +1810,7 @@
             <span style="flex-shrink:0">Громкость SFX</span>
             <input type="range" id="setting-sfx-volume" min="0" max="100" value="75" step="1" aria-label="Громкость звуков боя" />
           </div>
+          <button type="button" class="btn btn-gold" id="btn-open-sfx-auditor" style="width:100%;font-size:9px">▶ SFX-аудитор</button>
           <p class="menu-settings-hint">При сворачивании вкладки или окна музыка и звуки боя останавливаются (требование площадки).</p>
           <button type="button" class="menu-btn menu-btn-continue" id="btn-menu-settings-back" style="margin-top:4px">
             <span class="menu-btn-icon">←</span>
@@ -1809,6 +2022,7 @@
         <!-- Right column (landscape) / bottom (portrait) -->
         <div class="victory-buttons" id="victory-buttons">
           <button class="btn vic-btn-ad" id="btn-vic-ad">📺 ×2 ЗОЛОТО [РЕКЛАМА]</button>
+          <button class="btn vic-btn-inventory" id="btn-vic-inventory" title="Открыть рюкзак и надеть добычу">🎒 РЮКЗАК</button>
           <button class="btn vic-btn-continue" id="btn-vic-continue">▶ ПРОДОЛЖИТЬ</button>
           <button class="btn vic-btn-bestiary" id="btn-vic-bestiary">📖 БЕСТИАРИЙ</button>
         </div>
@@ -1903,6 +2117,22 @@
       </div>
     </div>
   </div>
+  <div id="sfx-auditor-modal" aria-hidden="true">
+    <div class="sfx-auditor-box">
+      <div class="sfx-auditor-head">
+        <div>
+          <div class="sfx-auditor-title">SFX-АУДИТОР</div>
+          <div class="sfx-auditor-sub">Сравнение кандидатов для боя и сохранение выбранного варианта</div>
+        </div>
+        <button type="button" class="btn" id="btn-sfx-auditor-close">✕</button>
+      </div>
+      <div class="sfx-auditor-body" id="sfx-auditor-body"></div>
+      <div class="sfx-auditor-foot">
+        <div class="sfx-auditor-status" id="sfx-auditor-status">Готово</div>
+        <button type="button" class="btn btn-red" id="btn-sfx-auditor-reset">Сбросить выбор</button>
+      </div>
+    </div>
+  </div>
   <div id="fx-layer" style="position:fixed;inset:0;pointer-events:none;z-index:500"></div>
   <div id="game-menu-overlay">
     <div class="modal-box">
@@ -1928,6 +2158,7 @@
   const STATUS = { STUN: 'stun', FREEZE: 'freeze', WEB: 'web', POISON: 'poison', BURN: 'burn', SLOW: 'slow', BLIND: 'blind', CURSE: 'curse', BERSERK: 'berserk', STEALTH: 'stealth' };
   const SAVE_KEY = 'threeHeroesSave';
   const AUDIO_SETTINGS_KEY = 'threeBladesAudioV1';
+  const SFX_OVERRIDES_KEY = 'threeBladesSfxOverridesV1';
   const BGM_TRACKS = {
     'menu-cinematic': ['assets/audio/menu-cinematic/bgm_menu_cinematic_01.mp3'],
     battle: [
@@ -2095,7 +2326,7 @@
 
   /** Сэмплы боя (импорт из assets/audio/battle/sfx/…); префлоад в Web Audio, без замены синтеза ударов/смерти. */
   const BATTLE_SFX_SAMPLE_URLS = [
-    'assets/audio/battle/sfx/common/hit.wav',
+    'assets/audio/battle/sfx/common/hit.mp3',
     'assets/audio/battle/sfx/common/death.wav',
     'assets/audio/battle/sfx/common/critical_hit.mp3',
     'assets/audio/battle/sfx/common/victory.mp3',
@@ -2104,19 +2335,19 @@
     'assets/audio/battle/sfx/movement/step_rock.wav',
     'assets/audio/battle/sfx/movement/step_wood.wav',
     'assets/audio/battle/sfx/movement/step_water.wav',
-    'assets/audio/battle/sfx/heroes/garet_melee.wav',
-    'assets/audio/battle/sfx/heroes/alira_bow.wav',
+    'assets/audio/battle/sfx/heroes/garet_melee.mp3',
+    'assets/audio/battle/sfx/heroes/alira_bow.mp3',
     'assets/audio/battle/sfx/heroes/alira_bow_draw.wav',
-    'assets/audio/battle/sfx/heroes/seris_magic.wav',
+    'assets/audio/battle/sfx/heroes/seris_magic.mp3',
     'assets/audio/battle/sfx/heroes/garet_shield_bash.mp3',
-    'assets/audio/battle/sfx/heroes/garet_fire_call.wav',
-    'assets/audio/battle/sfx/heroes/garet_berserk.wav',
+    'assets/audio/battle/sfx/heroes/garet_fire_call.mp3',
+    'assets/audio/battle/sfx/heroes/garet_berserk.mp3',
     'assets/audio/battle/sfx/heroes/alira_double_shot.mp3',
     'assets/audio/battle/sfx/heroes/alira_slow_arrow.wav',
     'assets/audio/battle/sfx/heroes/alira_arrow_rain.wav',
     'assets/audio/battle/sfx/heroes/seris_fireball.ogg',
-    'assets/audio/battle/sfx/heroes/seris_freeze.wav',
-    'assets/audio/battle/sfx/heroes/seris_meteor.wav',
+    'assets/audio/battle/sfx/heroes/seris_freeze.mp3',
+    'assets/audio/battle/sfx/heroes/seris_meteor.mp3',
     'assets/audio/battle/sfx/enemies/skeleton_attack.wav',
     'assets/audio/battle/sfx/enemies/goblin_archer_attack.wav',
     'assets/audio/battle/sfx/enemies/boar_attack.wav',
@@ -2157,17 +2388,17 @@
     'assets/audio/battle/sfx/status/apply_blind.mp3',
     'assets/audio/battle/sfx/status/apply_curse.wav',
     'assets/audio/battle/sfx/status/apply_berserk.mp3',
-    'assets/audio/battle/sfx/ui/select_unit.wav',
-    'assets/audio/battle/sfx/ui/end_turn.wav',
-    'assets/audio/battle/sfx/ui/skill_ready.wav',
+    'assets/audio/battle/sfx/ui/select_unit.mp3',
+    'assets/audio/battle/sfx/ui/end_turn.mp3',
+    'assets/audio/battle/sfx/ui/skill_ready.mp3',
     'assets/audio/battle/sfx/ui/victory_screen.mp3',
-    'assets/audio/battle/sfx/ui/defeat_screen.wav'
+    'assets/audio/battle/sfx/ui/defeat_screen.mp3'
   ];
 
   const BSX = (() => {
     const r = p => 'assets/audio/battle/sfx/' + p;
     return {
-      common_hit: r('common/hit.wav'),
+      common_hit: r('common/hit.mp3'),
       common_death: r('common/death.wav'),
       common_critical_hit: r('common/critical_hit.mp3'),
       common_victory: r('common/victory.mp3'),
@@ -2176,19 +2407,19 @@
       move_step_rock: r('movement/step_rock.wav'),
       move_step_wood: r('movement/step_wood.wav'),
       move_step_water: r('movement/step_water.wav'),
-      heroes_garet_melee: r('heroes/garet_melee.wav'),
-      heroes_alira_bow: r('heroes/alira_bow.wav'),
+      heroes_garet_melee: r('heroes/garet_melee.mp3'),
+      heroes_alira_bow: r('heroes/alira_bow.mp3'),
       heroes_alira_bow_draw: r('heroes/alira_bow_draw.wav'),
-      heroes_seris_magic: r('heroes/seris_magic.wav'),
+      heroes_seris_magic: r('heroes/seris_magic.mp3'),
       heroes_garet_shield_bash: r('heroes/garet_shield_bash.mp3'),
-      heroes_garet_fire_call: r('heroes/garet_fire_call.wav'),
-      heroes_garet_berserk: r('heroes/garet_berserk.wav'),
+      heroes_garet_fire_call: r('heroes/garet_fire_call.mp3'),
+      heroes_garet_berserk: r('heroes/garet_berserk.mp3'),
       heroes_alira_double_shot: r('heroes/alira_double_shot.mp3'),
       heroes_alira_slow_arrow: r('heroes/alira_slow_arrow.wav'),
       heroes_alira_arrow_rain: r('heroes/alira_arrow_rain.wav'),
       heroes_seris_fireball: r('heroes/seris_fireball.ogg'),
-      heroes_seris_freeze: r('heroes/seris_freeze.wav'),
-      heroes_seris_meteor: r('heroes/seris_meteor.wav'),
+      heroes_seris_freeze: r('heroes/seris_freeze.mp3'),
+      heroes_seris_meteor: r('heroes/seris_meteor.mp3'),
       enemies_skeleton_attack: r('enemies/skeleton_attack.wav'),
       enemies_goblin_archer_attack: r('enemies/goblin_archer_attack.wav'),
       enemies_boar_attack: r('enemies/boar_attack.wav'),
@@ -2229,11 +2460,11 @@
       status_apply_blind: r('status/apply_blind.mp3'),
       status_apply_curse: r('status/apply_curse.wav'),
       status_apply_berserk: r('status/apply_berserk.mp3'),
-      ui_select_unit: r('ui/select_unit.wav'),
-      ui_end_turn: r('ui/end_turn.wav'),
-      ui_skill_ready: r('ui/skill_ready.wav'),
+      ui_select_unit: r('ui/select_unit.mp3'),
+      ui_end_turn: r('ui/end_turn.mp3'),
+      ui_skill_ready: r('ui/skill_ready.mp3'),
       ui_victory_screen: r('ui/victory_screen.mp3'),
-      ui_defeat_screen: r('ui/defeat_screen.wav')
+      ui_defeat_screen: r('ui/defeat_screen.mp3')
     };
   })();
 
@@ -2257,6 +2488,134 @@
     [ENEMY_IDS.FIRE_TITAN]: BSX.enemies_fire_titan_attack,
     [ENEMY_IDS.DARK_LORD]: BSX.enemies_dark_lord_attack
   };
+
+  const SFX_AUDITOR_GROUPS = [
+    {
+      id: 'sword',
+      title: 'Меч / ближний удар',
+      target: 'heroes_garet_melee',
+      candidates: [
+        ['Текущий: Slash 04', BSX.heroes_garet_melee],
+        ['Blade 01', 'assets/audio/_extracted/80-CC0-RPG-SFX/blade_01.ogg'],
+        ['Blade 02', 'assets/audio/_extracted/80-CC0-RPG-SFX/blade_02.ogg'],
+        ['Blade 03', 'assets/audio/_extracted/80-CC0-RPG-SFX/blade_03.ogg'],
+        ['Magic Slash', 'assets/audio/_extracted/Magic Spells AmbroggioMusic/Slash.mp3'],
+        ['Sword unsheathe', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/sword-unsheathe.wav']
+      ]
+    },
+    {
+      id: 'arrow',
+      title: 'Стрела / выстрел',
+      target: 'heroes_alira_bow',
+      candidates: [
+        ['Текущий: Wind 01', BSX.heroes_alira_bow],
+        ['Attack 03', 'assets/audio/_extracted/RPG_Essentials_Free/12_Player_Movement_SFX/56_Attack_03.wav'],
+        ['Swing', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/swing.wav'],
+        ['Swing 2', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/swing2.wav'],
+        ['Swing 3', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/swing3.wav'],
+        ['Wind 01 source', 'assets/audio/_extracted/RPG_Essentials_Free/8_Atk_Magic_SFX/25_Wind_01.wav']
+      ]
+    },
+    {
+      id: 'impact',
+      title: 'Попадание / импакт',
+      target: 'common_hit',
+      candidates: [
+        ['Текущий: flesh impact', BSX.common_hit],
+        ['Movement Hit 03', 'assets/audio/_extracted/RPG_Essentials_Free/12_Player_Movement_SFX/61_Hit_03.wav'],
+        ['Metal Hit 1', 'assets/audio/_extracted/Magic Spells AmbroggioMusic/Metal Hit 1.mp3'],
+        ['Metal Hit 2', 'assets/audio/_extracted/Magic Spells AmbroggioMusic/Metal Hit 2.mp3'],
+        ['Orc damage', 'assets/audio/_extracted/43284__randbsoundbites__rpg-sounds/800361__randbsoundbites__orc-taking-damage.wav'],
+        ['Character injury', 'assets/audio/_extracted/43284__randbsoundbites__rpg-sounds/808094__randbsoundbites__various-injury-sounds-for-game-character.wav']
+      ]
+    },
+    {
+      id: 'steps',
+      title: 'Шаги по земле',
+      target: 'move_step_grass',
+      candidates: [
+        ['Текущий: grass step', BSX.move_step_grass],
+        ['Rock step', BSX.move_step_rock],
+        ['Wood step', BSX.move_step_wood],
+        ['Water step', BSX.move_step_water],
+        ['Landing 01', 'assets/audio/_extracted/RPG_Essentials_Free/12_Player_Movement_SFX/45_Landing_01.wav']
+      ]
+    },
+    {
+      id: 'fire',
+      title: 'Огонь / взрыв',
+      target: 'heroes_seris_fireball',
+      candidates: [
+        ['Текущий: fireball', BSX.heroes_seris_fireball],
+        ['Fire explosion medium', 'assets/audio/_extracted/RPG_Essentials_Free/8_Atk_Magic_SFX/04_Fire_explosion_04_medium.wav'],
+        ['Fire 01', 'assets/audio/_extracted/80-CC0-RPG-SFX/spell_fire_01.ogg'],
+        ['Fire 02', 'assets/audio/_extracted/80-CC0-RPG-SFX/spell_fire_02.ogg'],
+        ['Fire 04', 'assets/audio/_extracted/80-CC0-RPG-SFX/spell_fire_04.ogg'],
+        ['Fire 05', 'assets/audio/_extracted/80-CC0-RPG-SFX/spell_fire_05.ogg']
+      ]
+    },
+    {
+      id: 'ice',
+      title: 'Лёд / заморозка',
+      target: 'heroes_seris_freeze',
+      candidates: [
+        ['Текущий: ice explosion', BSX.heroes_seris_freeze],
+        ['Ice source', 'assets/audio/_extracted/RPG_Essentials_Free/8_Atk_Magic_SFX/13_Ice_explosion_01.wav'],
+        ['Water 02', 'assets/audio/_extracted/RPG_Essentials_Free/8_Atk_Magic_SFX/22_Water_02.wav'],
+        ['Stun', 'assets/audio/_extracted/Magic Spells Vol 2 AmbroggioMusic/Stun.mp3'],
+        ['Magic Block', 'assets/audio/_extracted/Magic Spells Vol 2 AmbroggioMusic/Magic Block.mp3']
+      ]
+    },
+    {
+      id: 'magic',
+      title: 'Магический разряд',
+      target: 'heroes_seris_magic',
+      candidates: [
+        ['Текущий: magic1', BSX.heroes_seris_magic],
+        ['Spell', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/spell.wav'],
+        ['Spell 01', 'assets/audio/_extracted/80-CC0-RPG-SFX/spell_01.ogg'],
+        ['Spell 02', 'assets/audio/_extracted/80-CC0-RPG-SFX/spell_02.ogg'],
+        ['Zap 1', 'assets/audio/_extracted/Magic Spells Vol 2 AmbroggioMusic/Zap 1.mp3'],
+        ['Zap 2', 'assets/audio/_extracted/Magic Spells Vol 2 AmbroggioMusic/Zap 2.mp3']
+      ]
+    }
+  ];
+
+  function addBattleSfxUrl(url) {
+    if (url && !BATTLE_SFX_SAMPLE_URLS.includes(url)) BATTLE_SFX_SAMPLE_URLS.push(url);
+  }
+
+  function loadSfxOverrides() {
+    try {
+      const raw = localStorage.getItem(SFX_OVERRIDES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveSfxOverrides(overrides) {
+    try { localStorage.setItem(SFX_OVERRIDES_KEY, JSON.stringify(overrides || {})); } catch (_) {}
+  }
+
+  function applySfxOverride(target, url) {
+    if (!target || !url || !(target in BSX)) return false;
+    BSX[target] = url;
+    addBattleSfxUrl(url);
+    return true;
+  }
+
+  function applySavedSfxOverrides() {
+    const overrides = loadSfxOverrides();
+    Object.entries(overrides).forEach(([target, url]) => applySfxOverride(target, url));
+  }
+
+  function resetSfxOverrides() {
+    try { localStorage.removeItem(SFX_OVERRIDES_KEY); } catch (_) {}
+    location.reload();
+  }
+
+  applySavedSfxOverrides();
 
   const BattleSfx = {
     ctx: null,
@@ -2314,14 +2673,62 @@
       return this._sampleLoadPromise;
     },
 
+    _altSampleUrls(url) {
+      const base = url.replace(/\.[^.]+$/, '');
+      const exts = ['.mp3', '.wav', '.ogg', '.m4a'];
+      const out = [url];
+      exts.forEach(ext => { const u = base + ext; if (!out.includes(u)) out.push(u); });
+      return out;
+    },
+
+    _bufferForUrl(url) {
+      if (!this._sampleBuffers || !url) return null;
+      if (this._sampleBuffers.has(url)) return { url, buf: this._sampleBuffers.get(url) };
+      const base = url.replace(/\.[^.]+$/, '');
+      for (const ext of ['.mp3', '.wav', '.ogg', '.m4a']) {
+        const alt = base + ext;
+        if (this._sampleBuffers.has(alt)) return { url: alt, buf: this._sampleBuffers.get(alt) };
+      }
+      return null;
+    },
+
+    async loadSampleUrl(url) {
+      const ctx = this.ensureCtx();
+      if (!ctx || !url) return false;
+      if (!this._sampleBuffers) this._sampleBuffers = new Map();
+      const hit = this._bufferForUrl(url);
+      if (hit) return true;
+      for (const tryUrl of this._altSampleUrls(url)) {
+        try {
+          const res = await fetch(tryUrl);
+          if (!res.ok) continue;
+          const ab = await res.arrayBuffer();
+          const buf = await ctx.decodeAudioData(ab.slice(0));
+          this._sampleBuffers.set(url, buf);
+          addBattleSfxUrl(url);
+          return true;
+        } catch (_) { /* next ext */ }
+      }
+      return false;
+    },
+
+    async auditionUrl(url, gainMul) {
+      this.unlock();
+      const ok = await this.loadSampleUrl(url);
+      if (!ok) return false;
+      this.playSampledUrl(url, gainMul || 0.85);
+      return true;
+    },
+
     /** Воспроизвести сэмпл по полному URL; delaySec — задержка относительно AudioContext.currentTime. */
     playSampledUrl(url, gainMul, delaySec) {
       const ctx = this.ensureCtx();
       if (!ctx || !this.master || !this._sampleBuffers) return;
       const g0 = this._sfxGain();
       if (g0 <= 0) return;
-      const buf = this._sampleBuffers.get(url);
-      if (!buf) return;
+      const resolved = this._bufferForUrl(url);
+      if (!resolved) return;
+      const buf = resolved.buf;
       const startAt = ctx.currentTime + Math.max(0, delaySec || 0);
       const gn = ctx.createGain();
       const mul = typeof gainMul === 'number' && gainMul > 0 ? gainMul : 1;
@@ -2424,13 +2831,13 @@
       if (g <= 0 || dmg <= 0) return;
       const mul = Math.min(1.15, 0.5 + Math.min(dmg, 45) * 0.014);
       const t0 = ctx.currentTime;
-      const bufHit = this._sampleBuffers && this._sampleBuffers.get(BSX.common_hit);
+      const bufHit = this._bufferForUrl(BSX.common_hit);
+      const onlyImpact = opts && opts.sfxImpactOnly;
+      if (!onlyImpact) {
+        const wind = this._windSfxUrl(attacker, opts);
+        if (wind && this._bufferForUrl(wind)) this.playSampledUrl(wind, 0.88 * mul, 0);
+      }
       if (bufHit) {
-        const onlyImpact = opts && opts.sfxImpactOnly;
-        if (!onlyImpact) {
-          const wind = this._windSfxUrl(attacker, opts);
-          if (wind) this.playSampledUrl(wind, 0.88 * mul, 0);
-        }
         this.playSampledUrl(BSX.common_hit, 0.9 * mul, onlyImpact ? 0 : 0.035);
         if (opts && opts.sfxCrit) this.playSampledUrl(BSX.common_critical_hit, 0.92 * mul, 0.052);
         return;
@@ -2445,7 +2852,7 @@
       if (!ctx || !this.master) return;
       const g = this._sfxGain();
       if (g <= 0) return;
-      if (this._sampleBuffers && this._sampleBuffers.get(BSX.common_death)) {
+      if (this._bufferForUrl(BSX.common_death)) {
         this.playSampledUrl(BSX.common_death, 0.95);
         return;
       }
@@ -3200,7 +3607,8 @@
       activeIndex: 0, order: [], mode: 'idle',
       selected: null, moveFrom: null, nodeId: node.id,
       battleLog: [], pendingLoot: { gold: 0, items: [] },
-      globalBuffs: { watcherDeadMove: 0 }, heroMoved: false, heroActionDone: false, pendingSkill: null, deployDragHeroId: null
+      globalBuffs: { watcherDeadMove: 0 }, heroMoved: false, heroActionDone: false, pendingSkill: null, deployDragHeroId: null,
+      heroMoveUndo: null
     };
     GameState.screen = 'battle';
     GameState.mapNodeId = node.id;
@@ -3289,6 +3697,68 @@
     return m;
   }
 
+  function heroHasMoveOptions(b, u) {
+    if (!u || !u.isHero || b.heroMoved) return false;
+    if (u.activeStatuses && u.activeStatuses.find(s => s.type === STATUS.BLIND)) return false;
+    if (getMovePoints(u, b) <= 0) return false;
+    const reach = floodReachable(b, u);
+    return Object.keys(reach).some(k => {
+      const [kx, ky] = k.split(',').map(Number);
+      return kx !== u.x || ky !== u.y;
+    });
+  }
+
+  function shouldShowAttackHighlights(b, sel) {
+    if (!b || b.phase !== 'combat' || !sel || !sel.isHero || b.heroActionDone) return false;
+    if (getActiveUnit() !== sel) return false;
+    if (sel.activeStatuses && sel.activeStatuses.find(s => s.type === STATUS.BLIND)) return false;
+    if (b.mode === 'skill' && !b.pendingSkill) return false;
+    // Красные цели — и в фазе движения (дальнобой/магия с текущей клетки), и в атаке/навыке
+    return b.mode === 'move' || b.mode === 'attack' || b.mode === 'skill';
+  }
+
+  function prepareHeroTurnMode(b, u) {
+    b.heroMoveUndo = null;
+    if (heroHasMoveOptions(b, u)) {
+      b.mode = 'move';
+      b.heroMoved = false;
+    } else {
+      b.heroMoved = true;
+      b.mode = 'attack';
+    }
+  }
+
+  function snapshotHeroMoveForUndo(b, u) {
+    if (!b || !u || !u.isHero || b.heroMoved || b.heroMoveUndo) return;
+    b.heroMoveUndo = { x: u.x, y: u.y, heroId: u.heroId };
+  }
+
+  function heroCanUndoMove(b, u) {
+    if (!b || b.phase !== 'combat' || !u || !u.isHero || b.heroActionDone) return false;
+    if (!b.heroMoved || !b.heroMoveUndo) return false;
+    if (b.heroMoveUndo.heroId !== u.heroId) return false;
+    if (u.x === b.heroMoveUndo.x && u.y === b.heroMoveUndo.y) return false;
+    return heroHasMoveOptions(b, u);
+  }
+
+  function undoHeroMove() {
+    const b = GameState.currentBattle;
+    const u = getActiveUnit();
+    if (!heroCanUndoMove(b, u)) return;
+    const { x, y } = b.heroMoveUndo;
+    const fromX = u.x, fromY = u.y;
+    u.x = x;
+    u.y = y;
+    if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, x, y, b.grid);
+    b.heroMoveUndo = null;
+    b.heroMoved = false;
+    b.mode = 'move';
+    b.pendingSkill = null;
+    syncHeroFromUnit(u);
+    pushBattleLog(`↩️ ${u.name}: перемещение отменено`, 'status');
+    updateBattleUI();
+  }
+
   function floodReachable(b, u) {
     const maxCost = getMovePoints(u, b);
     const dist = {};
@@ -3371,6 +3841,7 @@
     const b = GameState.currentBattle;
     opts = opts || {};
     let dmg = rawDmg;
+    let sfxCrit = false;
     // Item mod: weapon attack bonus applied to rawDmg (if not already factored by caller)
     if (attacker.isHero && !opts.noWeaponBonus) {
       const wep = getEquippedItem(attacker, 'weapon');
@@ -3382,7 +3853,7 @@
     if (target.isHero && target.heroId === 'garet' && target.flags && target.flags.fireCallMitigateActive) dmg = Math.floor(dmg * 0.5);
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags && attacker.flags.firstAttackTurn) dmg = Math.floor(dmg * 1.5);
     if (attacker.activeStatuses && attacker.activeStatuses.find(s => s.type === STATUS.BERSERK)) dmg = Math.floor(dmg * 2);
-    let armor = target.armor + tileDefenseBonus(b.grid[target.y][target.x]);
+    let armor = target.armor + (b && b.grid ? tileDefenseBonus(b.grid[target.y][target.x]) : 0);
     // Perk: auraArmor (Garet) — союзник рядом с Гаретом получает +1 брони
     if (target.isHero && b) {
       const garetAura = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
@@ -3420,6 +3891,7 @@
     // ── Perk: crit15 (Garet) — 15% шанс ×1.5 ──
     if (attacker.isHero && attacker.perks && attacker.perks.includes('crit15') && Math.random() < 0.15) {
       dmg = Math.floor(dmg * 1.5);
+      sfxCrit = true;
       pushBattleLog(`💥 ${attacker.name}: Критический удар!`, 'status');
     }
 
@@ -3738,6 +4210,17 @@
       bestiaryEl.style.display = '';
     } else if (bestiaryEl) bestiaryEl.style.display = 'none';
 
+    const vicInvBtn = document.getElementById('btn-vic-inventory');
+    if (vicInvBtn) {
+      const hasLoot = !!drop;
+      const hasBag = !!(GameState.inventory && GameState.inventory.length);
+      vicInvBtn.classList.toggle('vic-btn-inventory-loot', hasLoot);
+      vicInvBtn.title = hasLoot
+        ? `Открыть рюкзак и надеть: ${drop.name}`
+        : (hasBag ? 'Открыть рюкзак' : 'Открыть рюкзак (пусто)');
+      vicInvBtn.textContent = hasLoot ? '🎒 НАДЕТЬ ДОБЫЧУ' : '🎒 РЮКЗАК';
+    }
+
     if (GameState.pendingPerks.length) {
       setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
     } else if (GameState.pendingSkillUnlocks && GameState.pendingSkillUnlocks.length) {
@@ -3895,8 +4378,9 @@
     ctx.translate(BattleView.offsetX, BattleView.offsetY);
     ctx.scale(BattleView.zoom, BattleView.zoom);
     const sel = b.selected;
-    const reach = sel && sel.isHero && b.phase === 'combat' && b.mode === 'move' && getActiveUnit() === sel ? floodReachable(b, sel) : null;
     const blind = sel && sel.activeStatuses && sel.activeStatuses.find(s => s.type === STATUS.BLIND);
+    const heroCanMoveNow = sel && sel.isHero && b.phase === 'combat' && getActiveUnit() === sel && !blind && heroHasMoveOptions(b, sel);
+    const reach = heroCanMoveNow && b.mode === 'move' ? floodReachable(b, sel) : null;
 
     for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
       const px = x * CELL, py = y * CELL;
@@ -3930,7 +4414,7 @@
       }
     }
 
-    if (b.phase === 'combat' && sel && !blind && b.mode === 'attack') {
+    if (shouldShowAttackHighlights(b, sel)) {
       for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
         const dist = Math.abs(sel.x - x) + Math.abs(sel.y - y);
         if (dist <= sel.range && sel.range > 0) {
@@ -4156,6 +4640,7 @@
     b.phase = 'combat';
     b.heroMoved = false;
     b.heroActionDone = false;
+    b.heroMoveUndo = null;
     b.battleLog.push({ text: 'Сражение!', t: 'status' });
     renderBattleLog();
     buildInitiative();
@@ -4174,7 +4659,7 @@
     if (findWatcher(b) && typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_watcher_buff, 0.55);
     if (fu && !fu.isHero) setTimeout(() => runEnemyTurn(), 120);
     else {
-      b.mode = 'move';
+      prepareHeroTurnMode(b, fu);
       updateBattleUI();
     }
   }
@@ -4224,11 +4709,23 @@
     }
     b.heroMoved = false;
     b.heroActionDone = false;
+    b.heroMoveUndo = null;
     b.selected = null;
     b.mode = 'idle';
     b.pendingSkill = null;
 
+    let turnGuard = 0;
+    const maxTurnSkips = Math.max(12, (b.units.length || 0) * 4);
     for (;;) {
+      if (++turnGuard > maxTurnSkips) {
+        console.error('endUnitTurn: turn queue guard exceeded');
+        pushBattleLog('Ошибка очереди ходов — ход передан героям', 'status');
+        const guardHero = getActiveUnit();
+        if (guardHero && guardHero.isHero) prepareHeroTurnMode(b, guardHero);
+        else b.mode = 'move';
+        updateBattleUI();
+        return;
+      }
       const nu = advanceSingleTurn();
       if (!nu) { resolveBattleIfOver(); return; }
       if (resolveBattleIfOver()) return;
@@ -4260,8 +4757,7 @@
         updateBattleUI();
         return;
       }
-      // Start each hero turn with movement mode already active.
-      b.mode = 'move';
+      prepareHeroTurnMode(b, nu);
       updateBattleUI();
       return;
     }
@@ -4330,11 +4826,18 @@
     if (!b || b.phase !== 'combat') return;
     const u = getActiveUnit();
     if (!u || u.isHero || u.hp <= 0) { endUnitTurn(); return; }
+    let enemyTurnEnded = false;
+    const finishEnemyTurn = () => {
+      if (enemyTurnEnded) return;
+      enemyTurnEnded = true;
+      endUnitTurn();
+    };
+    try {
 
     // Special AI for specific enemy types
-    if (u.enemyId === ENEMY_IDS.DARK_LORD) { darkLordAi(u); endUnitTurn(); return; }
-    if (u.enemyId === ENEMY_IDS.FIRE_TITAN) { fireTitanAi(u); endUnitTurn(); return; }
-    if (u.enemyId === ENEMY_IDS.SUICIDE) { bomberAi(u); endUnitTurn(); return; }
+    if (u.enemyId === ENEMY_IDS.DARK_LORD) { darkLordAi(u); finishEnemyTurn(); return; }
+    if (u.enemyId === ENEMY_IDS.FIRE_TITAN) { fireTitanAi(u); finishEnemyTurn(); return; }
+    if (u.enemyId === ENEMY_IDS.SUICIDE) { bomberAi(u); finishEnemyTurn(); return; }
 
     // Shaman: heal lowest HP ally every other turn
     if (u.enemyId === ENEMY_IDS.SHAMAN) {
@@ -4349,13 +4852,13 @@
           pushBattleLog(`🧙 ${u.name} исцеляет ${wounded.emoji} ${wounded.name} на ${heal}`, 'enemy');
           if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_shaman_heal, 0.75);
           u.aiVar.healCd = 2;
-          endUnitTurn(); return;
+          finishEnemyTurn(); return;
         }
       }
     }
 
     const heroes = b.units.filter(h => h.isHero && h.hp > 0);
-    if (!heroes.length) { endUnitTurn(); return; }
+    if (!heroes.length) { finishEnemyTurn(); return; }
 
     // Goblin Archer: retreat if hero is adjacent (< 2 tiles)
     if (u.enemyId === ENEMY_IDS.GOBLIN_ARCHER) {
@@ -4376,7 +4879,7 @@
           u.x = bestDir.x; u.y = bestDir.y;
           if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, u.x, u.y, b.grid);
         }
-        endUnitTurn(); return;
+        finishEnemyTurn(); return;
       }
     }
 
@@ -4424,7 +4927,7 @@
     const preTarget = bestInRangeTarget(u.x, u.y);
     if (preTarget) {
       doEnemyAttack(preTarget);
-      endUnitTurn();
+      finishEnemyTurn();
       return;
     }
 
@@ -4500,7 +5003,12 @@
     if (tgtAfterMove) {
       doEnemyAttack(tgtAfterMove);
     }
-    endUnitTurn();
+    finishEnemyTurn();
+    } catch (err) {
+      console.error('runEnemyTurn', err);
+      pushBattleLog('Сбой хода противника', 'status');
+      finishEnemyTurn();
+    }
   }
 
   function bomberAi(u) {
@@ -4794,7 +5302,10 @@
         html += skillMakeBtn('sk-fr',  'freeze',   '🧊','Заморозка (4mp)',     u.cds.freeze,   { mpFail: u.mana < 4 });
         html += skillMakeBtn('sk-met', 'meteor',   '☄', 'Метеорит (8mp)',      u.cds.meteor,   { mpFail: u.mana < 8 });
       }
-      if (!b.heroMoved) html += `<button class="btn" id="btn-skip-move">⚡ Не двигаться</button>`;
+      if (heroCanUndoMove(b, u)) {
+        html += `<button class="btn" id="btn-undo-move" title="Вернуть героя на клетку до перемещения">↩ Назад</button>`;
+      }
+      if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn" id="btn-skip-move">⚡ Не двигаться</button>`;
       html += `<button class="btn" id="btn-wait">⏹ Ждать</button>`;
     }
     // 10: Inventory button always visible in battle
@@ -4803,6 +5314,7 @@
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     const heroLvl2 = (GameState.heroes.find(x => x.id === u.heroId) || u).level || 1;
     const skLocked = (key) => { const s = (HERO_SKILLS[u.heroId] || []).find(x => x.key === key); return s && heroLvl2 < s.unlockLevel; };
+    bind('btn-undo-move', () => undoHeroMove());
     bind('btn-skip-move', () => { b.heroMoved = true; b.mode = 'attack'; updateBattleUI(); });
     bind('btn-wait', () => { if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.ui_end_turn, 0.75); b.heroActionDone = true; endUnitTurn(); });
     bind('sk-shield', () => { if (skLocked('shieldBash') || u.cds.shieldBash > 0) return; b.pendingSkill = 'shieldBash'; b.mode = 'skill'; updateBattleUI(); });
@@ -4815,7 +5327,12 @@
     bind('sk-fr', () => { if (skLocked('freeze') || u.mana < 4 || u.cds.freeze > 0) return; b.pendingSkill = 'freeze'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-met', () => { if (skLocked('meteor') || u.mana < 8 || u.cds.meteor > 0) return; b.pendingSkill = 'meteor'; b.mode = 'skill'; updateBattleUI(); });
     // 10: Inventory from battle
-    bind('btn-battle-inv', () => { GameState._returnToBattle = true; showScreen('inventory'); renderInventoryScreen(); });
+    bind('btn-battle-inv', () => {
+      GameState._returnToVictory = false;
+      GameState._returnToBattle = true;
+      showScreen('inventory');
+      renderInventoryScreen();
+    });
   }
 
   function performHeroAttack(u, target) {
@@ -4914,6 +5431,7 @@
       if (isEmpty && !b.heroMoved && !blind) {
         const reach = floodReachable(b, u);
         if (reach[gx + ',' + gy] !== undefined) {
+          snapshotHeroMoveForUndo(b, u);
           const fromX = u.x, fromY = u.y;
           u.x = gx; u.y = gy;
           if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, gx, gy, b.grid);
@@ -4931,6 +5449,7 @@
     if (b.mode === 'move' && !b.heroMoved && !blind) {
       const reach = floodReachable(b, u);
       if (reach[gx + ',' + gy] === undefined) return;
+      snapshotHeroMoveForUndo(b, u);
       const fromX = u.x, fromY = u.y;
       u.x = gx; u.y = gy;
       if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, gx, gy, b.grid);
@@ -5081,6 +5600,87 @@
       okBtn.onclick = () => finish(sel.value);
       cancelBtn.onclick = () => finish(null);
     });
+  }
+
+  function sfxShortPath(url) {
+    return String(url || '').replace(/^assets\/audio\//, '');
+  }
+
+  function setSfxAuditorStatus(text) {
+    const el = document.getElementById('sfx-auditor-status');
+    if (el) el.textContent = text || '';
+  }
+
+  function renderSfxAuditor() {
+    const root = document.getElementById('sfx-auditor-body');
+    if (!root) return;
+    const overrides = loadSfxOverrides();
+    SFX_AUDITOR_GROUPS.forEach(group => group.candidates.forEach(([, url]) => addBattleSfxUrl(url)));
+    root.innerHTML = SFX_AUDITOR_GROUPS.map(group => {
+      const current = BSX[group.target] || overrides[group.target] || '';
+      const rows = group.candidates.map(([label, url], idx) => {
+        const active = url === current;
+        return `<div class="sfx-candidate" data-sfx-target="${group.target}" data-sfx-url="${escapeHtmlAttr(url)}">
+          <button type="button" class="btn sfx-play-btn" data-sfx-play title="Прослушать">▶</button>
+          <div>
+            <div class="sfx-candidate-name">${idx + 1}. ${label}</div>
+            <div class="sfx-candidate-src">${sfxShortPath(url)}</div>
+          </div>
+          <button type="button" class="btn sfx-apply-btn${active ? ' active' : ''}" data-sfx-apply>${active ? 'ВЫБРАН' : 'ВЫБРАТЬ'}</button>
+        </div>`;
+      }).join('');
+      return `<section class="sfx-group">
+        <div class="sfx-group-head">
+          <div class="sfx-group-title">${group.title}</div>
+          <div class="sfx-group-current">${sfxShortPath(current)}</div>
+        </div>
+        ${rows}
+      </section>`;
+    }).join('');
+
+    root.querySelectorAll('[data-sfx-play]').forEach(btn => {
+      btn.onclick = async ev => {
+        ev.stopPropagation();
+        const row = btn.closest('.sfx-candidate');
+        const url = row && row.getAttribute('data-sfx-url');
+        setSfxAuditorStatus(`Загрузка: ${sfxShortPath(url)}`);
+        const ok = typeof BattleSfx !== 'undefined' && await BattleSfx.auditionUrl(url, 0.9);
+        setSfxAuditorStatus(ok ? `Играет: ${sfxShortPath(url)}` : `Не удалось загрузить: ${sfxShortPath(url)}`);
+      };
+    });
+    root.querySelectorAll('[data-sfx-apply]').forEach(btn => {
+      btn.onclick = ev => {
+        ev.stopPropagation();
+        const row = btn.closest('.sfx-candidate');
+        const target = row && row.getAttribute('data-sfx-target');
+        const url = row && row.getAttribute('data-sfx-url');
+        const ok = applySfxOverride(target, url);
+        if (ok) {
+          const next = loadSfxOverrides();
+          next[target] = url;
+          saveSfxOverrides(next);
+          if (typeof BattleSfx !== 'undefined') void BattleSfx.loadSampleUrl(url);
+          setSfxAuditorStatus(`Выбрано: ${sfxShortPath(url)}`);
+          renderSfxAuditor();
+        }
+      };
+    });
+  }
+
+  function openSfxAuditor() {
+    const el = document.getElementById('sfx-auditor-modal');
+    if (!el) return;
+    if (typeof BattleSfx !== 'undefined') BattleSfx.unlock();
+    renderSfxAuditor();
+    el.classList.add('show');
+    el.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeSfxAuditor() {
+    const el = document.getElementById('sfx-auditor-modal');
+    if (!el) return;
+    el.classList.remove('show');
+    el.setAttribute('aria-hidden', 'true');
   }
   // ══════════ БЕСТИАРИЙ ══════════
   function markBestiarySeen(enemyId) {
@@ -5388,6 +5988,21 @@
     if (item.id.includes('hammer') && hero.role !== 'warrior') return false;
     return true;
   }
+  function updateInventoryCloseButton() {
+    const el = document.getElementById('btn-close-inv');
+    if (!el) return;
+    if (GameState._returnToVictory) el.textContent = '↩ К победе';
+    else if (GameState._returnToBattle) el.textContent = '↩ В бой';
+    else el.textContent = '✕ Закрыть';
+  }
+
+  function openInventoryFromVictory() {
+    GameState._returnToVictory = true;
+    GameState._returnToBattle = false;
+    showScreen('inventory');
+    renderInventoryScreen();
+  }
+
   function renderInventoryScreen() {
     const hero = GameState.heroes.find(h => h.id === InvState.activeHeroId) || GameState.heroes[0];
     if (!hero) return;
@@ -5424,8 +6039,8 @@
     const figEl = document.getElementById('inv-hero-figure');
     if (figEl) {
       const tex = getHeroTexture(hero.id);
-      if (tex) figEl.innerHTML = `<img src="${HERO_TEXTURE_PATHS[hero.id]}" style="width:72px;height:72px;border-radius:8px;border:2px solid #3a3a6a;display:block" />`;
-      else figEl.innerHTML = `<span style="font-size:72px;line-height:1">${hero.emoji}</span>`;
+      if (tex) figEl.innerHTML = `<img src="${HERO_TEXTURE_PATHS[hero.id]}" class="inv-hero-figure-img" alt="" />`;
+      else figEl.innerHTML = `<span class="inv-hero-figure-emoji">${hero.emoji}</span>`;
     }
 
     // Paperdoll — equipment zones
@@ -5576,6 +6191,7 @@
         renderInventoryScreen();
       });
     };
+    updateInventoryCloseButton();
   }
   function generateShopStock(region) {
     const byRegion = ITEM_POOL.filter(i => i.minRegion <= region);
@@ -6029,6 +6645,8 @@
     };
     const bagBtn = document.getElementById('btn-map-bag');
     if (bagBtn) bagBtn.onclick = () => {
+      GameState._returnToVictory = false;
+      GameState._returnToBattle = false;
       renderInventoryScreen();
       showScreen('inventory');
     };
@@ -6742,9 +7360,21 @@
       renderBestiaryScreen();
     };
     document.getElementById('btn-close-inv').onclick = () => {
-      if (GameState._returnToBattle) { GameState._returnToBattle = false; showScreen('battle'); updateBattleUI(); }
-      else { showScreen('map'); renderMap(); }
+      if (GameState._returnToVictory) {
+        GameState._returnToVictory = false;
+        showScreen('victory');
+        return;
+      }
+      if (GameState._returnToBattle) {
+        GameState._returnToBattle = false;
+        showScreen('battle');
+        updateBattleUI();
+        return;
+      }
+      showScreen('map');
+      renderMap();
     };
+    document.getElementById('btn-vic-inventory').onclick = () => openInventoryFromVictory();
     document.getElementById('btn-event-ok').onclick = () => {
       const fn = GameState._eventContinueFn;
       GameState._eventContinueFn = null;
@@ -6832,6 +7462,9 @@
     const settingMusicVolume = document.getElementById('setting-music-volume');
     const settingSfxEnabled = document.getElementById('setting-sfx-enabled');
     const settingSfxVolume = document.getElementById('setting-sfx-volume');
+    const btnOpenSfxAuditor = document.getElementById('btn-open-sfx-auditor');
+    const btnSfxAuditorClose = document.getElementById('btn-sfx-auditor-close');
+    const btnSfxAuditorReset = document.getElementById('btn-sfx-auditor-reset');
     if (btnMenuSettings && menuSettingsOverlay) {
       btnMenuSettings.onclick = () => {
         const s = loadAudioSettings();
@@ -6874,6 +7507,9 @@
         saveAudioSettings({ sfxVolume: v });
       };
     }
+    if (btnOpenSfxAuditor) btnOpenSfxAuditor.onclick = openSfxAuditor;
+    if (btnSfxAuditorClose) btnSfxAuditorClose.onclick = closeSfxAuditor;
+    if (btnSfxAuditorReset) btnSfxAuditorReset.onclick = resetSfxOverrides;
     document.getElementById('btn-menu-continue').onclick = closeGameMenu;
     document.getElementById('btn-menu-save-exit').onclick = () => {
       saveGame();
