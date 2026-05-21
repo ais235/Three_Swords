@@ -1166,9 +1166,11 @@
     .game-dialog-btns { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
     #confirm-modal .modal-box { display: flex; flex-direction: column; gap: 12px; }
     .perk-modal-box { background: #0d0d1a; border: 1px solid var(--border); border-radius: 10px; width: min(680px, 96vw); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
-    .perk-modal-topbar { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .perk-modal-topbar { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .perk-modal-topbar-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
     .perk-modal-title { font-size: 13px; color: var(--accent-gold); letter-spacing: 1px; }
     .perk-modal-hint { font-size: 10px; color: var(--text-dim); }
+    .perk-modal-close-btn { flex-shrink: 0; padding: 6px 10px; font-size: 10px; min-height: 28px; }
     .perk-modal-body { display: grid; grid-template-columns: 1fr 200px; overflow: hidden; }
     .perk-branches { padding: 14px; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-content: start; }
     .perk-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
@@ -1187,6 +1189,9 @@
     .perk-skill.unlocked { border-color: var(--accent-green); background: #081408; }
     .perk-skill.available { border-color: var(--accent-blue); }
     .perk-skill.locked { opacity: 0.35; cursor: not-allowed; }
+    .perk-skill.next { border-color: var(--accent-gold); opacity: 0.85; }
+    #inv-hero-actions { margin-top: 8px; flex-shrink: 0; }
+    #inv-hero-actions .btn { width: 100%; }
     .perk-skill.sel { border-color: var(--accent-gold); background: #1a1000; }
     .perk-skill-icon { font-size: 16px; margin-bottom: 2px; }
     .perk-skill-name { font-size: 8px; color: #e8e8f0; text-align: center; line-height: 1.2; padding: 0 2px; }
@@ -1952,6 +1957,7 @@
             <button class="inv-tab" data-hero-tab="seris" title="Сэрис"><img src="assets/heroes/seris.png" alt="Сэрис" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('🔮'))"></button>
           </div>
           <div id="inv-hero-card"></div>
+          <div id="inv-hero-actions"></div>
         </div>
 
         <!-- Колонка 2: Paperdoll (силуэт + слоты) -->
@@ -2081,8 +2087,11 @@
   <div id="perk-modal" class="hidden">
     <div class="perk-modal-box">
       <div class="perk-modal-topbar">
-        <span class="perk-modal-title" id="perk-hero-name">Уровень!</span>
-        <span class="perk-modal-hint">Выберите перк — действие необратимо</span>
+        <div class="perk-modal-topbar-text">
+          <span class="perk-modal-title" id="perk-hero-name">Уровень!</span>
+          <span class="perk-modal-hint" id="perk-modal-hint">Выберите перк — действие необратимо</span>
+        </div>
+        <button type="button" class="btn btn-dim perk-modal-close-btn hidden" id="perk-modal-close" title="Закрыть">✕</button>
       </div>
       <div class="perk-modal-body">
         <div id="perk-tree-ui" class="perk-branches"></div>
@@ -6035,6 +6044,13 @@
       ${hero.maxMana ? `<div class="stat-row"><span>Мана</span><span class="stat-val">${hero.mana}/${hero.maxMana}</span></div>` : ''}
     </div>`;
 
+    const invActions = document.getElementById('inv-hero-actions');
+    if (invActions) {
+      invActions.innerHTML = `<button type="button" class="btn btn-gold" id="btn-inv-perks" title="Дерево перков и веток развития">🌳 Прокачка</button>`;
+      const perkBtn = document.getElementById('btn-inv-perks');
+      if (perkBtn) perkBtn.onclick = () => openPerkTreeView(hero.id);
+    }
+
     // Paperdoll — hero figure
     const figEl = document.getElementById('inv-hero-figure');
     if (figEl) {
@@ -6993,11 +7009,29 @@
     showScreen('city');
   }
 
-  function openPerkModal(heroId) {
+  function openPerkTreeView(heroId) {
+    openPerkModal(heroId, false);
+  }
+
+  function openPerkModal(heroId, pickMode) {
+    if (pickMode === undefined) pickMode = true;
     const h = GameState.heroes.find(x => x.id === heroId);
     if (!h) return;
     const modal = document.getElementById('perk-modal');
-    document.getElementById('perk-hero-name').textContent = `${h.emoji} ${h.name} — новый уровень ${h.level}`;
+    const hintEl = document.getElementById('perk-modal-hint');
+    const closeBtn = document.getElementById('perk-modal-close');
+    document.getElementById('perk-hero-name').textContent = pickMode
+      ? `${h.emoji} ${h.name} — новый уровень ${h.level}`
+      : `${h.emoji} ${h.name} — дерево прокачки · ур. ${h.level}`;
+    if (hintEl) {
+      hintEl.textContent = pickMode
+        ? 'Выберите перк — действие необратимо'
+        : 'Просмотр · новый перк выбирается при повышении уровня';
+    }
+    if (closeBtn) {
+      closeBtn.classList.toggle('hidden', pickMode);
+      closeBtn.onclick = () => modal.classList.add('hidden');
+    }
     const tree = PERK_TREES[heroId];
     h.perkLevels = h.perkLevels || {};
     const branchNames = Object.keys(tree);
@@ -7042,11 +7076,13 @@
         let rows = '';
         perks.forEach((perk, i) => {
           const taken = i < takenCount;
-          const available = i === takenCount && availableBranches.includes(br);
+          const isNext = i === takenCount;
+          const available = pickMode && isNext && availableBranches.includes(br);
           const locked = i > takenCount;
           let cls = 'perk-skill';
           if (taken) cls += ' unlocked';
           else if (available) cls += ' available';
+          else if (!pickMode && isNext) cls += ' next';
           else if (locked) cls += ' locked';
           if (selectedPerkId === perk.id) cls += ' sel';
           const icon = perkIcons[perk.id] || '◆';
@@ -7064,33 +7100,39 @@
         </div>`;
       }).join('');
 
-      box.querySelectorAll('.perk-skill:not(.locked)').forEach(el => {
+      box.querySelectorAll(pickMode ? '.perk-skill:not(.locked)' : '.perk-skill').forEach(el => {
         el.onclick = () => {
           selectedBr = el.dataset.br;
           selectedPerkId = el.dataset.id;
           const idx = +el.dataset.idx;
           const perk = tree[selectedBr][idx];
           const taken = idx < (h.perkLevels[selectedBr] || 0);
-          const available = !taken && selectedBr in nextPerkByBranch && nextPerkByBranch[selectedBr].id === perk.id;
+          const isNextInBranch = idx === (h.perkLevels[selectedBr] || 0);
+          const available = pickMode && !taken && selectedBr in nextPerkByBranch && nextPerkByBranch[selectedBr].id === perk.id;
           const icon2 = perkIcons[perk.id] || '◆';
+          let statusBtn;
+          if (taken) {
+            statusBtn = `<button class="btn btn-dim" style="width:100%">✓ Изучено</button>`;
+          } else if (available) {
+            statusBtn = `<button class="btn btn-green" id="perk-confirm-btn" style="width:100%">+ Изучить</button>`;
+          } else if (!pickMode && isNextInBranch) {
+            statusBtn = `<button class="btn btn-dim" style="width:100%;cursor:default">⏳ При следующем level-up</button>`;
+          } else {
+            statusBtn = `<button class="btn btn-dim" style="width:100%;cursor:not-allowed">🔒 Сначала предыдущий</button>`;
+          }
 
           detailPanel.innerHTML = `
             <div class="perk-detail-icon">${icon2}</div>
             <div class="perk-detail-name">${perk.name}</div>
             <div class="perk-detail-branch">${branchLabels[selectedBr] || selectedBr}</div>
-            <div class="perk-detail-effect">${perk.name}</div>
+            <div class="perk-detail-effect">Ур. ${perk.level || idx + 1} в ветке</div>
             <div class="perk-detail-desc">Улучшает боевые характеристики героя.</div>
-            ${taken
-              ? `<button class="btn btn-dim" style="width:100%">✓ Уже изучено</button>`
-              : available
-                ? `<button class="btn btn-green" id="perk-confirm-btn" style="width:100%">+ Изучить</button>`
-                : `<button class="btn btn-dim" style="width:100%;cursor:not-allowed">🔒 Сначала предыдущий</button>`
-            }
+            ${statusBtn}
           `;
           renderPerkTree();
 
           const confirmBtn = document.getElementById('perk-confirm-btn');
-          if (confirmBtn) {
+          if (confirmBtn && pickMode) {
             confirmBtn.onclick = () => {
               document.getElementById('confirm-modal').classList.remove('hidden');
               document.getElementById('confirm-text').textContent = `Вы уверены? Перк: «${perk.name}»`;
@@ -7117,7 +7159,9 @@
     }
 
     renderPerkTree();
-    detailPanel.innerHTML = '<div style="color:#555577;font-size:10px;line-height:1.6">Нажмите на умение чтобы увидеть описание.<br><br>🟢 Открыто&nbsp;&nbsp;🔵 Доступно<br>🔒 Требует предыдущее</div>';
+    detailPanel.innerHTML = pickMode
+      ? '<div style="color:#555577;font-size:10px;line-height:1.6">Нажмите на перк для описания.<br><br>🟢 Изучено&nbsp;&nbsp;🔵 Выберите сейчас<br>🔒 Нужен предыдущий</div>'
+      : '<div style="color:#555577;font-size:10px;line-height:1.6">Нажмите на перк для описания.<br><br>🟢 Изучено&nbsp;&nbsp;🟡 Следующий при level-up<br>🔒 Закрыто</div>';
     modal.classList.remove('hidden');
   }
 
