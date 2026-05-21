@@ -382,7 +382,7 @@
     .hero-heal-btn.grey { border-color: var(--border); color: #555577; cursor: default; }
     .city-panel { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
     .city-panel.hidden { display: none !important; }
-    .city-panel-trader { gap: 8px; }
+    .city-panel-trader { gap: 8px; --shop-icon-size: 56px; }
     .shop-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 8px; flex-wrap: wrap; }
     .shop-title { font-size: 13px; color: var(--text-main); letter-spacing: 1px; }
     .trader-mode-tabs {
@@ -397,11 +397,21 @@
     .trader-mode-tab.active { border-color: var(--accent-gold); background: #1a1208; color: var(--accent-gold); }
     .trader-stock-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
     .trader-stock-wrap.hidden { display: none !important; }
+    #shop-list.items-grid-scroll,
     #shop-sell-list.items-grid-scroll {
       grid-template-rows: none;
       align-content: start;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    #shop-list.items-grid-scroll .item-card,
+    #shop-sell-list.items-grid-scroll .item-card {
+      height: auto;
+      min-height: 0;
+    }
+    #shop-list.items-grid-scroll .item-card.secret {
+      grid-column: 1 / -1;
     }
     .shop-footer {
       font-size: 8px; color: var(--text-hint); letter-spacing: 0.5px; padding: 6px 8px; border-radius: 6px; border: 1px dashed var(--border);
@@ -450,17 +460,55 @@
       min-height: 0;
     }
     #shop-list .card-icon-name,
-    #shop-sell-list .card-icon-name { display: flex; align-items: center; gap: 10px; }
+    #shop-sell-list .card-icon-name { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+    #shop-list .card-icon-name .card-name,
+    #shop-sell-list .card-icon-name .card-name { flex: 1; min-width: 0; }
     #shop-list .card-icon,
-    #shop-sell-list .card-icon { font-size: 30px; flex-shrink: 0; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    #shop-sell-list .card-icon {
+      flex-shrink: 0;
+      width: var(--shop-icon-size, 56px);
+      height: var(--shop-icon-size, 56px);
+      font-size: calc(var(--shop-icon-size, 56px) * 0.82);
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    #shop-list .card-icon .item-icon-wrap,
+    #shop-sell-list .card-icon .item-icon-wrap {
+      width: 100%;
+      height: 100%;
+      padding: 2px;
+      border-radius: 8px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     #shop-list .card-icon .item-icon-img,
-    #shop-sell-list .card-icon .item-icon-img { width: 30px !important; height: 30px !important; }
+    #shop-sell-list .card-icon .item-icon-img {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    #shop-list .card-icon > span:not(.item-icon-wrap),
+    #shop-sell-list .card-icon > span:not(.item-icon-wrap) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
     #shop-list .card-name,
-    #shop-sell-list .card-name { font-size: 8px; color: #e8e8f0; line-height: 1.5; word-break: break-word; }
+    #shop-sell-list .card-name { font-size: 9px; color: #e8e8f0; line-height: 1.45; word-break: break-word; }
     #shop-list .card-stat,
-    #shop-sell-list .card-stat { font-size: 7px; color: #2ecc71; line-height: 1.7; }
+    #shop-sell-list .card-stat { font-size: 8px; color: #2ecc71; line-height: 1.55; }
     #shop-list .card-desc,
-    #shop-sell-list .card-desc { font-size: 6px; color: #888aa0; line-height: 1.5; margin-top: 3px; font-style: italic; }
+    #shop-sell-list .card-desc { font-size: 8px; color: #a8aac0; line-height: 1.5; margin-top: 2px; font-style: italic; }
     #shop-list .card-footer,
     #shop-sell-list .card-footer {
       border-top: 2px solid #1a1a2e;
@@ -1154,8 +1202,6 @@
     .inv-item-thumb .item-icon-wrap { padding: 1px; border-radius: 6px; }
     /* В крупном превью карточки предмета подложка крупнее и мягче */
     #inv-detail .item-icon-wrap { padding: 6px; border-radius: 12px; }
-    /* В магазине подложка немного крупнее для солидной карточки */
-    #shop-list .card-icon .item-icon-wrap { padding: 3px; border-radius: 8px; }
     .vic-loot-info { flex: 1; min-width: 0; }
     .vic-loot-name { font-size: 8px; color: var(--text-main); }
     .vic-loot-stat { font-size: 6px; color: var(--accent-green); margin-top: 2px; }
@@ -1218,7 +1264,25 @@
       position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 4000;
       display: flex; align-items: center; justify-content: center; padding: 16px;
     }
-    .game-dialog-box { max-width: 440px; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .game-dialog-box {
+      max-width: min(400px, calc(100vw - 32px));
+      width: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-sizing: border-box;
+    }
+    .modal-box.game-dialog-box {
+      width: auto;
+      max-width: min(400px, calc(100vw - 32px));
+    }
+    #confirm-text {
+      margin: 0;
+      font-size: 9px;
+      line-height: 1.55;
+      color: var(--text-main);
+      word-break: break-word;
+    }
     .game-alert-text {
       white-space: pre-wrap; word-break: break-word; font-size: 9px; line-height: 1.55;
       color: var(--text-main); margin: 0; font-family: inherit;
@@ -1228,7 +1292,14 @@
       width: 100%; padding: 8px; background: #0d0d1a; border: 1px solid var(--border);
       color: var(--text-main); font-family: inherit; font-size: 8px; border-radius: 4px;
     }
-    .game-dialog-btns { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
+    .game-dialog-btns {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .game-dialog-btns .btn { min-width: 72px; }
     #confirm-modal .modal-box { display: flex; flex-direction: column; gap: 12px; }
     .perk-modal-box { background: #0d0d1a; border: 1px solid var(--border); border-radius: 10px; width: min(680px, 96vw); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
     .perk-modal-topbar { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -1400,6 +1471,11 @@
     .eq-mini { font-size: 10px; opacity: 0.9; margin-left: 3px; display: inline-flex; align-items: center; gap: 3px; flex-wrap: nowrap; vertical-align: middle; }
     .eq-mini-icon { display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
     .eq-mini-dot { opacity: 0.85; font-size: 10px; }
+
+    /* City trader icons — desktop, как слоты экипировки (64px) */
+    @media (min-width: 900px) and (min-height: 520px) and (hover: hover) and (pointer: fine) {
+      .city-panel-trader { --shop-icon-size: 64px; }
+    }
 
     /* Inventory paperdoll — PC / мышь (не трогает touch-мобилку) */
     @media (min-width: 900px) and (min-height: 520px) and (hover: hover) and (pointer: fine) {
@@ -1609,19 +1685,21 @@
       .shop-header { gap: 6px; }
       .shop-title { font-size: 10px; }
       .items-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+      .city-panel-trader { --shop-icon-size: 48px; }
       #shop-list .card-body { padding: 8px; gap: 5px; }
-      #shop-list .card-icon { font-size: 22px; }
-      #shop-list .card-icon .item-icon-img { width: 22px !important; height: 22px !important; }
-      #shop-list .card-name { font-size: 7px; }
-      #shop-list .card-stat { font-size: 6px; }
-      #shop-list .card-desc { font-size: 5px; }
+      #shop-list .card-name,
+      #shop-sell-list .card-name { font-size: 8px; }
+      #shop-list .card-stat,
+      #shop-sell-list .card-stat { font-size: 7px; }
+      #shop-list .card-desc,
+      #shop-sell-list .card-desc { font-size: 7px; }
+      #shop-list.items-grid-scroll .item-card,
+      #shop-sell-list.items-grid-scroll .item-card { height: auto; }
       #shop-list .card-footer { padding: 5px 6px; gap: 4px; }
       #shop-list .btn-buy, #shop-sell-list .btn-sell { font-size: 5px; padding: 4px 3px; }
       .trader-mode-tab { font-size: 7px; padding: 5px 4px; }
       #shop-list .card-price, #shop-sell-list .card-price, #shop-list .card-footer .badge { font-size: 8px; }
       #shop-sell-list .card-body { padding: 8px; gap: 5px; }
-      #shop-sell-list .card-icon { font-size: 22px; }
-      #shop-sell-list .card-icon .item-icon-img { width: 22px !important; height: 22px !important; }
       .services-title { font-size: 9px; margin-bottom: 0; }
       .service-card { padding: 7px; }
       .service-icon { font-size: 14px; }
@@ -1697,6 +1775,18 @@
 
       /* Generic polish */
       .modal-box { max-width: 92vw; padding: 10px; }
+      .modal-box.game-dialog-box {
+        max-width: min(320px, calc(100vw - 20px));
+        width: auto;
+        padding: 12px 14px;
+        gap: 10px;
+      }
+      #confirm-modal,
+      #game-alert-modal,
+      #game-prompt-modal { padding: 10px; }
+      #confirm-text { font-size: 8px; }
+      .game-dialog-btns { justify-content: stretch; gap: 6px; }
+      .game-dialog-btns .btn { flex: 1; min-width: 0; min-height: 32px; }
       #tooltip { font-size: 9px; max-width: 170px; padding: 6px; }
     }
     @media (max-height: 430px) and (orientation: landscape) {
@@ -1770,22 +1860,25 @@
         padding: 5px;
         gap: 4px;
       }
-      #shop-list .item-card { height: 100%; }
+      #shop-list:not(.items-grid-scroll) .item-card { height: 100%; }
+      #shop-list.items-grid-scroll .item-card,
+      #shop-sell-list.items-grid-scroll .item-card { height: auto; }
+      .city-panel-trader { --shop-icon-size: 40px; }
       #shop-list .card-body { padding: 5px 5px 4px; gap: 4px; }
-      #shop-list .card-icon { font-size: 20px; }
-      #shop-list .card-icon .item-icon-img { width: 20px !important; height: 20px !important; }
-      #shop-list .card-name { font-size: 6px; }
-      #shop-list .card-stat { font-size: 5px; }
-      #shop-list .card-desc { font-size: 5px; }
+      #shop-list .card-name,
+      #shop-sell-list .card-name { font-size: 7px; }
+      #shop-list .card-stat,
+      #shop-sell-list .card-stat { font-size: 7px; }
+      #shop-list .card-desc,
+      #shop-sell-list .card-desc { font-size: 7px; }
       #shop-list .card-footer { padding: 4px 5px; gap: 3px; }
       #shop-list .btn-buy, #shop-sell-list .btn-sell { font-size: 5px; padding: 4px 2px; }
       .trader-mode-tab { font-size: 6px; padding: 4px 3px; }
       #shop-list .card-price, #shop-sell-list .card-price { font-size: 8px; }
       #shop-list .card-footer .badge { font-size: 5px; }
       #shop-sell-list .card-body { padding: 5px 5px 4px; gap: 4px; }
-      #shop-sell-list .card-icon { font-size: 20px; }
-      #shop-sell-list .card-icon .item-icon-img { width: 20px !important; height: 20px !important; }
-      #shop-list .item-card.secret { grid-column: auto !important; height: 100%; }
+      #shop-list:not(.items-grid-scroll) .item-card.secret { grid-column: auto !important; height: 100%; }
+      #shop-list.items-grid-scroll .item-card.secret { grid-column: 1 / -1 !important; height: auto; }
       #shop-list .btn-buy-ad { font-size: 5px; padding: 4px 2px; }
       .service-card .service-desc, .sc-desc { display: none; }
       .city-shortcuts .sc-btn { font-size: 7px; padding: 1px 3px; min-height: 22px; }
@@ -1842,6 +1935,13 @@
       .perk-detail-name { font-size: 9px; }
       .perk-detail-branch, .perk-detail-effect, .perk-detail-desc { font-size: 8px; }
       #perk-detail-panel .btn { min-height: 26px; font-size: 7px; }
+      .modal-box.game-dialog-box {
+        max-width: min(300px, calc(100vw - 16px));
+        padding: 10px 12px;
+        gap: 8px;
+      }
+      #confirm-text { font-size: 7px; }
+      .game-dialog-btns .btn { min-height: 28px; }
     }
     @media (max-width: 480px) and (orientation: portrait) {
       #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
@@ -3906,7 +4006,7 @@
     if (!b.heroMoved || !b.heroMoveUndo) return false;
     if (b.heroMoveUndo.heroId !== u.heroId) return false;
     if (u.x === b.heroMoveUndo.x && u.y === b.heroMoveUndo.y) return false;
-    return heroHasMoveOptions(b, u);
+    return true;
   }
 
   function undoHeroMove() {
@@ -3958,6 +4058,36 @@
       if (!canEndOnTile(b, kx, ky, u)) delete dist[k];
     }
     return dist;
+  }
+
+  /** Лучшая клетка за один ход (учитывает стоимость леса/воды через floodReachable). */
+  function pickEnemyMoveCell(b, u, target) {
+    if (!target) return null;
+    const reachable = floodReachable(b, u);
+    let best = null;
+    let bestDist = Infinity;
+    let bestReachCost = Infinity;
+    for (const key of Object.keys(reachable)) {
+      const [rx, ry] = key.split(',').map(Number);
+      if (rx === u.x && ry === u.y) continue;
+      const reachCost = reachable[key];
+      const d = Math.abs(rx - target.x) + Math.abs(ry - target.y);
+      if (d < bestDist || (d === bestDist && reachCost < bestReachCost)) {
+        bestDist = d;
+        bestReachCost = reachCost;
+        best = { x: rx, y: ry };
+      }
+    }
+    return best;
+  }
+
+  function enemyStepToCell(b, u, cell) {
+    if (!cell || (cell.x === u.x && cell.y === u.y)) return false;
+    const fromX = u.x, fromY = u.y;
+    u.x = cell.x;
+    u.y = cell.y;
+    if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, u.x, u.y, b.grid);
+    return true;
   }
 
   function addStatus(u, type, turns, meta) {
@@ -5035,19 +5165,20 @@
       if (tooClose.length > 0) {
         // Move away from nearest threat
         const threat = tooClose[0];
-        const dirs = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }];
-        let bestDir = null, bestDist = -1;
-        for (const d of dirs) {
-          const nx = u.x + d.x, ny = u.y + d.y;
-          if (!inBounds(nx, ny) || !enemyPassable(b, nx, ny, u)) continue;
-          const dist = Math.abs(nx - threat.x) + Math.abs(ny - threat.y);
-          if (dist > bestDist) { bestDist = dist; bestDir = { x: nx, y: ny }; }
+        const reachable = floodReachable(b, u);
+        let fleeCell = null, fleeDist = -1, fleeCost = Infinity;
+        for (const key of Object.keys(reachable)) {
+          const [rx, ry] = key.split(',').map(Number);
+          if (rx === u.x && ry === u.y) continue;
+          const dist = Math.abs(rx - threat.x) + Math.abs(ry - threat.y);
+          const rc = reachable[key];
+          if (dist > fleeDist || (dist === fleeDist && rc < fleeCost)) {
+            fleeDist = dist;
+            fleeCost = rc;
+            fleeCell = { x: rx, y: ry };
+          }
         }
-        if (bestDir) {
-          const fromX = u.x, fromY = u.y;
-          u.x = bestDir.x; u.y = bestDir.y;
-          if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, u.x, u.y, b.grid);
-        }
+        if (fleeCell) enemyStepToCell(b, u, fleeCell);
         finishEnemyTurn(); return;
       }
     }
@@ -5100,71 +5231,21 @@
       return;
     }
 
-    // Movement: flood-fill reachable tiles, pick closest to priority target
-    const movePoints = getMovePoints(u, b);
-    if (movePoints > 0) {
-      const prevX = u.x, prevY = u.y;
-
-      // Sort heroes: damageable first (by effective dmg desc), then by distance
+    // Движение: flood-fill с учётом стоимости леса (3) и воды (3) — как у героя
+    if (getMovePoints(u, b) > 0) {
       const heroesSorted = [...heroes].sort((a, b) => {
         const da = effectiveDmg(a), db = effectiveDmg(b);
-        if (da !== db) return db - da; // prefer damageable
-        const distA = Math.abs(a.x - u.x) + Math.abs(a.y - u.y);
-        const distB = Math.abs(b.x - u.x) + Math.abs(b.y - u.y);
-        return distA - distB;
+        if (da !== db) return db - da;
+        return (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y));
       });
-
-      // Try A* toward each hero, walk the path
-      let bestPath = null;
-      let bestTarget = null;
-      for (const h of heroesSorted) {
-        const p = astar(
-          b.grid,
-          { x: u.x, y: u.y },
-          { x: h.x, y: h.y },
-          (x, y) => enemyPassable(b, x, y, u) || (x === h.x && y === h.y),
-          (x, y) => tileMoveCost(b.grid[y][x], u)
-        );
-        if (p && p.length > 1 && (!bestPath || p.length < bestPath.length)) {
-          bestPath = p;
-          bestTarget = h;
+      let moveCell = pickEnemyMoveCell(b, u, target);
+      if (!moveCell) {
+        for (const h of heroesSorted) {
+          moveCell = pickEnemyMoveCell(b, u, h);
+          if (moveCell) break;
         }
       }
-
-      if (bestPath && bestPath.length > 1) {
-        let spent = 0;
-        for (let i = 1; i < bestPath.length; i++) {
-          const step = bestPath[i];
-          // Героев насквозь не проходим
-          if (b.units.some(h => h.isHero && h.hp > 0 && h.x === step.x && h.y === step.y)) break;
-          if (!enemyPassable(b, step.x, step.y, u)) break;
-          const cost = tileMoveCost(b.grid[step.y][step.x], u);
-          if (spent + cost > movePoints) break;
-          spent += cost;
-          // Можно проходить сквозь союзных врагов, но не останавливаться на их клетке
-          if (canEndOnTile(b, step.x, step.y, u)) {
-            u.x = step.x;
-            u.y = step.y;
-            if (bestTarget && inRange(u.x, u.y, bestTarget)) break;
-          }
-        }
-      }
-
-      // Fallback: if A* path was blocked (e.g. water too expensive), use flood-fill
-      // to find the reachable tile closest to target
-      if (u.x === prevX && u.y === prevY) {
-        const tgt = target;
-        const reachable = floodReachable(b, u);
-        let bestCell = null, bestDist = Infinity;
-        for (const key of Object.keys(reachable)) {
-          const [rx, ry] = key.split(',').map(Number);
-          if (rx === u.x && ry === u.y) continue;
-          const d = Math.abs(rx - tgt.x) + Math.abs(ry - tgt.y);
-          if (d < bestDist) { bestDist = d; bestCell = { x: rx, y: ry }; }
-        }
-        if (bestCell) { u.x = bestCell.x; u.y = bestCell.y; }
-      }
-      if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, prevX, prevY, u.x, u.y, b.grid);
+      if (moveCell) enemyStepToCell(b, u, moveCell);
     }
 
     // After moving, attack nearest in-range hero (respecting priority)
@@ -5200,27 +5281,10 @@
       onUnitDeath(u);
       return;
     }
-    const movePoints = getMovePoints(u, b);
-    const fromX = u.x, fromY = u.y;
-    const path = astar(b.grid, { x: u.x, y: u.y }, { x: nearest.x, y: nearest.y },
-      (x, y) => enemyPassable(b, x, y, u) || (x === nearest.x && y === nearest.y),
-      (x, y) => tileMoveCost(b.grid[y][x], u));
-    if (path && path.length > 1) {
-      let spent = 0;
-      for (let i = 1; i < path.length; i++) {
-        const step = path[i];
-        if (b.units.some(h => h.isHero && h.hp > 0 && h.x === step.x && h.y === step.y)) break;
-        if (!enemyPassable(b, step.x, step.y, u)) break;
-        const cost = tileMoveCost(b.grid[step.y][step.x], u);
-        if (spent + cost > movePoints) break;
-        spent += cost;
-        if (canEndOnTile(b, step.x, step.y, u)) {
-          u.x = step.x;
-          u.y = step.y;
-        }
-      }
+    if (getMovePoints(u, b) > 0) {
+      const moveCell = pickEnemyMoveCell(b, u, nearest);
+      if (moveCell) enemyStepToCell(b, u, moveCell);
     }
-    if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, u.x, u.y, b.grid);
     if (typeof BattleSfx !== 'undefined') {
       let dMin = 999;
       for (const h of heroes) {
@@ -5328,26 +5392,9 @@
       if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) {
         aiAttack(u, tgt);
       } else {
-        const fromX = u.x, fromY = u.y;
-        const path = astar(b.grid, { x: u.x, y: u.y }, { x: tgt.x, y: tgt.y },
-          (x, y) => enemyPassable(b, x, y, u) || (x === tgt.x && y === tgt.y),
-          (x, y) => tileMoveCost(b.grid[y][x], u));
-        if (path && path.length > 1) {
-          let spent = 0;
-          for (let i = 1; i < path.length; i++) {
-            const step = path[i];
-            if (b.units.some(h => h.isHero && h.hp > 0 && h.x === step.x && h.y === step.y)) break;
-            if (!enemyPassable(b, step.x, step.y, u)) break;
-            const cost = tileMoveCost(b.grid[step.y][step.x], u);
-            if (spent + cost > u.move) break;
-            spent += cost;
-            if (canEndOnTile(b, step.x, step.y, u)) {
-              u.x = step.x; u.y = step.y;
-            }
-          }
-          if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, u.x, u.y, b.grid);
-          if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) aiAttack(u, tgt);
-        }
+        const moveCell = pickEnemyMoveCell(b, u, tgt);
+        if (moveCell) enemyStepToCell(b, u, moveCell);
+        if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) aiAttack(u, tgt);
       }
     }
   }
@@ -5439,6 +5486,9 @@
     const hh = GameState.heroes.find(x => x.id === u.heroId);
     let html = '';
     if (!b.heroActionDone) {
+      if (heroCanUndoMove(b, u)) {
+        html += `<button class="btn btn-gold" id="btn-undo-move" title="Вернуть на клетку до перемещения" style="margin-bottom:2px">↩ Назад</button>`;
+      }
       // 6: Skill buttons with cooldown, level-lock, and tooltips
       const cdLabel = (cd) => cd > 0 ? ` [${cd}]` : '';
       const hh2 = GameState.heroes.find(x => x.id === u.heroId) || u;
@@ -5470,9 +5520,6 @@
         html += skillMakeBtn('sk-fb',  'fireball', '🔥','Огненный шар (3mp)', u.cds.fireball, { mpFail: u.mana < 3 });
         html += skillMakeBtn('sk-fr',  'freeze',   '🧊','Заморозка (4mp)',     u.cds.freeze,   { mpFail: u.mana < 4 });
         html += skillMakeBtn('sk-met', 'meteor',   '☄', 'Метеорит (8mp)',      u.cds.meteor,   { mpFail: u.mana < 8 });
-      }
-      if (heroCanUndoMove(b, u)) {
-        html += `<button class="btn" id="btn-undo-move" title="Вернуть героя на клетку до перемещения">↩ Назад</button>`;
       }
       if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn" id="btn-skip-move">⚡ Не двигаться</button>`;
       html += `<button class="btn" id="btn-wait">⏹ Ждать</button>`;
@@ -6020,6 +6067,8 @@
     const rel = ITEM_ICON_MAP[itemId];
     return rel ? ITEM_ICON_BASE + rel : null;
   }
+  const CITY_SHOP_ICON_PX = 56;
+
   function itemIconMarkup(item, sizePx) {
     if (!item) return '<span style="font-size:' + sizePx + 'px;line-height:1;display:inline-block">📦</span>';
     const src = itemIconPath(item.id);
@@ -6933,7 +6982,7 @@
     return `<div class="item-card ${r}" title="${escapeHtmlAttr(tooltip)}">
       <div class="card-body">
         <div class="card-icon-name">
-          <span class="card-icon">${itemIconMarkup(it, 30)}</span>
+          <span class="card-icon">${itemIconMarkup(it, CITY_SHOP_ICON_PX)}</span>
           <span class="card-name">${it.name}</span>
         </div>
         <div class="card-stat">${statText}</div>
@@ -6988,7 +7037,14 @@
       return;
     }
     sellList.innerHTML = entries.map(buildCitySellItemCard).join('');
+    syncTraderItemsGridScroll(sellList);
     bindCitySellClicks(sellList, node, strangerOnly);
+  }
+
+  function syncTraderItemsGridScroll(gridEl) {
+    if (!gridEl) return;
+    const n = gridEl.querySelectorAll('.item-card').length;
+    gridEl.classList.toggle('items-grid-scroll', n >= 5);
   }
 
   function renderCityTraderBuyPanel(node, strangerOnly) {
@@ -7019,6 +7075,7 @@
       }
     }
     shop.innerHTML = html;
+    syncTraderItemsGridScroll(shop);
     bindCityShopClicks(shop, node, strangerOnly);
   }
 
@@ -7039,7 +7096,7 @@
     return `<div class="item-card ${r}${canBuy ? '' : ' cant'}" title="${escapeHtmlAttr(tooltip)}">
       <div class="card-body">
         <div class="card-icon-name">
-          <span class="card-icon">${itemIconMarkup(it, 30)}</span>
+          <span class="card-icon">${itemIconMarkup(it, CITY_SHOP_ICON_PX)}</span>
           <span class="card-name">${it.name}</span>
         </div>
         <div class="card-stat">${statText}</div>
@@ -7060,7 +7117,7 @@
     return `<div class="item-card epic secret-revealed${canBuy ? '' : ' cant'}" id="city-secret-card">
       <div class="card-body">
         <div class="card-icon-name">
-          <span class="card-icon">${itemIconMarkup(item, 30)}</span>
+          <span class="card-icon">${itemIconMarkup(item, CITY_SHOP_ICON_PX)}</span>
           <span class="card-name">${item.name}</span>
         </div>
       </div>
@@ -7112,6 +7169,7 @@
             const price = Math.floor(item.price * 0.7);
             secretCardEl.outerHTML = buildCitySecretEpicCardHTML(item, price);
             const shop = document.getElementById('shop-list');
+            syncTraderItemsGridScroll(shop);
             if (shop) bindCityShopClicks(shop, node, strangerOnly);
           }, 680);
         });
