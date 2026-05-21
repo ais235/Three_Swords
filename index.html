@@ -1323,6 +1323,8 @@
     .inv-item-card { background: #0d0d1a; border-radius: 6px; padding: 0; border: 1px solid var(--border); cursor: pointer; text-align: center; transition: border-color .15s; overflow: hidden; }
     .inv-item-card:hover { border-color: var(--accent-blue); background: #10102a; }
     .inv-item-card.selected { border-color: var(--accent-gold); background: #150f00; box-shadow: 0 0 8px rgba(240,165,0,.2); }
+    .inv-item-card.inv-item-mismatch { opacity: 0.55; }
+    .inv-item-card.inv-item-mismatch.selected { border-color: var(--accent-red); }
     .inv-item-thumb { position: relative; aspect-ratio: 1; width: 100%; display: flex; align-items: stretch; justify-content: stretch; min-height: 0; }
     .inv-item-thumb .item-icon-wrap { flex: 1; width: 100%; height: 100%; min-height: 0; border-radius: 5px; box-sizing: border-box; }
     .inv-item-thumb > span:not(.inv-item-price):not(.item-icon-wrap) { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 28px; line-height: 1; min-height: 0; }
@@ -3381,6 +3383,7 @@
         if (!GameState.bestiary) GameState.bestiary = {};
         if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
         if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
+        sanitizeAllHeroEquipment();
         return true;
       }
     } catch (e) { console.warn(e); }
@@ -6049,6 +6052,7 @@
     hero.mana = Math.min(hero.mana || hero.maxMana, hero.maxMana);
   }
   function recalcHeroFromEquipment(hero) {
+    sanitizeHeroEquipment(hero);
     resetHeroBaseStats(hero);
     hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
     ['weapon', 'armor', 'artifact'].forEach(slot => {
@@ -6076,14 +6080,36 @@
     if (!root) return;
     root.innerHTML = GameState.heroes.map(h => `<div class="party-card">${h.emoji} ${h.name}<div class="eq-mini">${heroEquipIcons(h)}</div></div>`).join('');
   }
+  function itemHeroClassLabel(item) {
+    if (!item || !item.heroClass || item.heroClass === 'all') return 'Все герои';
+    return { warrior: 'Воин', archer: 'Лучник', mage: 'Маг' }[item.heroClass] || item.heroClass;
+  }
+
   function inventoryItemFitsHero(item, hero) {
-    if (!item) return false;
-    if (item.id.includes('bow') && hero.role !== 'archer') return false;
-    if (item.id.includes('staff') && hero.role !== 'mage') return false;
-    if (item.id.includes('wand') && hero.role !== 'mage') return false;
-    if (item.id.includes('sword') && hero.role !== 'warrior') return false;
-    if (item.id.includes('hammer') && hero.role !== 'warrior') return false;
-    return true;
+    if (!item || !hero) return false;
+    const hc = item.heroClass;
+    if (!hc || hc === 'all') return true;
+    return hc === hero.role;
+  }
+
+  function sanitizeHeroEquipment(hero) {
+    if (!hero) return;
+    hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
+    ['weapon', 'armor', 'artifact'].forEach(slot => {
+      const id = hero.equipment[slot];
+      if (!id) return;
+      const it = itemById(id);
+      if (it && inventoryItemFitsHero(it, hero)) return;
+      hero.equipment[slot] = null;
+      if (id && !(GameState.inventory || []).includes(id)) {
+        GameState.inventory = GameState.inventory || [];
+        GameState.inventory.push(id);
+      }
+    });
+  }
+
+  function sanitizeAllHeroEquipment() {
+    (GameState.heroes || []).forEach(sanitizeHeroEquipment);
   }
   function updateInventoryCloseButton() {
     const el = document.getElementById('btn-close-inv');
@@ -6206,9 +6232,11 @@
       bag.innerHTML = invList.map((id, idx) => {
         const it = itemById(id);
         const active = idx === InvState.selectedItemIdx ? 'selected' : '';
+        const mismatch = !inventoryItemFitsHero(it, hero);
         const fx = formatItemMods(it).join(' · ');
-        const tip = [it.name, fx, it.desc].filter(Boolean).join('\n');
-        return `<div class="inv-item-card ${active}" data-idx="${idx}" title="${escapeHtmlAttr(tip)}">
+        const roleHint = mismatch ? `Только: ${itemHeroClassLabel(it)}` : '';
+        const tip = [it.name, fx, roleHint, it.desc].filter(Boolean).join('\n');
+        return `<div class="inv-item-card ${active}${mismatch ? ' inv-item-mismatch' : ''}" data-idx="${idx}" title="${escapeHtmlAttr(tip)}">
           <div class="inv-item-thumb">
             ${itemIconMarkup(it, 56)}
             <span class="inv-item-price">${it.price}g</span>
@@ -6234,7 +6262,8 @@
       ? effects.map(e => `<div>${e}</div>`).join('')
       : '<div>— особый эффект</div>';
     const descHtml = sel.desc ? `<div class="item-detail-desc">${sel.desc}</div>` : '';
-    const forRole = sel.id.includes('bow') ? 'Лучник' : sel.id.includes('staff') || sel.id.includes('wand') ? 'Маг' : sel.id.includes('sword') || sel.id.includes('hammer') ? 'Воин' : 'Все';
+    const forRole = itemHeroClassLabel(sel);
+    const fitsHero = inventoryItemFitsHero(sel, hero);
     const itemName = sel.name;
     detail.innerHTML = `
     <div style="text-align:center;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px">
@@ -6242,11 +6271,12 @@
       <div class="item-detail-title">${itemName}</div>
       <div class="item-detail-sub" style="margin-top:4px">${slotNames[sel.slot] || sel.slot} · ${forRole}</div>
       <div style="margin-top:4px">${rarBadge(sel.rarity)}</div>
+      ${fitsHero ? '' : `<div style="font-size:8px;color:var(--accent-red);margin-top:6px">Не подходит ${hero.name}</div>`}
     </div>
     <div class="item-detail-stats" style="text-align:center;margin-bottom:6px">${statLinesHtml}</div>
     ${descHtml}
     <div class="item-detail-btns" style="display:flex;flex-direction:column;gap:6px">
-      <button class="btn btn-green" id="inv-equip-btn" style="width:100%;margin:0">✓ Надеть</button>
+      <button class="btn btn-green" id="inv-equip-btn" style="width:100%;margin:0"${fitsHero ? '' : ' disabled'}>✓ Надеть</button>
       <button class="btn" id="inv-transfer-btn" style="width:100%;margin:0">⇄ Передать</button>
       <button class="btn btn-red" id="inv-drop-btn" style="width:100%;margin:0">✕ Убрать</button>
     </div>`;
@@ -6284,6 +6314,10 @@
         if (!targetId) return;
         const target = GameState.heroes.find(h => h.id === targetId);
         if (!target) return;
+        if (!inventoryItemFitsHero(sel, target)) {
+          void showGameAlert(`${sel.name} не подходит ${target.name} (${itemHeroClassLabel(sel)}).`);
+          return;
+        }
         InvState.activeHeroId = target.id;
         renderInventoryScreen();
       });
