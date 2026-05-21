@@ -11,13 +11,17 @@ OUT_BASE = ROOT / "assets/audio/battle/sfx"
 
 # (category, stem_without_ext, path relative to EXT)
 MAPPING: list[tuple[str, str, Path]] = [
-    ("common", "hit", Path("RPG_Essentials_Free/12_Player_Movement_SFX/61_Hit_03.wav")),
+    ("common", "hit", Path("RPG_Essentials_Free/10_Battle_SFX/15_Impact_flesh_02.wav")),
     ("common", "death", Path("RPG_Essentials_Free/10_Battle_SFX/69_Enemy_death_01.wav")),
     ("common", "critical_hit", Path("Magic Spells AmbroggioMusic/Slash.mp3")),
     ("common", "victory", Path("Magic Spells AmbroggioMusic/Support Spell Success!!!!!.mp3")),
     ("common", "defeat", Path("Magic Spells AmbroggioMusic/Support Spell Fail.mp3")),
     ("heroes", "garet_melee", Path("RPG_Essentials_Free/10_Battle_SFX/22_Slash_04.wav")),
-    ("heroes", "alira_bow", Path("rpg_sound_pack/RPG Sound Pack/battle/swing2.wav")),
+    ("movement", "step_grass", Path("RPG_Essentials_Free/12_Player_Movement_SFX/03_Step_grass_03.wav")),
+    ("movement", "step_rock", Path("RPG_Essentials_Free/12_Player_Movement_SFX/08_Step_rock_02.wav")),
+    ("movement", "step_wood", Path("RPG_Essentials_Free/12_Player_Movement_SFX/12_Step_wood_03.wav")),
+    ("movement", "step_water", Path("RPG_Essentials_Free/12_Player_Movement_SFX/14_Step_water_02.wav")),
+    ("heroes", "alira_bow", Path("RPG_Essentials_Free/8_Atk_Magic_SFX/25_Wind_01.wav")),
     ("heroes", "alira_bow_draw", Path("RPG_Essentials_Free/8_Atk_Magic_SFX/45_Charge_05.wav")),
     ("heroes", "seris_magic", Path("rpg_sound_pack/RPG Sound Pack/battle/magic1.wav")),
     ("heroes", "garet_shield_bash", Path("Magic Spells AmbroggioMusic/Metal Hit 1.mp3")),

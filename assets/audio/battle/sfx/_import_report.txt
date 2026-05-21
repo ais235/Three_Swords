@@ -1,10 +1,14 @@
-common/hit.wav	RPG_Essentials_Free/12_Player_Movement_SFX/61_Hit_03.wav	скопирован
+common/hit.wav	RPG_Essentials_Free/10_Battle_SFX/15_Impact_flesh_02.wav	скопирован
 common/death.wav	RPG_Essentials_Free/10_Battle_SFX/69_Enemy_death_01.wav	скопирован
 common/critical_hit.mp3	Magic Spells AmbroggioMusic/Slash.mp3	скопирован
 common/victory.mp3	Magic Spells AmbroggioMusic/Support Spell Success!!!!!.mp3	скопирован
 common/defeat.mp3	Magic Spells AmbroggioMusic/Support Spell Fail.mp3	скопирован
 heroes/garet_melee.wav	RPG_Essentials_Free/10_Battle_SFX/22_Slash_04.wav	скопирован
-heroes/alira_bow.wav	rpg_sound_pack/RPG Sound Pack/battle/swing2.wav	скопирован
+movement/step_grass.wav	RPG_Essentials_Free/12_Player_Movement_SFX/03_Step_grass_03.wav	скопирован
+movement/step_rock.wav	RPG_Essentials_Free/12_Player_Movement_SFX/08_Step_rock_02.wav	скопирован
+movement/step_wood.wav	RPG_Essentials_Free/12_Player_Movement_SFX/12_Step_wood_03.wav	скопирован
+movement/step_water.wav	RPG_Essentials_Free/12_Player_Movement_SFX/14_Step_water_02.wav	скопирован
+heroes/alira_bow.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/25_Wind_01.wav	скопирован
 heroes/alira_bow_draw.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/45_Charge_05.wav	скопирован
 heroes/seris_magic.wav	rpg_sound_pack/RPG Sound Pack/battle/magic1.wav	скопирован
 heroes/garet_shield_bash.mp3	Magic Spells AmbroggioMusic/Metal Hit 1.mp3	скопирован
