@@ -1190,6 +1190,18 @@
     .perk-skill.available { border-color: var(--accent-blue); }
     .perk-skill.locked { opacity: 0.35; cursor: not-allowed; }
     .perk-skill.next { border-color: var(--accent-gold); opacity: 0.85; }
+    #inv-hero-perks { flex-shrink: 0; margin-top: 8px; }
+    .inv-perks-label { font-size: 8px; color: var(--text-hint); letter-spacing: 1px; text-transform: uppercase; text-align: center; margin-bottom: 5px; }
+    .inv-perks-row { display: flex; justify-content: center; gap: 5px; }
+    .inv-perk-btn {
+      flex: 1; min-width: 0; max-width: 46px; height: 34px;
+      border-radius: 5px; border: 1px solid var(--border);
+      font-size: 15px; display: flex; align-items: center; justify-content: center;
+      background: #0d0d1a; cursor: default; padding: 0; box-sizing: border-box;
+    }
+    .inv-perk-btn.active { border-color: var(--accent-green); background: #081408; box-shadow: 0 0 6px rgba(46,204,113,.25); opacity: 1; }
+    .inv-perk-btn.inactive { opacity: 0.32; filter: grayscale(0.65); border-color: #2a2a40; }
+    .inv-perk-btn:hover { border-color: #888; }
     #inv-hero-actions { margin-top: 8px; flex-shrink: 0; }
     #inv-hero-actions .btn { width: 100%; }
     .perk-skill.sel { border-color: var(--accent-gold); background: #1a1000; }
@@ -1700,6 +1712,10 @@
       .inv-portrait-class, .slots-title { display: none; }
       .inv-stats { padding: 4px; }
       .stat-row { font-size: 7px; margin-bottom: 1px; }
+      #inv-hero-perks { margin-top: 4px; }
+      .inv-perks-label { font-size: 7px; margin-bottom: 3px; }
+      .inv-perk-btn { max-width: 38px; height: 28px; font-size: 12px; }
+      .inv-perks-row { gap: 3px; }
       .equip-slot { padding: 3px; margin-bottom: 2px; }
       .equip-slot-icon { width: 16px; height: 16px; font-size: 10px; }
       .equip-slot-name { font-size: 7px; }
@@ -1957,6 +1973,7 @@
             <button class="inv-tab" data-hero-tab="seris" title="Сэрис"><img src="assets/heroes/seris.png" alt="Сэрис" style="width:28px;height:28px;object-fit:contain;border-radius:4px;display:block;margin:0 auto" onerror="this.replaceWith(document.createTextNode('🔮'))"></button>
           </div>
           <div id="inv-hero-card"></div>
+          <div id="inv-hero-perks"></div>
           <div id="inv-hero-actions"></div>
         </div>
 
@@ -3037,6 +3054,45 @@
       ]
     }
   };
+
+  const PERK_ICONS = {
+    d1:'🛡',d2:'🔰',d3:'💎', a1:'⚡',a2:'🔥',a3:'💥', l1:'🌟',l2:'🤝',l3:'👑',
+    m1:'🎯',m2:'🏹',m3:'🔍', s1:'💨',s2:'🌀',s3:'⚡', t1:'🕸',t2:'💣',t3:'🌧',
+    r1:'🔥',r2:'☄',r3:'💥', c1:'🧊',c2:'😱',c3:'🌀', y1:'✨',y2:'💊',y3:'🌀'
+  };
+  const PERK_BRANCH_LABELS = {
+    defense: 'ЗАЩИТА', attack: 'АТАКА', leader: 'ЛИДЕРСТВО',
+    accuracy: 'МЕТКОСТЬ', speed: 'СКОРОСТЬ', traps: 'ЛОВУШКИ',
+    destruction: 'РАЗРУШЕНИЕ', control: 'КОНТРОЛЬ', mystic: 'МИСТИКА'
+  };
+
+  function getHeroPerkBranchSlots(hero) {
+    const tree = PERK_TREES[hero.id];
+    if (!tree) return [];
+    hero.perkLevels = hero.perkLevels || {};
+    return Object.keys(tree).map(br => {
+      const perks = tree[br];
+      const taken = hero.perkLevels[br] || 0;
+      const perk = taken > 0 ? perks[Math.min(taken, perks.length) - 1] : perks[0];
+      return { br, perk, active: taken > 0, taken, maxTier: perks.length };
+    });
+  }
+
+  function renderInvHeroPerksHtml(hero) {
+    const slots = getHeroPerkBranchSlots(hero);
+    if (!slots.length) return '';
+    const btns = slots.map(s => {
+      const icon = PERK_ICONS[s.perk.id] || '◆';
+      const branch = PERK_BRANCH_LABELS[s.br] || s.br;
+      const tip = s.active
+        ? `${s.perk.name}\n${branch}\nИзучено · ${s.taken}/${s.maxTier}`
+        : `${s.perk.name}\n${branch}\nНе изучено · «Прокачка»`;
+      const cls = s.active ? 'active' : 'inactive';
+      const safeTip = tip.replace(/"/g, '&quot;');
+      return `<div class="inv-perk-btn ${cls}" title="${safeTip}">${icon}</div>`;
+    }).join('');
+    return `<div class="inv-perks-label">Перки</div><div class="inv-perks-row">${btns}</div>`;
+  }
 
   function enemyDef(type) {
     const D = ENEMY_IDS;
@@ -6044,6 +6100,9 @@
       ${hero.maxMana ? `<div class="stat-row"><span>Мана</span><span class="stat-val">${hero.mana}/${hero.maxMana}</span></div>` : ''}
     </div>`;
 
+    const invPerks = document.getElementById('inv-hero-perks');
+    if (invPerks) invPerks.innerHTML = renderInvHeroPerksHtml(hero);
+
     const invActions = document.getElementById('inv-hero-actions');
     if (invActions) {
       invActions.innerHTML = `<button type="button" class="btn btn-gold" id="btn-inv-perks" title="Дерево перков и веток развития">🌳 Прокачка</button>`;
@@ -7041,16 +7100,8 @@
       accuracy: 'bh-accuracy', speed: 'bh-speed', traps: 'bh-traps',
       destruction: 'bh-destruction', control: 'bh-control', mystic: 'bh-mystic'
     };
-    const branchLabels = {
-      defense: 'ЗАЩИТА', attack: 'АТАКА', leader: 'ЛИДЕРСТВО',
-      accuracy: 'МЕТКОСТЬ', speed: 'СКОРОСТЬ', traps: 'ЛОВУШКИ',
-      destruction: 'РАЗРУШЕНИЕ', control: 'КОНТРОЛЬ', mystic: 'МИСТИКА'
-    };
-    const perkIcons = {
-      d1:'🛡',d2:'🔰',d3:'💎', a1:'⚡',a2:'🔥',a3:'💥', l1:'🌟',l2:'🤝',l3:'👑',
-      m1:'🎯',m2:'🏹',m3:'🔍', s1:'💨',s2:'🌀',s3:'⚡', t1:'🕸',t2:'💣',t3:'🌧',
-      r1:'🔥',r2:'☄',r3:'💥', c1:'🧊',c2:'😱',c3:'🌀', y1:'✨',y2:'💊',y3:'🌀'
-    };
+    const branchLabels = PERK_BRANCH_LABELS;
+    const perkIcons = PERK_ICONS;
 
     // Determine which perk each branch is offering next
     const nextPerkByBranch = {};
