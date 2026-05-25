@@ -1,8 +1,8 @@
 common/hit.wav	RPG_Essentials_Free/10_Battle_SFX/15_Impact_flesh_02.wav	скопирован
 common/death.wav	RPG_Essentials_Free/10_Battle_SFX/69_Enemy_death_01.wav	скопирован
-common/critical_hit.mp3	Magic Spells AmbroggioMusic/Slash.mp3	скопирован
-common/victory.mp3	Magic Spells AmbroggioMusic/Support Spell Success!!!!!.mp3	скопирован
-common/defeat.mp3	Magic Spells AmbroggioMusic/Support Spell Fail.mp3	скопирован
+common/critical_hit.mp3	magic_spells_ambroggiomusic/Slash.mp3	скопирован
+common/victory.mp3	magic_spells_ambroggiomusic/support_spell_success_.mp3	скопирован
+common/defeat.mp3	magic_spells_ambroggiomusic/support_spell_fail.mp3	скопирован
 heroes/garet_melee.wav	RPG_Essentials_Free/10_Battle_SFX/22_Slash_04.wav	скопирован
 movement/step_grass.wav	RPG_Essentials_Free/12_Player_Movement_SFX/03_Step_grass_03.wav	скопирован
 movement/step_rock.wav	RPG_Essentials_Free/12_Player_Movement_SFX/08_Step_rock_02.wav	скопирован
@@ -10,58 +10,58 @@ movement/step_wood.wav	RPG_Essentials_Free/12_Player_Movement_SFX/12_Step_wood_0
 movement/step_water.wav	RPG_Essentials_Free/12_Player_Movement_SFX/14_Step_water_02.wav	скопирован
 heroes/alira_bow.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/25_Wind_01.wav	скопирован
 heroes/alira_bow_draw.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/45_Charge_05.wav	скопирован
-heroes/seris_magic.wav	rpg_sound_pack/RPG Sound Pack/battle/magic1.wav	скопирован
-heroes/garet_shield_bash.mp3	Magic Spells AmbroggioMusic/Metal Hit 1.mp3	скопирован
+heroes/seris_magic.wav	rpg_sound_pack/rpg_sound_pack/battle/magic1.wav	скопирован
+heroes/garet_shield_bash.mp3	magic_spells_ambroggiomusic/metal_hit_1.mp3	скопирован
 heroes/garet_fire_call.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/04_Fire_explosion_04_medium.wav	скопирован
 heroes/garet_berserk.wav	43284__randbsoundbites__rpg-sounds/795440__randbsoundbites__grunting.wav	скопирован
-heroes/alira_double_shot.mp3	Magic Spells AmbroggioMusic/Pulse Multi Attack.mp3	скопирован
+heroes/alira_double_shot.mp3	magic_spells_ambroggiomusic/pulse_multi_attack.mp3	скопирован
 heroes/alira_slow_arrow.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/22_Water_02.wav	скопирован
 heroes/alira_arrow_rain.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/18_Thunder_02.wav	скопирован
 heroes/seris_fireball.ogg	80-CC0-RPG-SFX/spell_fire_03.ogg	скопирован
 heroes/seris_freeze.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/13_Ice_explosion_01.wav	скопирован
 heroes/seris_meteor.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/30_Earth_02.wav	скопирован
 enemies/skeleton_attack.wav	RPG_Essentials_Free/10_Battle_SFX/03_Claw_03.wav	скопирован
-enemies/goblin_archer_attack.wav	rpg_sound_pack/RPG Sound Pack/NPC/beetle/bite-small.wav	скопирован
+enemies/goblin_archer_attack.wav	rpg_sound_pack/rpg_sound_pack/NPC/beetle/bite-small.wav	скопирован
 enemies/boar_attack.wav	RPG_Essentials_Free/10_Battle_SFX/08_Bite_04.wav	скопирован
 enemies/zombie_attack.wav	43284__randbsoundbites__rpg-sounds/797849__randbsoundbites__injured.wav	скопирован
 enemies/zombie_explosion.ogg	80-CC0-RPG-SFX/creature_die_01.ogg	скопирован
 enemies/shaman_attack.ogg	80-CC0-RPG-SFX/spell_02.ogg	скопирован
 enemies/shaman_heal.wav	RPG_Essentials_Free/8_Buffs_Heals_SFX/02_Heal_02.wav	скопирован
-enemies/orc_guard_attack.mp3	Magic Spells AmbroggioMusic/Metal Hit 2.mp3	скопирован
+enemies/orc_guard_attack.mp3	magic_spells_ambroggiomusic/metal_hit_2.mp3	скопирован
 enemies/suicide_attack.wav	43284__randbsoundbites__rpg-sounds/804662__randbsoundbites__opening-a-magic-potion.wav	скопирован
 enemies/suicide_explosion.ogg	80-CC0-RPG-SFX/spell_fire_05.ogg	скопирован
-enemies/spider_attack.wav	rpg_sound_pack/RPG Sound Pack/NPC/beetle/bite-small2.wav	скопирован
+enemies/spider_attack.wav	rpg_sound_pack/rpg_sound_pack/NPC/beetle/bite-small2.wav	скопирован
 enemies/spider_web.ogg	80-CC0-RPG-SFX/creature_slime_01.ogg	скопирован
-enemies/watcher_attack.wav	rpg_sound_pack/RPG Sound Pack/NPC/shade/shade7.wav	скопирован
+enemies/watcher_attack.wav	rpg_sound_pack/rpg_sound_pack/NPC/shade/shade7.wav	скопирован
 enemies/watcher_buff.wav	RPG_Essentials_Free/8_Buffs_Heals_SFX/17_Def_buff_01.wav	скопирован
 enemies/ice_elem_attack.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/13_Ice_explosion_01.wav	скопирован
 enemies/ice_freeze_touch.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/13_Ice_explosion_01.wav	скопирован
 enemies/dark_knight_attack.wav	RPG_Essentials_Free/10_Battle_SFX/22_Slash_04.wav	скопирован
-enemies/necro_attack.mp3	Magic Spells Vol 2 AmbroggioMusic/Scream of Souls.mp3	скопирован
+enemies/necro_attack.mp3	magic_spells_vol_2_ambroggiomusic/scream_of_souls.mp3	скопирован
 enemies/necro_raise.wav	RPG_Essentials_Free/8_Buffs_Heals_SFX/30_Revive_03.wav	скопирован
-enemies/chaos_attack.mp3	Magic Spells AmbroggioMusic/Confuse 1.mp3	скопирован
-enemies/assassin_attack.wav	rpg_sound_pack/RPG Sound Pack/battle/swing.wav	скопирован
-enemies/hydra_attack.wav	rpg_sound_pack/RPG Sound Pack/NPC/giant/giant2.wav	скопирован
-enemies/ghost_attack.wav	rpg_sound_pack/RPG Sound Pack/NPC/shade/shade3.wav	скопирован
+enemies/chaos_attack.mp3	magic_spells_ambroggiomusic/confuse_1.mp3	скопирован
+enemies/assassin_attack.wav	rpg_sound_pack/rpg_sound_pack/battle/swing.wav	скопирован
+enemies/hydra_attack.wav	rpg_sound_pack/rpg_sound_pack/NPC/giant/giant2.wav	скопирован
+enemies/ghost_attack.wav	rpg_sound_pack/rpg_sound_pack/NPC/shade/shade3.wav	скопирован
 enemies/fire_titan_attack.ogg	80-CC0-RPG-SFX/spell_fire_04.ogg	скопирован
 enemies/fire_titan_aoe.ogg	80-CC0-RPG-SFX/spell_fire_02.ogg	скопирован
-enemies/dark_lord_attack.wav	rpg_sound_pack/RPG Sound Pack/NPC/ogre/ogre3.wav	скопирован
-enemies/dark_lord_teleport.mp3	Magic Spells Vol 2 AmbroggioMusic/Teleport.mp3	скопирован
-enemies/dark_lord_summon.mp3	Magic Spells Vol 2 AmbroggioMusic/Whimsy Cast.mp3	скопирован
-enemies/dark_lord_aoe.mp3	Magic Spells AmbroggioMusic/Electricity MORE.mp3	скопирован
-status/apply_stun.mp3	Magic Spells Vol 2 AmbroggioMusic/Stun.mp3	скопирован
+enemies/dark_lord_attack.wav	rpg_sound_pack/rpg_sound_pack/NPC/ogre/ogre3.wav	скопирован
+enemies/dark_lord_teleport.mp3	magic_spells_vol_2_ambroggiomusic/Teleport.mp3	скопирован
+enemies/dark_lord_summon.mp3	magic_spells_vol_2_ambroggiomusic/whimsy_cast.mp3	скопирован
+enemies/dark_lord_aoe.mp3	magic_spells_ambroggiomusic/electricity_more.mp3	скопирован
+status/apply_stun.mp3	magic_spells_vol_2_ambroggiomusic/Stun.mp3	скопирован
 status/apply_freeze.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/13_Ice_explosion_01.wav	скопирован
 status/apply_web.wav	RPG_Essentials_Free/8_Buffs_Heals_SFX/44_Sleep_01.wav	скопирован
-status/apply_poison.mp3	Magic Spells AmbroggioMusic/Poison.mp3	скопирован
+status/apply_poison.mp3	magic_spells_ambroggiomusic/Poison.mp3	скопирован
 status/tick_poison.wav	RPG_Essentials_Free/8_Atk_Magic_SFX/46_Poison_01.wav	скопирован
 status/apply_burn.ogg	80-CC0-RPG-SFX/spell_fire_01.ogg	скопирован
 status/tick_burn.ogg	80-CC0-RPG-SFX/spell_fire_06.ogg	скопирован
-status/apply_slow.mp3	Magic Spells Vol 2 AmbroggioMusic/Hover.mp3	скопирован
-status/apply_blind.mp3	Magic Spells AmbroggioMusic/Confuse 2.mp3	скопирован
+status/apply_slow.mp3	magic_spells_vol_2_ambroggiomusic/Hover.mp3	скопирован
+status/apply_blind.mp3	magic_spells_ambroggiomusic/confuse_2.mp3	скопирован
 status/apply_curse.wav	RPG_Essentials_Free/8_Buffs_Heals_SFX/21_Debuff_01.wav	скопирован
-status/apply_berserk.mp3	Magic Spells AmbroggioMusic/Power Up.mp3	скопирован
+status/apply_berserk.mp3	magic_spells_ambroggiomusic/power_up.mp3	скопирован
 ui/select_unit.wav	RPG_Essentials_Free/10_UI_Menu_SFX/001_Hover_01.wav	скопирован
 ui/end_turn.wav	RPG_Essentials_Free/10_UI_Menu_SFX/013_Confirm_03.wav	скопирован
 ui/skill_ready.wav	RPG_Essentials_Free/10_UI_Menu_SFX/070_Equip_10.wav	скопирован
-ui/victory_screen.mp3	Magic Spells AmbroggioMusic/Support Spell Success!!!!!.mp3	скопирован
+ui/victory_screen.mp3	magic_spells_ambroggiomusic/support_spell_success_.mp3	скопирован
 ui/defeat_screen.wav	RPG_Essentials_Free/10_UI_Menu_SFX/029_Decline_09.wav	скопирован

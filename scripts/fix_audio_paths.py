@@ -33,10 +33,10 @@ def extract_double_shot_mp3() -> bool:
     out = SFX / "heroes" / "alira_double_shot.mp3"
     if out.is_file() and out.stat().st_size > 500:
         return True
-    zip_path = AUDIO / "Magic Spells AmbroggioMusic.zip"
+    zip_path = AUDIO / "magic_spells_ambroggiomusic.zip"
     if not zip_path.is_file():
         return False
-    needle = "Pulse Multi Attack.mp3"
+    needle = "pulse_multi_attack.mp3"
     with zipfile.ZipFile(zip_path) as zf:
         for name in zf.namelist():
             if name.endswith(needle) or needle in name.replace("\\", "/"):
@@ -45,7 +45,7 @@ def extract_double_shot_mp3() -> bool:
                     shutil.copyfileobj(src, dst)
                 print(f"Extracted {out} ({out.stat().st_size} bytes)")
                 return True
-    print("WARN: Pulse Multi Attack.mp3 not found in zip")
+    print("WARN: pulse_multi_attack.mp3 not found in zip")
     return False
 
 

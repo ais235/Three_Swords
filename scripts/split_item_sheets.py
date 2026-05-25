@@ -134,24 +134,24 @@ def save_items(
 
 
 SHEETS: dict[str, list[tuple[str, str]]] = {
-    "ChatGPT Image 2 мая 2026 г., 02_05_48.png": [
+    "chatgpt_image_2_maya_2026_g_02_05_48.png": [
         ("consumables", "health_potion.png"),
         ("consumables", "mana_potion.png"),
         ("materials", "arcane_crystal.png"),
     ],
-    "ChatGPT Image 2 мая 2026 г., 02_09_05.png": [
+    "chatgpt_image_2_maya_2026_g_02_09_05.png": [
         ("weapons", "iron_sword.png"),
         ("weapons", "poison_sword.png"),
         ("weapons", "storm_sword.png"),
         ("weapons", "shadow_sword.png"),
     ],
-    "ChatGPT Image 2 мая 2026 г., 02_11_20.png": [
+    "chatgpt_image_2_maya_2026_g_02_11_20.png": [
         ("weapons", "arcane_staff.png"),
         ("weapons", "fire_staff.png"),
         ("weapons", "shadow_staff.png"),
         ("weapons", "frost_staff.png"),
     ],
-    "ChatGPT Image 2 мая 2026 г., 02_13_25.png": [
+    "chatgpt_image_2_maya_2026_g_02_13_25.png": [
         ("armor", "leather_armor.png"),
         ("armor", "shadow_cloak.png"),
         ("armor", "runic_shield.png"),
@@ -160,7 +160,7 @@ SHEETS: dict[str, list[tuple[str, str]]] = {
         ("armor", "magister_robe.png"),
         ("armor", "assassin_cloak.png"),
     ],
-    "ChatGPT Image 2 мая 2026 г., 02_14_06.png": [
+    "chatgpt_image_2_maya_2026_g_02_14_06.png": [
         ("accessories", "amulet_clover.png"),
         ("materials", "mana_crystal.png"),
         ("accessories", "amulet_evil_eye.png"),
@@ -169,7 +169,7 @@ SHEETS: dict[str, list[tuple[str, str]]] = {
         ("misc", "rune_stone.png"),
         ("accessories", "royal_crown.png"),
     ],
-    "ChatGPT Image 11 мая 2026 г., 23_06_05.png": [
+    "chatgpt_image_11_maya_2026_g_23_06_05.png": [
         ("weapons", "hunter_bow.png"),
         ("weapons", "shadow_bow.png"),
         ("weapons", "moon_bow.png"),

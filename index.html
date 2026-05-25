@@ -590,13 +590,24 @@
     .alchemist-panel-title { font-size: 11px; color: var(--accent-teal); letter-spacing: 1px; margin-bottom: 4px; }
     .oracle-panel-title { font-size: 11px; color: var(--accent-purple); letter-spacing: 1px; margin-bottom: 4px; flex-shrink: 0; }
     .alchemist-help { font-size: 8px; color: var(--text-dim); line-height: 1.45; margin-bottom: 8px; }
-    .alchemist-list { display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; overflow-y: auto; }
+    .alchemist-section-title {
+      font-size: 8px; color: var(--accent-teal); letter-spacing: 1px; text-transform: uppercase;
+      margin: 6px 0 4px; flex-shrink: 0;
+    }
+    .alchemist-panel-scroll { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; -webkit-overflow-scrolling: touch; }
+    .alchemist-list { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .alchemist-potions { margin-bottom: 4px; }
     .alchemist-row {
       display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: #0d0d1a;
       flex-wrap: wrap;
     }
+    .alchemist-row-icon { flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+    .alchemist-row-icon .item-icon-wrap { width: 100%; height: 100%; padding: 2px; box-sizing: border-box; }
+    .alchemist-row-icon .item-icon-img { width: 100% !important; height: 100% !important; object-fit: contain; }
     .alchemist-row-info { flex: 1; min-width: 0; font-size: 9px; color: var(--text-main); }
     .alchemist-row-meta { font-size: 8px; color: var(--text-dim); margin-top: 2px; }
+    .alchemist-row-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .alchemist-row-actions .btn { font-size: 8px; padding: 5px 8px; min-width: 72px; margin: 0; }
     .oracle-view { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; text-align: center; min-height: 200px; }
     .oracle-crystal { font-size: 48px; line-height: 1; filter: drop-shadow(0 0 12px rgba(155, 89, 182, 0.5)); }
     .oracle-hint { font-size: 10px; color: var(--text-dim); max-width: 280px; line-height: 1.5; }
@@ -2102,8 +2113,13 @@
               <img class="npc-inline-face" src="assets/npc/ruta.png" alt="" />
               <div class="alchemist-panel-title">АЛХИМИК РУТА</div>
             </div>
-            <div class="alchemist-help">Обычный → редкий: 100💰 · Редкий → эпический: 200💰. Выберите предмет в рюкзаке или посмотрите рекламу у алхимика (справа).</div>
-            <div id="alchemist-list" class="alchemist-list"></div>
+            <div class="alchemist-help">Купите зелья и примените к герою. Ниже — улучшение снаряжения из рюкзака (100💰 / 200💰).</div>
+            <div class="alchemist-panel-scroll">
+              <div class="alchemist-section-title">Зелья и расходники</div>
+              <div id="alchemist-potions" class="alchemist-list alchemist-potions"></div>
+              <div class="alchemist-section-title">Улучшение снаряжения</div>
+              <div id="alchemist-upgrades" class="alchemist-list"></div>
+            </div>
           </div>
           <div id="city-panel-oracle" class="city-panel city-panel-oracle hidden">
             <div class="oracle-view" id="oracle-view-wrap">
@@ -2531,6 +2547,10 @@
   //══════════ SECTION 2: GAME_DATA ══════════
   const ENEMY_IDS = {
     SKELETON: 'skeleton', GOBLIN_ARCHER: 'goblin_archer', BOAR: 'boar', ZOMBIE: 'zombie', SHAMAN: 'shaman',
+    BANDIT: 'bandit', WOLF: 'wolf', BANDIT_THROWER: 'bandit_thrower',
+    SPEARMAN: 'spearman', BOG_LURKER: 'bog_lurker', THORN_DRYAD: 'thorn_dryad', RAT_SWARM: 'rat_swarm', CULTIST: 'cultist',
+    HEXER: 'hexer', SHIELDBEARER: 'shieldbearer', CROSSBOWMAN: 'crossbowman', STONE_GOLEM: 'stone_golem',
+    VOID_STALKER: 'void_stalker', BLOOD_KNIGHT: 'blood_knight', BANSHEE: 'banshee', PLAGUE_DOCTOR: 'plague_doctor', ARCANE_SENTINEL: 'arcane_sentinel',
     ORC_GUARD: 'orc_guard', SUICIDE: 'suicide', SPIDER: 'spider', WATCHER: 'watcher', ICE_ELEM: 'ice_elem',
     DARK_KNIGHT: 'dark_knight', NECRO: 'necro', CHAOS: 'chaos', ASSASSIN: 'assassin', HYDRA: 'hydra', GHOST: 'ghost',
     FIRE_TITAN: 'fire_titan', DARK_LORD: 'dark_lord'
@@ -2561,8 +2581,8 @@
     'assets/audio/battle/sfx/movement/step_wood.wav',
     'assets/audio/battle/sfx/movement/step_water.wav',
     'assets/audio/battle/sfx/heroes/garet_melee.mp3',
-    'assets/audio/battle/sfx/heroes/alira_bow.mp3',
-    'assets/audio/battle/sfx/heroes/alira_bow_draw.wav',
+    'assets/audio/battle/sfx/heroes/alira_bow.wav',
+    'assets/audio/battle/sfx/heroes/alira_bow_draw.mp3',
     'assets/audio/battle/sfx/heroes/seris_magic.mp3',
     'assets/audio/battle/sfx/heroes/garet_shield_bash.mp3',
     'assets/audio/battle/sfx/heroes/garet_fire_call.mp3',
@@ -2633,8 +2653,8 @@
       move_step_wood: r('movement/step_wood.wav'),
       move_step_water: r('movement/step_water.wav'),
       heroes_garet_melee: r('heroes/garet_melee.mp3'),
-      heroes_alira_bow: r('heroes/alira_bow.mp3'),
-      heroes_alira_bow_draw: r('heroes/alira_bow_draw.wav'),
+      heroes_alira_bow: r('heroes/alira_bow.wav'),
+      heroes_alira_bow_draw: r('heroes/alira_bow_draw.mp3'),
       heroes_seris_magic: r('heroes/seris_magic.mp3'),
       heroes_garet_shield_bash: r('heroes/garet_shield_bash.mp3'),
       heroes_garet_fire_call: r('heroes/garet_fire_call.mp3'),
@@ -2724,8 +2744,8 @@
         ['Blade 01', 'assets/audio/_extracted/80-CC0-RPG-SFX/blade_01.ogg'],
         ['Blade 02', 'assets/audio/_extracted/80-CC0-RPG-SFX/blade_02.ogg'],
         ['Blade 03', 'assets/audio/_extracted/80-CC0-RPG-SFX/blade_03.ogg'],
-        ['Magic Slash', 'assets/audio/_extracted/Magic Spells AmbroggioMusic/Slash.mp3'],
-        ['Sword unsheathe', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/sword-unsheathe.wav']
+        ['Magic Slash', 'assets/audio/_extracted/magic_spells_ambroggiomusic/Slash.mp3'],
+        ['Sword unsheathe', 'assets/audio/_extracted/rpg_sound_pack/rpg_sound_pack/battle/sword-unsheathe.wav']
       ]
     },
     {
@@ -2735,9 +2755,9 @@
       candidates: [
         ['Текущий: Wind 01', BSX.heroes_alira_bow],
         ['Attack 03', 'assets/audio/_extracted/RPG_Essentials_Free/12_Player_Movement_SFX/56_Attack_03.wav'],
-        ['Swing', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/swing.wav'],
-        ['Swing 2', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/swing2.wav'],
-        ['Swing 3', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/swing3.wav'],
+        ['Swing', 'assets/audio/_extracted/rpg_sound_pack/rpg_sound_pack/battle/swing.wav'],
+        ['Swing 2', 'assets/audio/_extracted/rpg_sound_pack/rpg_sound_pack/battle/swing2.wav'],
+        ['Swing 3', 'assets/audio/_extracted/rpg_sound_pack/rpg_sound_pack/battle/swing3.wav'],
         ['Wind 01 source', 'assets/audio/_extracted/RPG_Essentials_Free/8_Atk_Magic_SFX/25_Wind_01.wav']
       ]
     },
@@ -2748,8 +2768,8 @@
       candidates: [
         ['Текущий: flesh impact', BSX.common_hit],
         ['Movement Hit 03', 'assets/audio/_extracted/RPG_Essentials_Free/12_Player_Movement_SFX/61_Hit_03.wav'],
-        ['Metal Hit 1', 'assets/audio/_extracted/Magic Spells AmbroggioMusic/Metal Hit 1.mp3'],
-        ['Metal Hit 2', 'assets/audio/_extracted/Magic Spells AmbroggioMusic/Metal Hit 2.mp3'],
+        ['Metal Hit 1', 'assets/audio/_extracted/magic_spells_ambroggiomusic/metal_hit_1.mp3'],
+        ['Metal Hit 2', 'assets/audio/_extracted/magic_spells_ambroggiomusic/metal_hit_2.mp3'],
         ['Orc damage', 'assets/audio/_extracted/43284__randbsoundbites__rpg-sounds/800361__randbsoundbites__orc-taking-damage.wav'],
         ['Character injury', 'assets/audio/_extracted/43284__randbsoundbites__rpg-sounds/808094__randbsoundbites__various-injury-sounds-for-game-character.wav']
       ]
@@ -2787,8 +2807,8 @@
         ['Текущий: ice explosion', BSX.heroes_seris_freeze],
         ['Ice source', 'assets/audio/_extracted/RPG_Essentials_Free/8_Atk_Magic_SFX/13_Ice_explosion_01.wav'],
         ['Water 02', 'assets/audio/_extracted/RPG_Essentials_Free/8_Atk_Magic_SFX/22_Water_02.wav'],
-        ['Stun', 'assets/audio/_extracted/Magic Spells Vol 2 AmbroggioMusic/Stun.mp3'],
-        ['Magic Block', 'assets/audio/_extracted/Magic Spells Vol 2 AmbroggioMusic/Magic Block.mp3']
+        ['Stun', 'assets/audio/_extracted/magic_spells_vol_2_ambroggiomusic/Stun.mp3'],
+        ['Magic Block', 'assets/audio/_extracted/magic_spells_vol_2_ambroggiomusic/magic_block.mp3']
       ]
     },
     {
@@ -2797,11 +2817,11 @@
       target: 'heroes_seris_magic',
       candidates: [
         ['Текущий: magic1', BSX.heroes_seris_magic],
-        ['Spell', 'assets/audio/_extracted/rpg_sound_pack/RPG Sound Pack/battle/spell.wav'],
+        ['Spell', 'assets/audio/_extracted/rpg_sound_pack/rpg_sound_pack/battle/spell.wav'],
         ['Spell 01', 'assets/audio/_extracted/80-CC0-RPG-SFX/spell_01.ogg'],
         ['Spell 02', 'assets/audio/_extracted/80-CC0-RPG-SFX/spell_02.ogg'],
-        ['Zap 1', 'assets/audio/_extracted/Magic Spells Vol 2 AmbroggioMusic/Zap 1.mp3'],
-        ['Zap 2', 'assets/audio/_extracted/Magic Spells Vol 2 AmbroggioMusic/Zap 2.mp3']
+        ['Zap 1', 'assets/audio/_extracted/magic_spells_vol_2_ambroggiomusic/zap_1.mp3'],
+        ['Zap 2', 'assets/audio/_extracted/magic_spells_vol_2_ambroggiomusic/zap_2.mp3']
       ]
     }
   ];
@@ -3191,11 +3211,11 @@
 
   function baseHeroTemplate() {
     return [
-      { id: 'garet', name: 'Гарет', emoji: '⚔️', role: 'warrior', hp: 40, maxHp: 40, armor: 5, attack: 8, range: 1, move: 3, speed: 13, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
+      { id: 'garet', name: 'Гарет', emoji: '⚔️', role: 'warrior', hp: 30, maxHp: 30, armor: 4, attack: 6, range: 1, move: 3, speed: 11, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
         cds: { shieldBash: 0, fireCall: 0, berserk: 0 }, flags: { firstAttackTurn: true } },
-      { id: 'alira', name: 'Алира', emoji: '🏹', role: 'archer', hp: 25, maxHp: 25, armor: 2, attack: 10, range: 4, move: 4, speed: 11, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
+      { id: 'alira', name: 'Алира', emoji: '🏹', role: 'archer', hp: 19, maxHp: 19, armor: 1, attack: 8, range: 3, move: 3, speed: 9, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
         cds: { doubleShot: 0, slowArrow: 0, arrowRain: 0 }, flags: { firstAttackTurn: true } },
-      { id: 'seris', name: 'Сэрис', emoji: '🔮', role: 'mage', hp: 20, maxHp: 20, armor: 1, attack: 12, range: 3, move: 3, speed: 9, level: 1, xp: 0, perks: [], mana: 10, maxMana: 10,
+      { id: 'seris', name: 'Сэрис', emoji: '🔮', role: 'mage', hp: 15, maxHp: 15, armor: 0, attack: 9, range: 2, move: 2, speed: 7, level: 1, xp: 0, perks: [], mana: 8, maxMana: 8,
         cds: { fireball: 0, freeze: 0, meteor: 0 }, flags: { mysticShield: 3 } }
     ];
   }
@@ -3301,6 +3321,23 @@
       [D.BOAR]: { name: 'Кабан', emoji: '🐗', hp: 15, armor: 2, attack: 7, move: 2, range: 1, speed: 8, gold: [10,15] },
       [D.ZOMBIE]: { name: 'Зомби', emoji: '🧟', hp: 12, armor: 1, attack: 6, move: 1, range: 1, speed: 5, gold: [8,12] },
       [D.SHAMAN]: { name: 'Лесной шаман', emoji: '🧙', hp: 25, armor: 1, attack: 5, move: 2, range: 2, speed: 7, gold: [40,60], miniBoss: true },
+      [D.BANDIT]: { name: 'Разбойник', emoji: '🗡️', hp: 16, armor: 1, attack: 8, move: 2, range: 1, speed: 10, gold: [10,16] },
+      [D.WOLF]: { name: 'Волк', emoji: '🐺', hp: 12, armor: 0, attack: 7, move: 3, range: 1, speed: 12, gold: [8,12] },
+      [D.BANDIT_THROWER]: { name: 'Метатель', emoji: '🪓', hp: 12, armor: 0, attack: 7, move: 2, range: 2, speed: 11, gold: [10,14] },
+      [D.SPEARMAN]: { name: 'Копейщик', emoji: '🔱', hp: 16, armor: 1, attack: 7, move: 2, range: 1, speed: 9, gold: [10,14] },
+      [D.BOG_LURKER]: { name: 'Топляк', emoji: '⛓️', hp: 20, armor: 2, attack: 8, move: 1, range: 1, speed: 7, gold: [12,18] },
+      [D.THORN_DRYAD]: { name: 'Дриада шипов', emoji: '🌿', hp: 14, armor: 0, attack: 7, move: 2, range: 2, speed: 10, gold: [12,18] },
+      [D.RAT_SWARM]: { name: 'Крысиный рой', emoji: '🐀', hp: 18, armor: 0, attack: 5, move: 3, range: 1, speed: 12, gold: [10,16] },
+      [D.CULTIST]: { name: 'Культист', emoji: '🕯️', hp: 15, armor: 0, attack: 7, move: 2, range: 2, speed: 9, gold: [14,20] },
+      [D.HEXER]: { name: 'Колдун порчи', emoji: '☠️', hp: 18, armor: 1, attack: 8, move: 2, range: 3, speed: 10, gold: [18,26] },
+      [D.SHIELDBEARER]: { name: 'Щитоносец', emoji: '🛡️', hp: 26, armor: 5, attack: 8, move: 1, range: 1, speed: 7, gold: [16,24] },
+      [D.CROSSBOWMAN]: { name: 'Арбалетчик', emoji: '🏹', hp: 16, armor: 1, attack: 9, move: 2, range: 3, speed: 9, gold: [16,24] },
+      [D.STONE_GOLEM]: { name: 'Каменный голем', emoji: '🪨', hp: 40, armor: 6, attack: 10, move: 1, range: 1, speed: 6, gold: [22,32], miniBoss: true },
+      [D.VOID_STALKER]: { name: 'Пустотный охотник', emoji: '🌑', hp: 22, armor: 1, attack: 11, move: 4, range: 1, speed: 14, gold: [26,36] },
+      [D.BLOOD_KNIGHT]: { name: 'Кровавый рыцарь', emoji: '🩸', hp: 38, armor: 4, attack: 12, move: 2, range: 1, speed: 8, gold: [30,42], miniBoss: true },
+      [D.BANSHEE]: { name: 'Банши', emoji: '👻', hp: 24, armor: 0, attack: 9, move: 3, range: 2, speed: 12, gold: [26,38] },
+      [D.PLAGUE_DOCTOR]: { name: 'Чумной лекарь', emoji: '🧪', hp: 26, armor: 1, attack: 8, move: 2, range: 3, speed: 10, gold: [28,40] },
+      [D.ARCANE_SENTINEL]: { name: 'Чародейский страж', emoji: '💠', hp: 34, armor: 3, attack: 11, move: 1, range: 3, speed: 9, gold: [30,44], miniBoss: true },
       [D.ORC_GUARD]: { name: 'Орк-страж', emoji: '🛡️', hp: 30, armor: 6, attack: 9, move: 1, range: 1, speed: 6, gold: [15,20] },
       [D.SUICIDE]: { name: 'Подрывник', emoji: '💣', hp: 8, armor: 0, attack: 0, move: 3, range: 1, speed: 10, gold: [12,18] },
       [D.SPIDER]: { name: 'Паук', emoji: '🕷️', hp: 18, armor: 1, attack: 7, move: 3, range: 1, speed: 10, gold: [15,22] },
@@ -3360,10 +3397,27 @@
   // ══════════ ENEMY BESTIARY DATA ══════════
   const ENEMY_BESTIARY_DATA = {
     [ENEMY_IDS.SKELETON]:     { region: 1, tactic: 'Движется прямо к ближайшему герою. Атакует в ближнем бою без хитростей.', weakness: 'Дробящее оружие, Огненный шар, Заморозка.' },
-    [ENEMY_IDS.GOBLIN_ARCHER]:{ region: 1, tactic: 'Стреляет с дистанции 3. Отступает, если герой подходит вплотную.', weakness: 'Рывок в ближний бой — Гарет с Берсерком.' },
+    [ENEMY_IDS.GOBLIN_ARCHER]:{ region: 1, tactic: 'Стреляет с дистанции 3 и старается держать дистанцию, но не отступает бесконечно. Будет обходить препятствия и давить.', weakness: 'Рывок в ближний бой — Гарет с Берсерком.' },
     [ENEMY_IDS.BOAR]:         { region: 1, tactic: 'Рвётся к цели, игнорируя рельеф. Высокий HP и броня 2.', weakness: 'Стрела замедления снижает скорость. Заморозка.' },
     [ENEMY_IDS.ZOMBIE]:       { region: 1, tactic: 'Медленный, но взрывается при смерти — 5 урона всем ближним.', weakness: 'Держись на расстоянии! Лучник и Маг идеальны.' },
     [ENEMY_IDS.SHAMAN]:       { region: 1, tactic: 'Мини-босс. Каждый ход лечит союзников. Убей первым!', weakness: 'Фокус-огонь сразу. Метеорит или Дождь стрел.' },
+    [ENEMY_IDS.BANDIT]:       { region: 1, tactic: 'Быстрый боец ближнего боя. Старается добраться и разменять урон.', weakness: 'Контроль (Заморозка, Стан) и фокус огня.' },
+    [ENEMY_IDS.WOLF]:         { region: 1, tactic: 'Очень мобильный. Заходит с фланга и быстро наказывает за плохую позицию.', weakness: 'Замедление и плотная линия.' },
+    [ENEMY_IDS.BANDIT_THROWER]:{ region: 1, tactic: 'Дальность 2. Пытается добить раненых, пока фронт держит дистанцию.', weakness: 'Сближение и фокус, щит Гарета.' },
+    [ENEMY_IDS.SPEARMAN]:     { region: 1, tactic: 'Держит линию и наказывает за сближение. Простой, но надёжный фронт.', weakness: 'Заморозка/оглушение и дальний фокус.' },
+    [ENEMY_IDS.BOG_LURKER]:   { region: 1, tactic: 'Живучий топляк. Бьёт больно и может замедлять вблизи.', weakness: 'Держать дистанцию, сжигать огнём.' },
+    [ENEMY_IDS.THORN_DRYAD]:  { region: 1, tactic: 'Дальность 2. Может накладывать замедление шипами.', weakness: 'Фокус-огонь и быстрый рывок в ближний бой.' },
+    [ENEMY_IDS.RAT_SWARM]:    { region: 1, tactic: 'Давит числом и ядом. Быстрый, но уязвим к AoE.', weakness: 'Огненный шар / Дождь стрел.' },
+    [ENEMY_IDS.CULTIST]:      { region: 2, tactic: 'Маг дальнего боя. Накладывает проклятие и усиливает давление.', weakness: 'Убить первым, не стоять кучей.' },
+    [ENEMY_IDS.HEXER]:        { region: 2, tactic: 'Колдун контроля. Порча/ослепление ломают точность и темп.', weakness: 'Фокус, сопротивление контролю, щит Гарета.' },
+    [ENEMY_IDS.SHIELDBEARER]: { region: 2, tactic: 'Танк. Держит проход и снижает урон по себе щитом.', weakness: 'Магический урон и пробивание.' },
+    [ENEMY_IDS.CROSSBOWMAN]:  { region: 2, tactic: 'Сильный дальний урон. Наказывает за открытую позицию.', weakness: 'Укрытия, фланг, заморозка.' },
+    [ENEMY_IDS.STONE_GOLEM]:  { region: 2, tactic: 'Мини-босс. Очень высокий HP и броня. Давит медленно, но верно.', weakness: 'Магия, контроль, обход.' },
+    [ENEMY_IDS.VOID_STALKER]: { region: 3, tactic: 'Элитный убийца. Очень быстро добирается до слабых целей.', weakness: 'Не расходиться слишком далеко. Контроль.' },
+    [ENEMY_IDS.BLOOD_KNIGHT]: { region: 3, tactic: 'Мини-босс. Тяжёлый фронт с самоисцелением от ударов.', weakness: 'Кайтить, заморозка, фокус.' },
+    [ENEMY_IDS.BANSHEE]:      { region: 3, tactic: 'Маг-дух. Крик может оглушить/ослепить, ломая строй.', weakness: 'Не стоять кучей. Быстро добить.' },
+    [ENEMY_IDS.PLAGUE_DOCTOR]:{ region: 3, tactic: 'Поддержка: лечит союзников и травит героев ядом.', weakness: 'Фокус-огонь по лекарю первым.' },
+    [ENEMY_IDS.ARCANE_SENTINEL]:{ region: 3, tactic: 'Мини-босс. Маг-страж с мощной дальностью и контролем.', weakness: 'Рывок, контроль, фокус.' },
     [ENEMY_IDS.ORC_GUARD]:    { region: 2, tactic: 'Тяжелая броня 6, двигается медленно. Держит линию.', weakness: 'Магический урон игнорирует броню. Огненный шар.' },
     [ENEMY_IDS.SUICIDE]:      { region: 2, tactic: 'Бежит к герою и взрывается — AoE 5 урона всем рядом.', weakness: 'Уничтожь издалека до подрыва. Дождь стрел.' },
     [ENEMY_IDS.SPIDER]:       { region: 2, tactic: 'Накладывает паутину — герой пропускает ход. Высокая скорость.', weakness: 'Заморозка блокирует паутину. Берсерк Гарета.' },
@@ -3379,10 +3433,13 @@
     [ENEMY_IDS.DARK_LORD]:    { region: 3, tactic: 'ФИНАЛЬНЫЙ БОСС. Телепорт, AoE, призыв миньонов. Две фазы.', weakness: 'Убей миньонов. Берсерк + Метеорит в финале.' }
   };
 
+  /** Расходники одноразового использования (пока не продаются в UI; иконки в ITEM_ICON_MAP). */
   const SHOP_ITEMS = [
-    { id: 'potion', name: 'Зелье HP +15', price: 30, use: (h) => { h.hp = Math.min(h.maxHp, h.hp + 15); } },
-    { id: 'elixir', name: 'Эликсир маны +5', price: 40, use: (h) => { if (h.maxMana) h.mana = Math.min(h.maxMana, h.mana + 5); } },
-    { id: 'mag_stone', name: 'Камень магии (+1 атака мага)', price: 80, use: (h) => { if (h.role === 'mage') h.attack += 1; } }
+    { id: 'potion_small', name: 'Малое зелье HP +5', price: 10, emoji: '🧪', use: (h) => { h.hp = Math.min(h.maxHp, h.hp + 5); } },
+    { id: 'potion_mid', name: 'Зелье HP +10', price: 18, emoji: '🧪', use: (h) => { h.hp = Math.min(h.maxHp, h.hp + 10); } },
+    { id: 'potion', name: 'Зелье HP +15', price: 30, emoji: '🧪', use: (h) => { h.hp = Math.min(h.maxHp, h.hp + 15); } },
+    { id: 'elixir', name: 'Эликсир маны +5', price: 40, emoji: '🔵', use: (h) => { if (h.maxMana) h.mana = Math.min(h.maxMana, h.mana + 5); } },
+    { id: 'mag_stone', name: 'Камень магии (+1 атака мага)', price: 80, emoji: '💎', use: (h) => { if (h.role === 'mage') h.attack += 1; } }
   ];
   const ITEM_POOL = [
     // ── ОРУЖИЕ: Гарет (warrior) ──
@@ -3423,6 +3480,7 @@
   const ITEM_ICON_MAP = {
     steel_sword: 'weapons/iron_sword.png',
     poison_blade: 'weapons/poison_sword.png',
+    thunder_hammer: 'weapons/storm_sword.png',
     blade_dark: 'weapons/shadow_sword.png',
     hunter_bow: 'weapons/hunter_bow.png',
     shadow_bow: 'weapons/shadow_bow.png',
@@ -3445,7 +3503,13 @@
     hourglass: 'misc/hourglass.png',
     death_ring: 'accessories/ring_of_skulls.png',
     portal_stone: 'misc/rune_stone.png',
-    crown: 'accessories/royal_crown.png'
+    crown: 'accessories/royal_crown.png',
+    /* Расходники SHOP_ITEMS — в коде есть, магазин зелий пока не в UI; иконки готовы */
+    potion_small: 'consumables/health_potion.png',
+    potion_mid: 'consumables/health_potion.png',
+    potion: 'consumables/health_potion.png',
+    elixir: 'consumables/mana_potion.png',
+    mag_stone: 'materials/arcane_crystal.png'
   };
 
   const LOOT_CHANCE = {
@@ -3478,12 +3542,13 @@
     screen: 'map',
     region: 1,
     turn: 1,
-    gold: 150,
+    gold: 20,
     heroes: [],
     currentBattle: null,
     worldMap: [],
     log: [],
     inventory: [],
+    consumables: {},
     adsAvailable: true,
     lastAdTime: 0,
     mapNodeId: null,
@@ -3552,6 +3617,7 @@
         if (!GameState.bestiary) GameState.bestiary = {};
         if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
         if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
+        if (!GameState.consumables || typeof GameState.consumables !== 'object') GameState.consumables = {};
         sanitizeAllHeroEquipment();
         return true;
       }
@@ -4027,7 +4093,8 @@
     updateBattleUI();
   }
 
-  function floodReachable(b, u) {
+  function floodReachable(b, u, opts) {
+    opts = opts || {};
     const maxCost = getMovePoints(u, b);
     const dist = {};
     const key = (x, y) => x + ',' + y;
@@ -4041,7 +4108,7 @@
         if (!passableForUnit(b, nx, ny, u)) continue;
         const tile = b.grid[ny][nx];
         if (tile === TILE.MOUNTAIN) continue;
-        const step = tileMoveCost(tile, u);
+        const step = opts.ignoreHighCosts ? 1 : tileMoveCost(tile, u);
         const nc = cur.c + step;
         if (nc > maxCost) continue;
         const k = key(nx, ny);
@@ -4060,10 +4127,41 @@
     return dist;
   }
 
+  // Distance-to-target map for movement planning: BFS (cost=1) from target.
+  // Used to avoid "stalling" behind obstacles where manhattan distance is misleading.
+  function buildTargetDistanceMap(b, target, self) {
+    const dist = {};
+    if (!target) return dist;
+    const key = (x, y) => x + ',' + y;
+    const q = [{ x: target.x, y: target.y }];
+    dist[key(target.x, target.y)] = 0;
+    while (q.length) {
+      const cur = q.shift();
+      const base = dist[key(cur.x, cur.y)];
+      for (const d of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
+        const nx = cur.x + d.x, ny = cur.y + d.y;
+        if (!inBounds(nx, ny)) continue;
+        const tile = b.grid[ny][nx];
+        if (tile === TILE.MOUNTAIN) continue;
+        // Target tile may be occupied by a hero; still allow it as an anchor.
+        if (!(nx === target.x && ny === target.y) && !passableForUnit(b, nx, ny, self)) continue;
+        const k = key(nx, ny);
+        if (dist[k] === undefined) {
+          dist[k] = base + 1;
+          q.push({ x: nx, y: ny });
+        }
+      }
+    }
+    return dist;
+  }
+
   /** Лучшая клетка за один ход (учитывает стоимость леса/воды через floodReachable). */
-  function pickEnemyMoveCell(b, u, target) {
+  function pickEnemyMoveCell(b, u, target, opts) {
     if (!target) return null;
-    const reachable = floodReachable(b, u);
+    opts = opts || {};
+    const ignoreHighCosts = !!opts.ignoreHighCosts || !!(u.aiVar && u.aiVar.forceChase);
+    const reachable = floodReachable(b, u, { ignoreHighCosts });
+    const dmap = buildTargetDistanceMap(b, target, u);
     let best = null;
     let bestDist = Infinity;
     let bestReachCost = Infinity;
@@ -4071,7 +4169,7 @@
       const [rx, ry] = key.split(',').map(Number);
       if (rx === u.x && ry === u.y) continue;
       const reachCost = reachable[key];
-      const d = Math.abs(rx - target.x) + Math.abs(ry - target.y);
+      const d = (dmap[key] !== undefined) ? dmap[key] : (Math.abs(rx - target.x) + Math.abs(ry - target.y));
       if (d < bestDist || (d === bestDist && reachCost < bestReachCost)) {
         bestDist = d;
         bestReachCost = reachCost;
@@ -4337,6 +4435,12 @@
     let gold = cell?.type === 'dungeon' ? randInt(45, 80) : randInt(20, 35);
     if (cell?.type === 'boss') gold = randInt(120, 160);
     if (cell?.type === 'final') gold = 300;
+    // Gold bonus from amulet_luck artifact
+    const goldMult = GameState.heroes.reduce((m, h) => {
+      const item = getEquippedItem(h, 'artifact');
+      return item && item.mods.goldBonus ? m + item.mods.goldBonus : m;
+    }, 1);
+    gold = Math.round(gold * goldMult);
     GameState.gold += gold;
     GameState.stats.battles += 1;
     GameState.stats.goldEarned += gold;
@@ -4619,6 +4723,23 @@
     boar: 'assets/enemies/boar.png',
     zombie: 'assets/enemies/zombie.png',
     shaman: 'assets/enemies/shaman.png',
+    bandit: 'assets/enemies/bandit.png',
+    wolf: 'assets/enemies/wolf.png',
+    bandit_thrower: 'assets/enemies/bandit_thrower.png',
+    spearman: 'assets/enemies/spearman.png',
+    bog_lurker: 'assets/enemies/bog_lurker.png',
+    thorn_dryad: 'assets/enemies/thorn_dryad.png',
+    rat_swarm: 'assets/enemies/rat_swarm.png',
+    cultist: 'assets/enemies/cultist.png',
+    hexer: 'assets/enemies/hexer.png',
+    shieldbearer: 'assets/enemies/shieldbearer.png',
+    crossbowman: 'assets/enemies/crossbowman.png',
+    stone_golem: 'assets/enemies/stone_golem.png',
+    void_stalker: 'assets/enemies/void_stalker.png',
+    blood_knight: 'assets/enemies/blood_knight.png',
+    banshee: 'assets/enemies/banshee.png',
+    plague_doctor: 'assets/enemies/plague_doctor.png',
+    arcane_sentinel: 'assets/enemies/arcane_sentinel.png',
     orc_guard: 'assets/enemies/orc_guard.png',
     suicide: 'assets/enemies/bomber.png',
     spider: 'assets/enemies/spider.png',
@@ -5129,6 +5250,20 @@
     const finishEnemyTurn = () => {
       if (enemyTurnEnded) return;
       enemyTurnEnded = true;
+      // Persist minimal distance to heroes for anti-stall logic on the next turn.
+      try {
+        const heroesNow = b.units.filter(h => h.isHero && h.hp > 0);
+        if (heroesNow.length) {
+          let dMin = 999;
+          for (const h of heroesNow) {
+            const d = Math.abs(h.x - u.x) + Math.abs(h.y - u.y);
+            if (d < dMin) dMin = d;
+          }
+          u.aiVar = u.aiVar || {};
+          u.aiVar.prevMinHeroDist = dMin;
+          u.aiVar.forceChase = false;
+        }
+      } catch (e) {}
       endUnitTurn();
     };
     try {
@@ -5156,32 +5291,36 @@
       }
     }
 
+    // Plague doctor: small heal to lowest HP ally every 3 turns (support enemy, kill priority)
+    if (u.enemyId === ENEMY_IDS.PLAGUE_DOCTOR) {
+      u.aiVar = u.aiVar || {};
+      u.aiVar.healCd = (u.aiVar.healCd || 0) - 1;
+      if (u.aiVar.healCd <= 0) {
+        const wounded = b.units.filter(x => !x.isHero && x.hp > 0 && x.hp < x.maxHp)
+          .sort((a, z) => (a.hp / a.maxHp) - (z.hp / z.maxHp))[0];
+        if (wounded) {
+          const heal = 6;
+          wounded.hp = Math.min(wounded.maxHp, wounded.hp + heal);
+          pushBattleLog(`🧪 ${u.name} лечит ${wounded.emoji} ${wounded.name} на ${heal}`, 'enemy');
+          if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_shaman_heal, 0.65);
+          u.aiVar.healCd = 3;
+          finishEnemyTurn(); return;
+        }
+      }
+    }
+
     const heroes = b.units.filter(h => h.isHero && h.hp > 0);
     if (!heroes.length) { finishEnemyTurn(); return; }
 
-    // Goblin Archer: retreat if hero is adjacent (< 2 tiles)
-    if (u.enemyId === ENEMY_IDS.GOBLIN_ARCHER) {
-      const tooClose = heroes.filter(h => Math.abs(h.x - u.x) + Math.abs(h.y - u.y) <= 1);
-      if (tooClose.length > 0) {
-        // Move away from nearest threat
-        const threat = tooClose[0];
-        const reachable = floodReachable(b, u);
-        let fleeCell = null, fleeDist = -1, fleeCost = Infinity;
-        for (const key of Object.keys(reachable)) {
-          const [rx, ry] = key.split(',').map(Number);
-          if (rx === u.x && ry === u.y) continue;
-          const dist = Math.abs(rx - threat.x) + Math.abs(ry - threat.y);
-          const rc = reachable[key];
-          if (dist > fleeDist || (dist === fleeDist && rc < fleeCost)) {
-            fleeDist = dist;
-            fleeCost = rc;
-            fleeCell = { x: rx, y: ry };
-          }
-        }
-        if (fleeCell) enemyStepToCell(b, u, fleeCell);
-        finishEnemyTurn(); return;
-      }
+    // Anti-stall: if last turn the enemy didn't get closer to any hero, it will temporarily
+    // ignore high terrain costs (water/forest) to keep pressure on the player.
+    u.aiVar = u.aiVar || {};
+    let curMinHeroDist = 999;
+    for (const h of heroes) {
+      const d = Math.abs(h.x - u.x) + Math.abs(h.y - u.y);
+      if (d < curMinHeroDist) curMinHeroDist = d;
     }
+    u.aiVar.forceChase = (u.aiVar.prevMinHeroDist !== undefined && curMinHeroDist >= u.aiVar.prevMinHeroDist);
 
     if (u.enemyId === ENEMY_IDS.CHAOS) {
       u.bossVar = u.bossVar || { aoeTurn: 0 };
@@ -5302,18 +5441,36 @@
       else if (attacker.phase === 3) dmg = attacker.attack + 6;
     }
     if (!attacker.isHero && findWatcher(GameState.currentBattle)) dmg += 2;
-    const mul = (attacker.enemyId === ENEMY_IDS.ASSASSIN && target.isHero) ? (() => {
-      const backs = [{ x: target.x, y: target.y + 1 }, { x: target.x, y: target.y - 1 }, { x: target.x - 1, y: target.y }, { x: target.x + 1, y: target.y }];
-      return backs.some(p => p.x === attacker.x && p.y === attacker.y) ? 2 : 1;
-    })() : 1;
+    const mul = (!attacker.isHero && target.isHero && [ENEMY_IDS.ASSASSIN, ENEMY_IDS.VOID_STALKER].includes(attacker.enemyId))
+      ? (() => {
+        const backs = [{ x: target.x, y: target.y + 1 }, { x: target.x, y: target.y - 1 }, { x: target.x - 1, y: target.y }, { x: target.x + 1, y: target.y }];
+        const isBack = backs.some(p => p.x === attacker.x && p.y === attacker.y);
+        if (!isBack) return 1;
+        if (attacker.enemyId === ENEMY_IDS.ASSASSIN) return 2;
+        return 1.5;
+      })()
+      : 1;
     let heads = 1;
     if (attacker.enemyId === ENEMY_IDS.HYDRA) heads = 3;
     for (let h = 0; h < heads; h++) {
       if (target.hp <= 0) break;
       dealDamage(attacker, target, Math.floor(dmg * mul), { magic: attacker.enemyId === ENEMY_IDS.GHOST, sfxImpactOnly: h > 0 });
+      if (!attacker.isHero && attacker.hp > 0) {
+        if (attacker.enemyId === ENEMY_IDS.BLOOD_KNIGHT) attacker.hp = Math.min(attacker.maxHp, attacker.hp + 3);
+      }
       if (attacker.enemyId === ENEMY_IDS.SPIDER && target.hp > 0) addStatus(target, STATUS.WEB, 2);
       if (attacker.enemyId === ENEMY_IDS.ICE_ELEM && target.hp > 0) addStatus(target, STATUS.FREEZE, 1);
       if (attacker.enemyId === ENEMY_IDS.HYDRA && target.hp > 0) addStatus(target, STATUS.POISON, 2);
+      if (attacker.enemyId === ENEMY_IDS.THORN_DRYAD && target.hp > 0) addStatus(target, STATUS.SLOW, 1);
+      if (attacker.enemyId === ENEMY_IDS.BOG_LURKER && target.hp > 0 && Math.random() < 0.35) addStatus(target, STATUS.SLOW, 1);
+      if (attacker.enemyId === ENEMY_IDS.RAT_SWARM && target.hp > 0 && Math.random() < 0.45) addStatus(target, STATUS.POISON, 1);
+      if (attacker.enemyId === ENEMY_IDS.CULTIST && target.hp > 0 && Math.random() < 0.30) addStatus(target, STATUS.CURSE, 1);
+      if (attacker.enemyId === ENEMY_IDS.HEXER && target.hp > 0 && Math.random() < 0.35) addStatus(target, STATUS.BLIND, 1);
+      if (attacker.enemyId === ENEMY_IDS.BANSHEE && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.STUN, 1);
+      if (attacker.enemyId === ENEMY_IDS.PLAGUE_DOCTOR && target.hp > 0) addStatus(target, STATUS.POISON, 2);
+      if (attacker.enemyId === ENEMY_IDS.VOID_STALKER && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.CURSE, 1);
+      if (attacker.enemyId === ENEMY_IDS.STONE_GOLEM && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.STUN, 1);
+      if (attacker.enemyId === ENEMY_IDS.ARCANE_SENTINEL && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.FREEZE, 1);
     }
     pushBattleLog(`[${attacker.emoji}] бьёт [${target.emoji}]`, 'enemy');
   }
@@ -6063,6 +6220,83 @@
     });
   }
   function itemById(id) { return ITEM_POOL.find(i => i.id === id); }
+  function shopItemById(id) { return SHOP_ITEMS.find(i => i.id === id) || null; }
+  function getConsumableCount(id) {
+    return (GameState.consumables && GameState.consumables[id]) ? GameState.consumables[id] : 0;
+  }
+  function addConsumable(id, n) {
+    const add = n || 1;
+    GameState.consumables = GameState.consumables || {};
+    GameState.consumables[id] = (GameState.consumables[id] || 0) + add;
+  }
+  function canUseConsumableOnHero(item, hero) {
+    if (!item || !hero || hero.hp <= 0) return false;
+    if (item.id === 'potion_small' || item.id === 'potion_mid' || item.id === 'potion') return hero.hp < hero.maxHp;
+    if (item.id === 'elixir') return hero.maxMana > 0 && hero.mana < hero.maxMana;
+    if (item.id === 'mag_stone') return hero.role === 'mage' && !(hero.flags && hero.flags.magStoneUsed);
+    return false;
+  }
+  function consumableUseHint(item) {
+    if (!item) return '';
+    if (item.id.startsWith('potion')) return 'восстанавливает HP';
+    if (item.id === 'elixir') return 'восстанавливает ману магу';
+    if (item.id === 'mag_stone') return 'магу: +1 атака навсегда (1 раз на героя)';
+    return '';
+  }
+  function useConsumableOnHero(itemId, heroId) {
+    const item = shopItemById(itemId);
+    const hero = GameState.heroes.find(h => h.id === heroId);
+    if (!item || !hero || getConsumableCount(itemId) <= 0) return false;
+    if (!canUseConsumableOnHero(item, hero)) return false;
+    if (item.id === 'mag_stone') {
+      hero.flags = hero.flags || {};
+      if (hero.flags.magStoneUsed) return false;
+      hero.flags.magStoneUsed = true;
+      if (hero.role === 'mage') hero.attack += 1;
+    } else {
+      item.use(hero);
+    }
+    GameState.consumables[itemId]--;
+    if (GameState.consumables[itemId] <= 0) delete GameState.consumables[itemId];
+    return true;
+  }
+  function buyConsumable(itemId, node, strangerOnly) {
+    const item = shopItemById(itemId);
+    if (!item) return;
+    if (GameState.gold < item.price) {
+      void showGameAlert('Недостаточно золота.');
+      return;
+    }
+    GameState.gold -= item.price;
+    addConsumable(itemId);
+    saveGame();
+    enterCity(node, strangerOnly);
+  }
+  function tryUseConsumable(itemId, node, strangerOnly) {
+    const item = shopItemById(itemId);
+    if (!item || getConsumableCount(itemId) <= 0) return;
+    const usable = GameState.heroes.filter(h => canUseConsumableOnHero(item, h));
+    if (!usable.length) {
+      void showGameAlert(`Некому применить «${item.name}». ${consumableUseHint(item)}.`);
+      return;
+    }
+    const apply = heroId => {
+      if (!useConsumableOnHero(itemId, heroId)) return;
+      const h = GameState.heroes.find(x => x.id === heroId);
+      saveGame();
+      void showGameAlert(`${item.name} → ${h.name}`).then(() => enterCity(node, strangerOnly));
+    };
+    if (usable.length === 1) {
+      apply(usable[0].id);
+      return;
+    }
+    showGamePickOne(`Кому применить «${item.name}»?`, usable.map(h => ({
+      value: h.id,
+      label: `${h.name} (${h.hp}/${h.maxHp}${h.maxMana ? ` · ${h.mana}/${h.maxMana} MP` : ''})`
+    }))).then(heroId => {
+      if (heroId) apply(heroId);
+    });
+  }
   function itemIconPath(itemId) {
     const rel = ITEM_ICON_MAP[itemId];
     return rel ? ITEM_ICON_BASE + rel : null;
@@ -6500,14 +6734,24 @@
   function generateEnemyWaveForCell(cell) {
     if (!cell) return [ENEMY_IDS.SKELETON];
     const pools = {
-      1: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.BOAR, ENEMY_IDS.ZOMBIE, ENEMY_IDS.SHAMAN],
-      2: [ENEMY_IDS.ORC_GUARD, ENEMY_IDS.SPIDER, ENEMY_IDS.SUICIDE, ENEMY_IDS.ICE_ELEM, ENEMY_IDS.WATCHER, ENEMY_IDS.DARK_KNIGHT],
-      3: [ENEMY_IDS.NECRO, ENEMY_IDS.CHAOS, ENEMY_IDS.ASSASSIN, ENEMY_IDS.HYDRA, ENEMY_IDS.GHOST]
+      1: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.BOAR, ENEMY_IDS.ZOMBIE, ENEMY_IDS.SHAMAN,
+          ENEMY_IDS.BANDIT, ENEMY_IDS.WOLF, ENEMY_IDS.BANDIT_THROWER,
+          ENEMY_IDS.SPEARMAN, ENEMY_IDS.BOG_LURKER, ENEMY_IDS.THORN_DRYAD, ENEMY_IDS.RAT_SWARM],
+      2: [ENEMY_IDS.ORC_GUARD, ENEMY_IDS.SPIDER, ENEMY_IDS.SUICIDE, ENEMY_IDS.ICE_ELEM, ENEMY_IDS.WATCHER, ENEMY_IDS.DARK_KNIGHT,
+          ENEMY_IDS.CULTIST, ENEMY_IDS.HEXER, ENEMY_IDS.SHIELDBEARER, ENEMY_IDS.CROSSBOWMAN, ENEMY_IDS.STONE_GOLEM],
+      3: [ENEMY_IDS.NECRO, ENEMY_IDS.CHAOS, ENEMY_IDS.ASSASSIN, ENEMY_IDS.HYDRA, ENEMY_IDS.GHOST,
+          ENEMY_IDS.VOID_STALKER, ENEMY_IDS.BLOOD_KNIGHT, ENEMY_IDS.BANSHEE, ENEMY_IDS.PLAGUE_DOCTOR, ENEMY_IDS.ARCANE_SENTINEL]
     };
     if (cell.type === 'boss') return [cell.region === 2 ? ENEMY_IDS.FIRE_TITAN : ENEMY_IDS.DARK_KNIGHT];
     if (cell.type === 'final') return [ENEMY_IDS.DARK_LORD];
     const pool = pools[cell.region];
-    const cnt = cell.type === 'dungeon' ? 4 : cell.type === 'arena' ? 1 : 3;
+    let cnt = cell.type === 'dungeon' ? 4 : cell.type === 'arena' ? 1 : 3;
+    // Region 1 is the onboarding zone, but it must still create pressure to use perks/loot.
+    // We increase wave size there instead of scaling the base skeleton/zombie stats.
+    if (cell.region === 1) {
+      if (cell.type === 'mission') cnt = 4;
+      if (cell.type === 'dungeon') cnt = 5;
+    }
     const wave = [];
     for (let i = 0; i < cnt; i++) wave.push(pool[randInt(0, pool.length - 1)]);
     return wave;
@@ -6531,21 +6775,6 @@
   }
   function applyBattleRewards(cell) {
     const region = (cell && cell.region) || GameState.region || 1;
-    // Gold by cell type
-    const goldRanges = {
-      mission:  [25, 45], dungeon: [60, 100], miniboss: [50, 90],
-      boss:     [150, 150], final: [300, 300]
-    };
-    const [gMin, gMax] = goldRanges[cell && cell.type] || [25, 45];
-    const gold = randInt(gMin, gMax);
-    // Gold bonus from amulet_luck artifact
-    const goldMult = GameState.heroes.reduce((m, h) => {
-      const item = getEquippedItem(h, 'artifact');
-      return item && item.mods.goldBonus ? m + item.mods.goldBonus : m;
-    }, 1);
-    const finalGold = Math.round(gold * goldMult);
-    GameState.gold += finalGold;
-    GameState.stats.goldEarned += finalGold;
     // Loot drop based on boss type
     let forceRarity = null;
     if (cell && (cell.type === 'boss' || cell.type === 'final')) forceRarity = 'epic';
@@ -6753,9 +6982,10 @@
   function startNewGame() {
     initHeroesFromTemplate();
     buildWorldMap();
-    GameState.gold = 150;
+    GameState.gold = 20;
     GameState.turn = 1;
     GameState.inventory = [];
+    GameState.consumables = {};
     GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
     if (!GameState.difficulty) GameState.difficulty = 'normal';
     saveGame();
@@ -7214,27 +7444,60 @@
   }
 
   function renderCityAlchemistPanel(node, strangerOnly) {
-    const root = document.getElementById('alchemist-list');
-    if (!root) return;
-    const seen = new Set();
-    const rows = [];
-    (GameState.inventory || []).forEach(id => {
-      if (seen.has(id)) return;
-      seen.add(id);
-      const it = itemById(id);
-      if (!it || !['common', 'rare'].includes(it.rarity)) return;
-      const cost = it.rarity === 'common' ? 100 : 200;
-      const ic = it.name.split(' ')[0];
-      const nm = it.name.split(' ').slice(1).join(' ');
-      rows.push(`<div class="alchemist-row">
-        <div class="alchemist-row-info"><span>${ic}</span> ${nm}<div class="alchemist-row-meta">${cityItemRarBadge(it.rarity)} · улучшение ${cost}💰</div></div>
-        <button type="button" class="btn btn-green" style="font-size:9px;padding:6px 10px" data-alch-up="${it.id}">Улучшить</button>
-      </div>`);
-    });
-    root.innerHTML = rows.length ? rows.join('') : '<div style="font-size:9px;color:var(--text-hint);padding:8px;">Нет предметов common/rare в рюкзаке.</div>';
-    root.querySelectorAll('[data-alch-up]').forEach(btn => {
-      btn.onclick = () => tryUpgradeInventoryItem(btn.getAttribute('data-alch-up'), node, GameState._cityStrangerOnly);
-    });
+    const potRoot = document.getElementById('alchemist-potions');
+    const upRoot = document.getElementById('alchemist-upgrades');
+    if (potRoot) {
+      potRoot.innerHTML = SHOP_ITEMS.map(item => {
+        const stock = getConsumableCount(item.id);
+        const canUse = GameState.heroes.some(h => canUseConsumableOnHero(item, h));
+        const icon = itemIconMarkup({ id: item.id, rarity: 'common', emoji: item.emoji || '🧪' }, 32);
+        return `<div class="alchemist-row">
+          <div class="alchemist-row-icon">${icon}</div>
+          <div class="alchemist-row-info">
+            <div>${item.name}</div>
+            <div class="alchemist-row-meta">${item.price}💰 · в запасе: ${stock} · ${consumableUseHint(item)}</div>
+          </div>
+          <div class="alchemist-row-actions">
+            <button type="button" class="btn btn-green" data-alch-buy="${item.id}">Купить</button>
+            <button type="button" class="btn" data-alch-use="${item.id}"${stock <= 0 || !canUse ? ' disabled' : ''}>Применить</button>
+          </div>
+        </div>`;
+      }).join('');
+      potRoot.querySelectorAll('[data-alch-buy]').forEach(btn => {
+        btn.onclick = () => buyConsumable(btn.getAttribute('data-alch-buy'), node, strangerOnly);
+      });
+      potRoot.querySelectorAll('[data-alch-use]').forEach(btn => {
+        btn.onclick = () => tryUseConsumable(btn.getAttribute('data-alch-use'), node, strangerOnly);
+      });
+    }
+    if (upRoot) {
+      const seen = new Set();
+      const rows = [];
+      (GameState.inventory || []).forEach(id => {
+        if (seen.has(id)) return;
+        seen.add(id);
+        const it = itemById(id);
+        if (!it || !['common', 'rare'].includes(it.rarity)) return;
+        const cost = it.rarity === 'common' ? 100 : 200;
+        const icon = itemIconMarkup(it, 32);
+        rows.push(`<div class="alchemist-row">
+          <div class="alchemist-row-icon">${icon}</div>
+          <div class="alchemist-row-info">
+            <div>${it.name}</div>
+            <div class="alchemist-row-meta">${cityItemRarBadge(it.rarity)} · улучшение ${cost}💰</div>
+          </div>
+          <div class="alchemist-row-actions">
+            <button type="button" class="btn btn-green" data-alch-up="${it.id}">Улучшить</button>
+          </div>
+        </div>`);
+      });
+      upRoot.innerHTML = rows.length
+        ? rows.join('')
+        : '<div style="font-size:9px;color:var(--text-hint);padding:8px;">Нет предметов common/rare в рюкзаке.</div>';
+      upRoot.querySelectorAll('[data-alch-up]').forEach(btn => {
+        btn.onclick = () => tryUpgradeInventoryItem(btn.getAttribute('data-alch-up'), node, GameState._cityStrangerOnly);
+      });
+    }
   }
 
   function runOraclePrediction(node) {
@@ -7771,7 +8034,7 @@
     if (!hasSave) {
       initHeroesFromTemplate();
       buildWorldMap();
-      GameState.gold = 150;
+      GameState.gold = 20;
       GameState.turn = 1;
       // Стартовый инвентарь по документации баланса
       GameState.inventory = ['steel_sword', 'hunter_bow', 'magic_wand', 'leather', 'luck_amulet'];
@@ -7964,11 +8227,22 @@
     }
     updateMenuMeta();
   }
+  let yandexGameReadySent = false;
+  function notifyYandexGameReady(sdk) {
+    if (yandexGameReadySent || !sdk?.features?.LoadingAPI?.ready) return;
+    yandexGameReadySent = true;
+    try {
+      const result = sdk.features.LoadingAPI.ready();
+      if (result && typeof result.catch === 'function') result.catch(() => {});
+    } catch (_) {}
+  }
+
   if (typeof YaGames !== 'undefined') YaGames.init().then(sdk => {
     window.ysdk = sdk;
+    notifyYandexGameReady(sdk);
     const adBtn = document.getElementById('btn-ad-revive');
     if (adBtn) adBtn.classList.remove('hidden');
-  });
+  }).catch(() => {});
 
   // Spacebar: "Начать бой" in deploy phase, "Ждать" in combat phase
   document.addEventListener('keydown', e => {
