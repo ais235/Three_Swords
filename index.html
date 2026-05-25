@@ -3564,6 +3564,8 @@
     stats: { battles: 0, kills: 0, goldEarned: 0 },
     pendingNegativeEvent: null,
     adMeta: { lastShownAt: 0, lastBonusGoldAt: 0 },
+    adPaused: false,
+    pendingEnemyTurnAfterAd: false,
     defeatedBosses: 0,
     hardFlags: { skipDeployNextBattle: false },
     arenaDoneByRegion: {},
@@ -3588,6 +3590,8 @@
   }
   function saveGame() {
     const snap = deepClone(GameState);
+    snap.adPaused = false;
+    snap.pendingEnemyTurnAfterAd = false;
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(snap));
       localStorage.setItem('save', JSON.stringify(snap));
@@ -3618,6 +3622,8 @@
         if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
         if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
         if (!GameState.consumables || typeof GameState.consumables !== 'object') GameState.consumables = {};
+        GameState.adPaused = false;
+        GameState.pendingEnemyTurnAfterAd = false;
         sanitizeAllHeroEquipment();
         return true;
       }
@@ -5041,6 +5047,10 @@
 
   let rafId = 0;
   function loop() {
+    if (GameState.adPaused) {
+      rafId = requestAnimationFrame(loop);
+      return;
+    }
     drawBattle();
     renderInitiative();
     rafId = requestAnimationFrame(loop);
@@ -5242,6 +5252,10 @@
     return true;
   }
   function runEnemyTurn() {
+    if (GameState.adPaused) {
+      GameState.pendingEnemyTurnAfterAd = true;
+      return;
+    }
     const b = GameState.currentBattle;
     if (!b || b.phase !== 'combat') return;
     const u = getActiveUnit();
@@ -6202,22 +6216,75 @@
   function canShowAd() {
     return window.ysdk && (Date.now() - (GameState.adMeta.lastShownAt || 0) >= AD_MIN_INTERVAL_MS);
   }
+  const AdRuntimePause = {
+    depth: 0,
+    bgmWasPlaying: false,
+    sfxWasRunning: false,
+
+    begin() {
+      if (this.depth++ > 0) return;
+      GameState.adPaused = true;
+      this.bgmWasPlaying = !!(GameBGM.audio && !GameBGM.audio.paused);
+      this.sfxWasRunning = !!(BattleSfx.ctx && BattleSfx.ctx.state === 'running');
+      if (GameBGM.audio) GameBGM.audio.pause();
+      if (BattleSfx.ctx && BattleSfx.ctx.state === 'running') BattleSfx.ctx.suspend().catch(() => {});
+    },
+
+    end() {
+      if (this.depth <= 0) return;
+      this.depth--;
+      if (this.depth > 0) return;
+      GameState.adPaused = false;
+      const s = loadAudioSettings();
+      if (this.bgmWasPlaying && GameBGM.audio && GameBGM.unlocked && s.musicEnabled && !document.hidden) {
+        GameBGM.audio.play().catch(() => {});
+      }
+      if (this.sfxWasRunning && BattleSfx.ctx && BattleSfx.ctx.state === 'suspended' && !document.hidden) {
+        BattleSfx.ctx.resume().catch(() => {});
+      }
+      if (GameState.pendingEnemyTurnAfterAd) {
+        GameState.pendingEnemyTurnAfterAd = false;
+        setTimeout(() => runEnemyTurn(), 80);
+      }
+    }
+  };
   function showRewardedAd(rewardCallback) {
     if (!window.ysdk) { rewardCallback(); return; }
     if (!canShowAd()) {
       void showGameAlert('Реклама временно недоступна (антиспам).');
       return;
     }
-    window.ysdk.adv.showRewardedVideo({
-      callbacks: {
-        onRewarded: () => {
-          GameState.adMeta.lastShownAt = Date.now();
-          rewardCallback();
-        },
-        onClose: () => {},
-        onError: () => { void showGameAlert('Реклама недоступна'); }
-      }
-    });
+    let adPauseStarted = false;
+    const pauseForAd = () => {
+      if (adPauseStarted) return;
+      adPauseStarted = true;
+      AdRuntimePause.begin();
+    };
+    const resumeAfterAd = () => {
+      if (!adPauseStarted) return;
+      adPauseStarted = false;
+      AdRuntimePause.end();
+    };
+    try {
+      pauseForAd();
+      window.ysdk.adv.showRewardedVideo({
+        callbacks: {
+          onOpen: pauseForAd,
+          onRewarded: () => {
+            GameState.adMeta.lastShownAt = Date.now();
+            rewardCallback();
+          },
+          onClose: resumeAfterAd,
+          onError: () => {
+            resumeAfterAd();
+            void showGameAlert('Реклама недоступна');
+          }
+        }
+      });
+    } catch (e) {
+      resumeAfterAd();
+      void showGameAlert('Реклама недоступна');
+    }
   }
   function itemById(id) { return ITEM_POOL.find(i => i.id === id); }
   function shopItemById(id) { return SHOP_ITEMS.find(i => i.id === id) || null; }
