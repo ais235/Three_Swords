@@ -926,6 +926,17 @@
     .menu-settings-row label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
     .menu-settings-row input[type="checkbox"] { width: 14px; height: 14px; accent-color: #f0a500; cursor: pointer; }
     .menu-settings-row input[type="range"] { flex: 1; min-width: 0; accent-color: #f0a500; }
+    .menu-settings-select {
+      flex: 1;
+      min-width: 0;
+      background: #0d0d1a;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: inherit;
+      font-size: 8px;
+    }
     .menu-settings-hint {
       font-size: 6px;
       color: #666688;
@@ -2017,6 +2028,14 @@
       <div id="menu-settings-overlay" class="menu-settings-overlay" aria-hidden="true">
         <div class="menu-settings-box">
           <h3 class="menu-settings-title">НАСТРОЙКИ</h3>
+          <div class="menu-settings-row">
+            <span style="flex-shrink:0">Язык</span>
+            <select id="setting-language" class="menu-settings-select" aria-label="Язык">
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+              <option value="es">Español</option>
+            </select>
+          </div>
           <p class="menu-settings-sub">Звук</p>
           <div class="menu-settings-row">
             <label><input type="checkbox" id="setting-music-enabled" checked /> Музыка</label>
@@ -2400,6 +2419,8 @@
   const SAVE_KEY = 'threeHeroesSave';
   const AUDIO_SETTINGS_KEY = 'threeBladesAudioV1';
   const SFX_OVERRIDES_KEY = 'threeBladesSfxOverridesV1';
+  const LANGUAGE_KEY = 'threeBladesLanguageV1';
+  const SUPPORTED_LANGUAGES = ['ru', 'en', 'es'];
   const BGM_TRACKS = {
     'menu-cinematic': ['assets/audio/menu-cinematic/bgm_menu_cinematic_01.mp3'],
     battle: [
@@ -2413,6 +2434,266 @@
       'assets/audio/exploration/bgm_exploration_03.mp3'
     ]
   };
+
+  function detectInitialLanguage() {
+    try {
+      const saved = localStorage.getItem(LANGUAGE_KEY);
+      if (SUPPORTED_LANGUAGES.includes(saved)) return saved;
+    } catch (_) {}
+    const nav = (navigator.language || '').toLowerCase();
+    if (nav.startsWith('es')) return 'es';
+    if (nav.startsWith('en')) return 'en';
+    return 'ru';
+  }
+
+  let GameLanguage = detectInitialLanguage();
+  let ActiveScreen = 'menu';
+
+  const I18N = {
+    gameTitle: { ru: 'ТРИ  КЛИНКА', en: 'THREE BLADES', es: 'TRES ESPADAS' },
+    newGame: { ru: 'Новая игра', en: 'New Game', es: 'Nueva partida' },
+    continue: { ru: 'Продолжить', en: 'Continue', es: 'Continuar' },
+    about: { ru: 'Об игре', en: 'About', es: 'Acerca del juego' },
+    settings: { ru: 'Настройки', en: 'Settings', es: 'Ajustes' },
+    difficulty: { ru: 'СЛОЖНОСТЬ', en: 'DIFFICULTY', es: 'DIFICULTAD' },
+    normal: { ru: 'ОБЫЧНАЯ', en: 'NORMAL', es: 'NORMAL' },
+    hardcore: { ru: 'ХАРДКОР', en: 'HARDCORE', es: 'DIFÍCIL' },
+    settingsTitle: { ru: 'НАСТРОЙКИ', en: 'SETTINGS', es: 'AJUSTES' },
+    language: { ru: 'Язык', en: 'Language', es: 'Idioma' },
+    sound: { ru: 'Звук', en: 'Sound', es: 'Sonido' },
+    music: { ru: 'Музыка', en: 'Music', es: 'Música' },
+    volume: { ru: 'Громкость', en: 'Volume', es: 'Volumen' },
+    musicVolume: { ru: 'Громкость музыки', en: 'Music volume', es: 'Volumen de música' },
+    sfx: { ru: 'Звуки боя (удары, выстрелы, магия)', en: 'Battle sounds (hits, shots, magic)', es: 'Sonidos de combate (golpes, disparos, magia)' },
+    sfxVolume: { ru: 'Громкость SFX', en: 'SFX volume', es: 'Volumen SFX' },
+    battleSfxVolume: { ru: 'Громкость звуков боя', en: 'Battle sound volume', es: 'Volumen de sonidos de combate' },
+    sfxAuditor: { ru: '▶ SFX-аудитор', en: '▶ SFX auditor', es: '▶ Auditor SFX' },
+    audioPauseHint: { ru: 'При сворачивании вкладки или окна музыка и звуки боя останавливаются (требование площадки).', en: 'Music and battle sounds stop when the tab or window is hidden (platform requirement).', es: 'La música y los sonidos de combate se detienen al ocultar la pestaña o la ventana (requisito de la plataforma).' },
+    back: { ru: 'Назад', en: 'Back', es: 'Atrás' },
+    menu: { ru: 'Меню', en: 'Menu', es: 'Menú' },
+    gold: { ru: 'Золото', en: 'Gold', es: 'Oro' },
+    region: { ru: 'Регион', en: 'Region', es: 'Región' },
+    turn: { ru: 'Ход', en: 'Turn', es: 'Turno' },
+    location: { ru: 'ЛОКАЦИЯ', en: 'LOCATION', es: 'UBICACIÓN' },
+    opened: { ru: 'ОТКРЫТО', en: 'OPENED', es: 'ABIERTO' },
+    revealMap: { ru: 'Открыть карту', en: 'Reveal map', es: 'Revelar mapa' },
+    selectCell: { ru: 'Выберите клетку', en: 'Select a tile', es: 'Elige una casilla' },
+    cellInfoHint: { ru: 'Показывает информацию о выбранной зоне.', en: 'Shows information about the selected area.', es: 'Muestra información de la zona seleccionada.' },
+    enter: { ru: '▶ Войти', en: '▶ Enter', es: '▶ Entrar' },
+    bag: { ru: '🎒 Рюкзак', en: '🎒 Bag', es: '🎒 Mochila' },
+    bestiary: { ru: '📖 Бестиарий', en: '📖 Bestiary', es: '📖 Bestiario' },
+    forestRefuge: { ru: 'ЛЕСНОЙ ПРИЮТ', en: 'FOREST HAVEN', es: 'REFUGIO DEL BOSQUE' },
+    cityDesc: { ru: 'Торговый пост на краю Тёмного леса. Отдых, снаряжение, разведданные.', en: 'A trading post on the edge of the Dark Forest. Rest, gear, intel.', es: 'Un puesto comercial al borde del Bosque Oscuro. Descanso, equipo e informes.' },
+    cityServices: { ru: 'Услуги города', en: 'Town services', es: 'Servicios de la ciudad' },
+    trader: { ru: 'Торговец', en: 'Trader', es: 'Mercader' },
+    alchemist: { ru: 'Алхимик', en: 'Alchemist', es: 'Alquimista' },
+    scout: { ru: 'Разведка', en: 'Scout', es: 'Exploración' },
+    traderBorn: { ru: 'ТОРГОВЕЦ БОРН', en: 'TRADER BORN', es: 'MERCADER BORN' },
+    refresh: { ru: '↺ Обновить (20g)', en: '↺ Refresh (20g)', es: '↺ Renovar (20g)' },
+    trade: { ru: 'Торговля', en: 'Trade', es: 'Comercio' },
+    buyTab: { ru: 'Покупка', en: 'Buy', es: 'Comprar' },
+    sellTab: { ru: 'Продажа', en: 'Sell', es: 'Vender' },
+    chooseItemBuy: { ru: 'Выберите товар и нажмите «Купить».', en: 'Choose an item and press “Buy”.', es: 'Elige un objeto y pulsa “Comprar”.' },
+    alchemistRuta: { ru: 'АЛХИМИК РУТА', en: 'ALCHEMIST RUTA', es: 'ALQUIMISTA RUTA' },
+    alchemistHelp: { ru: 'Купите зелья и примените к герою. Ниже — улучшение снаряжения из рюкзака (100💰 / 200💰).', en: 'Buy potions and use them on a hero. Below: upgrade gear from the bag (100💰 / 200💰).', es: 'Compra pociones y úsalas en un héroe. Abajo: mejora equipo de la mochila (100💰 / 200💰).' },
+    potions: { ru: 'Зелья и расходники', en: 'Potions and consumables', es: 'Pociones y consumibles' },
+    gearUpgrade: { ru: 'Улучшение снаряжения', en: 'Gear upgrades', es: 'Mejoras de equipo' },
+    scoutVeira: { ru: 'РАЗВЕДЧИЦА ВЕЙРА', en: 'SCOUT VEIRA', es: 'EXPLORADORA VEIRA' },
+    scoutHint: { ru: 'Вейра изучит ближайший бой на карте: состав врагов после просмотра рекламы.', en: 'Veira will scout the nearest battle on the map: enemy lineup after watching an ad.', es: 'Veira explorará la batalla más cercana del mapa: enemigos tras ver un anuncio.' },
+    getIntel: { ru: '📺 Получить разведданные', en: '📺 Get intel', es: '📺 Obtener informe' },
+    quick: { ru: 'Быстро', en: 'Quick', es: 'Rápido' },
+    leaveTown: { ru: '← Покинуть город', en: '← Leave town', es: '← Salir de la ciudad' },
+    turnOrder: { ru: 'ОЧЕРЁДНОСТЬ', en: 'TURN ORDER', es: 'ORDEN DE TURNO' },
+    deployHint: { ru: 'Перетащите героев в левых 2 колонках. Или нажмите «Начать бой» сразу.', en: 'Drag heroes into the left 2 columns, or press “Start Battle” right away.', es: 'Arrastra héroes a las 2 columnas izquierdas, o pulsa “Iniciar batalla”.' },
+    event: { ru: 'СОБЫТИЕ', en: 'EVENT', es: 'EVENTO' },
+    continueArrow: { ru: 'Продолжить →', en: 'Continue →', es: 'Continuar →' },
+    equipment: { ru: 'СНАРЯЖЕНИЕ', en: 'EQUIPMENT', es: 'EQUIPO' },
+    weapon: { ru: 'Оружие', en: 'Weapon', es: 'Arma' },
+    artifact: { ru: 'Артефакт', en: 'Artifact', es: 'Artefacto' },
+    armor: { ru: 'Броня', en: 'Armor', es: 'Armadura' },
+    inventory: { ru: 'РЮКЗАК', en: 'BAG', es: 'MOCHILA' },
+    pickItem: { ru: 'Выберите предмет в рюкзаке.', en: 'Choose an item in the bag.', es: 'Elige un objeto de la mochila.' },
+    close: { ru: '✕ Закрыть', en: '✕ Close', es: '✕ Cerrar' },
+    doubleGold: { ru: '📺 ×2 ЗОЛОТО [РЕКЛАМА]', en: '📺 ×2 GOLD [AD]', es: '📺 ×2 ORO [ANUNCIO]' },
+    victoryContinue: { ru: '▶ ПРОДОЛЖИТЬ', en: '▶ CONTINUE', es: '▶ CONTINUAR' },
+    defeat: { ru: 'Поражение', en: 'Defeat', es: 'Derrota' },
+    squadFell: { ru: 'Отряд пал...', en: 'The party has fallen...', es: 'El grupo ha caído...' },
+    reviveAd: { ru: '⚡ Древний артефакт [реклама]', en: '⚡ Ancient artifact [ad]', es: '⚡ Artefacto antiguo [anuncio]' },
+    loadLast: { ru: 'Загрузить последнее сохранение', en: 'Load last save', es: 'Cargar último guardado' },
+    restart: { ru: 'Начать заново', en: 'Start over', es: 'Empezar de nuevo' },
+    endingTitle: { ru: 'Победа над Тьмой!', en: 'Victory over Darkness!', es: '¡Victoria sobre la Oscuridad!' },
+    endingText: { ru: 'Тёмный Лорд повержен. Мир спасён благодаря трём героям.', en: 'The Dark Lord is defeated. The world is saved by three heroes.', es: 'El Señor Oscuro ha caído. Tres héroes salvaron el mundo.' },
+    wonderful: { ru: 'Замечательно', en: 'Wonderful', es: 'Excelente' },
+    chooseCreature: { ru: 'Выберите существо из списка.', en: 'Choose a creature from the list.', es: 'Elige una criatura de la lista.' },
+    newAbility: { ru: 'НОВАЯ СПОСОБНОСТЬ!', en: 'NEW ABILITY!', es: '¡NUEVA HABILIDAD!' },
+    ability: { ru: 'Способность', en: 'Ability', es: 'Habilidad' },
+    great: { ru: 'Отлично!', en: 'Great!', es: '¡Genial!' },
+    levelUp: { ru: 'Уровень!', en: 'Level up!', es: '¡Subiste de nivel!' },
+    choosePerkHint: { ru: 'Выберите перк — действие необратимо', en: 'Choose a perk — this cannot be undone', es: 'Elige una mejora; no se puede deshacer' },
+    perkInfoHint: { ru: 'Нажмите на умение чтобы увидеть описание.', en: 'Click a skill to see its description.', es: 'Pulsa una habilidad para ver su descripción.' },
+    sure: { ru: 'Вы уверены?', en: 'Are you sure?', es: '¿Seguro?' },
+    yes: { ru: 'Да', en: 'Yes', es: 'Sí' },
+    no: { ru: 'Нет', en: 'No', es: 'No' },
+    cancel: { ru: 'Отмена', en: 'Cancel', es: 'Cancelar' },
+    sfxAuditorTitle: { ru: 'SFX-АУДИТОР', en: 'SFX AUDITOR', es: 'AUDITOR SFX' },
+    sfxAuditorSub: { ru: 'Сравнение кандидатов для боя и сохранение выбранного варианта', en: 'Compare battle sound candidates and save the selected option', es: 'Compara sonidos de combate y guarda la opción elegida' },
+    ready: { ru: 'Готово', en: 'Ready', es: 'Listo' },
+    resetChoice: { ru: 'Сбросить выбор', en: 'Reset choice', es: 'Restablecer elección' },
+    saveExit: { ru: 'Сохранить и выйти', en: 'Save and exit', es: 'Guardar y salir' },
+    exitNoSave: { ru: 'Выйти без сохранения', en: 'Exit without saving', es: 'Salir sin guardar' },
+    notEnoughGold: { ru: 'Недостаточно золота.', en: 'Not enough gold.', es: 'No hay suficiente oro.' },
+    saveNotFound: { ru: 'Сохранение не найдено.', en: 'Save not found.', es: 'Guardado no encontrado.' },
+    adUnavailable: { ru: 'Реклама недоступна', en: 'Ad unavailable', es: 'Anuncio no disponible' },
+    adCooldown: { ru: 'Реклама временно недоступна (антиспам).', en: 'Ad temporarily unavailable (cooldown).', es: 'Anuncio no disponible temporalmente (espera).' },
+    allHealthy: { ru: '✓ Все здоровы', en: '✓ Everyone healthy', es: '✓ Todos sanos' },
+    adTitle: { ru: 'Реклама', en: 'Ad', es: 'Anuncio' },
+    buy: { ru: 'КУПИТЬ', en: 'BUY', es: 'COMPRAR' },
+    sell: { ru: 'ПРОДАТЬ', en: 'SELL', es: 'VENDER' },
+    apply: { ru: 'Применить', en: 'Use', es: 'Usar' },
+    upgrade: { ru: 'Улучшить', en: 'Upgrade', es: 'Mejorar' },
+    learned: { ru: '✓ Изучено', en: '✓ Learned', es: '✓ Aprendido' },
+    learn: { ru: '+ Изучить', en: '+ Learn', es: '+ Aprender' },
+    common: { ru: 'Обычн.', en: 'Common', es: 'Común' },
+    rare: { ru: 'Редкий', en: 'Rare', es: 'Raro' },
+    epic: { ru: 'Эпик', en: 'Epic', es: 'Épico' },
+    secretGoods: { ru: 'Тайный товар', en: 'Secret goods', es: 'Mercancía secreta' },
+    secret: { ru: 'Тайна', en: 'Secret', es: 'Secreto' },
+    openAd: { ru: '📺 Открыть', en: '📺 Reveal', es: '📺 Revelar' },
+    partyState: { ru: 'СОСТОЯНИЕ ОТРЯДА', en: 'PARTY STATUS', es: 'ESTADO DEL GRUPO' }
+  };
+
+  const I18N_DYNAMIC = {
+    en: {
+      nodeTypes: { 'Миссия': 'Mission', 'Город': 'Town', 'Подземелье': 'Dungeon', 'Событие': 'Event', 'Босс': 'Boss', 'Странник': 'Wanderer', 'Арена': 'Arena', 'Финал': 'Final' },
+      regions: { 'Регион 1 — Дикий лес': 'Region 1 — Wild Forest', 'Регион 2 — Тёмные земли': 'Region 2 — Dark Lands', 'Регион 3 — Цитадель тьмы': 'Region 3 — Citadel of Darkness' },
+      classes: { 'Воин': 'Warrior', 'Лучник': 'Archer', 'Маг': 'Mage', 'Все герои': 'All heroes' },
+      stats: { 'Атака': 'Attack', 'Броня': 'Armor', 'Дальность': 'Range', 'Дальн.': 'Range', 'Ход': 'Move', 'Мана': 'Mana', 'Скорость': 'Speed', 'Макс.HP': 'Max HP', 'Макс.Мана': 'Max Mana' }
+    },
+    es: {
+      nodeTypes: { 'Миссия': 'Misión', 'Город': 'Ciudad', 'Подземелье': 'Mazmorra', 'Событие': 'Evento', 'Босс': 'Jefe', 'Странник': 'Viajero', 'Арена': 'Arena', 'Финал': 'Final' },
+      regions: { 'Регион 1 — Дикий лес': 'Región 1 — Bosque Salvaje', 'Регион 2 — Тёмные земли': 'Región 2 — Tierras Oscuras', 'Регион 3 — Цитадель тьмы': 'Región 3 — Ciudadela Oscura' },
+      classes: { 'Воин': 'Guerrero', 'Лучник': 'Arquero', 'Маг': 'Mago', 'Все герои': 'Todos los héroes' },
+      stats: { 'Атака': 'Ataque', 'Броня': 'Armadura', 'Дальность': 'Alcance', 'Дальн.': 'Alcance', 'Ход': 'Mov.', 'Мана': 'Maná', 'Скорость': 'Velocidad', 'Макс.HP': 'HP máx.', 'Макс.Мана': 'Maná máx.' }
+    }
+  };
+
+  const I18N_EXACT = (() => {
+    const out = {};
+    Object.values(I18N).forEach(entry => {
+      SUPPORTED_LANGUAGES.forEach(lang => {
+        const phrase = entry[lang];
+        if (!phrase) return;
+        const key = phrase.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+        out[key] = entry;
+      });
+    });
+    return out;
+  })();
+
+  function currentLanguage() { return SUPPORTED_LANGUAGES.includes(GameLanguage) ? GameLanguage : 'ru'; }
+  function translateKey(key) { return (I18N[key] && I18N[key][currentLanguage()]) || (I18N[key] && I18N[key].ru) || key; }
+  function normalizeI18nText(text) { return String(text || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function translateText(text) {
+    const target = currentLanguage();
+    if (!text || !normalizeI18nText(text)) return text;
+    const raw = String(text);
+    const leading = raw.match(/^\s*/)[0];
+    const trailing = raw.match(/\s*$/)[0];
+    const core = normalizeI18nText(raw);
+    const exact = I18N_EXACT[core.toLowerCase()];
+    if (exact && exact[target]) return leading + exact[target] + trailing;
+    if (target === 'ru') return raw;
+    return leading + translateDynamicText(core, target) + trailing;
+  }
+  function translateDynamicText(text, target) {
+    const d = I18N_DYNAMIC[target] || I18N_DYNAMIC.en;
+    let out = text;
+    out = out.replace(/^Золото: (\d+) \| Регион: (\d+) \| Ход: (\d+)$/, target === 'es' ? 'Oro: $1 | Región: $2 | Turno: $3' : 'Gold: $1 | Region: $2 | Turn: $3');
+    out = out.replace(/^ОТКРЫТО: (\d+) \/ (\d+)$/, target === 'es' ? 'ABIERTO: $1 / $2' : 'OPENED: $1 / $2');
+    out = out.replace(/^Регион (\d+) · (.+)$/, (_, r, type) => `${target === 'es' ? 'Región' : 'Region'} ${r} · ${(d.nodeTypes && d.nodeTypes[type]) || type}`);
+    out = out.replace(/^Регион (\d+)$/, (_, r) => `${target === 'es' ? 'Región' : 'Region'} ${r}`);
+    Object.entries(d.nodeTypes || {}).forEach(([ru, tr]) => { out = out.replace(new RegExp(`\\b${escapeRegExp(ru)}\\b`, 'g'), tr); });
+    Object.entries(d.regions || {}).forEach(([ru, tr]) => { out = out.replace(ru, tr); });
+    Object.entries(d.classes || {}).forEach(([ru, tr]) => { out = out.replace(new RegExp(`\\b${escapeRegExp(ru)}\\b`, 'g'), tr); });
+    Object.entries(d.stats || {}).forEach(([ru, tr]) => { out = out.replace(new RegExp(`\\b${escapeRegExp(ru)}\\b`, 'g'), tr); });
+    out = out.replace(/Ур\. (\d+)/g, target === 'es' ? 'Nv. $1' : 'Lv. $1');
+    out = out.replace(/ур\. (\d+)/g, target === 'es' ? 'nv. $1' : 'lv. $1');
+    out = out.replace(/в запасе: (\d+)/g, target === 'es' ? 'en reserva: $1' : 'stock: $1');
+    out = out.replace(/улучшение (\d+)💰/g, target === 'es' ? 'mejora $1💰' : 'upgrade $1💰');
+    out = out.replace(/^Ближайших боёв не найдено\.$/, target === 'es' ? 'No hay batallas cercanas.' : 'No nearby battles found.');
+    out = out.replace(/^Разведка Вейры: /, target === 'es' ? 'Informe de Veira: ' : 'Veira intel: ');
+    out = out.replace(/^Недостаточно золота\.$/, target === 'es' ? 'No hay suficiente oro.' : 'Not enough gold.');
+    out = out.replace(/^Сохранение не найдено\.$/, target === 'es' ? 'Guardado no encontrado.' : 'Save not found.');
+    return out;
+  }
+  function escapeRegExp(value) { return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  let i18nObserver = null;
+  let i18nScheduled = false;
+  let i18nApplying = false;
+  function localizeUI(root) {
+    const target = currentLanguage();
+    document.documentElement.lang = target;
+    document.title = target === 'es' ? 'Tres Espadas' : target === 'en' ? 'Three Blades' : 'Three Blades';
+    const start = root || document.body;
+    if (!start || i18nApplying) return;
+    i18nApplying = true;
+    const walker = document.createTreeWalker(start, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const p = node.parentElement;
+        if (!p || p.closest('script,style,textarea,select,[data-i18n-skip]')) return NodeFilter.FILTER_REJECT;
+        return normalizeI18nText(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+      const next = translateText(node.nodeValue);
+      if (next !== node.nodeValue) node.nodeValue = next;
+    });
+    start.querySelectorAll('[title],[aria-label],[placeholder]').forEach(el => {
+      ['title', 'aria-label', 'placeholder'].forEach(attr => {
+        if (!el.hasAttribute(attr)) return;
+        const next = translateText(el.getAttribute(attr));
+        if (next !== el.getAttribute(attr)) el.setAttribute(attr, next);
+      });
+    });
+    const langSelect = document.getElementById('setting-language');
+    if (langSelect) langSelect.value = target;
+    i18nApplying = false;
+  }
+  function scheduleLocalize(root) {
+    if (i18nApplying || i18nScheduled) return;
+    i18nScheduled = true;
+    requestAnimationFrame(() => {
+      i18nScheduled = false;
+      localizeUI(root || document.body);
+    });
+  }
+  function startI18nObserver() {
+    if (i18nObserver || !document.body) return;
+    i18nObserver = new MutationObserver(() => scheduleLocalize(document.body));
+    i18nObserver.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['title', 'aria-label', 'placeholder'] });
+    scheduleLocalize(document.body);
+  }
+  function setGameLanguage(lang) {
+    if (!SUPPORTED_LANGUAGES.includes(lang)) return;
+    GameLanguage = lang;
+    try { localStorage.setItem(LANGUAGE_KEY, lang); } catch (_) {}
+    refreshLocalizedScreen();
+    localizeUI(document.body);
+  }
+  function refreshLocalizedScreen() {
+    try {
+      updateMenuMeta();
+      updateHud();
+      if (ActiveScreen === 'map') renderMap();
+      else if (ActiveScreen === 'city') renderCityUI();
+      else if (ActiveScreen === 'battle') updateBattleUI();
+      else if (ActiveScreen === 'inventory') renderInventoryScreen();
+      else if (ActiveScreen === 'bestiary') renderBestiary();
+    } catch (_) {}
+  }
 
   function loadAudioSettings() {
     const def = { musicEnabled: true, musicVolume: 0.7, sfxEnabled: true, sfxVolume: 0.75 };
@@ -6908,6 +7189,7 @@
   }
   // 13: showScreen with fade transition
   function showScreen(name) {
+    ActiveScreen = name;
     const screenMap = {
       map: 'map-screen', city: 'city-screen', battle: 'battle-screen',
       inventory: 'inventory-screen', victory: 'victory-screen',
@@ -6948,6 +7230,7 @@
       document.getElementById('region-display').textContent = GameState.region;
       document.getElementById('turn-display').textContent = GameState.turn;
       GameBGM.syncToScreen(name);
+      scheduleLocalize(document.body);
     };
 
     // Find currently visible elements to fade out
@@ -8228,6 +8511,7 @@
     const settingMusicVolume = document.getElementById('setting-music-volume');
     const settingSfxEnabled = document.getElementById('setting-sfx-enabled');
     const settingSfxVolume = document.getElementById('setting-sfx-volume');
+    const settingLanguage = document.getElementById('setting-language');
     const btnOpenSfxAuditor = document.getElementById('btn-open-sfx-auditor');
     const btnSfxAuditorClose = document.getElementById('btn-sfx-auditor-close');
     const btnSfxAuditorReset = document.getElementById('btn-sfx-auditor-reset');
@@ -8238,8 +8522,10 @@
         if (settingMusicVolume) settingMusicVolume.value = String(Math.round(s.musicVolume * 100));
         if (settingSfxEnabled) settingSfxEnabled.checked = s.sfxEnabled;
         if (settingSfxVolume) settingSfxVolume.value = String(Math.round(s.sfxVolume * 100));
+        if (settingLanguage) settingLanguage.value = currentLanguage();
         menuSettingsOverlay.classList.add('show');
         menuSettingsOverlay.setAttribute('aria-hidden', 'false');
+        scheduleLocalize(menuSettingsOverlay);
       };
     }
     if (btnMenuSettingsBack && menuSettingsOverlay) {
@@ -8273,6 +8559,10 @@
         saveAudioSettings({ sfxVolume: v });
       };
     }
+    if (settingLanguage) {
+      settingLanguage.value = currentLanguage();
+      settingLanguage.onchange = e => setGameLanguage(e.target.value);
+    }
     if (btnOpenSfxAuditor) btnOpenSfxAuditor.onclick = openSfxAuditor;
     if (btnSfxAuditorClose) btnSfxAuditorClose.onclick = closeSfxAuditor;
     if (btnSfxAuditorReset) btnSfxAuditorReset.onclick = resetSfxOverrides;
@@ -8293,6 +8583,8 @@
       if (adBtn) adBtn.classList.add('hidden');
     }
     updateMenuMeta();
+    startI18nObserver();
+    setGameLanguage(GameLanguage);
   }
   let yandexGameReadySent = false;
   function notifyYandexGameReady(sdk) {
