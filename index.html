@@ -206,6 +206,67 @@
       align-items: stretch;
       position: relative;
     }
+    .map-region-clouds {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      z-index: 5;
+      pointer-events: none;
+      border: 1px solid rgba(180, 190, 230, 0.24);
+      background:
+        radial-gradient(circle at 12% 32%, rgba(210, 220, 255, 0.46) 0 13%, transparent 26%),
+        radial-gradient(circle at 34% 54%, rgba(180, 200, 255, 0.4) 0 16%, transparent 30%),
+        radial-gradient(circle at 58% 28%, rgba(225, 230, 255, 0.42) 0 15%, transparent 31%),
+        radial-gradient(circle at 78% 62%, rgba(170, 185, 235, 0.44) 0 17%, transparent 33%),
+        linear-gradient(90deg, rgba(11, 15, 30, 0.78), rgba(35, 44, 76, 0.66), rgba(11, 15, 30, 0.78));
+      background-size: 120% 100%, 130% 100%, 125% 100%, 115% 100%, 100% 100%;
+      box-shadow: inset 0 0 28px rgba(210, 220, 255, 0.22), 0 0 18px rgba(20, 25, 45, 0.55);
+      backdrop-filter: blur(2px);
+      animation: regionCloudDrift 7s ease-in-out infinite alternate;
+      overflow: hidden;
+    }
+    .map-region-clouds::before,
+    .map-region-clouds::after {
+      content: '';
+      position: absolute;
+      inset: -16% -10%;
+      background:
+        radial-gradient(circle at 15% 45%, rgba(235,245,255,0.34) 0 8%, transparent 18%),
+        radial-gradient(circle at 45% 35%, rgba(205,220,255,0.28) 0 11%, transparent 23%),
+        radial-gradient(circle at 73% 55%, rgba(240,245,255,0.30) 0 10%, transparent 22%);
+      animation: regionCloudPulse 5.5s ease-in-out infinite alternate;
+    }
+    .map-region-clouds::after {
+      animation-duration: 8s;
+      animation-direction: alternate-reverse;
+      opacity: 0.75;
+      transform: translateX(4%);
+    }
+    .map-region-clouds .map-region-cloud-label {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #dfe8ff;
+      text-shadow: 0 2px 8px #050510, 0 0 8px #050510;
+      font-size: 8px;
+      letter-spacing: 1px;
+      line-height: 1.4;
+      padding: 8px;
+    }
+    .map-region-clouds.region-2 { top: calc(8px + (100% - 16px) * 3 / 8); height: calc((100% - 16px) * 3 / 8); }
+    .map-region-clouds.region-3 { top: calc(8px + (100% - 16px) * 6 / 8); height: calc((100% - 16px) * 2 / 8); }
+    @keyframes regionCloudDrift {
+      from { background-position: 0% 0%, 8% 0%, 14% 0%, 2% 0%, 0 0; }
+      to { background-position: 10% 0%, -6% 0%, 4% 0%, 14% 0%, 0 0; }
+    }
+    @keyframes regionCloudPulse {
+      from { transform: translateX(-3%) scale(1); opacity: 0.58; }
+      to { transform: translateX(5%) scale(1.05); opacity: 0.88; }
+    }
     #map-screen .node-grid {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
@@ -258,7 +319,7 @@
     }
     #map-screen .map-node:hover:not(.hidden):not(.locked) { border-color: rgba(240, 165, 0, 0.85); }
     #map-screen .map-node.done:not(.hidden) { opacity: 0.5; }
-    #map-screen .map-node.locked { opacity: 0.45; cursor: not-allowed; }
+    #map-screen .map-node.locked { opacity: 0.18; cursor: not-allowed; filter: saturate(0.5) blur(0.5px); }
     #map-screen .map-node.current { border-color: rgba(240, 165, 0, 0.95); background: rgba(26, 21, 0, 0.88); box-shadow: 0 0 0 1px rgba(240, 165, 0, 0.5); }
     #map-screen .map-node small { font-size: 5px; color: var(--text-hint); margin-top: 1px; line-height: 1.2; }
     #map-screen .map-node .map-node-face,
@@ -2068,7 +2129,7 @@
             <span style="flex-shrink:0">Громкость SFX</span>
             <input type="range" id="setting-sfx-volume" min="0" max="100" value="75" step="1" aria-label="Громкость звуков боя" />
           </div>
-          <button type="button" class="btn btn-gold" id="btn-open-sfx-auditor" style="width:100%;font-size:9px">▶ SFX-аудитор</button>
+          <button type="button" class="btn btn-gold hidden" id="btn-open-sfx-auditor" style="width:100%;font-size:9px">▶ SFX-аудитор</button>
           <p class="menu-settings-hint">При сворачивании вкладки или окна музыка и звуки боя останавливаются (требование площадки).</p>
           <button type="button" class="menu-btn menu-btn-continue" id="btn-menu-settings-back" style="margin-top:4px">
             <span class="menu-btn-icon">←</span>
@@ -2087,6 +2148,8 @@
       <div class="map-screen-layout">
         <div class="map-grid-wrap">
           <div id="map-nodes" class="node-grid"></div>
+          <div id="region-cloud-2" class="map-region-clouds region-2 hidden"><span class="map-region-cloud-label">Регион закрыт<br>Победите босса</span></div>
+          <div id="region-cloud-3" class="map-region-clouds region-3 hidden"><span class="map-region-cloud-label">Регион закрыт<br>Победите босса</span></div>
         </div>
         <div class="map-panel">
           <div class="map-panel-title">ЛОКАЦИЯ</div>
@@ -2508,6 +2571,8 @@
     recordKills: { ru: 'Побеждено врагов', en: 'Enemies defeated', es: 'Enemigos vencidos' },
     recordTurns: { ru: 'Лучшая победа', en: 'Best victory', es: 'Mejor victoria' },
     noRecord: { ru: '—', en: '—', es: '—' },
+    lockedRegion: { ru: 'Регион закрыт', en: 'Region locked', es: 'Región bloqueada' },
+    defeatBoss: { ru: 'Победите босса', en: 'Defeat the boss', es: 'Derrota al jefe' },
     sound: { ru: 'Звук', en: 'Sound', es: 'Sonido' },
     music: { ru: 'Музыка', en: 'Music', es: 'Música' },
     volume: { ru: 'Громкость', en: 'Volume', es: 'Volumen' },
@@ -3031,6 +3096,7 @@
     });
     const langSelect = document.getElementById('setting-language');
     if (langSelect) langSelect.value = target;
+    updateRegionClouds();
     i18nApplying = false;
   }
   function scheduleLocalize(root) {
@@ -3072,6 +3138,16 @@
     if (center) {
       center.innerHTML = `${translateKey('gold')}: <span id="gold-display">${GameState.gold}</span> | ${translateKey('region')}: <span id="region-display">${GameState.region}</span> | ${translateKey('turn')}: <span id="turn-display">${GameState.turn}</span>`;
     }
+  }
+  function updateRegionClouds() {
+    [2, 3].forEach(region => {
+      const el = document.getElementById(`region-cloud-${region}`);
+      if (!el) return;
+      const locked = (GameState.regionUnlocked || 1) < region;
+      el.classList.toggle('hidden', !locked);
+      const label = el.querySelector('.map-region-cloud-label');
+      if (label) label.innerHTML = `${translateKey('lockedRegion')}<br>${translateKey('defeatBoss')}`;
+    });
   }
   function refreshLocalizedScreen() {
     try {
@@ -4600,6 +4676,9 @@
       return sum + h.attack + h.armor + h.maxHp / 10 + h.range + h.speed / 2;
     }, 0);
   }
+  function isHardcoreMode() {
+    return GameState.difficulty === 'hardcore';
+  }
 
   // Fixed stats for bosses — do NOT scale with partyPower
   const BOSS_PROFILES = {
@@ -4632,6 +4711,12 @@
     } else {
       // Regular enemies: scale with partyPower
       ({ hp, attack, armor } = scaleEnemy(d, pp, region));
+    }
+    if (isHardcoreMode()) {
+      const bossMul = BOSS_PROFILES[type] ? 1.18 : 1.22;
+      hp = Math.ceil(hp * bossMul);
+      attack = Math.ceil(attack * (BOSS_PROFILES[type] ? 1.12 : 1.18));
+      armor = Math.ceil(armor * 1.12);
     }
 
     const u = {
@@ -5251,6 +5336,7 @@
     let gold = cell?.type === 'dungeon' ? randInt(45, 80) : randInt(20, 35);
     if (cell?.type === 'boss') gold = randInt(120, 160);
     if (cell?.type === 'final') gold = 300;
+    if (isHardcoreMode()) gold = Math.max(1, Math.round(gold * 0.85));
     // Gold bonus from amulet_luck artifact
     const goldMult = GameState.heroes.reduce((m, h) => {
       const item = getEquippedItem(h, 'artifact');
@@ -7664,6 +7750,9 @@
       if (cell.type === 'mission') cnt = 4;
       if (cell.type === 'dungeon') cnt = 5;
     }
+    if (isHardcoreMode() && ['mission', 'dungeon', 'arena'].includes(cell.type)) {
+      cnt += 1;
+    }
     const wave = [];
     for (let i = 0; i < cnt; i++) wave.push(pool[randInt(0, pool.length - 1)]);
     return wave;
@@ -7815,12 +7904,12 @@
     document.getElementById('game-menu-overlay').classList.remove('show');
   }
   function setDifficulty(mode) {
-    GameState.difficulty = mode;
+    GameState.difficulty = mode === 'hardcore' ? 'hardcore' : 'normal';
     const dn = document.getElementById('diff-normal');
     const dh = document.getElementById('diff-hard');
     if (!dn || !dh) return;
-    dn.className = 'menu-diff-btn' + (mode === 'normal' ? ' active-normal' : '');
-    dh.className = 'menu-diff-btn' + (mode === 'hardcore' ? ' active-hard' : '');
+    dn.className = 'menu-diff-btn' + (GameState.difficulty === 'normal' ? ' active-normal' : '');
+    dh.className = 'menu-diff-btn' + (GameState.difficulty === 'hardcore' ? ' active-hard' : '');
   }
 
   function initMenuScreen() {
@@ -7894,7 +7983,7 @@
   function startNewGame() {
     initHeroesFromTemplate();
     buildWorldMap();
-    GameState.gold = 20;
+    GameState.gold = isHardcoreMode() ? 10 : 20;
     GameState.turn = 1;
     GameState.inventory = [];
     GameState.consumables = {};
@@ -8058,6 +8147,7 @@
         <div class="cell-info-name">Регион ${selectedNode.region} · ${typeNames[selectedNode.type] || selectedNode.type}</div>
         <div>Текущая точка отряда.</div>`;
     }
+    updateRegionClouds();
     const enterBtn = document.getElementById('btn-map-enter');
     if (enterBtn) enterBtn.onclick = () => {
       const node = selectedNode || getCurrentCell();
