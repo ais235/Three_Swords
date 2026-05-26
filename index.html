@@ -28,7 +28,7 @@
       background: var(--bg-dark);
       color: var(--text-main);
       font-family: "Courier New", Consolas, monospace;
-      font-size: 8px;
+      font-size: 10px;
       line-height: 1.45;
       height: 100vh;
       overflow: hidden;
@@ -47,10 +47,10 @@
       align-items: center;
       justify-content: space-between;
       color: var(--text-main);
-      font-size: 7px;
+      font-size: 10px;
       line-height: 1.35;
     }
-    #topbar-center { text-align: center; flex: 1; font-size: 7px; line-height: 1.4; min-width: 0; }
+    #topbar-center { text-align: center; flex: 1; font-size: 10px; line-height: 1.4; min-width: 0; }
     #topbar-right { min-width: 110px; text-align: right; }
     #btn-open-menu { padding: 4px 8px; margin: 0; }
     .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
@@ -252,7 +252,7 @@
       text-align: center;
       color: #dfe8ff;
       text-shadow: 0 2px 8px #050510, 0 0 8px #050510;
-      font-size: 8px;
+      font-size: 10px;
       letter-spacing: 1px;
       line-height: 1.4;
       padding: 8px;
@@ -1569,6 +1569,68 @@
     .eq-mini { font-size: 10px; opacity: 0.9; margin-left: 3px; display: inline-flex; align-items: center; gap: 3px; flex-wrap: nowrap; vertical-align: middle; }
     .eq-mini-icon { display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
     .eq-mini-dot { opacity: 0.85; font-size: 10px; }
+
+    @media (min-width: 900px) and (min-height: 560px) and (hover: hover) and (pointer: fine) {
+      .btn { font-size: 10px; min-height: 30px; }
+      .map-panel-title,
+      .map-fog-counter,
+      .cell-info,
+      .cell-info-name { font-size: 10px; }
+      #map-screen .map-node small { font-size: 7px; }
+
+      .npc-tab,
+      .hero-hp-name,
+      .hero-heal-btn,
+      .shop-footer,
+      .trader-mode-tab,
+      .city-shortcuts .sc-btn,
+      .alchemist-help,
+      .alchemist-section-title,
+      .alchemist-row-info,
+      .alchemist-row-meta { font-size: 10px; }
+
+      .city-banner-title,
+      .shop-title,
+      .services-title,
+      .alchemist-panel-title,
+      .oracle-panel-title { font-size: 13px; }
+
+      .city-banner-desc,
+      .service-desc { font-size: 10px; }
+
+      #shop-list .card-name,
+      #shop-sell-list .card-name { font-size: 11px; }
+      #shop-list .card-stat,
+      #shop-sell-list .card-stat,
+      #shop-list .card-desc,
+      #shop-sell-list .card-desc { font-size: 10px; }
+      #shop-list .btn-buy,
+      #shop-sell-list .btn-sell { font-size: 9px; padding: 5px 8px; }
+      #shop-list .card-price,
+      #shop-sell-list .card-price { font-size: 12px; }
+      #shop-list .card-footer .badge,
+      #shop-sell-list .card-footer .badge { font-size: 9px; }
+
+      .heroes-bar-title,
+      .party-card,
+      .eq-mini,
+      .bestiary-card-name,
+      .bestiary-text,
+      .bestiary-weakness,
+      .inv-portrait-class,
+      .stat-row,
+      .inv-pack-header,
+      #inv-paperdoll-title,
+      #inv-detail,
+      .eq-slot-heading,
+      .eq-slot-item-name,
+      .item-detail-sub,
+      .item-detail-desc { font-size: 10px; }
+
+      .item-detail-title,
+      .inv-portrait-name { font-size: 14px; }
+      .item-detail-stats { font-size: 12px; }
+    }
 
     /* City trader icons — desktop, как слоты экипировки (64px) */
     @media (min-width: 900px) and (min-height: 520px) and (hover: hover) and (pointer: fine) {
