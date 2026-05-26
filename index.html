@@ -2107,6 +2107,183 @@
       #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
       .btn { padding: 6px 8px; }
     }
+
+    /* Readability pass: the local monospace font needs larger sizes than the old webfont. */
+    body {
+      font-size: 12px;
+    }
+    #game-container {
+      max-width: min(1360px, 100vw);
+    }
+    #hud-top,
+    #topbar-center,
+    .btn,
+    button,
+    input,
+    select,
+    textarea {
+      font-size: 12px !important;
+    }
+    .btn {
+      min-height: 34px;
+      padding: 7px 14px;
+      line-height: 1.35;
+    }
+    .map-panel,
+    .cell-info,
+    #battle-log,
+    #unit-panel,
+    #unit-stats,
+    .deploy-hint-box,
+    .game-alert-text,
+    #confirm-text,
+    .game-prompt-label,
+    #inv-detail {
+      font-size: 12px !important;
+      line-height: 1.55;
+    }
+    #map-screen .map-node {
+      font-size: clamp(10px, 1.35vmin, 14px) !important;
+      line-height: 1.25;
+    }
+    #map-screen .map-node small {
+      font-size: 9px !important;
+      line-height: 1.25;
+    }
+    .map-region-clouds .map-region-cloud-label,
+    .map-panel-title,
+    .map-fog-counter,
+    .cell-info-name,
+    #map-help,
+    .party-card {
+      font-size: 12px !important;
+    }
+    .city-body {
+      grid-template-columns: 210px 1fr 210px;
+    }
+    .city-banner-title,
+    .shop-title,
+    .alchemist-panel-title,
+    .oracle-panel-title,
+    .services-title,
+    .city-shortcuts-title,
+    .bestiary-detail-name,
+    .perk-modal-title,
+    .item-detail-title,
+    .inv-portrait-name {
+      font-size: 15px !important;
+      line-height: 1.35;
+    }
+    .city-banner-desc,
+    .npc-tab,
+    .npc-tab-text,
+    .heroes-bar-title,
+    .hero-hp-name,
+    .hero-heal-btn,
+    .shop-footer,
+    .trader-mode-tab,
+    .badge,
+    .service-name,
+    .service-desc,
+    .alchemist-help,
+    .alchemist-section-title,
+    .alchemist-row-info,
+    .alchemist-row-meta,
+    .alchemist-row-actions .btn,
+    .oracle-hint,
+    .bestiary-bar-title,
+    .bestiary-bar-count,
+    .bestiary-card-name,
+    .bestiary-card-status,
+    .bestiary-stat,
+    .bestiary-section-label,
+    .bestiary-text,
+    .bestiary-weakness,
+    .bestiary-locked,
+    .bestiary-region-badge,
+    .skill-unlock-header,
+    .skill-unlock-desc,
+    .skill-unlock-meta,
+    .perk-modal-hint,
+    .perk-col-header,
+    .perk-skill-name,
+    .perk-detail-branch,
+    .perk-detail-effect,
+    .perk-detail-desc,
+    .stat-row,
+    .inv-tab,
+    .inv-portrait-class,
+    .inv-perks-label,
+    .equip-slot-name,
+    .eq-mini,
+    .inv-item-price,
+    .inv-item-name,
+    .item-detail-sub,
+    .item-detail-stats,
+    .item-detail-desc {
+      font-size: 11px !important;
+      line-height: 1.45;
+    }
+    .hero-card-name,
+    .hero-card-class,
+    .bar-label,
+    .hero-mini-stats,
+    .br-label,
+    .battle-actions .btn,
+    #battle-log-toggle,
+    #mode-badge,
+    .menu-settings-title,
+    .menu-settings-sub,
+    .menu-settings-row,
+    .menu-settings-select,
+    .menu-record-val,
+    .menu-record-label,
+    .menu-settings-hint,
+    .event-type-label,
+    .victory-subtitle-text,
+    .vic-stat-card-lbl,
+    .vic-hero-name,
+    .vic-hero-xp,
+    .vic-hero-hp-text,
+    .vic-levelup-badge,
+    .vic-loot-title,
+    .vic-loot-name,
+    .vic-loot-stat,
+    .vic-loot-badge,
+    .vic-bestiary-label {
+      font-size: 11px !important;
+      line-height: 1.45;
+    }
+    #shop-list .card-name,
+    #shop-sell-list .card-name {
+      font-size: 12px !important;
+      line-height: 1.45;
+    }
+    #shop-list .card-stat,
+    #shop-sell-list .card-stat,
+    #shop-list .card-desc,
+    #shop-sell-list .card-desc,
+    #shop-list .btn-buy,
+    #shop-sell-list .btn-sell,
+    #shop-list .card-footer .badge,
+    #shop-sell-list .card-footer .badge {
+      font-size: 11px !important;
+      line-height: 1.35;
+    }
+    #shop-list .card-price,
+    #shop-sell-list .card-price,
+    .stats-line,
+    .bestiary-stat b,
+    .skill-unlock-name,
+    .perk-detail-name {
+      font-size: 14px !important;
+    }
+    .menu-btn,
+    .menu-diff-btn,
+    .menu-diff-label {
+      font-size: 12px !important;
+      line-height: 1.35;
+    }
   </style>
   <script src="https://yandex.ru/games/sdk/v2"></script>
 </head>
