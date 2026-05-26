@@ -4,7 +4,7 @@
 
 - **Чистый клиент**: один HTML-файл с встроенными `<style>` и `<script>`.
 - **Язык**: JavaScript (без сборщика в репозитории для основной игры).
-- **Хранение прогресса**: `localStorage` (ключи `threeHeroesSave` и дублирующий `save`); отдельно `threeBladesBest` для рекордов золота/убийств.
+- **Хранение прогресса**: `localStorage` как гостевой fallback (ключи `threeHeroesSave` и дублирующий `save`), плюс облачные сохранения Яндекс Игр через `ysdk.getPlayer().setData/getData`; отдельно `threeBladesRecordsV1` для рекордов.
 - **Платформа**: ориентир на **Яндекс Игры** (в HTML закомментирован SDK; есть хуки рекламы `showRewardedAd`, интервалы `AD_MIN_INTERVAL_MS`, `BONUS_GOLD_CD_MS`).
 
 ## Основной файл

@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Three Blades</title>
+  <title>Три клинка</title>
   <style>
     :root {
       --bg-dark: #0d0d1a;
@@ -28,7 +27,7 @@
       margin: 0;
       background: var(--bg-dark);
       color: var(--text-main);
-      font-family: 'Press Start 2P', monospace;
+      font-family: "Courier New", Consolas, monospace;
       font-size: 8px;
       line-height: 1.45;
       height: 100vh;
@@ -937,6 +936,22 @@
       font-family: inherit;
       font-size: 8px;
     }
+    .menu-records {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+    .menu-record-cell {
+      background: #0d0d1a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 4px;
+      text-align: center;
+      min-width: 0;
+    }
+    .menu-record-val { color: var(--accent-gold); font-size: 9px; margin-bottom: 4px; }
+    .menu-record-label { color: var(--text-dim); font-size: 6px; line-height: 1.3; }
     .menu-settings-hint {
       font-size: 6px;
       color: #666688;
@@ -2036,6 +2051,8 @@
               <option value="es">Español</option>
             </select>
           </div>
+          <p class="menu-settings-sub">Рекорды</p>
+          <div id="settings-records" class="menu-records"></div>
           <p class="menu-settings-sub">Звук</p>
           <div class="menu-settings-row">
             <label><input type="checkbox" id="setting-music-enabled" checked /> Музыка</label>
@@ -2417,10 +2434,19 @@
   const TILE_EMOJI = { [TILE.GROUND]: '🟫', [TILE.FOREST]: '🌲', [TILE.MOUNTAIN]: '⛰️', [TILE.WATER]: '💧', [TILE.FORT]: '🏰', [TILE.FIRE]: '🔥' };
   const STATUS = { STUN: 'stun', FREEZE: 'freeze', WEB: 'web', POISON: 'poison', BURN: 'burn', SLOW: 'slow', BLIND: 'blind', CURSE: 'curse', BERSERK: 'berserk', STEALTH: 'stealth' };
   const SAVE_KEY = 'threeHeroesSave';
+  const LEGACY_SAVE_KEY = 'save';
+  const RECORDS_KEY = 'threeBladesRecordsV1';
   const AUDIO_SETTINGS_KEY = 'threeBladesAudioV1';
   const SFX_OVERRIDES_KEY = 'threeBladesSfxOverridesV1';
   const LANGUAGE_KEY = 'threeBladesLanguageV1';
   const SUPPORTED_LANGUAGES = ['ru', 'en', 'es'];
+  const CLOUD_SAVE_VERSION = 1;
+  const LEADERBOARDS = {
+    maxGold: 'three_blades_max_gold',
+    enemiesDefeated: 'three_blades_enemies_defeated',
+    fastVictory: 'three_blades_fast_victory'
+  };
+  const FAST_VICTORY_BASE_SCORE = 100000;
   const BGM_TRACKS = {
     'menu-cinematic': ['assets/audio/menu-cinematic/bgm_menu_cinematic_01.mp3'],
     battle: [
@@ -2445,12 +2471,29 @@
     if (nav.startsWith('en')) return 'en';
     return 'ru';
   }
+  function hasSavedLanguagePreference() {
+    try { return SUPPORTED_LANGUAGES.includes(localStorage.getItem(LANGUAGE_KEY)); } catch (_) { return false; }
+  }
+  function normalizeSupportedLanguage(lang) {
+    const v = String(lang || '').toLowerCase();
+    if (v.startsWith('es')) return 'es';
+    if (v.startsWith('en')) return 'en';
+    if (v.startsWith('ru')) return 'ru';
+    return 'en';
+  }
+  function applySdkLanguage(sdk) {
+    if (hasSavedLanguagePreference()) return;
+    const sdkLang = sdk?.environment?.i18n?.lang;
+    if (!sdkLang) return;
+    setGameLanguage(normalizeSupportedLanguage(sdkLang), { persist: false });
+  }
 
   let GameLanguage = detectInitialLanguage();
   let ActiveScreen = 'menu';
 
   const I18N = {
     gameTitle: { ru: 'ТРИ  КЛИНКА', en: 'THREE BLADES', es: 'TRES ESPADAS' },
+    pageTitle: { ru: 'Три клинка', en: 'Three Blades', es: 'Tres Espadas' },
     newGame: { ru: 'Новая игра', en: 'New Game', es: 'Nueva partida' },
     continue: { ru: 'Продолжить', en: 'Continue', es: 'Continuar' },
     about: { ru: 'Об игре', en: 'About', es: 'Acerca del juego' },
@@ -2460,6 +2503,11 @@
     hardcore: { ru: 'ХАРДКОР', en: 'HARDCORE', es: 'DIFÍCIL' },
     settingsTitle: { ru: 'НАСТРОЙКИ', en: 'SETTINGS', es: 'AJUSTES' },
     language: { ru: 'Язык', en: 'Language', es: 'Idioma' },
+    records: { ru: 'Рекорды', en: 'Records', es: 'Récords' },
+    recordGold: { ru: 'Макс. золото', en: 'Max gold', es: 'Oro máx.' },
+    recordKills: { ru: 'Побеждено врагов', en: 'Enemies defeated', es: 'Enemigos vencidos' },
+    recordTurns: { ru: 'Лучшая победа', en: 'Best victory', es: 'Mejor victoria' },
+    noRecord: { ru: '—', en: '—', es: '—' },
     sound: { ru: 'Звук', en: 'Sound', es: 'Sonido' },
     music: { ru: 'Музыка', en: 'Music', es: 'Música' },
     volume: { ru: 'Громкость', en: 'Volume', es: 'Volumen' },
@@ -2898,7 +2946,7 @@
         const phrase = entry[lang];
         if (!phrase) return;
         const key = phrase.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
-        out[key] = entry;
+        if (!out[key]) out[key] = entry;
       });
     });
     return out;
@@ -2957,7 +3005,7 @@
   function localizeUI(root) {
     const target = currentLanguage();
     document.documentElement.lang = target;
-    document.title = target === 'es' ? 'Tres Espadas' : target === 'en' ? 'Three Blades' : 'Three Blades';
+    document.title = I18N.pageTitle[target] || I18N.pageTitle.ru;
     const start = root || document.body;
     if (!start || i18nApplying) return;
     i18nApplying = true;
@@ -2999,16 +3047,36 @@
     i18nObserver.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['title', 'aria-label', 'placeholder', 'alt'] });
     scheduleLocalize(document.body);
   }
-  function setGameLanguage(lang) {
+  function setGameLanguage(lang, options = {}) {
     if (!SUPPORTED_LANGUAGES.includes(lang)) return;
     GameLanguage = lang;
-    try { localStorage.setItem(LANGUAGE_KEY, lang); } catch (_) {}
+    if (options.persist !== false) {
+      try { localStorage.setItem(LANGUAGE_KEY, lang); } catch (_) {}
+    }
     refreshLocalizedScreen();
     localizeUI(document.body);
+  }
+  function updateRecordsSummary() {
+    const el = document.getElementById('settings-records');
+    if (!el) return;
+    const r = loadRecords();
+    const turns = r.bestVictoryTurns ? String(r.bestVictoryTurns) : translateKey('noRecord');
+    el.innerHTML = `
+      <div class="menu-record-cell"><div class="menu-record-val">${r.maxGold || 0}</div><div class="menu-record-label">${translateKey('recordGold')}</div></div>
+      <div class="menu-record-cell"><div class="menu-record-val">${r.enemiesDefeated || 0}</div><div class="menu-record-label">${translateKey('recordKills')}</div></div>
+      <div class="menu-record-cell"><div class="menu-record-val">${turns}</div><div class="menu-record-label">${translateKey('recordTurns')}</div></div>
+    `;
+  }
+  function updateHud() {
+    const center = document.getElementById('topbar-center');
+    if (center) {
+      center.innerHTML = `${translateKey('gold')}: <span id="gold-display">${GameState.gold}</span> | ${translateKey('region')}: <span id="region-display">${GameState.region}</span> | ${translateKey('turn')}: <span id="turn-display">${GameState.turn}</span>`;
+    }
   }
   function refreshLocalizedScreen() {
     try {
       updateMenuMeta();
+      updateRecordsSummary();
       updateHud();
       if (ActiveScreen === 'map') renderMap();
       else if (ActiveScreen === 'city') renderCityUI();
@@ -3143,6 +3211,7 @@
   };
 
   const AD_MIN_INTERVAL_MS = 3 * 60 * 1000;
+  const INTERSTITIAL_MIN_INTERVAL_MS = 4 * 60 * 1000;
   const BONUS_GOLD_CD_MS = 5 * 60 * 1000;
   const MAP_COLS = 12;
   const MAP_ROWS = 8;
@@ -4192,44 +4261,181 @@
       return x;
     });
   }
-  function saveGame() {
+  const YandexServices = {
+    sdk: null,
+    player: null,
+    cloudReady: false,
+    saveTimer: null,
+    pendingSave: null,
+    lastCloudSaveAt: 0,
+    interstitialLastAt: 0,
+    interstitialOpen: false
+  };
+
+  function defaultRecords() {
+    return { maxGold: 0, enemiesDefeated: 0, bestVictoryTurns: null, updatedAt: 0 };
+  }
+
+  function loadRecords() {
+    try {
+      const raw = localStorage.getItem(RECORDS_KEY) || localStorage.getItem('threeBladesBest');
+      if (!raw) return defaultRecords();
+      const data = JSON.parse(raw);
+      return {
+        maxGold: Math.max(Number(data.maxGold ?? data.gold ?? 0) || 0, 0),
+        enemiesDefeated: Math.max(Number(data.enemiesDefeated ?? data.kills ?? 0) || 0, 0),
+        bestVictoryTurns: Number.isFinite(Number(data.bestVictoryTurns)) ? Number(data.bestVictoryTurns) : null,
+        updatedAt: Number(data.updatedAt || 0) || 0
+      };
+    } catch (_) {
+      return defaultRecords();
+    }
+  }
+
+  function saveRecords(records) {
+    try {
+      localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+      localStorage.setItem('threeBladesBest', JSON.stringify({ gold: records.maxGold || 0, kills: records.enemiesDefeated || 0 }));
+    } catch (_) {}
+  }
+
+  function updateRecordsFromState(opts = {}) {
+    const records = loadRecords();
+    let changed = false;
+    const gold = Number(GameState.gold || 0) || 0;
+    const kills = Number(GameState.stats?.kills || 0) || 0;
+    if (gold > (records.maxGold || 0)) { records.maxGold = gold; changed = true; }
+    if (kills > (records.enemiesDefeated || 0)) { records.enemiesDefeated = kills; changed = true; }
+    if (opts.finished) {
+      const turns = Math.max(1, Number(GameState.turn || 1) || 1);
+      if (!records.bestVictoryTurns || turns < records.bestVictoryTurns) {
+        records.bestVictoryTurns = turns;
+        changed = true;
+      }
+    }
+    if (changed) {
+      records.updatedAt = Date.now();
+      saveRecords(records);
+      submitLeaderboards(records);
+    }
+    return records;
+  }
+
+  function createSaveSnapshot() {
     const snap = deepClone(GameState);
     snap.adPaused = false;
     snap.pendingEnemyTurnAfterAd = false;
+    snap.savedAt = Date.now();
+    snap.saveVersion = CLOUD_SAVE_VERSION;
+    return snap;
+  }
+
+  function applySaveSnapshot(o) {
+    Object.assign(GameState, o);
+    if (!GameState.heroes || !GameState.heroes.length) initHeroesFromTemplate();
+    if (!GameState.mapGrid || GameState.mapGrid.length !== MAP_CELL_TOTAL) buildWorldMap();
+    else {
+      if (!Array.isArray(GameState.mapFogVisited)) GameState.mapFogVisited = [];
+      if (GameState.mapFogVisited.length === 0) {
+        GameState.mapGrid.forEach(c => { if (c.visited) mapFogVisitedAdd(c.y, c.x); });
+      }
+    }
+    ensureCurrentCellFogVisited();
+    if (!GameState.bestiary) GameState.bestiary = {};
+    if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
+    if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
+    if (!GameState.consumables || typeof GameState.consumables !== 'object') GameState.consumables = {};
+    if (!GameState.stats || typeof GameState.stats !== 'object') GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
+    GameState.adPaused = false;
+    GameState.pendingEnemyTurnAfterAd = false;
+    sanitizeAllHeroEquipment();
+    updateRecordsFromState();
+    return true;
+  }
+
+  function localSaveTimestamp() {
+    try {
+      const s = localStorage.getItem(SAVE_KEY) || localStorage.getItem(LEGACY_SAVE_KEY);
+      return s ? (JSON.parse(s).savedAt || 0) : 0;
+    } catch (_) { return 0; }
+  }
+
+  function queueCloudSave(snap, flush = false) {
+    if (!YandexServices.player) return;
+    YandexServices.pendingSave = snap || createSaveSnapshot();
+    clearTimeout(YandexServices.saveTimer);
+    const delay = flush ? 0 : 1500;
+    YandexServices.saveTimer = setTimeout(() => flushCloudSave(flush), delay);
+  }
+
+  async function flushCloudSave(flush = false) {
+    const player = YandexServices.player;
+    const snap = YandexServices.pendingSave;
+    if (!player || !snap) return;
+    YandexServices.pendingSave = null;
+    try {
+      await player.setData({ save: snap, records: loadRecords(), saveVersion: CLOUD_SAVE_VERSION }, !!flush);
+      YandexServices.lastCloudSaveAt = Date.now();
+      YandexServices.cloudReady = true;
+    } catch (e) {
+      console.warn('Cloud save failed', e);
+    }
+  }
+
+  async function initYandexPlayer(sdk) {
+    try {
+      const player = await sdk.getPlayer();
+      YandexServices.player = player;
+      const data = await player.getData(['save', 'records']);
+      if (data && data.records) {
+        const localRecords = loadRecords();
+        if ((data.records.updatedAt || 0) > (localRecords.updatedAt || 0)) saveRecords(data.records);
+      }
+      if (data && data.save && (data.save.savedAt || 0) > localSaveTimestamp()) {
+        try {
+          localStorage.setItem(SAVE_KEY, JSON.stringify(data.save));
+          localStorage.setItem(LEGACY_SAVE_KEY, JSON.stringify(data.save));
+        } catch (_) {}
+        if (ActiveScreen === 'menu') updateMenuMeta();
+      }
+      YandexServices.cloudReady = true;
+    } catch (e) {
+      console.warn('Yandex player unavailable', e);
+    }
+  }
+
+  function submitLeaderboards(records = loadRecords()) {
+    const lb = window.ysdk?.leaderboards;
+    if (!lb?.setScore) return;
+    const calls = [];
+    if (records.maxGold > 0) calls.push([LEADERBOARDS.maxGold, records.maxGold, 'maxGold']);
+    if (records.enemiesDefeated > 0) calls.push([LEADERBOARDS.enemiesDefeated, records.enemiesDefeated, 'enemiesDefeated']);
+    if (records.bestVictoryTurns) {
+      calls.push([LEADERBOARDS.fastVictory, Math.max(1, FAST_VICTORY_BASE_SCORE - records.bestVictoryTurns), `turns:${records.bestVictoryTurns}`]);
+    }
+    calls.forEach(([name, score, extra]) => {
+      try {
+        const res = lb.setScore(name, score, String(extra || ''));
+        if (res && typeof res.catch === 'function') res.catch(() => {});
+      } catch (_) {}
+    });
+  }
+
+  function saveGame() {
+    const snap = createSaveSnapshot();
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(snap));
-      localStorage.setItem('save', JSON.stringify(snap));
-      const bestRaw = localStorage.getItem('threeBladesBest');
-      const best = bestRaw ? JSON.parse(bestRaw) : { gold: 0, kills: 0 };
-      if ((GameState.gold || 0) > (best.gold || 0) || (GameState.stats?.kills || 0) > (best.kills || 0)) {
-        localStorage.setItem('threeBladesBest', JSON.stringify({ gold: GameState.gold || 0, kills: GameState.stats?.kills || 0 }));
-      }
+      localStorage.setItem(LEGACY_SAVE_KEY, JSON.stringify(snap));
+      updateRecordsFromState();
+      queueCloudSave(snap);
     } catch (e) { console.warn(e); }
   }
   function loadGame() {
     try {
-      const s = localStorage.getItem(SAVE_KEY) || localStorage.getItem('save');
+      const s = localStorage.getItem(SAVE_KEY) || localStorage.getItem(LEGACY_SAVE_KEY);
       if (s) {
         const o = JSON.parse(s);
-        Object.assign(GameState, o);
-        if (!GameState.heroes || !GameState.heroes.length) initHeroesFromTemplate();
-        if (!GameState.mapGrid || GameState.mapGrid.length !== MAP_CELL_TOTAL) buildWorldMap();
-        else {
-          if (!Array.isArray(GameState.mapFogVisited)) GameState.mapFogVisited = [];
-          if (GameState.mapFogVisited.length === 0) {
-            GameState.mapGrid.forEach(c => { if (c.visited) mapFogVisitedAdd(c.y, c.x); });
-          }
-        }
-        ensureCurrentCellFogVisited();
-        // Migration: ensure new fields exist
-        if (!GameState.bestiary) GameState.bestiary = {};
-        if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
-        if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
-        if (!GameState.consumables || typeof GameState.consumables !== 'object') GameState.consumables = {};
-        GameState.adPaused = false;
-        GameState.pendingEnemyTurnAfterAd = false;
-        sanitizeAllHeroEquipment();
-        return true;
+        return applySaveSnapshot(o);
       }
     } catch (e) { console.warn(e); }
     return false;
@@ -5105,6 +5311,8 @@
       console.error('showVictoryUI failed', e);
       showScreen('victory');
     }
+    updateRecordsFromState();
+    setTimeout(() => showInterstitialAdAtBreak('victory'), 700);
   }
 
   // 9: Victory screen with stats
@@ -5803,6 +6011,8 @@
       const node = getCellById(b.nodeId);
       if (node?.type === 'final') {
         endBattleVictory();
+        updateRecordsFromState({ finished: true });
+        saveGame();
         showScreen('ending');
         document.getElementById('ending-stats').textContent = `Боев: ${GameState.stats.battles}, золото: ${GameState.gold} 💰`;
         return;
@@ -6820,6 +7030,11 @@
   function canShowAd() {
     return window.ysdk && (Date.now() - (GameState.adMeta.lastShownAt || 0) >= AD_MIN_INTERVAL_MS);
   }
+  function canShowInterstitialAd() {
+    return !!(window.ysdk?.adv?.showFullscreenAdv) &&
+      !YandexServices.interstitialOpen &&
+      Date.now() - (YandexServices.interstitialLastAt || 0) >= INTERSTITIAL_MIN_INTERVAL_MS;
+  }
   const AdRuntimePause = {
     depth: 0,
     bgmWasPlaying: false,
@@ -6852,6 +7067,32 @@
       }
     }
   };
+  function showInterstitialAdAtBreak(reason, after) {
+    const done = typeof after === 'function' ? after : () => {};
+    if (!canShowInterstitialAd()) { done(); return; }
+    let completed = false;
+    const finish = () => {
+      if (completed) return;
+      completed = true;
+      YandexServices.interstitialOpen = false;
+      AdRuntimePause.end();
+      done();
+    };
+    try {
+      YandexServices.interstitialOpen = true;
+      YandexServices.interstitialLastAt = Date.now();
+      AdRuntimePause.begin();
+      window.ysdk.adv.showFullscreenAdv({
+        callbacks: {
+          onOpen: () => {},
+          onClose: finish,
+          onError: finish
+        }
+      });
+    } catch (e) {
+      finish();
+    }
+  }
   function showRewardedAd(rewardCallback) {
     if (!window.ysdk) { rewardCallback(); return; }
     if (!canShowAd()) {
@@ -7549,9 +7790,7 @@
           }
         }
       }
-      document.getElementById('gold-display').textContent = GameState.gold;
-      document.getElementById('region-display').textContent = GameState.region;
-      document.getElementById('turn-display').textContent = GameState.turn;
+      updateHud();
       GameBGM.syncToScreen(name);
       scheduleLocalize(document.body);
     };
@@ -7611,7 +7850,7 @@
 
     let save = null;
     try {
-      const raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem('save');
+      const raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem(LEGACY_SAVE_KEY);
       save = raw ? JSON.parse(raw) : null;
     } catch (_) { save = null; }
 
@@ -7668,7 +7907,7 @@
   }
 
   function continueGame() {
-    if (!localStorage.getItem(SAVE_KEY) && !localStorage.getItem('save')) {
+    if (!localStorage.getItem(SAVE_KEY) && !localStorage.getItem(LEGACY_SAVE_KEY)) {
       void showGameAlert('Сохранение не найдено.');
       return;
     }
@@ -8750,8 +8989,10 @@
     document.getElementById('btn-event-ok').onclick = () => {
       const fn = GameState._eventContinueFn;
       GameState._eventContinueFn = null;
-      if (fn) fn();
-      else { showScreen('map'); renderMap(); }
+      showInterstitialAdAtBreak('event', () => {
+        if (fn) fn();
+        else { showScreen('map'); renderMap(); }
+      });
     };
     document.getElementById('btn-leave-city').onclick = () => { saveGame(); showScreen('map'); renderMap(); };
     document.getElementById('btn-city-bestiary').onclick = () => {
@@ -8816,7 +9057,7 @@
     };
     document.getElementById('btn-go-title').onclick = () => {
       localStorage.removeItem(SAVE_KEY);
-      localStorage.removeItem('save');
+      localStorage.removeItem(LEGACY_SAVE_KEY);
       startNewGame();
     };
     document.getElementById('btn-ending-ok').onclick = () => { showScreen('map'); renderMap(); };
@@ -8846,6 +9087,7 @@
         if (settingSfxEnabled) settingSfxEnabled.checked = s.sfxEnabled;
         if (settingSfxVolume) settingSfxVolume.value = String(Math.round(s.sfxVolume * 100));
         if (settingLanguage) settingLanguage.value = currentLanguage();
+        updateRecordsSummary();
         menuSettingsOverlay.classList.add('show');
         menuSettingsOverlay.setAttribute('aria-hidden', 'false');
         scheduleLocalize(menuSettingsOverlay);
@@ -8893,13 +9135,17 @@
     document.getElementById('btn-menu-save-exit').onclick = () => {
       saveGame();
       closeGameMenu();
-      showScreen('menu');
-      updateMenuMeta();
+      showInterstitialAdAtBreak('menu', () => {
+        showScreen('menu');
+        updateMenuMeta();
+      });
     };
     document.getElementById('btn-menu-exit').onclick = () => {
       closeGameMenu();
-      showScreen('menu');
-      updateMenuMeta();
+      showInterstitialAdAtBreak('menu', () => {
+        showScreen('menu');
+        updateMenuMeta();
+      });
     };
     if (!window.ysdk) {
       const adBtn = document.getElementById('btn-ad-revive');
@@ -8921,7 +9167,17 @@
 
   if (typeof YaGames !== 'undefined') YaGames.init().then(sdk => {
     window.ysdk = sdk;
+    YandexServices.sdk = sdk;
+    applySdkLanguage(sdk);
     notifyYandexGameReady(sdk);
+    initYandexPlayer(sdk).then(() => {
+      submitLeaderboards(loadRecords());
+      if (ActiveScreen === 'menu') {
+        updateMenuMeta();
+        updateRecordsSummary();
+        scheduleLocalize(document.body);
+      }
+    });
     const adBtn = document.getElementById('btn-ad-revive');
     if (adBtn) adBtn.classList.remove('hidden');
   }).catch(() => {});
