@@ -5666,6 +5666,59 @@
     return best;
   }
 
+  /** Для range > 1: держать дистанцию, не бежать в упор как ближник. */
+  function pickRangedEnemyMoveCell(b, u, heroes, inRangeFn, effectiveDmg, opts) {
+    opts = opts || {};
+    const ignoreHighCosts = !!opts.ignoreHighCosts || !!(u.aiVar && u.aiVar.forceChase);
+    const reachable = floodReachable(b, u, { ignoreHighCosts });
+    const focus = opts.focusHero || null;
+
+    const pickTargetAt = (ax, ay) => {
+      const inR = heroes.filter(h => inRangeFn(ax, ay, h));
+      if (!inR.length) return null;
+      if (focus && !inR.some(h => h === focus)) return null;
+      const damageable = inR.filter(h => effectiveDmg(h) > 0);
+      const pool = damageable.length ? damageable : inR;
+      return pool.find(h => h.heroId === 'seris')
+        || pool.find(h => h.heroId === 'alira')
+        || pool.reduce((a, bb) => a.hp < bb.hp ? a : bb);
+    };
+
+    let bestAttack = null;
+    let bestAttackScore = -Infinity;
+    let bestChase = null;
+    let bestChaseDist = Infinity;
+    let bestChaseReach = Infinity;
+
+    for (const key of Object.keys(reachable)) {
+      const [rx, ry] = key.split(',').map(Number);
+      const reachCost = reachable[key];
+      if (rx === u.x && ry === u.y) continue;
+      const tgt = pickTargetAt(rx, ry);
+      if (tgt) {
+        const dist = Math.abs(rx - tgt.x) + Math.abs(ry - tgt.y);
+        const score = dist * 1000 - reachCost;
+        if (score > bestAttackScore) {
+          bestAttackScore = score;
+          bestAttack = { x: rx, y: ry };
+        }
+      } else if (!focus) {
+        let minD = Infinity;
+        for (const h of heroes) {
+          const d = Math.abs(rx - h.x) + Math.abs(ry - h.y);
+          if (d < minD) minD = d;
+        }
+        if (minD < bestChaseDist || (minD === bestChaseDist && reachCost < bestChaseReach)) {
+          bestChaseDist = minD;
+          bestChaseReach = reachCost;
+          bestChase = { x: rx, y: ry };
+        }
+      }
+    }
+    if (bestAttack) return bestAttack;
+    return focus ? null : bestChase;
+  }
+
   function enemyStepToCell(b, u, cell) {
     if (!cell || (cell.x === u.x && cell.y === u.y)) return false;
     const fromX = u.x, fromY = u.y;
@@ -6862,12 +6915,24 @@
         || pool.reduce((a, b) => a.hp < b.hp ? a : b); // lowest HP
     };
 
-    // If already in range — attack immediately without moving
+    const isRanged = u.range > 1;
+
+    // Уже в зоне удара — для дальников сначала отойти на макс. дистанцию, если можно
     const preTarget = bestInRangeTarget(u.x, u.y);
     if (preTarget) {
-      doEnemyAttack(preTarget);
-      finishEnemyTurn();
-      return;
+      if (isRanged && getMovePoints(u, b) > 0) {
+        const distNow = Math.abs(preTarget.x - u.x) + Math.abs(preTarget.y - u.y);
+        if (distNow < u.range) {
+          const kiteCell = pickRangedEnemyMoveCell(b, u, heroes, inRange, effectiveDmg, { focusHero: preTarget });
+          if (kiteCell) enemyStepToCell(b, u, kiteCell);
+        }
+      }
+      const attackTarget = bestInRangeTarget(u.x, u.y);
+      if (attackTarget) {
+        doEnemyAttack(attackTarget);
+        finishEnemyTurn();
+        return;
+      }
     }
 
     // Движение: flood-fill с учётом стоимости леса (3) и воды (3) — как у героя
@@ -6877,10 +6942,14 @@
         if (da !== db) return db - da;
         return (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y));
       });
-      let moveCell = pickEnemyMoveCell(b, u, target);
+      let moveCell = null;
+      if (isRanged) moveCell = pickRangedEnemyMoveCell(b, u, heroes, inRange, effectiveDmg);
+      if (!moveCell) moveCell = pickEnemyMoveCell(b, u, target);
       if (!moveCell) {
         for (const h of heroesSorted) {
-          moveCell = pickEnemyMoveCell(b, u, h);
+          moveCell = isRanged
+            ? pickRangedEnemyMoveCell(b, u, heroes, inRange, effectiveDmg)
+            : pickEnemyMoveCell(b, u, h);
           if (moveCell) break;
         }
       }
@@ -9531,7 +9600,12 @@
   function enemyAbilityText(enemyId) {
     const m = {
       [ENEMY_IDS.SKELETON]: 'Обычная атака.',
-      [ENEMY_IDS.GOBLIN_ARCHER]: 'Отступает при ближнем контакте.',
+      [ENEMY_IDS.GOBLIN_ARCHER]: 'Стреляет с дистанции, держит дальность.',
+      [ENEMY_IDS.BANDIT_THROWER]: 'Метает с дистанции 2, отходит от героев.',
+      [ENEMY_IDS.CROSSBOWMAN]: 'Стреляет с дистанции 3.',
+      [ENEMY_IDS.HEXER]: 'Атакует с дистанции, накладывает слепоту.',
+      [ENEMY_IDS.CULTIST]: 'Дальняя атака, шанс проклятия.',
+      [ENEMY_IDS.THORN_DRYAD]: 'Дальняя атака, замедление.',
       [ENEMY_IDS.BOAR]: 'Рывок к цели.',
       [ENEMY_IDS.ZOMBIE]: 'Взрыв при смерти.',
       [ENEMY_IDS.SHAMAN]: 'Лечит союзников.',
