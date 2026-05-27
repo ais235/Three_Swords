@@ -5515,6 +5515,7 @@
     if (u.activeStatuses && u.activeStatuses.find(s => s.type === STATUS.SLOW)) m = Math.max(0, m - 2);
     if (u.activeStatuses && u.activeStatuses.find(s => s.type === STATUS.WEB)) m = 0;
     if (u.activeStatuses && u.activeStatuses.find(s => s.type === STATUS.STUN)) m = 0;
+    if (!u.isHero && u.enemyId !== ENEMY_IDS.WATCHER && b && findWatcher(b)) m += 2;
     return m;
   }
 
@@ -5719,6 +5720,37 @@
     return focus ? null : bestChase;
   }
 
+  /** Следящий держится подальше от героев (range 0 — только баф союзникам). */
+  function pickWatcherStayBackCell(b, u, heroes) {
+    const reachable = floodReachable(b, u, {});
+    let best = null;
+    let bestMinDist = -1;
+    let bestReach = Infinity;
+    for (const key of Object.keys(reachable)) {
+      const [rx, ry] = key.split(',').map(Number);
+      const reachCost = reachable[key];
+      if (rx === u.x && ry === u.y) continue;
+      let minD = Infinity;
+      for (const h of heroes) {
+        const d = Math.abs(rx - h.x) + Math.abs(ry - h.y);
+        if (d < minD) minD = d;
+      }
+      if (minD > bestMinDist || (minD === bestMinDist && reachCost < bestReach)) {
+        bestMinDist = minD;
+        bestReach = reachCost;
+        best = { x: rx, y: ry };
+      }
+    }
+    return best;
+  }
+
+  function enemyMoveOpts(u) {
+    const opts = {};
+    if (u.enemyId === ENEMY_IDS.BOAR) opts.ignoreHighCosts = true;
+    if (u.aiVar && u.aiVar.forceChase) opts.ignoreHighCosts = true;
+    return opts;
+  }
+
   function enemyStepToCell(b, u, cell) {
     if (!cell || (cell.x === u.x && cell.y === u.y)) return false;
     const fromX = u.x, fromY = u.y;
@@ -5819,6 +5851,7 @@
       if (attacker.isHero && attacker.heroId !== 'seris' && !opts.magic && !opts.artifact) dmg = 0;
     }
     if (target.enemyId === ENEMY_IDS.ICE_ELEM && opts.fire) dmg = Math.floor(dmg * 1.5);
+    if (target.enemyId === ENEMY_IDS.SHIELDBEARER) dmg = Math.floor(dmg * 0.75);
     if (Math.random() < 0.25 && target.isHero && target.heroId === 'garet' && !opts.blockIgnore && !opts.magic) {
       pushBattleLog(`[${target.emoji} ${target.name}] Щитовой блок!`, 'status');
       return 0;
@@ -6769,10 +6802,15 @@
     return b.units.find(u => !u.isHero && u.enemyId === ENEMY_IDS.WATCHER && u.hp > 0);
   }
   function aiChooseTarget(b, self) {
+    const heroes = b.units.filter(u => u.isHero && u.hp > 0);
+    if (!heroes.length) return null;
+    if (self && [ENEMY_IDS.ASSASSIN, ENEMY_IDS.VOID_STALKER, ENEMY_IDS.WOLF].includes(self.enemyId)) {
+      return heroes.reduce((a, h) => (a.hp < h.hp ? a : h));
+    }
     const w = findWatcher(b);
     if (w) {
       let best = null, bd = 999;
-      for (const h of b.units.filter(u => u.isHero && u.hp > 0)) {
+      for (const h of heroes) {
         const d = Math.abs(h.x - w.x) + Math.abs(h.y - w.y);
         if (d < bd) { bd = d; best = h; }
       }
@@ -6865,6 +6903,43 @@
     const heroes = b.units.filter(h => h.isHero && h.hp > 0);
     if (!heroes.length) { finishEnemyTurn(); return; }
 
+    if (u.enemyId === ENEMY_IDS.NECRO) {
+      u.aiVar = u.aiVar || {};
+      u.aiVar.raiseCd = (u.aiVar.raiseCd || 0) - 1;
+      if (u.aiVar.raiseCd <= 0 && (u.aiVar.raiseCount || 0) < 4) {
+        let raised = false;
+        for (let t = 0; t < 40 && !raised; t++) {
+          const x = randInt(Math.max(0, u.x - 2), Math.min(GRID_W - 1, u.x + 2));
+          const y = randInt(Math.max(0, u.y - 2), Math.min(GRID_H - 1, u.y + 2));
+          if (enemyPassable(b, x, y, u) && !unitAt(b, x, y)) {
+            b.units.push(spawnEnemy(ENEMY_IDS.SKELETON, x, y));
+            if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_necro_raise, 0.78);
+            pushBattleLog(`🔮 ${u.name} поднимает скелета!`, 'enemy');
+            u.aiVar.raiseCd = 3;
+            u.aiVar.raiseCount = (u.aiVar.raiseCount || 0) + 1;
+            buildInitiative();
+            raised = true;
+          }
+        }
+        if (raised) { finishEnemyTurn(); return; }
+      }
+    }
+
+    if (u.enemyId === ENEMY_IDS.HYDRA && u.hp < u.maxHp) {
+      const heal = Math.min(4, u.maxHp - u.hp);
+      u.hp += heal;
+      pushBattleLog(`🐍 ${u.name} регенерирует +${heal} HP`, 'enemy');
+    }
+
+    if (u.enemyId === ENEMY_IDS.WATCHER) {
+      if (getMovePoints(u, b) > 0) {
+        const backCell = pickWatcherStayBackCell(b, u, heroes);
+        if (backCell) enemyStepToCell(b, u, backCell);
+      }
+      finishEnemyTurn();
+      return;
+    }
+
     // Anti-stall: if last turn the enemy didn't get closer to any hero, it will temporarily
     // ignore high terrain costs (water/forest) to keep pressure on the player.
     u.aiVar = u.aiVar || {};
@@ -6942,14 +7017,15 @@
         if (da !== db) return db - da;
         return (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y));
       });
+      const moveOpts = enemyMoveOpts(u);
       let moveCell = null;
-      if (isRanged) moveCell = pickRangedEnemyMoveCell(b, u, heroes, inRange, effectiveDmg);
-      if (!moveCell) moveCell = pickEnemyMoveCell(b, u, target);
+      if (isRanged) moveCell = pickRangedEnemyMoveCell(b, u, heroes, inRange, effectiveDmg, moveOpts);
+      if (!moveCell) moveCell = pickEnemyMoveCell(b, u, target, moveOpts);
       if (!moveCell) {
         for (const h of heroesSorted) {
           moveCell = isRanged
-            ? pickRangedEnemyMoveCell(b, u, heroes, inRange, effectiveDmg)
-            : pickEnemyMoveCell(b, u, h);
+            ? pickRangedEnemyMoveCell(b, u, heroes, inRange, effectiveDmg, moveOpts)
+            : pickEnemyMoveCell(b, u, h, moveOpts);
           if (moveCell) break;
         }
       }
@@ -6990,7 +7066,7 @@
       return;
     }
     if (getMovePoints(u, b) > 0) {
-      const moveCell = pickEnemyMoveCell(b, u, nearest);
+      const moveCell = pickEnemyMoveCell(b, u, nearest, enemyMoveOpts(u));
       if (moveCell) enemyStepToCell(b, u, moveCell);
     }
     if (typeof BattleSfx !== 'undefined') {
@@ -7005,11 +7081,14 @@
 
   function aiAttack(attacker, target) {
     let dmg = attacker.attack;
+    if (attacker.enemyId === ENEMY_IDS.SPEARMAN) {
+      const d = Math.abs(attacker.x - target.x) + Math.abs(attacker.y - target.y);
+      if (d === 1) dmg += 3;
+    }
     if (attacker.enemyId === ENEMY_IDS.DARK_LORD) {
       if (attacker.phase === 2) dmg = 18;
       else if (attacker.phase === 3) dmg = attacker.attack + 6;
     }
-    if (!attacker.isHero && findWatcher(GameState.currentBattle)) dmg += 2;
     const mul = (!attacker.isHero && target.isHero && [ENEMY_IDS.ASSASSIN, ENEMY_IDS.VOID_STALKER].includes(attacker.enemyId))
       ? (() => {
         const backs = [{ x: target.x, y: target.y + 1 }, { x: target.x, y: target.y - 1 }, { x: target.x - 1, y: target.y }, { x: target.x + 1, y: target.y }];
@@ -9606,14 +9685,33 @@
       [ENEMY_IDS.HEXER]: 'Атакует с дистанции, накладывает слепоту.',
       [ENEMY_IDS.CULTIST]: 'Дальняя атака, шанс проклятия.',
       [ENEMY_IDS.THORN_DRYAD]: 'Дальняя атака, замедление.',
-      [ENEMY_IDS.BOAR]: 'Рывок к цели.',
+      [ENEMY_IDS.BOAR]: 'Рывок к цели, игнорирует лес и воду.',
       [ENEMY_IDS.ZOMBIE]: 'Взрыв при смерти.',
       [ENEMY_IDS.SHAMAN]: 'Лечит союзников.',
-      [ENEMY_IDS.ORC_GUARD]: 'Тяжелая броня.',
-      [ENEMY_IDS.SUICIDE]: 'Самоподрыв рядом с героем.',
+      [ENEMY_IDS.BANDIT]: 'Быстрый ближний бой.',
+      [ENEMY_IDS.WOLF]: 'Охотится на самого слабого героя.',
+      [ENEMY_IDS.SPEARMAN]: 'Усиленный удар в ближнем бою.',
+      [ENEMY_IDS.BOG_LURKER]: 'Шанс замедлить в ближнем бою.',
+      [ENEMY_IDS.RAT_SWARM]: 'Шанс отравить при ударе.',
+      [ENEMY_IDS.ORC_GUARD]: 'Пробивает 2 брони.',
+      [ENEMY_IDS.SUICIDE]: 'Взрыв 20 урона рядом.',
       [ENEMY_IDS.SPIDER]: 'Накладывает паутину.',
-      [ENEMY_IDS.WATCHER]: 'Усиливает союзников.',
+      [ENEMY_IDS.WATCHER]: '+2 хода движения союзникам, держит дистанцию.',
       [ENEMY_IDS.ICE_ELEM]: 'Морозит при атаке.',
+      [ENEMY_IDS.NECRO]: 'Призывает скелетов.',
+      [ENEMY_IDS.CHAOS]: 'AoE вокруг себя, не ходит.',
+      [ENEMY_IDS.ASSASSIN]: 'Невидим в лесу, удар в спину ×2.',
+      [ENEMY_IDS.HYDRA]: 'Три удара за атаку, регенерация.',
+      [ENEMY_IDS.GHOST]: 'Проходит сквозь горы, только магия.',
+      [ENEMY_IDS.VOID_STALKER]: 'Удар в спину ×1.5, фокус слабых.',
+      [ENEMY_IDS.BLOOD_KNIGHT]: 'Вампиризм при ударе.',
+      [ENEMY_IDS.BANSHEE]: 'Шанс оглушить.',
+      [ENEMY_IDS.PLAGUE_DOCTOR]: 'Лечит союзников, отравляет.',
+      [ENEMY_IDS.SHIELDBEARER]: 'Снижает получаемый урон.',
+      [ENEMY_IDS.STONE_GOLEM]: 'Шанс оглушить.',
+      [ENEMY_IDS.ARCANE_SENTINEL]: 'Шанс заморозить.',
+      [ENEMY_IDS.FIRE_TITAN]: 'Поджигает поле, AoE.',
+      [ENEMY_IDS.DARK_KNIGHT]: 'Мини-босс ближнего боя.',
       [ENEMY_IDS.DARK_LORD]: 'Фазовый босс.'
     };
     return m[enemyId] || 'Опасный противник.';
