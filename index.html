@@ -2429,6 +2429,147 @@
         flex-direction: column;
       }
     }
+
+    /* Final typography floor: keep gameplay text readable across every screen. */
+    #hud-top,
+    #topbar-center,
+    #game-container,
+    #game-container .btn,
+    #game-container button,
+    #game-container select,
+    #game-container input,
+    #game-container textarea,
+    #game-container .screen,
+    #game-container .panel,
+    #game-container .modal-box,
+    #game-container .game-dialog-box {
+      font-size: 13px !important;
+      line-height: 1.5;
+    }
+    #map-screen .map-panel-title,
+    #map-screen .map-fog-counter,
+    #map-screen .cell-info,
+    #map-screen .cell-info-name,
+    #map-screen .map-region-cloud-label,
+    #party-strip .party-card,
+    #battle-screen .hero-card-name,
+    #battle-screen .hero-card-class,
+    #battle-screen .bar-label,
+    #battle-screen .hero-mini-stats,
+    #battle-screen #battle-log,
+    #battle-screen #battle-log-toggle,
+    #battle-screen .br-label,
+    #battle-screen #unit-title,
+    #battle-screen #unit-stats,
+    #battle-screen #mode-badge,
+    #battle-screen .deploy-hint-box,
+    #battle-screen .battle-actions .btn,
+    #city-screen .city-banner-desc,
+    #city-screen .npc-tab,
+    #city-screen .npc-tab-text,
+    #city-screen .heroes-bar-title,
+    #city-screen .hero-hp-name,
+    #city-screen .hero-heal-btn,
+    #city-screen .shop-footer,
+    #city-screen .trader-mode-tab,
+    #city-screen .badge,
+    #city-screen .service-name,
+    #city-screen .service-desc,
+    #city-screen .alchemist-help,
+    #city-screen .alchemist-section-title,
+    #city-screen .alchemist-row-info,
+    #city-screen .alchemist-row-meta,
+    #city-screen .oracle-hint,
+    #city-screen #shop-list .card-name,
+    #city-screen #shop-sell-list .card-name,
+    #city-screen #shop-list .card-stat,
+    #city-screen #shop-sell-list .card-stat,
+    #city-screen #shop-list .card-desc,
+    #city-screen #shop-sell-list .card-desc,
+    #city-screen #shop-list .btn-buy,
+    #city-screen #shop-sell-list .btn-sell,
+    #inventory-screen .inv-portrait-class,
+    #inventory-screen .stat-row,
+    #inventory-screen .inv-perks-label,
+    #inventory-screen #inv-paperdoll-title,
+    #inventory-screen .eq-slot-heading,
+    #inventory-screen .eq-slot-item-name,
+    #inventory-screen #inv-slot-info,
+    #inventory-screen .inv-pack-header,
+    #inventory-screen .inv-item-price,
+    #inventory-screen .inv-item-name,
+    #inventory-screen #inv-detail,
+    #inventory-screen .item-detail-sub,
+    #inventory-screen .item-detail-stats,
+    #inventory-screen .item-detail-desc,
+    #inventory-screen .item-detail-btns .btn,
+    #bestiary-screen .bestiary-bar-title,
+    #bestiary-screen .bestiary-bar-count,
+    #bestiary-screen .bestiary-card-name,
+    #bestiary-screen .bestiary-card-status,
+    #bestiary-screen .bestiary-stat,
+    #bestiary-screen .bestiary-section-label,
+    #bestiary-screen .bestiary-text,
+    #bestiary-screen .bestiary-weakness,
+    #bestiary-screen .bestiary-locked,
+    #bestiary-screen .bestiary-region-badge,
+    #victory-screen .victory-subtitle-text,
+    #victory-screen .vic-stat-card-lbl,
+    #victory-screen .vic-hero-name,
+    #victory-screen .vic-hero-xp,
+    #victory-screen .vic-hero-hp-text,
+    #victory-screen .vic-levelup-badge,
+    #victory-screen .vic-loot-title,
+    #victory-screen .vic-loot-name,
+    #victory-screen .vic-loot-stat,
+    #victory-screen .vic-loot-badge,
+    #victory-screen .vic-bestiary-label,
+    #perk-modal .perk-modal-hint,
+    #perk-modal .perk-col-header,
+    #perk-modal .perk-skill-name,
+    #perk-modal .perk-detail-branch,
+    #perk-modal .perk-detail-effect,
+    #perk-modal .perk-detail-desc,
+    #confirm-text,
+    #game-alert-text,
+    #game-prompt-label,
+    #game-menu-overlay .modal-box,
+    #main-menu .menu-settings-row,
+    #main-menu .menu-settings-sub,
+    #main-menu .menu-record-label,
+    #main-menu .menu-settings-hint {
+      font-size: 13px !important;
+      line-height: 1.55 !important;
+    }
+    #inventory-screen .item-detail-desc {
+      font-size: 14px !important;
+      line-height: 1.65 !important;
+    }
+    #inventory-screen .item-detail-title,
+    #inventory-screen .inv-portrait-name,
+    #city-screen .city-banner-title,
+    #city-screen .shop-title,
+    #city-screen .alchemist-panel-title,
+    #city-screen .oracle-panel-title,
+    #bestiary-screen .bestiary-detail-name,
+    #perk-modal .perk-modal-title,
+    #perk-modal .perk-detail-name {
+      font-size: 17px !important;
+      line-height: 1.35 !important;
+    }
+    #map-screen .map-node {
+      font-size: clamp(11px, 1.55vmin, 15px) !important;
+    }
+    #map-screen .map-node small {
+      font-size: 10px !important;
+    }
+    #shop-list .card-price,
+    #shop-sell-list .card-price,
+    #inventory-screen .item-detail-stats,
+    #victory-screen .vic-stat-card-val,
+    #bestiary-screen .bestiary-stat b {
+      font-size: 15px !important;
+    }
   </style>
   <script src="https://yandex.ru/games/sdk/v2"></script>
 </head>
