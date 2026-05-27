@@ -2760,6 +2760,7 @@
         </div>
         <div class="city-right city-shortcuts">
           <div class="city-shortcuts-title">Быстро</div>
+          <button type="button" class="btn btn-dim sc-btn" id="btn-city-bag">🎒 Рюкзак</button>
           <button type="button" class="btn btn-dim sc-btn" id="btn-city-bestiary">📖 Бестиарий</button>
           <button type="button" class="btn btn-dim btn-leave sc-btn" id="btn-leave-city"><span class="btn-leave-text">← Покинуть город</span></button>
         </div>
@@ -3197,6 +3198,7 @@
     getIntel: { ru: '📺 Получить разведданные', en: '📺 Get intel', es: '📺 Obtener informe' },
     quick: { ru: 'Быстро', en: 'Quick', es: 'Rápido' },
     leaveTown: { ru: '← Покинуть город', en: '← Leave town', es: '← Salir de la ciudad' },
+    returnTown: { ru: '↩ В город', en: '↩ To town', es: '↩ A la ciudad' },
     turnOrder: { ru: 'ОЧЕРЁДНОСТЬ', en: 'TURN ORDER', es: 'ORDEN DE TURNO' },
     deployHint: { ru: 'Перетащите героев в левых 2 колонках. Или нажмите «Начать бой» сразу.', en: 'Drag heroes into the left 2 columns, or press “Start Battle” right away.', es: 'Arrastra héroes a las 2 columnas izquierdas, o pulsa “Iniciar batalla”.' },
     event: { ru: 'СОБЫТИЕ', en: 'EVENT', es: 'EVENTO' },
@@ -7430,6 +7432,7 @@
     bind('btn-battle-inv', () => {
       GameState._returnToVictory = false;
       GameState._returnToBattle = true;
+      GameState._returnToCity = false;
       showScreen('inventory');
       renderInventoryScreen();
     });
@@ -8396,12 +8399,22 @@
     if (!el) return;
     if (GameState._returnToVictory) el.textContent = '↩ К победе';
     else if (GameState._returnToBattle) el.textContent = '↩ В бой';
+    else if (GameState._returnToCity) el.textContent = translateKey('returnTown');
     else el.textContent = '✕ Закрыть';
   }
 
   function openInventoryFromVictory() {
     GameState._returnToVictory = true;
     GameState._returnToBattle = false;
+    GameState._returnToCity = false;
+    showScreen('inventory');
+    renderInventoryScreen();
+  }
+
+  function openInventoryFromCity() {
+    GameState._returnToVictory = false;
+    GameState._returnToBattle = false;
+    GameState._returnToCity = true;
     showScreen('inventory');
     renderInventoryScreen();
   }
@@ -10003,6 +10016,9 @@
     updateMenuMeta();
     requestAnimationFrame(loop);
     const openInventory = () => {
+      GameState._returnToVictory = false;
+      GameState._returnToBattle = false;
+      GameState._returnToCity = false;
       renderInventoryScreen();
       showScreen('inventory');
     };
@@ -10028,6 +10044,13 @@
         updateBattleUI();
         return;
       }
+      if (GameState._returnToCity) {
+        GameState._returnToCity = false;
+        const node = currentCityNode();
+        if (node) renderCityUI(node, GameState._cityStrangerOnly);
+        showScreen('city');
+        return;
+      }
       showScreen('map');
       renderMap();
     };
@@ -10041,6 +10064,7 @@
       });
     };
     document.getElementById('btn-leave-city').onclick = () => { saveGame(); showScreen('map'); renderMap(); };
+    document.getElementById('btn-city-bag').onclick = () => openInventoryFromCity();
     document.getElementById('btn-city-bestiary').onclick = () => {
       GameState._bestiaryReturn = 'city';
       showScreen('bestiary');
