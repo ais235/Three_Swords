@@ -4667,9 +4667,9 @@
       [D.HEXER]: { name: 'Колдун порчи', emoji: '☠️', hp: 18, armor: 1, attack: 8, move: 2, range: 3, speed: 10, gold: [18,26] },
       [D.SHIELDBEARER]: { name: 'Щитоносец', emoji: '🛡️', hp: 26, armor: 5, attack: 8, move: 1, range: 1, speed: 7, gold: [16,24] },
       [D.CROSSBOWMAN]: { name: 'Арбалетчик', emoji: '🏹', hp: 16, armor: 1, attack: 9, move: 2, range: 3, speed: 9, gold: [16,24] },
-      [D.STONE_GOLEM]: { name: 'Каменный голем', emoji: '🪨', hp: 40, armor: 6, attack: 10, move: 1, range: 1, speed: 6, gold: [22,32], miniBoss: true },
+      [D.STONE_GOLEM]: { name: 'Каменный голем', emoji: '🪨', hp: 40, armor: 6, attack: 10, move: 1, range: 1, speed: 6, gold: [22,32], miniBoss: true, sizeW: 2 },
       [D.VOID_STALKER]: { name: 'Пустотный охотник', emoji: '🌑', hp: 22, armor: 1, attack: 11, move: 4, range: 1, speed: 14, gold: [26,36] },
-      [D.BLOOD_KNIGHT]: { name: 'Кровавый рыцарь', emoji: '🩸', hp: 38, armor: 4, attack: 12, move: 2, range: 1, speed: 8, gold: [30,42], miniBoss: true },
+      [D.BLOOD_KNIGHT]: { name: 'Кровавый рыцарь', emoji: '🩸', hp: 38, armor: 4, attack: 12, move: 2, range: 1, speed: 8, gold: [30,42], miniBoss: true, sizeW: 2 },
       [D.BANSHEE]: { name: 'Банши', emoji: '👻', hp: 24, armor: 0, attack: 9, move: 3, range: 2, speed: 12, gold: [26,38] },
       [D.PLAGUE_DOCTOR]: { name: 'Чумной лекарь', emoji: '🧪', hp: 26, armor: 1, attack: 8, move: 2, range: 3, speed: 10, gold: [28,40] },
       [D.ARCANE_SENTINEL]: { name: 'Чародейский страж', emoji: '💠', hp: 34, armor: 3, attack: 11, move: 1, range: 3, speed: 9, gold: [30,44], miniBoss: true },
@@ -4682,10 +4682,10 @@
       [D.NECRO]: { name: 'Некромант', emoji: '🔮', hp: 28, armor: 1, attack: 8, move: 2, range: 3, speed: 8, gold: [30,40] },
       [D.CHAOS]: { name: 'Хаос-демон', emoji: '🌀', hp: 25, armor: 2, attack: 11, move: 0, range: 2, speed: 12, gold: [28,38] },
       [D.ASSASSIN]: { name: 'Убийца', emoji: '🗡️', hp: 20, armor: 0, attack: 14, move: 4, range: 1, speed: 14, gold: [30,40] },
-      [D.HYDRA]: { name: 'Гидра', emoji: '🐍', hp: 35, armor: 2, attack: 9, move: 1, range: 2, speed: 6, gold: [50,70], heads: 3, headHp: 10 },
+      [D.HYDRA]: { name: 'Гидра', emoji: '🐍', hp: 35, armor: 2, attack: 9, move: 1, range: 2, speed: 6, gold: [50,70], heads: 3, headHp: 10, sizeW: 2 },
       [D.GHOST]: { name: 'Призрак', emoji: '👻', hp: 18, armor: 0, attack: 10, move: 3, range: 1, speed: 11, gold: [35,45] },
-      [D.FIRE_TITAN]: { name: 'Огненный титан', emoji: '🔥', hp: 80, armor: 4, attack: 15, move: 2, range: 1, speed: 8, gold: [150,150], boss: true },
-      [D.DARK_LORD]: { name: 'Тёмный Лорд', emoji: '👑', hp: 120, armor: 6, attack: 16, move: 2, range: 1, speed: 10, gold: [300,300], boss: true }
+      [D.FIRE_TITAN]: { name: 'Огненный титан', emoji: '🔥', hp: 80, armor: 4, attack: 15, move: 2, range: 1, speed: 8, gold: [150,150], boss: true, sizeW: 2 },
+      [D.DARK_LORD]: { name: 'Тёмный Лорд', emoji: '👑', hp: 120, armor: 6, attack: 16, move: 2, range: 1, speed: 10, gold: [300,300], boss: true, sizeW: 4 }
     };
     return map[type] || map[D.SKELETON];
   }
@@ -5151,13 +5151,25 @@
     }
     for (let x = 1; x < GRID_W - 1; x++) grid[Math.floor(GRID_H / 2)][x] = TILE.GROUND;
   }
-  function generateBattleGrid(region) {
+  function carveLargeCreatureLanes(grid) {
+    for (let y = 0; y < GRID_H; y++) {
+      for (let x = 3; x < GRID_W; x++) {
+        if (grid[y][x] === TILE.MOUNTAIN || grid[y][x] === TILE.WATER) grid[y][x] = TILE.GROUND;
+      }
+    }
+    for (const y of [1, 3, 5, 6]) {
+      if (y >= GRID_H) continue;
+      for (let x = 2; x < GRID_W; x++) grid[y][x] = TILE.GROUND;
+    }
+  }
+  function generateBattleGrid(region, opts = {}) {
     const grid = [];
     for (let y = 0; y < GRID_H; y++) {
       grid[y] = [];
       for (let x = 0; x < GRID_W; x++) grid[y][x] = TILE.GROUND;
     }
-    const density = 0.175 + region * 0.04;
+    const spacious = !!opts.spacious;
+    const density = spacious ? 0.045 : 0.175 + region * 0.04;
     let noise = [];
     for (let y = 0; y < GRID_H; y++) {
       noise[y] = [];
@@ -5178,7 +5190,7 @@
     for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
       if (noise[y][x] && Math.random() < density) grid[y][x] = TILE.FOREST;
     }
-    const clusters = 2 + region;
+    const clusters = spacious ? 1 : 2 + region;
     for (let c = 0; c < clusters; c++) {
       const cx = randInt(2, GRID_W - 3), cy = randInt(1, GRID_H - 2);
       const r = randInt(1, 2);
@@ -5193,6 +5205,7 @@
       if (x < 2 || x >= GRID_W - 2) grid[y][x] = grid[y][x] === TILE.MOUNTAIN ? TILE.GROUND : grid[y][x];
     }
     carvePassage(grid);
+    if (spacious) carveLargeCreatureLanes(grid);
     const fortX = Math.floor(GRID_W / 2);
     const fortY = Math.floor(GRID_H / 2);
     grid[fortY][fortX] = TILE.FORT;
@@ -5309,6 +5322,7 @@
       isHero: false, enemyId: type, name: d.name, emoji: d.emoji,
       x, y, hp, maxHp: hp, armor, attack,
       move: d.move, range: d.range, speed: d.speed, activeStatuses: [],
+      sizeW: d.sizeW || 1, sizeH: d.sizeH || 1,
       aiVar: {}
     };
     if (type === ENEMY_IDS.HYDRA) { u.heads = 3; u.headHp = d.headHp; }
@@ -5384,7 +5398,9 @@
   function startBattle(node) {
     GameState.lastSafeSave = deepClone(GameState);
     GameState.battleReviveUsed = false;
-    const grid = generateBattleGrid(node.region);
+    const wave = node.enemyWave || [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON];
+    const hasLargeEnemy = wave.some(id => (enemyDef(id).sizeW || 1) > 1 || (enemyDef(id).sizeH || 1) > 1);
+    const grid = generateBattleGrid(node.region, { spacious: hasLargeEnemy || node.boss || node.final });
     const units = [];
     const heroes = GameState.heroes.filter(h => h.hp > 0).map((h, i) => makeBattleHero(h, i));
     // Auto-place heroes on valid deploy cells (first 2 columns)
@@ -5407,20 +5423,29 @@
     });
     // Heroes must exist in battle units immediately (for sidebar + board visibility).
     units.push(...heroes);
-    const wave = node.enemyWave || [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON];
-    const rightXs = [GRID_W - 2, GRID_W - 1];
+    const rightXs = [GRID_W - 2, GRID_W - 1, GRID_W - 3, GRID_W - 4, GRID_W - 5];
     let ei = 0;
     for (const t of wave) {
       let placed = false;
+      const proto = { isHero: false, enemyId: t, sizeW: enemyDef(t).sizeW || 1, sizeH: enemyDef(t).sizeH || 1 };
       for (const rx of rightXs) {
         for (let y = 0; y < GRID_H && !placed; y++) {
-          if (!tileBlocksMove(grid[y][rx], null) && !units.find(u => u.x === rx && u.y === y)) {
+          if (canUnitOccupy({ grid, units }, proto, rx, y, { end: true })) {
             units.push(spawnEnemy(t, rx, y));
             placed = true;
           }
         }
       }
-      if (!placed) units.push(spawnEnemy(t, GRID_W - 1, ei % GRID_H));
+      if (!placed) {
+        for (let y = 0; y < GRID_H && !placed; y++) {
+          for (let x = Math.max(0, GRID_W - unitWidth(proto)); x >= 2 && !placed; x--) {
+            if (canUnitOccupy({ grid, units }, proto, x, y, { end: true })) {
+              units.push(spawnEnemy(t, x, y));
+              placed = true;
+            }
+          }
+        }
+      }
       ei++;
     }
     GameState.currentBattle = {
@@ -5448,7 +5473,56 @@
     if (typeof BattleSfx !== 'undefined') BattleSfx.ensureSampleBuffers();
   }
 
-  function unitAt(b, x, y) { return b.units.find(u => u.hp > 0 && u.x === x && u.y === y); }
+  function unitWidth(u) { return Math.max(1, u && Number.isFinite(u.sizeW) ? u.sizeW : 1); }
+  function unitHeight(u) { return Math.max(1, u && Number.isFinite(u.sizeH) ? u.sizeH : 1); }
+  function unitCells(u, x = u.x, y = u.y) {
+    const cells = [];
+    for (let dy = 0; dy < unitHeight(u); dy++) {
+      for (let dx = 0; dx < unitWidth(u); dx++) cells.push({ x: x + dx, y: y + dy });
+    }
+    return cells;
+  }
+  function pointInUnit(u, x, y) {
+    return u && u.hp > 0 && x >= u.x && x < u.x + unitWidth(u) && y >= u.y && y < u.y + unitHeight(u);
+  }
+  function unitAt(b, x, y) { return b.units.find(u => pointInUnit(u, x, y)); }
+  function unitAtExcluding(b, x, y, self) {
+    return b.units.find(u => u !== self && pointInUnit(u, x, y));
+  }
+  function closestUnitCellToPoint(u, x, y) {
+    let best = { x: u.x, y: u.y }, bestD = Infinity;
+    for (const c of unitCells(u)) {
+      const d = Math.abs(c.x - x) + Math.abs(c.y - y);
+      if (d < bestD) { bestD = d; best = c; }
+    }
+    return best;
+  }
+  function unitDistanceFromPoint(u, x, y) {
+    const c = closestUnitCellToPoint(u, x, y);
+    return Math.abs(c.x - x) + Math.abs(c.y - y);
+  }
+  function unitDistance(a, b) {
+    let best = Infinity;
+    for (const ac of unitCells(a)) for (const bc of unitCells(b)) {
+      best = Math.min(best, Math.abs(ac.x - bc.x) + Math.abs(ac.y - bc.y));
+    }
+    return best;
+  }
+  function canUnitOccupy(b, self, x, y, opts = {}) {
+    if (!b || !self) return false;
+    const ghost = self.enemyId === ENEMY_IDS.GHOST;
+    for (const c of unitCells(self, x, y)) {
+      if (!inBounds(c.x, c.y)) return false;
+      if (!ghost && tileBlocksMove(b.grid[c.y][c.x], self)) return false;
+      const occ = unitAtExcluding(b, c.x, c.y, self);
+      if (occ) {
+        if (ghost) continue;
+        if (opts.pass && sameSide(self, occ)) continue;
+        return false;
+      }
+    }
+    return true;
+  }
   function allEnemiesDead(b) { return !b.units.some(u => !u.isHero && u.hp > 0); }
   function allHeroesDead(b) { return !b.units.some(u => u.isHero && u.hp > 0); }
 
@@ -5483,31 +5557,17 @@
     return b.units[idx];
   }
 
-  function unitAtExcluding(b, x, y, self) {
-    return b.units.find(u => u.hp > 0 && u.x === x && u.y === y && u !== self);
-  }
   function sameSide(a, b) {
     if (!a || !b) return false;
     return !!a.isHero === !!b.isHero;
   }
   // Можно ли пройти по клетке во время движения: союзников проходим насквозь, врагов — нет.
   function passableForUnit(b, x, y, self) {
-    if (!inBounds(x, y)) return false;
-    if (tileBlocksMove(b.grid[y][x], self)) return false;
-    const occ = unitAtExcluding(b, x, y, self);
-    if (occ) {
-      if (self && self.enemyId === ENEMY_IDS.GHOST) return true;
-      return sameSide(self, occ);
-    }
-    return true;
+    return canUnitOccupy(b, self, x, y, { pass: true });
   }
   // Можно ли закончить ход на клетке: занятая клетка всегда блокирует (кроме GHOST).
   function canEndOnTile(b, x, y, self) {
-    if (!inBounds(x, y)) return false;
-    if (tileBlocksMove(b.grid[y][x], self)) return false;
-    const occ = unitAtExcluding(b, x, y, self);
-    if (occ) return !!(self && self.enemyId === ENEMY_IDS.GHOST);
-    return true;
+    return canUnitOccupy(b, self, x, y, { end: true });
   }
 
   function getMovePoints(u, b) {
@@ -5621,8 +5681,11 @@
     const dist = {};
     if (!target) return dist;
     const key = (x, y) => x + ',' + y;
-    const q = [{ x: target.x, y: target.y }];
-    dist[key(target.x, target.y)] = 0;
+    const q = [];
+    for (const c of unitCells(target)) {
+      q.push(c);
+      dist[key(c.x, c.y)] = 0;
+    }
     while (q.length) {
       const cur = q.shift();
       const base = dist[key(cur.x, cur.y)];
@@ -5631,8 +5694,8 @@
         if (!inBounds(nx, ny)) continue;
         const tile = b.grid[ny][nx];
         if (tile === TILE.MOUNTAIN) continue;
-        // Target tile may be occupied by a hero; still allow it as an anchor.
-        if (!(nx === target.x && ny === target.y) && !passableForUnit(b, nx, ny, self)) continue;
+        const targetOwnCell = pointInUnit(target, nx, ny);
+        if (!targetOwnCell && !passableForUnit(b, nx, ny, self)) continue;
         const k = key(nx, ny);
         if (dist[k] === undefined) {
           dist[k] = base + 1;
@@ -5657,7 +5720,8 @@
       const [rx, ry] = key.split(',').map(Number);
       if (rx === u.x && ry === u.y) continue;
       const reachCost = reachable[key];
-      const d = (dmap[key] !== undefined) ? dmap[key] : (Math.abs(rx - target.x) + Math.abs(ry - target.y));
+      const candidate = { ...u, x: rx, y: ry };
+      const d = (dmap[key] !== undefined) ? dmap[key] : unitDistance(candidate, target);
       if (d < bestDist || (d === bestDist && reachCost < bestReachCost)) {
         bestDist = d;
         bestReachCost = reachCost;
@@ -5697,7 +5761,7 @@
       if (rx === u.x && ry === u.y) continue;
       const tgt = pickTargetAt(rx, ry);
       if (tgt) {
-        const dist = Math.abs(rx - tgt.x) + Math.abs(ry - tgt.y);
+        const dist = unitDistance({ ...u, x: rx, y: ry }, tgt);
         const score = dist * 1000 - reachCost;
         if (score > bestAttackScore) {
           bestAttackScore = score;
@@ -5706,7 +5770,7 @@
       } else if (!focus) {
         let minD = Infinity;
         for (const h of heroes) {
-          const d = Math.abs(rx - h.x) + Math.abs(ry - h.y);
+          const d = unitDistance({ ...u, x: rx, y: ry }, h);
           if (d < minD) minD = d;
         }
         if (minD < bestChaseDist || (minD === bestChaseDist && reachCost < bestChaseReach)) {
@@ -5732,7 +5796,7 @@
       if (rx === u.x && ry === u.y) continue;
       let minD = Infinity;
       for (const h of heroes) {
-        const d = Math.abs(rx - h.x) + Math.abs(ry - h.y);
+        const d = unitDistance({ ...u, x: rx, y: ry }, h);
         if (d < minD) minD = d;
       }
       if (minD > bestMinDist || (minD === bestMinDist && reachCost < bestReach)) {
@@ -5826,7 +5890,7 @@
     if (target.isHero && b) {
       const garetAura = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
         u.heroId !== target.heroId && u.perks && u.perks.includes('auraArmor'));
-      if (garetAura && Math.abs(target.x - garetAura.x) + Math.abs(target.y - garetAura.y) <= 1)
+      if (garetAura && unitDistance(garetAura, target) <= 1)
         armor += 1;
     }
     // Item armor bonus from equipped armor slot
@@ -5868,7 +5932,7 @@
     if (attacker.isHero && b) {
       const garetUnit = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
         u.heroId !== attacker.heroId && u.perks && u.perks.includes('auraDmg'));
-      if (garetUnit && Math.abs(attacker.x - garetUnit.x) + Math.abs(attacker.y - garetUnit.y) <= 2)
+      if (garetUnit && unitDistance(attacker, garetUnit) <= 2)
         dmg = Math.floor(dmg * 1.1);
     }
 
@@ -5964,7 +6028,7 @@
         const dmgVal = artItem.mods.deathExplode;
         for (const t of b.units) {
           if (t.isHero || t.hp <= 0) continue;
-          if (Math.abs(t.x - u.x) <= 1 && Math.abs(t.y - u.y) <= 1)
+          if (unitDistance(u, t) <= 1)
             dealDamage(u, t, dmgVal, { blockIgnore: true, magic: true, noWeaponBonus: true });
         }
         pushBattleLog(`💀 ${u.name}: Кольцо смерти — взрыв 3×3!`, 'status');
@@ -5980,7 +6044,7 @@
     if (!u.isHero && u.enemyId === ENEMY_IDS.ZOMBIE) {
       for (const t of (b ? b.units : [])) {
         if (!t.isHero || t.hp <= 0) continue;
-        if (Math.abs(t.x - u.x) + Math.abs(t.y - u.y) <= 1) dealDamage(u, t, 5, { blockIgnore: true, magic: true, noWeaponBonus: true });
+        if (unitDistance(u, t) <= 1) dealDamage(u, t, 5, { blockIgnore: true, magic: true, noWeaponBonus: true });
       }
     }
     if (!u.isHero && u.enemyId === ENEMY_IDS.WATCHER && b) b.globalBuffs.watcherDeadMove = 2;
@@ -6397,7 +6461,7 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(TILE_EMOJI[t] || '🟫', px + CELL / 2, py + CELL / 2);
       }
-      if (sel && sel.x === x && sel.y === y) {
+      if (sel && pointInUnit(sel, x, y)) {
         ctx.fillStyle = 'rgba(255,255,0,0.25)';
         ctx.fillRect(px, py, CELL, CELL);
       }
@@ -6412,7 +6476,7 @@
 
     if (shouldShowAttackHighlights(b, sel)) {
       for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
-        const dist = Math.abs(sel.x - x) + Math.abs(sel.y - y);
+        const dist = unitDistanceFromPoint(sel, x, y);
         if (dist <= sel.range && sel.range > 0) {
           const tgt = unitAt(b, x, y);
           if (tgt && !tgt.isHero) {
@@ -6428,17 +6492,21 @@
     const activeU = b.phase === 'combat' ? getActiveUnit() : null;
     if (activeU && activeU.hp > 0) {
       const apx = activeU.x * CELL, apy = activeU.y * CELL;
+      const aw = unitWidth(activeU) * CELL, ah = unitHeight(activeU) * CELL;
       ctx.save();
       ctx.shadowColor = activeU.isHero ? '#4a9eff' : '#e74c3c';
       ctx.shadowBlur = 14;
       ctx.strokeStyle = activeU.isHero ? 'rgba(74,158,255,0.9)' : 'rgba(231,76,60,0.9)';
       ctx.lineWidth = 2.5;
-      ctx.strokeRect(apx + 1, apy + 1, CELL - 2, CELL - 2);
+      ctx.strokeRect(apx + 1, apy + 1, aw - 2, ah - 2);
       ctx.restore();
     }
 
     b.units.filter(u => u.hp > 0).sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x).forEach(u => {
       const px = u.x * CELL, py = u.y * CELL;
+      const footprintW = unitWidth(u) * CELL;
+      const footprintH = unitHeight(u) * CELL;
+      const centerX = px + footprintW / 2;
       let show = true;
       if (u.enemyId === ENEMY_IDS.ASSASSIN) {
         const t = b.grid[u.y][u.x];
@@ -6446,8 +6514,17 @@
         if (t === TILE.FOREST || nearM) show = false;
       }
       if (show) {
+        if (!u.isHero && unitWidth(u) > 1) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255, 190, 80, 0.75)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(px + 2, py + 2, footprintW - 4, footprintH - 4);
+          ctx.fillStyle = 'rgba(255, 190, 80, 0.08)';
+          ctx.fillRect(px + 2, py + 2, footprintW - 4, footprintH - 4);
+          ctx.restore();
+        }
         // Sprite size: 1.2× cell. Bottom of sprite sits 2px above HP bar.
-        const BAR_TOP  = CELL - 8;
+        const BAR_TOP  = footprintH - 8;
         const spriteBottom = BAR_TOP - 2;
 
         // Idle breathing: vertical stretch anchored at feet — body grows upward, feet stay fixed
@@ -6455,7 +6532,12 @@
         const phase = (u.x * 1.7 + u.y * 3.1 + (u.isHero ? 0 : 5.3));
         const scaleY = 1 + Math.sin(now * 0.0016 + phase) * 0.028; // ±2.8% vertical stretch
 
-        const spriteSz = Math.round(CELL * (u.isHero ? BATTLE_SPRITE_MULT_HERO : BATTLE_SPRITE_MULT_ENEMY));
+        const spriteW = u.isHero
+          ? Math.round(CELL * BATTLE_SPRITE_MULT_HERO)
+          : Math.round(footprintW * BATTLE_SPRITE_MULT_ENEMY);
+        const spriteH = u.isHero
+          ? Math.round(CELL * BATTLE_SPRITE_MULT_HERO)
+          : Math.round(CELL * (unitWidth(u) > 1 ? 1.35 : BATTLE_SPRITE_MULT_ENEMY));
         // Feet anchor: py + spriteBottom stays fixed; top grows/shrinks upward
         const feetY = py + spriteBottom;                        // absolute Y of feet
 
@@ -6463,34 +6545,34 @@
           const hTex = getHeroTexture(u.heroId);
           if (hTex) {
             ctx.save();
-            ctx.translate(px + CELL / 2, feetY);   // anchor at feet center
+            ctx.translate(centerX, feetY);   // anchor at feet center
             ctx.scale(1, scaleY);                   // stretch upward
-            ctx.drawImage(hTex, -spriteSz / 2, -spriteSz, spriteSz, spriteSz);
+            ctx.drawImage(hTex, -spriteW / 2, -spriteH, spriteW, spriteH);
             ctx.restore();
           } else {
             ctx.font = '38px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillText(u.sprite, px + CELL / 2, feetY);
+            ctx.fillText(u.sprite, centerX, feetY);
           }
         } else {
           const eTex = getEnemyTexture(u.enemyId);
           if (eTex) {
             ctx.save();
-            ctx.translate(px + CELL / 2, feetY);   // anchor at feet center
+            ctx.translate(centerX, feetY);   // anchor at feet center
             ctx.scale(-1, scaleY);                  // flip X + stretch Y
-            ctx.drawImage(eTex, -spriteSz / 2, -spriteSz, spriteSz, spriteSz);
+            ctx.drawImage(eTex, -spriteW / 2, -spriteH, spriteW, spriteH);
             ctx.restore();
           } else {
             ctx.font = '38px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillText(u.emoji, px + CELL / 2, feetY);
+            ctx.fillText(u.emoji, centerX, feetY);
           }
         }
 
         // 2: HP bar + hp text
-        const barW = CELL - 6, barH = 4, bx = px + 3, by = py + CELL - 7;
+        const barW = footprintW - 6, barH = 4, bx = px + 3, by = py + footprintH - 7;
         ctx.fillStyle = '#1a1a2e';
         ctx.fillRect(bx, by, barW, barH);
         const hpFrac = Math.max(0, Math.min(1, u.hp / u.maxHp));
@@ -6502,7 +6584,7 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         const textW = ctx.measureText(hpText).width;
-        const tx = Math.round(px + CELL / 2);
+        const tx = Math.round(centerX);
         const ty = by - 1;
         ctx.fillStyle = 'rgba(0,0,0,0.72)';
         ctx.fillRect(Math.round(tx - textW / 2 - 2), ty - 10, Math.round(textW + 4), 10);
@@ -6650,7 +6732,8 @@
         dl.aiVar.initSummon = true;
         let cnt = 0;
         for (let y = 0; y < GRID_H && cnt < 4; y++) for (let x = GRID_W - 2; x < GRID_W && cnt < 4; x++) {
-          if (enemyPassable(b, x, y, dl) && !unitAt(b, x, y)) { b.units.push(spawnEnemy(ENEMY_IDS.ORC_GUARD, x, y)); cnt++; }
+          const guardProto = { isHero: false, enemyId: ENEMY_IDS.ORC_GUARD, sizeW: 1, sizeH: 1 };
+          if (canUnitOccupy(b, guardProto, x, y, { end: true })) { b.units.push(spawnEnemy(ENEMY_IDS.ORC_GUARD, x, y)); cnt++; }
         }
         buildInitiative();
       }
@@ -6819,14 +6902,7 @@
     return priorityTarget(b);
   }
   function enemyPassable(b, x, y, self) {
-    if (!inBounds(x, y)) return false;
-    if (self.enemyId !== ENEMY_IDS.GHOST && tileBlocksMove(b.grid[y][x], self)) return false;
-    const occ = unitAtExcluding(b, x, y, self);
-    if (occ) {
-      if (self.enemyId === ENEMY_IDS.GHOST) return true;
-      return sameSide(self, occ);
-    }
-    return true;
+    return canUnitOccupy(b, self, x, y, { pass: true });
   }
   function runEnemyTurn() {
     if (GameState.adPaused) {
@@ -6847,7 +6923,7 @@
         if (heroesNow.length) {
           let dMin = 999;
           for (const h of heroesNow) {
-            const d = Math.abs(h.x - u.x) + Math.abs(h.y - u.y);
+            const d = unitDistance(u, h);
             if (d < dMin) dMin = d;
           }
           u.aiVar = u.aiVar || {};
@@ -6911,7 +6987,8 @@
         for (let t = 0; t < 40 && !raised; t++) {
           const x = randInt(Math.max(0, u.x - 2), Math.min(GRID_W - 1, u.x + 2));
           const y = randInt(Math.max(0, u.y - 2), Math.min(GRID_H - 1, u.y + 2));
-          if (enemyPassable(b, x, y, u) && !unitAt(b, x, y)) {
+          const skelProto = { isHero: false, enemyId: ENEMY_IDS.SKELETON, sizeW: 1, sizeH: 1 };
+          if (canUnitOccupy(b, skelProto, x, y, { end: true })) {
             b.units.push(spawnEnemy(ENEMY_IDS.SKELETON, x, y));
             if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_necro_raise, 0.78);
             pushBattleLog(`🔮 ${u.name} поднимает скелета!`, 'enemy');
@@ -6945,7 +7022,7 @@
     u.aiVar = u.aiVar || {};
     let curMinHeroDist = 999;
     for (const h of heroes) {
-      const d = Math.abs(h.x - u.x) + Math.abs(h.y - u.y);
+      const d = unitDistance(u, h);
       if (d < curMinHeroDist) curMinHeroDist = d;
     }
     u.aiVar.forceChase = (u.aiVar.prevMinHeroDist !== undefined && curMinHeroDist >= u.aiVar.prevMinHeroDist);
@@ -6953,7 +7030,7 @@
     if (u.enemyId === ENEMY_IDS.CHAOS) {
       u.bossVar = u.bossVar || { aoeTurn: 0 };
       u.bossVar.aoeTurn = (u.bossVar.aoeTurn || 0) + 1;
-      const nearby = heroes.filter(h => Math.abs(h.x - u.x) + Math.abs(h.y - u.y) <= 1);
+      const nearby = heroes.filter(h => unitDistance(u, h) <= 1);
       if (nearby.length) {
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_chaos_attack, 0.82);
         nearby.forEach(h => {
@@ -6965,8 +7042,10 @@
     }
 
     const inRange = (ax, ay, tgt) => {
-      const d = Math.abs(ax - tgt.x) + Math.abs(ay - tgt.y);
-      return d > 0 && d <= u.range && (u.range === 1 || !rangedBlocked(ax, ay, tgt.x, tgt.y, b.grid, false));
+      const candidate = { ...u, x: ax, y: ay };
+      const targetCell = closestUnitCellToPoint(tgt, ax, ay);
+      const d = unitDistance(candidate, tgt);
+      return d > 0 && d <= u.range && (u.range === 1 || !rangedBlocked(ax, ay, targetCell.x, targetCell.y, b.grid, false));
     };
 
     const doEnemyAttack = (tgt) => {
@@ -6996,7 +7075,7 @@
     const preTarget = bestInRangeTarget(u.x, u.y);
     if (preTarget) {
       if (isRanged && getMovePoints(u, b) > 0) {
-        const distNow = Math.abs(preTarget.x - u.x) + Math.abs(preTarget.y - u.y);
+        const distNow = unitDistance(u, preTarget);
         if (distNow < u.range) {
           const kiteCell = pickRangedEnemyMoveCell(b, u, heroes, inRange, effectiveDmg, { focusHero: preTarget });
           if (kiteCell) enemyStepToCell(b, u, kiteCell);
@@ -7015,7 +7094,7 @@
       const heroesSorted = [...heroes].sort((a, b) => {
         const da = effectiveDmg(a), db = effectiveDmg(b);
         if (da !== db) return db - da;
-        return (Math.abs(a.x - u.x) + Math.abs(a.y - u.y)) - (Math.abs(b.x - u.x) + Math.abs(b.y - u.y));
+        return unitDistance(u, a) - unitDistance(u, b);
       });
       const moveOpts = enemyMoveOpts(u);
       let moveCell = null;
@@ -7052,13 +7131,13 @@
     let nearest = heroes[0];
     let bd = 999;
     for (const h of heroes) {
-      const d = Math.abs(h.x - u.x) + Math.abs(h.y - u.y);
+      const d = unitDistance(u, h);
       if (d < bd) { bd = d; nearest = h; }
     }
     if (bd <= 1) {
       if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_suicide_explosion, 0.95);
       for (const h of heroes) {
-        if (Math.abs(h.x - u.x) + Math.abs(h.y - u.y) <= 1) dealDamage(u, h, 20, { blockIgnore: true, sfxImpactOnly: true });
+        if (unitDistance(u, h) <= 1) dealDamage(u, h, 20, { blockIgnore: true, sfxImpactOnly: true });
       }
       pushBattleLog(`💥 ${u.name} взрывается!`, 'enemy');
       u.hp = 0;
@@ -7072,7 +7151,7 @@
     if (typeof BattleSfx !== 'undefined') {
       let dMin = 999;
       for (const h of heroes) {
-        const d = Math.abs(h.x - u.x) + Math.abs(h.y - u.y);
+        const d = unitDistance(u, h);
         if (d < dMin) dMin = d;
       }
       if (dMin === 2) BattleSfx.playSampledUrl(BSX.enemies_suicide_attack, 0.45);
@@ -7082,7 +7161,7 @@
   function aiAttack(attacker, target) {
     let dmg = attacker.attack;
     if (attacker.enemyId === ENEMY_IDS.SPEARMAN) {
-      const d = Math.abs(attacker.x - target.x) + Math.abs(attacker.y - target.y);
+      const d = unitDistance(attacker, target);
       if (d === 1) dmg += 3;
     }
     if (attacker.enemyId === ENEMY_IDS.DARK_LORD) {
@@ -7137,17 +7216,17 @@
         let moved = false;
         for (let t = 0; t < 20; t++) {
           const x = randInt(0, GRID_W - 1), y = randInt(0, GRID_H - 1);
-          if (enemyPassable(b, x, y, u) && !unitAt(b, x, y)) { u.x = x; u.y = y; moved = true; break; }
+          if (canUnitOccupy(b, u, x, y, { end: true })) { u.x = x; u.y = y; moved = true; break; }
         }
         if (moved && typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_dark_lord_teleport, 0.85);
       }
       const tgt = priorityTarget(b);
-      if (tgt && Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= 1) aiAttack(u, tgt);
+      if (tgt && unitDistance(u, tgt) <= 1) aiAttack(u, tgt);
       u.aoeCd = (u.aoeCd || 0) + 1;
       if (u.aoeCd % 3 === 0) {
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_dark_lord_aoe, 0.82);
         b.units.forEach(t => {
-          if (t.isHero && t.hp > 0 && (Math.abs(t.x - u.x) + Math.abs(t.y - u.y) === 1)) {
+          if (t.isHero && t.hp > 0 && unitDistance(u, t) === 1) {
             dealDamage(u, t, 12, { magic: true, sfxImpactOnly: true });
             addStatus(t, STATUS.BLIND, 1);
           }
@@ -7161,7 +7240,8 @@
         }
         for (let k = 0; k < 2; k++) {
           for (let y = 0; y < GRID_H; y++) for (let x = GRID_W - 2; x < GRID_W; x++) {
-            if (enemyPassable(b, x, y, u) && !unitAt(b, x, y)) { b.units.push(spawnEnemy(ENEMY_IDS.SKELETON, x, y)); break; }
+            const skelProto = { isHero: false, enemyId: ENEMY_IDS.SKELETON, sizeW: 1, sizeH: 1 };
+            if (canUnitOccupy(b, skelProto, x, y, { end: true })) { b.units.push(spawnEnemy(ENEMY_IDS.SKELETON, x, y)); break; }
           }
         }
       }
@@ -7185,21 +7265,20 @@
     u.bossVar.aoeCounter = (u.bossVar.aoeCounter || 0) + 1;
     if (u.bossVar.aoeCounter % 3 === 0) {
       if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_fire_titan_aoe, 0.88);
-      const dirs = [[0,0],[1,0],[-1,0],[0,1],[0,-1]];
-      dirs.forEach(([dx, dy]) => {
-        const x = u.x + dx, y = u.y + dy;
-        if (!inBounds(x, y)) return;
-        b.units.forEach(t => { if (t.isHero && t.hp > 0 && t.x === x && t.y === y) dealDamage(u, t, 10, { fire: true, magic: true, sfxImpactOnly: true }); });
+      b.units.forEach(t => {
+        if (t.isHero && t.hp > 0 && unitDistance(u, t) <= 1) {
+          dealDamage(u, t, 10, { fire: true, magic: true, sfxImpactOnly: true });
+        }
       });
     }
     const tgt = priorityTarget(b);
     if (tgt) {
-      if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) {
+      if (unitDistance(u, tgt) <= u.range) {
         aiAttack(u, tgt);
       } else {
         const moveCell = pickEnemyMoveCell(b, u, tgt);
         if (moveCell) enemyStepToCell(b, u, moveCell);
-        if (Math.abs(tgt.x - u.x) + Math.abs(tgt.y - u.y) <= u.range) aiAttack(u, tgt);
+        if (unitDistance(u, tgt) <= u.range) aiAttack(u, tgt);
       }
     }
   }
@@ -7343,7 +7422,7 @@
     bind('sk-berz', () => { if (skLocked('berserk') || u.cds.berserk > 0) return; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_berserk, 0.9); addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
     bind('sk-double', () => { if (skLocked('doubleShot') || u.cds.doubleShot > 0) return; b.pendingSkill = 'double'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-slow', () => { if (skLocked('slowArrow') || u.cds.slowArrow > 0) return; b.pendingSkill = 'slowArrow'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_arrow_rain, 0.92); const b2 = GameState.currentBattle; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && Math.abs(t.x - u.x) <= 1 && Math.abs(t.y - u.y) <= 1) dealDamage(u, t, u.attack, {}); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_arrow_rain, 0.92); const b2 = GameState.currentBattle; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && unitDistanceFromPoint(t, u.x, u.y) <= 1) dealDamage(u, t, u.attack, {}); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
     bind('sk-fb', () => { if (skLocked('fireball') || u.mana < 3 || u.cds.fireball > 0) return; b.pendingSkill = 'fireball'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-fr', () => { if (skLocked('freeze') || u.mana < 4 || u.cds.freeze > 0) return; b.pendingSkill = 'freeze'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-met', () => { if (skLocked('meteor') || u.mana < 8 || u.cds.meteor > 0) return; b.pendingSkill = 'meteor'; b.mode = 'skill'; updateBattleUI(); });
@@ -7358,9 +7437,10 @@
 
   function performHeroAttack(u, target) {
     const b = GameState.currentBattle;
-    const dist = Math.abs(u.x - target.x) + Math.abs(u.y - target.y);
+    const targetCell = closestUnitCellToPoint(target, u.x, u.y);
+    const dist = unitDistanceFromPoint(target, u.x, u.y);
     if (dist > u.range) return;
-    if (u.range > 1 && rangedBlocked(u.x, u.y, target.x, target.y, b.grid, u.perks && u.perks.includes('ignoreCover'))) return;
+    if (u.range > 1 && rangedBlocked(u.x, u.y, targetCell.x, targetCell.y, b.grid, u.perks && u.perks.includes('ignoreCover'))) return;
     let base = u.attack;
     if (u.heroId === 'alira' && u.flags && u.flags.firstAttackTurn && typeof BattleSfx !== 'undefined') {
       BattleSfx.playSampledUrl(BSX.heroes_alira_bow_draw, 0.62);
@@ -7484,7 +7564,7 @@
       if (b.pendingSkill === 'fireCall' && u.heroId === 'garet') {
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_fire_call, 0.95);
         b.units.filter(e => !e.isHero && e.hp > 0).forEach(e => {
-          if (Math.abs(e.x - u.x) + Math.abs(e.y - u.y) <= 2) dealDamage(u, e, Math.max(1, Math.floor(u.attack * 0.5)), { fire: true, magic: true, sfxImpactOnly: true });
+          if (unitDistanceFromPoint(e, u.x, u.y) <= 2) dealDamage(u, e, Math.max(1, Math.floor(u.attack * 0.5)), { fire: true, magic: true, sfxImpactOnly: true });
         });
         u.flags = u.flags || {};
         u.flags.fireCallMitigateActive = true;
@@ -7525,7 +7605,7 @@
         b.heroActionDone = true; endUnitTurn(); return;
       }
       if (b.pendingSkill === 'shieldBash') {
-        if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > 1) return;
+        if (unitDistanceFromPoint(tgt, u.x, u.y) > 1) return;
         performHeroAttack(u, tgt);
         return;
       }
@@ -8590,7 +8670,7 @@
       3: [ENEMY_IDS.NECRO, ENEMY_IDS.CHAOS, ENEMY_IDS.ASSASSIN, ENEMY_IDS.HYDRA, ENEMY_IDS.GHOST,
           ENEMY_IDS.VOID_STALKER, ENEMY_IDS.BLOOD_KNIGHT, ENEMY_IDS.BANSHEE, ENEMY_IDS.PLAGUE_DOCTOR, ENEMY_IDS.ARCANE_SENTINEL]
     };
-    if (cell.type === 'boss') return [cell.region === 2 ? ENEMY_IDS.FIRE_TITAN : ENEMY_IDS.DARK_KNIGHT];
+    if (cell.type === 'boss') return [cell.region === 2 ? ENEMY_IDS.FIRE_TITAN : ENEMY_IDS.HYDRA];
     if (cell.type === 'final') return [ENEMY_IDS.DARK_LORD];
     const pool = pools[cell.region];
     let cnt = cell.type === 'dungeon' ? 4 : cell.type === 'arena' ? 1 : 3;
