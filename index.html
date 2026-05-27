@@ -4857,7 +4857,15 @@
     fire_titan: 1.00, dark_lord: 1.00
   };
 
-  function selectLootItem(region, forceRarity = null) {
+  function ownedItemIds() {
+    const ids = new Set(GameState.inventory || []);
+    (GameState.heroes || []).forEach(h => {
+      Object.values(h.equipment || {}).forEach(id => { if (id) ids.add(id); });
+    });
+    return ids;
+  }
+
+  function selectLootItem(region, forceRarity = null, preferNew = false) {
     let rarity;
     if (forceRarity) {
       rarity = forceRarity;
@@ -4871,7 +4879,9 @@
     }
     const pool = ITEM_POOL.filter(i => i.rarity === rarity && i.minRegion <= region);
     if (!pool.length) return deepClone(ITEM_POOL[0]);
-    return deepClone(pool[Math.floor(Math.random() * pool.length)]);
+    const freshPool = preferNew ? pool.filter(i => !ownedItemIds().has(i.id)) : [];
+    const finalPool = freshPool.length ? freshPool : pool;
+    return deepClone(finalPool[Math.floor(Math.random() * finalPool.length)]);
   }
 
   //══════════ SECTION 3: GAME_STATE helpers ══════════
@@ -8719,11 +8729,20 @@
   }
   function applyBattleRewards(cell) {
     const region = (cell && cell.region) || GameState.region || 1;
-    // Loot drop based on boss type
+    GameState._lastBattleDrop = null;
+    const type = (cell && cell.type) || 'mission';
     let forceRarity = null;
-    if (cell && (cell.type === 'boss' || cell.type === 'final')) forceRarity = 'epic';
-    else if (cell && cell.type === 'dungeon') forceRarity = 'rare';
-    const drop = selectLootItem(region, forceRarity);
+    let dropChance = 0.25;
+    if (type === 'dungeon') { dropChance = 0.65; forceRarity = 'rare'; }
+    else if (type === 'arena' || type === 'wanderer') dropChance = 0.40;
+    else if (type === 'boss' || type === 'final') { dropChance = 1; forceRarity = 'epic'; }
+
+    const enemyIds = GameState._lastBattleEnemyIds || [];
+    const eliteBonus = enemyIds.reduce((best, id) => Math.max(best, (LOOT_CHANCE[id] || 0) * 0.25), 0);
+    dropChance = Math.min(1, dropChance + eliteBonus);
+    if (Math.random() > dropChance) return;
+
+    const drop = selectLootItem(region, forceRarity, true);
     GameState.inventory.push(drop.id);
     GameState._lastBattleDrop = drop;
   }
