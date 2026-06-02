@@ -1691,6 +1691,55 @@
     .perk-node.taken { opacity: 0.5; pointer-events: none; }
     .line-v { border-left: 2px solid var(--border); margin-left: 8px; padding-left: 8px; }
     #victory-screen h2 { color: var(--accent-green); }
+    #gameover-screen {
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .gameover-card {
+      width: min(520px, calc(100vw - 36px));
+      padding: 0;
+      overflow: hidden;
+      text-align: center;
+      border-color: rgba(231,76,60,0.45);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.48), 0 0 0 1px rgba(231,76,60,0.08) inset;
+    }
+    .gameover-head {
+      padding: 20px 22px 14px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(48,18,30,0.92), rgba(20,20,42,0.96));
+    }
+    .gameover-icon { font-size: 26px; line-height: 1; margin-bottom: 8px; }
+    .gameover-title { margin: 0; font-size: 18px; color: var(--accent-red); letter-spacing: 1px; }
+    .gameover-sub { margin-top: 6px; color: var(--text-dim); font-size: 11px; line-height: 1.45; }
+    .gameover-body { padding: 16px 20px 18px; display: flex; flex-direction: column; gap: 14px; }
+    .gameover-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .gameover-stat {
+      border: 1px solid var(--border);
+      background: rgba(10,10,22,0.75);
+      border-radius: 6px;
+      padding: 8px 6px;
+      min-width: 0;
+    }
+    .gameover-stat-val { color: var(--text-main); font-size: 15px; font-weight: 700; line-height: 1.2; }
+    .gameover-stat-label { margin-top: 3px; color: var(--text-dim); font-size: 8px; line-height: 1.25; text-transform: uppercase; letter-spacing: 1px; }
+    .gameover-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .gameover-actions .btn {
+      width: 100%;
+      margin: 0;
+      min-height: 38px;
+      padding: 8px 10px;
+      font-size: 12px !important;
+      white-space: normal;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .gameover-actions .gameover-primary { grid-column: 1 / -1; border-color: var(--accent-purple); color: var(--accent-purple); }
+    .gameover-actions .gameover-danger { border-color: var(--accent-red); color: var(--accent-red); background: rgba(231,76,60,0.05); }
     .badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; }
     .badge-common { background:#1a1a2e; color:#8888aa; border:1px solid #2a2a4a; }
     .badge-rare { background:#0d1520; color:#4a9eff; border:1px solid #185fa5; }
@@ -2154,6 +2203,13 @@
         padding: 12px 14px;
         gap: 10px;
       }
+      .gameover-card { width: min(420px, calc(100vw - 20px)); }
+      .gameover-head { padding: 14px 16px 10px; }
+      .gameover-body { padding: 12px 14px 14px; gap: 10px; }
+      .gameover-title { font-size: 15px; }
+      .gameover-sub { font-size: 10px; }
+      .gameover-actions { gap: 8px; }
+      .gameover-actions .btn { min-height: 34px; font-size: 10px !important; padding: 7px 8px; }
       #confirm-modal,
       #game-alert-modal,
       #game-prompt-modal { padding: 10px; }
@@ -2320,6 +2376,18 @@
         padding: 10px 12px;
         gap: 8px;
       }
+      .gameover-card { width: min(340px, calc(100vw - 16px)); }
+      .gameover-head { padding: 10px 12px 8px; }
+      .gameover-icon { font-size: 20px; margin-bottom: 5px; }
+      .gameover-title { font-size: 12px; }
+      .gameover-sub { font-size: 8px; }
+      .gameover-body { padding: 10px 12px 12px; gap: 8px; }
+      .gameover-stats { gap: 5px; }
+      .gameover-stat { padding: 6px 4px; }
+      .gameover-stat-val { font-size: 11px; }
+      .gameover-stat-label { font-size: 6px; letter-spacing: 0.5px; }
+      .gameover-actions { gap: 6px; }
+      .gameover-actions .btn { min-height: 30px; font-size: 9px !important; padding: 5px 6px; }
       #confirm-text { font-size: 7px; }
       .game-dialog-btns .btn { min-height: 28px; }
     }
@@ -2997,12 +3065,20 @@
     </div>
 
     <div id="gameover-screen" class="screen hidden">
-      <div class="modal-box">
-        <h2 style="color:var(--accent-red)">Поражение</h2>
-        <p id="go-stats">Отряд пал...</p>
-        <button class="btn" id="btn-ad-revive">⚡ Древний артефакт [реклама]</button>
-        <button class="btn" id="btn-load-last">Загрузить последнее сохранение</button>
-        <button class="btn" id="btn-go-title">Начать заново</button>
+      <div class="modal-box gameover-card">
+        <div class="gameover-head">
+          <div class="gameover-icon">☠</div>
+          <h2 class="gameover-title">Поражение</h2>
+          <div class="gameover-sub">Отряд пал, но путь можно продолжить с последней безопасной точки.</div>
+        </div>
+        <div class="gameover-body">
+          <div class="gameover-stats" id="go-stats"></div>
+          <div class="gameover-actions">
+            <button class="btn gameover-primary" id="btn-ad-revive">⚡ Древний артефакт [реклама]</button>
+            <button class="btn" id="btn-load-last">Загрузить последнее сохранение</button>
+            <button class="btn gameover-danger" id="btn-go-title">Начать заново</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3325,6 +3401,9 @@
     victoryContinue: { ru: '▶ ПРОДОЛЖИТЬ', en: '▶ CONTINUE', es: '▶ CONTINUAR' },
     defeat: { ru: 'Поражение', en: 'Defeat', es: 'Derrota' },
     squadFell: { ru: 'Отряд пал...', en: 'The party has fallen...', es: 'El grupo ha caído...' },
+    defeatSub: { ru: 'Отряд пал, но путь можно продолжить с последней безопасной точки.', en: 'The party has fallen, but you can continue from the last safe point.', es: 'El grupo ha caído, pero puedes continuar desde el último punto seguro.' },
+    statBattles: { ru: 'Боев', en: 'Battles', es: 'Combates' },
+    statEnemies: { ru: 'Врагов', en: 'Enemies', es: 'Enemigos' },
     reviveAd: { ru: '⚡ Древний артефакт [реклама]', en: '⚡ Ancient artifact [ad]', es: '⚡ Artefacto antiguo [anuncio]' },
     loadLast: { ru: 'Загрузить последнее сохранение', en: 'Load last save', es: 'Cargar último guardado' },
     restart: { ru: 'Начать заново', en: 'Start over', es: 'Empezar de nuevo' },
@@ -6996,9 +7075,37 @@
         BattleSfx.playSampledUrl(BSX.ui_defeat_screen, 0.8, 0.05);
       }
       GameState.screen = 'gameover';
-      document.getElementById('go-stats').textContent = `Боев: ${GameState.stats.battles} | Убито врагов: ${GameState.stats.kills} | Золото: ${GameState.gold}`;
+      renderGameOverUI();
       showScreen('gameover');
     }
+  }
+
+  function renderGameOverUI() {
+    const statsEl = document.getElementById('go-stats');
+    if (!statsEl) return;
+    const titleEl = document.querySelector('#gameover-screen .gameover-title');
+    const subEl = document.querySelector('#gameover-screen .gameover-sub');
+    const reviveBtn = document.getElementById('btn-ad-revive');
+    const loadBtn = document.getElementById('btn-load-last');
+    const restartBtn = document.getElementById('btn-go-title');
+    if (titleEl) titleEl.textContent = translateKey('defeat');
+    if (subEl) subEl.textContent = translateKey('defeatSub');
+    if (reviveBtn) reviveBtn.textContent = translateKey('reviveAd');
+    if (loadBtn) loadBtn.textContent = translateKey('loadLast');
+    if (restartBtn) restartBtn.textContent = translateKey('restart');
+    statsEl.innerHTML = `
+      <div class="gameover-stat">
+        <div class="gameover-stat-val">${GameState.stats.battles}</div>
+        <div class="gameover-stat-label">${translateKey('statBattles')}</div>
+      </div>
+      <div class="gameover-stat">
+        <div class="gameover-stat-val">${GameState.stats.kills}</div>
+        <div class="gameover-stat-label">${translateKey('statEnemies')}</div>
+      </div>
+      <div class="gameover-stat">
+        <div class="gameover-stat-val">${GameState.gold}</div>
+        <div class="gameover-stat-label">${translateKey('gold')}</div>
+      </div>`;
   }
 
   //══════════ AI ══════════
