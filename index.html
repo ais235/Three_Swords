@@ -3404,6 +3404,29 @@
     defeatSub: { ru: 'Отряд пал, но путь можно продолжить с последней безопасной точки.', en: 'The party has fallen, but you can continue from the last safe point.', es: 'El grupo ha caído, pero puedes continuar desde el último punto seguro.' },
     statBattles: { ru: 'Боев', en: 'Battles', es: 'Combates' },
     statEnemies: { ru: 'Врагов', en: 'Enemies', es: 'Enemigos' },
+    victory: { ru: 'ПОБЕДА!', en: 'VICTORY!', es: 'VICTORIA!' },
+    missionComplete: { ru: 'МИССИЯ ЗАВЕРШЕНА', en: 'MISSION COMPLETE', es: 'MISIÓN COMPLETADA' },
+    victoryGold: { ru: 'ЗОЛОТО', en: 'GOLD', es: 'ORO' },
+    victoryKills: { ru: 'УБИТО', en: 'KILLS', es: 'BAJAS' },
+    victoryRounds: { ru: 'РАУНДОВ', en: 'ROUNDS', es: 'RONDAS' },
+    victoryLoot: { ru: 'ДОБЫЧА', en: 'LOOT', es: 'BOTÍN' },
+    victoryStudied: { ru: 'ИЗУЧЕНО:', en: 'STUDIED:', es: 'ESTUDIADO:' },
+    equipLoot: { ru: '🎒 НАДЕТЬ ДОБЫЧУ', en: '🎒 EQUIP LOOT', es: '🎒 EQUIPAR BOTÍN' },
+    openBag: { ru: 'Открыть рюкзак', en: 'Open bag', es: 'Abrir mochila' },
+    openBagEmpty: { ru: 'Открыть рюкзак (пусто)', en: 'Open bag (empty)', es: 'Abrir mochila (vacía)' },
+    openBagEquip: { ru: 'Открыть рюкзак и надеть', en: 'Open bag and equip', es: 'Abrir mochila y equipar' },
+    rarityCommon: { ru: 'ОБЫЧН.', en: 'COMMON', es: 'COMÚN' },
+    rarityRare: { ru: 'РЕДКИЙ', en: 'RARE', es: 'RARO' },
+    rarityEpic: { ru: 'ЭПИЧЕСКИЙ', en: 'EPIC', es: 'ÉPICO' },
+    levelBadge: { ru: 'УРОВЕНЬ', en: 'LEVEL', es: 'NIVEL' },
+    nodeMission: { ru: 'Миссия', en: 'Mission', es: 'Misión' },
+    nodeCity: { ru: 'Город', en: 'Town', es: 'Ciudad' },
+    nodeDungeon: { ru: 'Подземелье', en: 'Dungeon', es: 'Mazmorra' },
+    nodeEvent: { ru: 'Событие', en: 'Event', es: 'Evento' },
+    nodeBoss: { ru: 'Босс', en: 'Boss', es: 'Jefe' },
+    nodeWanderer: { ru: 'Странник', en: 'Wanderer', es: 'Errante' },
+    nodeArena: { ru: 'Арена', en: 'Arena', es: 'Arena' },
+    nodeFinal: { ru: 'Финал', en: 'Final', es: 'Final' },
     reviveAd: { ru: '⚡ Древний артефакт [реклама]', en: '⚡ Ancient artifact [ad]', es: '⚡ Artefacto antiguo [anuncio]' },
     loadLast: { ru: 'Загрузить последнее сохранение', en: 'Load last save', es: 'Cargar último guardado' },
     restart: { ru: 'Начать заново', en: 'Start over', es: 'Empezar de nuevo' },
@@ -6307,6 +6330,7 @@
     // Snapshot enemy IDs and battle label BEFORE clearing battle
     const btTypeNames = { mission:'Миссия', city:'Город', dungeon:'Подземелье', event:'Событие', boss:'Босс', wanderer:'Странник', arena:'Арена', final:'Финал' };
     GameState._lastBattleLabel = cell ? `Регион ${cell.region} · ${btTypeNames[cell.type] || 'Миссия'}` : 'Миссия завершена';
+    GameState._lastBattleMeta = cell ? { region: cell.region, type: cell.type } : null;
     GameState._lastBattleEnemyIds = b ? [...new Set(b.units.filter(u => !u.isHero).map(u => u.enemyId))] : [];
 
     // Snapshot levels before XP for level-up detection
@@ -6367,7 +6391,7 @@
     }
     const kills = GameState._lastBattleKills || 0;
     const rounds = GameState._lastBattleRounds || 1;
-    const label = GameState._lastBattleLabel || 'Миссия завершена';
+    const label = localizedBattleLabel(GameState._lastBattleMeta) || GameState._lastBattleLabel || translateKey('missionComplete');
     GameState._lastBattleAdGold = gold;
     const drop = GameState._lastBattleDrop || null;
     const enemyIds = GameState._lastBattleEnemyIds || [];
@@ -6390,14 +6414,14 @@
 
     // ── Topbar (landscape) ──
     const topbar = document.getElementById('victory-topbar');
-    if (topbar) topbar.innerHTML = `🏆 ПОБЕДА! &nbsp;·&nbsp; <span style="color:var(--text-dim)">${label}</span>`;
+    if (topbar) topbar.innerHTML = `🏆 ${translateKey('victory')} &nbsp;·&nbsp; <span style="color:var(--text-dim)">${label}</span>`;
 
     // ── Title area (portrait) ──
     const titleArea = document.getElementById('victory-title-area');
     if (titleArea) titleArea.innerHTML = `
       <div class="victory-trophy">🏆</div>
-      <div class="victory-title-text">ПОБЕДА!</div>
-      <div class="victory-subtitle-text">${label.toUpperCase()} · МИССИЯ ЗАВЕРШЕНА</div>`;
+      <div class="victory-title-text">${translateKey('victory')}</div>
+      <div class="victory-subtitle-text">${label.toUpperCase()} · ${translateKey('missionComplete')}</div>`;
 
     // ── Stats cards ──
     const statsEl = document.getElementById('victory-stats');
@@ -6405,17 +6429,17 @@
       <div class="vic-stat-card" style="border-color:#f0a500">
         <div class="vic-stat-card-icon">💰</div>
         <span class="vic-stat-card-val">+${gold}</span>
-        <span class="vic-stat-card-lbl">ЗОЛОТО</span>
+        <span class="vic-stat-card-lbl">${translateKey('victoryGold')}</span>
       </div>
       <div class="vic-stat-card" style="border-color:#e74c3c">
         <div class="vic-stat-card-icon">⚔</div>
         <span class="vic-stat-card-val">${kills}</span>
-        <span class="vic-stat-card-lbl">УБИТО</span>
+        <span class="vic-stat-card-lbl">${translateKey('victoryKills')}</span>
       </div>
       <div class="vic-stat-card" style="border-color:#4a9eff">
         <div class="vic-stat-card-icon">🔄</div>
         <span class="vic-stat-card-val">${rounds}</span>
-        <span class="vic-stat-card-lbl">РАУНДОВ</span>
+        <span class="vic-stat-card-lbl">${translateKey('victoryRounds')}</span>
       </div>`;
 
     // ── Hero cards builder ──
@@ -6435,7 +6459,7 @@
           <div class="vic-hero-xp">${xpGained}</div>
           <div class="vic-hero-hp-bar"><div class="vic-hero-hp-fill${isLow ? ' low' : ''}" style="width:${hpPct}%"></div></div>
           <div class="vic-hero-hp-text">${h.hp}/${h.maxHp}</div>
-          ${lvlUp ? `<div class="vic-levelup-badge">УРОВЕНЬ ${lvlUp}!</div>` : ''}
+          ${lvlUp ? `<div class="vic-levelup-badge">${translateKey('levelBadge')} ${lvlUp}!</div>` : ''}
         </div>`;
       }).join('');
     }
@@ -6448,10 +6472,10 @@
     // ── Loot ──
     const lootEl = document.getElementById('victory-loot');
     if (lootEl && drop) {
-      const rarLabel = { common: 'ОБЫЧН.', rare: 'РЕДКИЙ', epic: 'ЭПИЧЕСКИЙ' };
+      const rarLabel = { common: translateKey('rarityCommon'), rare: translateKey('rarityRare'), epic: translateKey('rarityEpic') };
       const statLine = formatItemMods(drop).join(' · ');
       lootEl.innerHTML = `
-        <div class="vic-loot-title">ДОБЫЧА</div>
+        <div class="vic-loot-title">${translateKey('victoryLoot')}</div>
         <div class="vic-loot-item rarity-${drop.rarity}" style="border-color:${drop.rarity==='epic'?'#9b59b6':drop.rarity==='rare'?'#4a9eff':'#2a2a4a'}">
           <div class="vic-loot-icon">${itemIconMarkup(drop, 22)}</div>
           <div class="vic-loot-info">
@@ -6469,7 +6493,7 @@
         const def = enemyDef(id);
         return def ? `<span class="vic-bestiary-enemy" title="${def.name}">${bestiaryEnemyPortraitHtml(id, 22)}</span>` : '';
       }).filter(Boolean).join('');
-      bestiaryEl.innerHTML = `<span class="vic-bestiary-label">ИЗУЧЕНО:</span>${icons}`;
+      bestiaryEl.innerHTML = `<span class="vic-bestiary-label">${translateKey('victoryStudied')}</span>${icons}`;
       bestiaryEl.style.display = '';
     } else if (bestiaryEl) bestiaryEl.style.display = 'none';
 
@@ -6479,10 +6503,12 @@
       const hasBag = !!(GameState.inventory && GameState.inventory.length);
       vicInvBtn.classList.toggle('vic-btn-inventory-loot', hasLoot);
       vicInvBtn.title = hasLoot
-        ? `Открыть рюкзак и надеть: ${drop.name}`
-        : (hasBag ? 'Открыть рюкзак' : 'Открыть рюкзак (пусто)');
-      vicInvBtn.textContent = hasLoot ? '🎒 НАДЕТЬ ДОБЫЧУ' : '🎒 РЮКЗАК';
+        ? `${translateKey('openBagEquip')}: ${drop.name}`
+        : (hasBag ? translateKey('openBag') : translateKey('openBagEmpty'));
+      vicInvBtn.textContent = hasLoot ? translateKey('equipLoot') : translateKey('bag');
     }
+
+    localizeUI(document.getElementById('victory-screen'));
 
     if (GameState.pendingPerks.length) {
       setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
@@ -7119,6 +7145,25 @@
         <div class="gameover-stat-val">${GameState.gold}</div>
         <div class="gameover-stat-label">${translateKey('gold')}</div>
       </div>`;
+  }
+
+  function localizedNodeType(type) {
+    const keys = {
+      mission: 'nodeMission',
+      city: 'nodeCity',
+      dungeon: 'nodeDungeon',
+      event: 'nodeEvent',
+      boss: 'nodeBoss',
+      wanderer: 'nodeWanderer',
+      arena: 'nodeArena',
+      final: 'nodeFinal'
+    };
+    return translateKey(keys[type] || 'nodeMission');
+  }
+
+  function localizedBattleLabel(meta) {
+    if (!meta || !meta.region) return translateKey('missionComplete');
+    return `${translateKey('region')} ${meta.region} · ${localizedNodeType(meta.type)}`;
   }
 
   //══════════ AI ══════════
