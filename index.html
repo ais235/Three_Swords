@@ -1677,6 +1677,7 @@
     .item-detail-stats { font-size: 11px; color: var(--accent-green); margin-bottom: 8px; font-weight: bold; line-height: 1.45; }
     .item-detail-stats > div { display: block; }
     .item-detail-desc { font-size: 9px; color: #888aa0; line-height: 1.5; margin-bottom: 8px; font-style: italic; padding: 6px 8px; background: #0e0e1d; border-left: 2px solid var(--border); border-radius: 0 4px 4px 0; }
+    .item-detail-mismatch { font-size: 11px; color: var(--accent-red); margin-top: 7px; font-weight: 700; line-height: 1.25; }
     .item-detail-btns { display: flex; gap: 5px; flex-wrap: wrap; }
     .item-detail-btns .btn { font-size: 10px; padding: 5px 10px; margin: 0; }
     .bag-item { border: 1px solid var(--border); border-radius: 6px; padding: 6px; cursor: pointer; }
@@ -1744,6 +1745,7 @@
       .eq-slot-item-name,
       .item-detail-sub,
       .item-detail-desc { font-size: 10px; }
+      .item-detail-mismatch { font-size: 12px; }
 
       .item-detail-title,
       .inv-portrait-name { font-size: 14px; }
@@ -2017,6 +2019,7 @@
       .item-detail-icon { font-size: 18px; }
       .item-detail-title { font-size: 10px; }
       .item-detail-sub, .item-detail-stats, .item-detail-desc { font-size: 8px; }
+      .item-detail-mismatch { font-size: 10px; }
       .item-detail-btns .btn {
         min-height: 30px;
         padding: 3px 6px;
@@ -2190,6 +2193,7 @@
       .item-detail-icon { font-size: 14px; }
       .item-detail-title { font-size: 8px; }
       .item-detail-sub, .item-detail-stats, .item-detail-desc { font-size: 7px; margin-bottom: 3px; }
+      .item-detail-mismatch { font-size: 9px; margin-top: 4px; }
       .item-detail-btns { gap: 3px; }
       .item-detail-btns .btn { min-height: 24px; font-size: 7px; padding: 2px 4px; }
 
@@ -2338,6 +2342,7 @@
     .inv-item-name,
     .item-detail-sub,
     .item-detail-stats,
+    .item-detail-mismatch,
     .item-detail-desc {
       font-size: 11px !important;
       line-height: 1.45;
@@ -2501,6 +2506,7 @@
     #inventory-screen #inv-detail,
     #inventory-screen .item-detail-sub,
     #inventory-screen .item-detail-stats,
+    #inventory-screen .item-detail-mismatch,
     #inventory-screen .item-detail-desc,
     #inventory-screen .item-detail-btns .btn,
     #bestiary-screen .bestiary-bar-title,
@@ -8574,7 +8580,7 @@
       <div class="item-detail-title">${itemName}</div>
       <div class="item-detail-sub" style="margin-top:4px">${slotNames[sel.slot] || sel.slot} · ${forRole}</div>
       <div style="margin-top:4px">${rarBadge(sel.rarity)}</div>
-      ${fitsHero ? '' : `<div style="font-size:8px;color:var(--accent-red);margin-top:6px">Не подходит ${hero.name}</div>`}
+      ${fitsHero ? '' : `<div class="item-detail-mismatch">Не подходит ${hero.name}</div>`}
     </div>
     <div class="item-detail-stats" style="text-align:center;margin-bottom:6px">${statLinesHtml}</div>
     ${descHtml}
