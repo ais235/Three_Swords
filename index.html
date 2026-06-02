@@ -321,6 +321,39 @@
     #map-screen .map-node.done:not(.hidden) { opacity: 0.5; }
     #map-screen .map-node.locked { opacity: 0.18; cursor: not-allowed; filter: saturate(0.5) blur(0.5px); }
     #map-screen .map-node.current { border-color: rgba(240, 165, 0, 0.95); background: rgba(26, 21, 0, 0.88); box-shadow: 0 0 0 1px rgba(240, 165, 0, 0.5); }
+    #map-screen .map-node.current.done:not(.hidden) { opacity: 1; }
+    #map-screen .map-party-marker {
+      position: absolute;
+      inset: 5px;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      border-radius: 6px;
+      background: radial-gradient(circle at center, rgba(240,165,0,0.22), rgba(0,0,0,0.05) 62%, rgba(0,0,0,0));
+      filter: drop-shadow(0 3px 5px rgba(0,0,0,0.85));
+    }
+    #map-screen .map-party-marker img {
+      width: min(74%, 58px);
+      height: min(74%, 58px);
+      object-fit: contain;
+      display: block;
+    }
+    #map-screen .map-party-marker-label {
+      position: absolute;
+      left: 50%;
+      bottom: 1px;
+      transform: translateX(-50%);
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.72);
+      border: 1px solid rgba(240,165,0,0.75);
+      color: var(--accent-gold);
+      font-size: 7px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
     #map-screen .map-node small { font-size: 5px; color: var(--text-hint); margin-top: 1px; line-height: 1.2; }
     #map-screen .map-node .map-node-face,
     #map-screen .map-node .map-node-lbl { position: relative; z-index: 2; }
@@ -3254,6 +3287,7 @@
     enter: { ru: '▶ Войти', en: '▶ Enter', es: '▶ Entrar' },
     bag: { ru: '🎒 Рюкзак', en: '🎒 Bag', es: '🎒 Mochila' },
     bestiary: { ru: '📖 Бестиарий', en: '📖 Bestiary', es: '📖 Bestiario' },
+    party: { ru: 'Отряд', en: 'Party', es: 'Grupo' },
     forestRefuge: { ru: 'ЛЕСНОЙ ПРИЮТ', en: 'FOREST HAVEN', es: 'REFUGIO DEL BOSQUE' },
     cityDesc: { ru: 'Торговый пост на краю Тёмного леса. Отдых, снаряжение, разведданные.', en: 'A trading post on the edge of the Dark Forest. Rest, gear, intel.', es: 'Un puesto comercial al borde del Bosque Oscuro. Descanso, equipo e informes.' },
     cityServices: { ru: 'Услуги города', en: 'Town services', es: 'Servicios de la ciudad' },
@@ -5101,6 +5135,7 @@
     if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
     if (!GameState.consumables || typeof GameState.consumables !== 'object') GameState.consumables = {};
     if (!GameState.stats || typeof GameState.stats !== 'object') GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
+    GameState.heroes.forEach(h => { h.activeStatuses = []; });
     GameState.adPaused = false;
     GameState.pendingEnemyTurnAfterAd = false;
     sanitizeAllHeroEquipment();
@@ -5359,7 +5394,7 @@
       doubleShot: u.cds?.doubleShot || 0, slowArrow: u.cds?.slowArrow || 0, arrowRain: u.cds?.arrowRain || 0,
       fireball: u.cds?.fireball || 0, freeze: u.cds?.freeze || 0, meteor: u.cds?.meteor || 0 };
     u.flags = { firstAttackTurn: true, mysticShield: src.flags?.mysticShield ?? 3, ...(u.flags || {}) };
-    u.activeStatuses = (u.activeStatuses || []).map(s => ({ ...s }));
+    u.activeStatuses = [];
     u.sprite = u.emoji;
     return u;
   }
@@ -5957,7 +5992,7 @@
     const h = GameState.heroes.find(x => x.id === unit.heroId);
     if (h) {
       h.hp = unit.hp; h.mana = unit.mana; h.cds = { ...unit.cds };
-      h.activeStatuses = unit.activeStatuses;
+      h.activeStatuses = [];
       h.flags = { ...unit.flags };
     }
   }
@@ -6206,6 +6241,7 @@
     // Detect level-ups after XP
     GameState._lastBattleLevelUps = {};
     GameState.heroes.forEach(h => { if (h.level > levelsBefore[h.id]) GameState._lastBattleLevelUps[h.id] = h.level; });
+    GameState.heroes.forEach(h => { h.activeStatuses = []; });
 
     if (cell) {
       cell.completed = true;
@@ -9073,6 +9109,10 @@
     return `<div class="map-node-face">${em}</div>`;
   }
 
+  function mapPartyMarkerHtml() {
+    return `<div class="map-party-marker" aria-label="${translateKey('party')}"><img src="assets/ui/heroes.png" alt="" loading="lazy" decoding="async" /><span class="map-party-marker-label">${translateKey('party')}</span></div>`;
+  }
+
   function mapCellInfoIconHtml(node) {
     const src = mapNodeIconPath(node);
     const em = node.emoji || '🏘️';
@@ -9108,10 +9148,11 @@
       const typeNames = { mission:'Миссия', city:'Город', dungeon:'Подземелье', event:'Событие', boss:'Босс', wanderer:'Странник', arena:'Арена', final:'Финал' };
       const typeLbl = unlocked ? (typeNames[node.type] || '') : '';
       const showCellFace = dist <= 2;
+      const partyMarker = node.x === px && node.y === py ? mapPartyMarkerHtml() : '';
       if (showCellFace) {
-        el.innerHTML = `${mapNodeFaceHtml(node)}${typeLbl ? `<small class="map-node-lbl">${typeLbl}</small>` : ''}`;
+        el.innerHTML = `${mapNodeFaceHtml(node)}${typeLbl ? `<small class="map-node-lbl">${typeLbl}</small>` : ''}${partyMarker}`;
       } else {
-        el.innerHTML = '';
+        el.innerHTML = partyMarker;
       }
       const setInfo = (n) => {
         const t = typeNames[n.type] || n.type;
