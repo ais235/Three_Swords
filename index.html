@@ -5559,9 +5559,14 @@
       }
     }
     const byRegion = {
-      1: { rows: [0, 1, 2], mission: 20, city: 4, dungeon: 4, event: 6, boss: 2 },
-      2: { rows: [3, 4, 5], mission: 16, city: 3, dungeon: 4, event: 5, boss: 2, wanderer: 3, arena: 3 },
-      3: { rows: [6, 7], mission: 8, city: 2, dungeon: 3, event: 3, boss: 2, wanderer: 2, final: 1, arena: 3 }
+      1: { rows: [0, 1, 2], mission: 20, city: 4, dungeon: 4, event: 6, boss: 0, bossPlaced: 1, bossMinDistance: 6 },
+      2: { rows: [3, 4, 5], mission: 16, city: 3, dungeon: 4, event: 5, boss: 0, bossPlaced: 1, bossMinDistance: 7, wanderer: 3, arena: 3 },
+      3: { rows: [6, 7], mission: 8, city: 2, dungeon: 3, event: 3, boss: 0, bossPlaced: 1, bossMinDistance: 6, wanderer: 2, final: 1, arena: 3 }
+    };
+    const regionEntrance = {
+      1: { x: 0, y: 0 },
+      2: { x: 0, y: 3 },
+      3: { x: 0, y: 6 }
     };
     const pick = (cells, n) => {
       const arr = cells.slice();
@@ -5573,12 +5578,20 @@
       const conf = byRegion[region];
       const cells = grid.filter(c => conf.rows.includes(c.y));
       const free = cells.slice();
-      const assign = (kind, count, emoji) => {
-        pick(free, count).forEach(c => {
+      const assign = (kind, count, emoji, opts = {}) => {
+        const origin = opts.origin || regionEntrance[region] || { x: 0, y: conf.rows[0] };
+        const minDistance = opts.minDistance || 0;
+        let candidates = free;
+        if (minDistance > 0) {
+          candidates = free.filter(c => Math.abs(c.x - origin.x) + Math.abs(c.y - origin.y) >= minDistance);
+          if (candidates.length < count) candidates = free;
+        }
+        pick(candidates, count).forEach(c => {
           c.type = kind; c.emoji = emoji;
           free.splice(free.indexOf(c), 1);
         });
       };
+      assign('boss', conf.bossPlaced || 0, '💀', { origin: regionEntrance[region], minDistance: conf.bossMinDistance || 0 });
       assign('mission', conf.mission, '⚔️');
       assign('city', conf.city, '🏘️');
       assign('dungeon', conf.dungeon, '🗺️');
