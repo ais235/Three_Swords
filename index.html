@@ -647,6 +647,9 @@
     .city-shortcuts { gap: 6px; }
     .city-shortcuts .sc-btn { font-size: 10px; padding: 5px 8px; text-align: center; width: 100%; }
     .heal-all-row { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .btn-heal-all,
+    .btn-heal-ad { width: 100%; margin: 0; text-align: center; white-space: normal; line-height: 1.35; }
+    .btn-heal-ad { border-color: var(--accent-purple); color: var(--accent-purple); }
     .alchemist-panel-title { font-size: 11px; color: var(--accent-teal); letter-spacing: 1px; margin-bottom: 4px; }
     .oracle-panel-title { font-size: 11px; color: var(--accent-purple); letter-spacing: 1px; margin-bottom: 4px; flex-shrink: 0; }
     .alchemist-help { font-size: 8px; color: var(--text-dim); line-height: 1.45; margin-bottom: 8px; }
@@ -2188,9 +2191,9 @@
       .npc-tab-text { display: block; font-size: 6px; line-height: 1.2; }
       .heroes-bar-title { display: none; }
       .hero-heal-btn { font-size: 7px; padding: 1px 3px; }
-      .heal-all-row { flex-direction: row; gap: 3px; }
-      .btn-heal-all { flex: 1; font-size: 4px; padding: 5px 2px; }
-      .btn-heal-ad { flex: 0 0 28px; font-size: 8px; padding: 5px; }
+      .heal-all-row { flex-direction: column; gap: 4px; }
+      .btn-heal-all { font-size: 8px !important; padding: 5px 4px; min-height: 26px; }
+      .btn-heal-ad { font-size: 8px !important; padding: 5px 4px; min-height: 26px; }
       .items-grid {
         grid-template-columns: 1fr 1fr;
         grid-template-rows: 1fr 1fr;
@@ -3316,6 +3319,10 @@
     adUnavailable: { ru: 'Реклама недоступна', en: 'Ad unavailable', es: 'Anuncio no disponible' },
     adCooldown: { ru: 'Реклама временно недоступна (антиспам).', en: 'Ad temporarily unavailable (cooldown).', es: 'Anuncio no disponible temporalmente (espera).' },
     allHealthy: { ru: '✓ Все здоровы', en: '✓ Everyone healthy', es: '✓ Todos sanos' },
+    healOne: { ru: 'Лечить', en: 'Heal', es: 'Curar' },
+    healAll: { ru: 'Лечить всех', en: 'Heal all', es: 'Curar a todos' },
+    freeAdHeal: { ru: '📺 Бесплатно за рекламу', en: '📺 Free with ad', es: '📺 Gratis con anuncio' },
+    adHealTitle: { ru: 'Лечение за просмотр рекламы', en: 'Healing for watching an ad', es: 'Curación por ver un anuncio' },
     adTitle: { ru: 'Реклама', en: 'Ad', es: 'Anuncio' },
     buy: { ru: 'КУПИТЬ', en: 'BUY', es: 'COMPRAR' },
     sell: { ru: 'ПРОДАТЬ', en: 'SELL', es: 'VENDER' },
@@ -9671,12 +9678,12 @@
               <div class="hero-hp-name">${h.name} · ${h.hp}/${h.maxHp}</div>
               <div class="bar"><div class="bar-hp" style="width:${pct}%"></div></div>
             </div>
-            <button type="button" class="hero-heal-btn${full ? ' grey' : ''}" data-heal="${h.id}">${full ? '✓' : `💚 ${indivCost}g`}</button>
+            <button type="button" class="hero-heal-btn${full ? ' grey' : ''}" data-heal="${h.id}">${full ? '✓' : `💚 ${translateKey('healOne')} ${indivCost}g`}</button>
           </div>`;
         }).join('')}
         <div class="heal-all-row">
-          <button type="button" class="btn btn-green btn-heal-all" id="btn-heal-full" ${allHealthy ? 'disabled' : ''} style="font-size:10px;text-align:center">${allHealthy ? '✓ Все здоровы' : `+ Всех · ${healCost}g`}</button>
-          ${window.ysdk ? '<button type="button" class="btn btn-ad btn-heal-ad" id="btn-heal-ad" title="Реклама">📺</button>' : ''}
+          <button type="button" class="btn btn-green btn-heal-all" id="btn-heal-full" ${allHealthy ? 'disabled' : ''}>${allHealthy ? translateKey('allHealthy') : `💚 ${translateKey('healAll')} · ${healCost}g`}</button>
+          ${window.ysdk ? `<button type="button" class="btn btn-ad btn-heal-ad" id="btn-heal-ad" title="${translateKey('adHealTitle')}">${translateKey('freeAdHeal')}</button>` : ''}
         </div>
       `;
       hbox.querySelectorAll('[data-heal]').forEach(btn => {
