@@ -93,7 +93,7 @@ Definition of Done:
 2. Give new skills strong unlock feedback.
 3. [done initial pass] Add visible equipment comparison and "best candidate" hints.
 4. Strengthen perk descriptions so each branch promises a playstyle, not only numbers.
-5. Add battle feedback for perk/item effects: crit, pierce, reflect, aura, dodge, revive.
+5. [in progress] Add battle feedback for perk/item effects: crit, pierce, reflect, aura, dodge, revive.
 
 Definition of Done:
 

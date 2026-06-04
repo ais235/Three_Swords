@@ -6879,8 +6879,11 @@
       const wep = getEquippedItem(attacker, 'weapon');
       if (wep && wep.mods.attack) dmg += wep.mods.attack;
       // firstShotBonus (moon_bow) — only if first attack this round
-      if (wep && wep.mods.firstShotBonus && attacker.flags && attacker.flags.firstAttackTurn)
+      if (wep && wep.mods.firstShotBonus && attacker.flags && attacker.flags.firstAttackTurn) {
         dmg = Math.floor(dmg * (1 + wep.mods.firstShotBonus));
+        pushBattleLog(`${attacker.name}: First shot x${(1 + wep.mods.firstShotBonus).toFixed(1)}`, 'status');
+        spawnBattleTextFx(attacker.x, attacker.y, 'FIRST x' + (1 + wep.mods.firstShotBonus).toFixed(1), '#9ff0ff');
+      }
     }
     if (target.isHero && target.heroId === 'garet' && target.flags && target.flags.fireCallMitigateActive) dmg = Math.floor(dmg * 0.5);
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags && attacker.flags.firstAttackTurn) dmg = Math.floor(dmg * 1.5);
@@ -6926,6 +6929,7 @@
       dmg = Math.floor(dmg * 1.5);
       sfxCrit = true;
       pushBattleLog(`💥 ${attacker.name}: Critical hit!`, 'status');
+      spawnBattleTextFx(target.x, target.y, 'CRIT', '#ffd06b');
     }
 
     // Perk: auraDmg (Garet): adjacent allies gain +10% damage.
@@ -6941,6 +6945,7 @@
       const tArmorItem = target.isHero ? getEquippedItem(target, 'armor') : null;
       if (tArmorItem && tArmorItem.mods.dodge && Math.random() < tArmorItem.mods.dodge) {
         pushBattleLog(`💨 ${target.name} dodged!`, 'status');
+        spawnBattleTextFx(target.x, target.y, 'DODGE', '#8bd3ff');
         return 0;
       }
     }
@@ -6959,6 +6964,7 @@
     if (target.isHero && target.perks && target.perks.includes('reflect1') && dmg > 0 && !opts.magic) {
       attacker.hp = Math.max(0, attacker.hp - 1);
       pushBattleLog(`🔄 ${target.name}: Reflected 1 damage!`, 'status');
+      spawnBattleTextFx(attacker.x, attacker.y, 'REFLECT -1', '#cfd4ff');
     }
 
     // Item mod: reflectFlat (armor): fixed reflection.
@@ -6966,19 +6972,31 @@
       const tArmItem = target.isHero ? getEquippedItem(target, 'armor') : null;
       if (tArmItem && tArmItem.mods.reflectFlat && dmg > 0) {
         attacker.hp = Math.max(0, attacker.hp - tArmItem.mods.reflectFlat);
+        pushBattleLog(`${target.name}: thorns reflected ${tArmItem.mods.reflectFlat}`, 'status');
+        spawnBattleTextFx(attacker.x, attacker.y, 'THORNS -' + tArmItem.mods.reflectFlat, '#cfd4ff');
       }
       // Item mod: reflectDmg (armor): reflect 10% physical damage.
       if (tArmItem && tArmItem.mods.reflectDmg && dmg > 0) {
         const reflected = Math.max(1, Math.floor(dmg * tArmItem.mods.reflectDmg));
         attacker.hp = Math.max(0, attacker.hp - reflected);
+        pushBattleLog(`${target.name}: mirror reflected ${reflected}`, 'status');
+        spawnBattleTextFx(attacker.x, attacker.y, 'MIRROR -' + reflected, '#d8b4ff');
       }
     }
 
     // Item mod: stunOnHit (weapon): stun on hit.
     if (attacker.isHero && target.hp > 0) {
       const wepItem = getEquippedItem(attacker, 'weapon');
-      if (wepItem && wepItem.mods.stunOnHit) addStatus(target, STATUS.STUN, 1);
-      if (wepItem && wepItem.mods.poisonOnHit) addStatus(target, STATUS.POISON, 2);
+      if (wepItem && wepItem.mods.stunOnHit) {
+        addStatus(target, STATUS.STUN, 1);
+        pushBattleLog(`${attacker.name}: stun on hit`, 'status');
+        spawnBattleTextFx(target.x, target.y, 'STUN', '#ffd06b');
+      }
+      if (wepItem && wepItem.mods.poisonOnHit) {
+        addStatus(target, STATUS.POISON, 2);
+        pushBattleLog(`${attacker.name}: poison on hit`, 'status');
+        spawnBattleTextFx(target.x, target.y, 'POISON', '#7dffbf');
+      }
     }
 
     // ── Item mod: burnSpell perk + burnSpell weapon ──
@@ -7017,6 +7035,7 @@
         u._reviveUsed = true;
         u.hp = 5;
         pushBattleLog(`🔥 ${u.name}: Phoenix Robe! revived with 5 HP!`, 'status');
+        spawnBattleTextFx(u.x, u.y, 'REVIVE 5', '#ffd06b');
         return; // Survives due to revive.
       }
     }
@@ -7032,6 +7051,7 @@
             dealDamage(u, t, dmgVal, { blockIgnore: true, magic: true, noWeaponBonus: true });
         }
         pushBattleLog(`💀 ${u.name}: Death Ring — 3×3 explosion!`, 'status');
+        spawnBattleTextFx(u.x, u.y, 'DEATH RING', '#ff8f8f');
       }
     }
 
@@ -7720,6 +7740,22 @@
     setTimeout(() => d.remove(), 900);
   }
 
+  function spawnBattleTextFx(x, y, text, color) {
+    const layer = document.getElementById('fx-layer');
+    if (!layer) return;
+    const cx = (x * CELL + CELL / 2) * BattleView.zoom + BattleView.offsetX;
+    const cy = (y * CELL + CELL * 0.25) * BattleView.zoom + BattleView.offsetY;
+    const { sx, sy } = canvasToScreen(cx, cy);
+    const d = document.createElement('div');
+    d.className = 'fx-dmg';
+    d.style.color = color || '#f0e68c';
+    d.style.left = sx + 'px';
+    d.style.top = sy + 'px';
+    d.textContent = text;
+    layer.appendChild(d);
+    setTimeout(() => d.remove(), 900);
+  }
+
   let rafId = 0;
   function loop() {
     if (GameState.adPaused) {
@@ -7849,6 +7885,10 @@
         const manaArt = getEquippedItem(nu, 'artifact');
         if (manaArt && manaArt.mods.manaRegen) manaGain += manaArt.mods.manaRegen;
         nu.mana = Math.min(nu.maxMana, (nu.mana || 0) + manaGain);
+        if (manaArt && manaArt.mods.manaRegen) {
+          pushBattleLog(`${nu.name}: Mana Crystal +${manaArt.mods.manaRegen} mana`, 'status');
+          spawnBattleTextFx(nu.x, nu.y, 'MANA +' + manaArt.mods.manaRegen, '#8bd3ff');
+        }
         Object.keys(nu.cds || {}).forEach(k => { if (nu.cds[k] > 0) nu.cds[k]--; });
         const hh = GameState.heroes.find(x => x.id === nu.heroId);
         if (hh) hh.cds = { ...nu.cds };
