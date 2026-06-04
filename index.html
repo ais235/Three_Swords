@@ -5551,6 +5551,35 @@
     accuracy: 'ACCURACY', speed: 'SPEED', traps: 'TRAPS',
     destruction: 'DESTRUCTION', control: 'CONTROL', mystic: 'MYSTIC'
   };
+  const PERK_DESCRIPTIONS = {
+    d1: 'Tank path: survive one more hit and hold the front line longer.',
+    d2: 'Tank path: reduce steady melee damage before it reaches the back line.',
+    d3: 'Tank path: punish enemies for attacking Garet.',
+    a1: 'Duelist path: turn Garet into a stronger finisher.',
+    a2: 'Duelist path: cut through armored enemies and bosses.',
+    a3: 'Duelist path: add burst damage spikes to key attacks.',
+    l1: 'Commander path: keep nearby allies safer when they stand with Garet.',
+    l2: 'Commander path: make tight formations hit harder.',
+    l3: 'Commander path: act earlier and keep the squad tempo high.',
+    m1: 'Sniper path: attack from safer positions and cover more lanes.',
+    m2: 'Sniper path: make each arrow a serious single-target threat.',
+    m3: 'Sniper path: shoot through cover when positioning gets messy.',
+    s1: 'Skirmisher path: reposition faster and escape bad tiles.',
+    s2: 'Skirmisher path: keep damage flowing after movement.',
+    s3: 'Skirmisher path: take turns earlier and finish wounded enemies.',
+    t1: 'Trapper path: make enemy movement costly.',
+    t2: 'Trapper path: slow dangerous targets before they reach the heroes.',
+    t3: 'Trapper path: control more space with layered traps.',
+    r1: 'Destruction path: raise Seris damage so spells end fights faster.',
+    r2: 'Destruction path: hit more enemies with every area spell.',
+    r3: 'Destruction path: add burning pressure after spell hits.',
+    c1: 'Control path: keep priority enemies frozen longer.',
+    c2: 'Control path: break enemy tempo with fear.',
+    c3: 'Control path: gain more mana for repeated control spells.',
+    y1: 'Mystic path: cast more often before running dry.',
+    y2: 'Mystic path: reward kills with sustain for Seris.',
+    y3: 'Mystic path: solve positioning problems with teleport.'
+  };
 
   function getHeroPerkBranchSlots(hero) {
     const tree = PERK_TREES[hero.id];
@@ -11049,7 +11078,7 @@
             <div class="perk-detail-name">${translateText(perk.name)}</div>
             <div class="perk-detail-branch">${translateText(branchLabels[selectedBr] || selectedBr)}</div>
             <div class="perk-detail-effect">${translateKey('heroLevelShort')} ${perk.level || idx + 1} ${translateText('in branch')}</div>
-            <div class="perk-detail-desc">${translateText('Improves the hero combat stats.')}</div>
+            <div class="perk-detail-desc">${translateText(PERK_DESCRIPTIONS[perk.id] || 'Improves the hero combat stats.')}</div>
             ${statusBtn}
           `;
           renderPerkTree();

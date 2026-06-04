@@ -92,7 +92,7 @@ Definition of Done:
 1. Add level-up presentation with before/after stat deltas.
 2. Give new skills strong unlock feedback.
 3. [done initial pass] Add visible equipment comparison and "best candidate" hints.
-4. Strengthen perk descriptions so each branch promises a playstyle, not only numbers.
+4. [done initial pass] Strengthen perk descriptions so each branch promises a playstyle, not only numbers.
 5. [in progress] Add battle feedback for perk/item effects: crit, pierce, reflect, aura, dodge, revive.
 
 Definition of Done:
