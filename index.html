@@ -6237,6 +6237,50 @@
   function allEnemiesDead(b) { return !b.units.some(u => !u.isHero && u.hp > 0); }
   function allHeroesDead(b) { return !b.units.some(u => u.isHero && u.hp > 0); }
 
+  function serisAoeBonus(u) {
+    if (!u || !u.isHero || u.heroId !== 'seris') return 0;
+    const weapon = getEquippedItem(u, 'weapon');
+    let bonus = 0;
+    if (u.perks && u.perks.includes('aoePlus')) bonus += 1;
+    if (weapon && weapon.mods && weapon.mods.aoePlus) bonus += 1;
+    return Math.min(2, bonus);
+  }
+
+  function damageEnemiesAtCells(b, attacker, cells, dmg, opts = {}) {
+    const hit = new Set();
+    const exclude = new Set(opts.excludeUnits || []);
+    const damageOpts = { ...opts };
+    delete damageOpts.excludeUnits;
+    cells.forEach(({ x, y }) => {
+      if (!inBounds(x, y)) return;
+      const t = unitAt(b, x, y);
+      if (!t || t.isHero || t.hp <= 0 || hit.has(t) || exclude.has(t)) return;
+      hit.add(t);
+      dealDamage(attacker, t, dmg, damageOpts);
+    });
+    return hit.size;
+  }
+
+  function applySerisChaosAoe(u) {
+    const b = GameState.currentBattle;
+    const weapon = getEquippedItem(u, 'weapon');
+    if (!b || !u || !weapon || !weapon.mods || !weapon.mods.chaosAoe) return;
+    const enemies = b.units.filter(t => !t.isHero && t.hp > 0);
+    if (!enemies.length) return;
+    const nearestDist = Math.min(...enemies.map(t => unitDistance(u, t)));
+    const nearest = enemies.filter(t => unitDistance(u, t) === nearestDist);
+    const center = nearest[randInt(0, nearest.length - 1)];
+    const radius = 1 + serisAoeBonus(u);
+    let cells = [];
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (Math.abs(dx) + Math.abs(dy) <= radius) cells.push({ x: center.x + dx, y: center.y + dy });
+      }
+    }
+    const hits = damageEnemiesAtCells(b, u, cells, 5, { magic: true, sfxImpactOnly: true, noWeaponBonus: true });
+    if (hits) pushBattleLog(`🌀 ${u.name}: Chaos Staff AoE`, 'status');
+  }
+
   /** Finish combat when all enemies or all heroes are dead, including DoT between turns. */
   function resolveBattleIfOver() {
     const b = GameState.currentBattle;
@@ -8343,29 +8387,38 @@
         if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range) return;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_seris_fireball, 0.95);
         u.mana -= 3; u.cds.fireball = 2;
+        const splashRadius = 1 + serisAoeBonus(u);
         dealDamage(u, tgt, 15, { fire: true, magic: true, sfxImpactOnly: true });
-        [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx,dy]) => {
-          const tx = gx + dx, ty = gy + dy;
-          const t2 = unitAt(b, tx, ty);
-          if (t2 && !t2.isHero) dealDamage(u, t2, 7, { fire: true, magic: true, sfxImpactOnly: true });
-        });
+        const splashCells = [];
+        for (let dy = -splashRadius; dy <= splashRadius; dy++) {
+          for (let dx = -splashRadius; dx <= splashRadius; dx++) {
+            if (Math.abs(dx) + Math.abs(dy) <= splashRadius && !(dx === 0 && dy === 0)) splashCells.push({ x: gx + dx, y: gy + dy });
+          }
+        }
+        damageEnemiesAtCells(b, u, splashCells, 7, { fire: true, magic: true, sfxImpactOnly: true, excludeUnits: [tgt] });
+        applySerisChaosAoe(u);
         b.heroActionDone = true; endUnitTurn(); return;
       }
       if (b.pendingSkill === 'freeze' && u.heroId === 'seris') {
         if (u.mana < 4) return;
+        if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range) return;
         u.mana -= 4; u.cds.freeze = 3;
-        addStatus(tgt, STATUS.FREEZE, 1);
+        const freezeWeapon = getEquippedItem(u, 'weapon');
+        const freezeTurns = (u.perks && u.perks.includes('freeze2')) || (freezeWeapon && freezeWeapon.mods && freezeWeapon.mods.freeze2) ? 2 : 1;
+        addStatus(tgt, STATUS.FREEZE, freezeTurns);
         pushBattleLog(`🧊 ${tgt.name} frozen`, 'status');
+        applySerisChaosAoe(u);
         b.heroActionDone = true; endUnitTurn(); return;
       }
       if (b.pendingSkill === 'meteor' && u.heroId === 'seris') {
         if (u.mana < 8) return;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_seris_meteor, 1);
         u.mana -= 8; u.cds.meteor = 6;
-        for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 2; dx++) {
-          const t2 = unitAt(b, gx + dx, gy + dy);
-          if (t2 && !t2.isHero) dealDamage(u, t2, 30, { fire: true, magic: true, sfxImpactOnly: true });
-        }
+        const meteorSize = 2 + serisAoeBonus(u);
+        const meteorCells = [];
+        for (let dy = 0; dy < meteorSize; dy++) for (let dx = 0; dx < meteorSize; dx++) meteorCells.push({ x: gx + dx, y: gy + dy });
+        damageEnemiesAtCells(b, u, meteorCells, 30, { fire: true, magic: true, sfxImpactOnly: true });
+        applySerisChaosAoe(u);
         b.heroActionDone = true; endUnitTurn(); return;
       }
       if (b.pendingSkill === 'shieldBash') {
