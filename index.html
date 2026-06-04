@@ -3745,6 +3745,9 @@
     learn: { ru: '+ Изучить', en: '+ Learn', es: '+ Aprender' },
     turnDone: { ru: '✓ Ход завершён', en: '✓ Turn done', es: '✓ Turno terminado' },
     chooseTarget: { ru: '✦ Выбери цель', en: '✦ Choose target', es: '✦ Elige objetivo' },
+    preview: { ru: 'Предпросмотр', en: 'Preview', es: 'Vista previa' },
+    enemyReach: { ru: 'Зона угрозы', en: 'Threat zone', es: 'Zona de amenaza' },
+    affectedTiles: { ru: 'клеток заденет', en: 'tiles affected', es: 'casillas afectadas' },
     battleMove: { ru: '◇ Движение', en: '◇ Move', es: '◇ Mover' },
     battleAttack: { ru: '⚔ Атака', en: '⚔ Attack', es: '⚔ Atacar' },
     enemyTurn: { ru: 'Ход противника…', en: 'Enemy turn...', es: 'Turno enemigo...' },
@@ -7356,6 +7359,7 @@
     lastX: 0,
     lastY: 0,
     moved: false,
+    hoverCell: null,
     suppressClickUntil: 0,
     pinchStartDist: 0,
     pinchStartZoom: 1
@@ -7502,6 +7506,68 @@
     return `<span class="hero-icon-large">${fallback || '🙂'}</span>`;
   }
 
+  function skillPreviewCells(b, sel) {
+    if (!b || !sel || !sel.isHero || !BattleView.hoverCell) return [];
+    const { gx, gy } = BattleView.hoverCell;
+    if (!inBounds(gx, gy)) return [];
+    const skill = b.pendingSkill;
+    const cells = [];
+    const add = (x, y) => { if (inBounds(x, y)) cells.push({ x, y }); };
+    if (skill === 'fireCall' && sel.heroId === 'garet') {
+      for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
+        if (Math.abs(sel.x - x) + Math.abs(sel.y - y) <= 2) add(x, y);
+      }
+      return cells;
+    }
+    if (skill === 'fireball' && sel.heroId === 'seris') {
+      const radius = 1 + serisAoeBonus(sel);
+      for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) {
+        if (Math.abs(dx) + Math.abs(dy) <= radius) add(gx + dx, gy + dy);
+      }
+      return cells;
+    }
+    if (skill === 'meteor' && sel.heroId === 'seris') {
+      const size = 2 + serisAoeBonus(sel);
+      for (let dy = 0; dy < size; dy++) for (let dx = 0; dx < size; dx++) add(gx + dx, gy + dy);
+      return cells;
+    }
+    if (skill === 'freeze' || skill === 'slowArrow' || skill === 'shieldBash' || skill === 'double') {
+      add(gx, gy);
+      return cells;
+    }
+    if (b.mode === 'attack') {
+      const tgt = unitAt(b, gx, gy);
+      if (tgt && !tgt.isHero) add(gx, gy);
+    }
+    return cells;
+  }
+
+  function enemyHoverDangerCells(b) {
+    if (!b || !BattleView.hoverCell) return [];
+    const enemy = unitAt(b, BattleView.hoverCell.gx, BattleView.hoverCell.gy);
+    if (!enemy || enemy.isHero || enemy.hp <= 0) return [];
+    const cells = [];
+    for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
+      if (unitDistanceFromPoint(enemy, x, y) > enemy.range) continue;
+      if (enemy.range > 1) {
+        if (rangedBlocked(enemy.x, enemy.y, x, y, b.grid, false)) continue;
+      }
+      cells.push({ x, y });
+    }
+    return cells;
+  }
+
+  function battleHoverPreviewText(b, u) {
+    if (!b || !BattleView.hoverCell) return '';
+    const active = getActiveUnit();
+    if (u && !u.isHero) return `${translateKey('enemyReach')}: ${u.range}`;
+    if (active && active.isHero && (b.mode === 'skill' || b.mode === 'attack')) {
+      const cells = skillPreviewCells(b, active);
+      if (cells.length) return `${translateKey('preview')}: ${cells.length} ${translateKey('affectedTiles')}`;
+    }
+    return '';
+  }
+
   function drawBattle() {
     const b = GameState.currentBattle;
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -7559,6 +7625,24 @@
         }
       }
     }
+
+    const dangerCells = enemyHoverDangerCells(b);
+    dangerCells.forEach(c => {
+      ctx.fillStyle = 'rgba(231,76,60,0.16)';
+      ctx.fillRect(c.x * CELL, c.y * CELL, CELL, CELL);
+      ctx.strokeStyle = 'rgba(231,76,60,0.55)';
+      ctx.strokeRect(c.x * CELL + 4, c.y * CELL + 4, CELL - 8, CELL - 8);
+    });
+
+    const previewCells = skillPreviewCells(b, sel);
+    previewCells.forEach(c => {
+      ctx.fillStyle = 'rgba(240,165,0,0.24)';
+      ctx.fillRect(c.x * CELL, c.y * CELL, CELL, CELL);
+      ctx.strokeStyle = 'rgba(255,226,122,0.75)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(c.x * CELL + 3, c.y * CELL + 3, CELL - 6, CELL - 6);
+      ctx.lineWidth = 1;
+    });
 
     // 11: Glow for active unit cell
     const activeU = b.phase === 'combat' ? getActiveUnit() : null;
@@ -11202,6 +11286,7 @@
           if (moveDeployHeroToCell(b, dragHero, gx, gy)) updateBattleUI();
         }
         hideTip();
+        BattleView.hoverCell = null;
         return;
       }
       const dx = e.clientX - BattleView.lastX;
@@ -11214,11 +11299,13 @@
       if (Math.abs(dx) + Math.abs(dy) > 1) BattleView.moved = true;
       clampBattleView();
       hideTip();
+      BattleView.hoverCell = null;
       return;
     }
     const b = GameState.currentBattle;
-    if (!b || b.phase !== 'combat') { hideTip(); return; }
+    if (!b || b.phase !== 'combat') { BattleView.hoverCell = null; hideTip(); return; }
     const { gx, gy } = eventToGrid(e.clientX, e.clientY);
+    BattleView.hoverCell = inBounds(gx, gy) ? { gx, gy } : null;
     const u = unitAt(b, gx, gy);
     const tip = document.getElementById('tooltip');
     if (u && !u.isHero) {
@@ -11233,6 +11320,7 @@
       </div>
       ${translateKey('battleAttack').replace(/^.\s*/, '')}: ${u.attack} | ${translateKey('armor')}: ${u.armor}<br/>
       ${translateKey('statuses')}: ${sts || translateKey('none')}<br/>
+      <span class="stats-line">${battleHoverPreviewText(b, u)}</span><br/>
       <span class="stats-line">${enemyAbilityText(u.enemyId)}</span>`;
       const vw = window.innerWidth, vh = window.innerHeight;
       const tw = 220, th = 120;
@@ -11244,7 +11332,7 @@
     } else hideTip();
   });
   function hideTip() { document.getElementById('tooltip').style.display = 'none'; }
-  canvas.addEventListener('mouseleave', hideTip);
+  canvas.addEventListener('mouseleave', () => { BattleView.hoverCell = null; hideTip(); });
   canvas.addEventListener('mousedown', e => {
     if (e.button !== 0) return;
     const b = GameState.currentBattle;

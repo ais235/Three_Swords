@@ -67,6 +67,7 @@ const checks = [
   ['all enemies have ability text', allEnemiesHaveAbilityText],
   ['all enemies have bestiary data', allEnemiesHaveBestiaryData],
   ['enemy behavior snippets present', enemyBehaviorSnippetsPresent],
+  ['battle hover previews present', () => index.includes('function skillPreviewCells') && index.includes('function enemyHoverDangerCells') && index.includes('hoverCell')],
   ['plan has Definition of Done', () => plan.includes('Definition of Done')],
   ['plan has Out Of Scope', () => plan.includes('Out Of Scope For This Overhaul')]
 ];
