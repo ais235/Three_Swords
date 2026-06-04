@@ -79,7 +79,7 @@ Tasks:
 2. [in progress] Rework battle HUD around icon-first commands, portraits, threat markers, and large skill buttons.
 3. [in progress] Reduce text panels in battle; move explanations into tooltips and bestiary.
 4. [done initial pass] Rework victory screen into a reward moment: loot, level-up, new skill, power delta.
-5. Rework inventory into a no-scroll primary workflow on desktop and mobile landscape.
+5. [in progress] Rework inventory into a no-scroll primary workflow on desktop and mobile landscape.
 
 Definition of Done:
 
@@ -91,7 +91,7 @@ Definition of Done:
 
 1. Add level-up presentation with before/after stat deltas.
 2. Give new skills strong unlock feedback.
-3. Add visible equipment comparison and "best candidate" hints.
+3. [in progress] Add visible equipment comparison and "best candidate" hints.
 4. Strengthen perk descriptions so each branch promises a playstyle, not only numbers.
 5. Add battle feedback for perk/item effects: crit, pierce, reflect, aura, dodge, revive.
 

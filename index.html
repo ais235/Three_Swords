@@ -1843,6 +1843,8 @@
     .inv-portrait-name { font-size: 13px; color: var(--text-main); margin-top: 0; font-weight: bold; letter-spacing: 1px; }
     .inv-portrait-class { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
     .inv-stats { background: #0a0a14; border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+    .inv-action-stack { display: flex; flex-direction: column; gap: 6px; }
+    .inv-action-stack .btn { margin: 0; }
     .stat-row { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-dim); margin-bottom: 5px; border-bottom: 1px solid #1a1a2a; padding-bottom: 4px; }
     .stat-row:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
     .stat-val { color: var(--text-main); font-weight: bold; }
@@ -1881,6 +1883,7 @@
     .inv-item-card { background: #0d0d1a; border-radius: 6px; padding: 0; border: 1px solid var(--border); cursor: pointer; text-align: center; transition: border-color .15s; overflow: hidden; }
     .inv-item-card:hover { border-color: var(--accent-blue); background: #10102a; }
     .inv-item-card.selected { border-color: var(--accent-gold); background: #150f00; box-shadow: 0 0 8px rgba(240,165,0,.2); }
+    .inv-item-card.inv-item-best { border-color: var(--accent-green); box-shadow: 0 0 8px rgba(46,204,113,.22); }
     .inv-item-card.inv-item-mismatch { opacity: 0.55; }
     .inv-item-card.inv-item-mismatch.selected { border-color: var(--accent-red); }
     .inv-item-thumb { position: relative; aspect-ratio: 1; width: 100%; display: flex; align-items: stretch; justify-content: stretch; min-height: 0; }
@@ -1888,6 +1891,7 @@
     .inv-item-thumb > span:not(.inv-item-price):not(.item-icon-wrap) { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 28px; line-height: 1; min-height: 0; }
     .inv-item-thumb .item-icon-img { width: 100% !important; height: 100% !important; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
     .inv-item-price { position: absolute; right: 3px; bottom: 2px; font-size: 8px; font-weight: bold; color: #e8c860; line-height: 1; pointer-events: none; text-shadow: 0 0 4px #000, 0 1px 2px #000, 0 -1px 2px #000; letter-spacing: 0.5px; z-index: 2; }
+    .inv-item-best-badge { position: absolute; left: 3px; top: 2px; font-size: 6px; font-weight: bold; color: #9cffc5; background: rgba(0,0,0,.65); border: 1px solid rgba(46,204,113,.55); border-radius: 3px; padding: 1px 3px; line-height: 1; z-index: 2; }
     .inv-item-name { font-size: 8px; color: var(--text-dim); line-height: 1.2; display: block; }
     #inv-detail { background: #0d0d1a; border-radius: 8px; padding: 10px; border: 1px solid var(--border); flex: 1; min-height: 0; overflow-y: auto; font-size: 10px; color: var(--text-dim); }
     .item-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -3778,6 +3782,10 @@
     mana: { ru: 'Мана', en: 'Mana', es: 'Maná' },
     progression: { ru: 'Прокачка', en: 'Progression', es: 'Progreso' },
     progressionTitle: { ru: 'Дерево перков и веток развития', en: 'Perk and upgrade tree', es: 'Árbol de mejoras y ramas' },
+    equipBest: { ru: 'Надеть лучшее', en: 'Equip best', es: 'Equipar mejor' },
+    equippedBest: { ru: 'Надето лучшее', en: 'Equipped best', es: 'Mejor equipado' },
+    noBetterGear: { ru: 'Лучшее уже надето', en: 'Best gear already equipped', es: 'Ya está lo mejor equipado' },
+    bestBadge: { ru: 'BEST', en: 'BEST', es: 'MEJOR' },
     unequip: { ru: 'Снять', en: 'Unequip', es: 'Quitar' },
     clickAgain: { ru: 'Клик ещё раз.', en: 'Click again.', es: 'Haz clic otra vez.' },
     emptyBag: { ru: 'Рюкзак пуст', en: 'Bag is empty', es: 'La mochila está vacía' },
@@ -9458,6 +9466,94 @@
     return hc === hero.role;
   }
 
+  function itemPowerScoreForHero(item, hero) {
+    if (!item || !hero || !inventoryItemFitsHero(item, hero)) return -Infinity;
+    const m = item.mods || {};
+    const role = hero.role || '';
+    const weights = {
+      attack: role === 'warrior' ? 8 : 9,
+      armor: role === 'warrior' ? 7 : 5,
+      range: role === 'archer' ? 9 : 6,
+      move: 7,
+      maxHp: role === 'warrior' ? 0.8 : 0.65,
+      mana: role === 'mage' ? 4 : 1.5,
+      armorPierce: 7,
+      manaRegen: role === 'mage' ? 6 : 2,
+      reflectFlat: role === 'warrior' ? 5 : 3,
+      allyAttack: 5,
+      allyArmor: 4
+    };
+    let score = 0;
+    Object.entries(weights).forEach(([key, weight]) => {
+      if (typeof m[key] === 'number') score += m[key] * weight;
+    });
+    if (typeof m.goldBonus === 'number') score += m.goldBonus * 16;
+    if (typeof m.dodge === 'number') score += m.dodge * 45;
+    if (typeof m.reflectDmg === 'number') score += m.reflectDmg * 35;
+    if (typeof m.reflectStatus === 'number') score += m.reflectStatus * 30;
+    if (typeof m.firstShotBonus === 'number') score += m.firstShotBonus * (role === 'archer' ? 45 : 24);
+    if (typeof m.deathExplode === 'number') score += m.deathExplode * 0.8;
+    if (m.poisonOnHit) score += 10;
+    if (m.stunOnHit) score += 14;
+    if (m.ignoreCover) score += role === 'archer' ? 12 : 5;
+    if (m.aoePlus) score += role === 'mage' ? 16 : 4;
+    if (m.chaosAoe) score += role === 'mage' ? 18 : 6;
+    if (m.freeze2) score += role === 'mage' ? 14 : 5;
+    if (m.revive5) score += 18;
+    if (m.extraAction) score += 20;
+    if (m.previewEnemies) score += 8;
+    if (m.battleTeleport) score += 16;
+    score += item.rarity === 'epic' ? 2 : item.rarity === 'rare' ? 1 : 0;
+    return score;
+  }
+
+  function bestInventoryCandidateForSlot(hero, slot) {
+    const current = itemById(hero?.equipment?.[slot]);
+    const currentScore = current ? itemPowerScoreForHero(current, hero) : 0;
+    let best = null;
+    (GameState.inventory || []).forEach((id, idx) => {
+      const it = itemById(id);
+      if (!it || it.slot !== slot || !inventoryItemFitsHero(it, hero)) return;
+      const score = itemPowerScoreForHero(it, hero);
+      if (score <= currentScore + 0.01) return;
+      if (!best || score > best.score) best = { id, idx, item: it, score };
+    });
+    return best;
+  }
+
+  function bestInventoryCandidateIdsForHero(hero) {
+    const ids = new Set();
+    ['weapon', 'armor', 'artifact'].forEach(slot => {
+      const best = bestInventoryCandidateForSlot(hero, slot);
+      if (best) ids.add(best.id);
+    });
+    return ids;
+  }
+
+  function equipBestForHero(hero) {
+    if (!hero) return 0;
+    hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
+    let changed = 0;
+    ['weapon', 'armor', 'artifact'].forEach(slot => {
+      const best = bestInventoryCandidateForSlot(hero, slot);
+      if (!best) return;
+      const old = hero.equipment[slot];
+      const removeIdx = GameState.inventory.indexOf(best.id);
+      if (removeIdx < 0) return;
+      GameState.inventory.splice(removeIdx, 1);
+      if (old) GameState.inventory.push(old);
+      hero.equipment[slot] = best.id;
+      changed++;
+    });
+    if (changed) {
+      recalcHeroFromEquipment(hero);
+      InvState.selectedItemId = null;
+      InvState.selectedItemIdx = -1;
+      saveGame();
+    }
+    return changed;
+  }
+
   function sanitizeHeroEquipment(hero) {
     if (!hero) return;
     hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
@@ -9539,7 +9635,19 @@
 
     const invActions = document.getElementById('inv-hero-actions');
     if (invActions) {
-      invActions.innerHTML = `<button type="button" class="btn btn-gold" id="btn-inv-perks" title="${translateKey('progressionTitle')}">🌳 ${translateKey('progression')}</button>`;
+      const hasBetterGear = ['weapon', 'armor', 'artifact'].some(slot => !!bestInventoryCandidateForSlot(hero, slot));
+      invActions.innerHTML = `<div class="inv-action-stack">
+        <button type="button" class="btn btn-green" id="btn-inv-equip-best"${hasBetterGear ? '' : ' disabled'}>${translateKey('equipBest')}</button>
+        <button type="button" class="btn btn-gold" id="btn-inv-perks" title="${translateKey('progressionTitle')}">🌳 ${translateKey('progression')}</button>
+      </div>`;
+      const bestBtn = document.getElementById('btn-inv-equip-best');
+      if (bestBtn) bestBtn.onclick = () => {
+        const changed = equipBestForHero(hero);
+        const sinfo = document.getElementById('inv-slot-info');
+        if (sinfo) sinfo.textContent = changed ? `${translateKey('equippedBest')}: ${changed}` : translateKey('noBetterGear');
+        renderInventoryScreen();
+        renderPartyStrip();
+      };
       const perkBtn = document.getElementById('btn-inv-perks');
       if (perkBtn) perkBtn.onclick = () => openPerkTreeView(hero.id);
     }
@@ -9600,6 +9708,7 @@
     // Backpack grid (index-based selection to avoid duplicate-ID bug)
     const bag = document.getElementById('bag-grid');
     const invList = (GameState.inventory || []).filter(id => itemById(id));
+    const bestCandidateIds = bestInventoryCandidateIdsForHero(hero);
     if (invList.length === 0) {
       bag.innerHTML = `<div style="grid-column:1/-1;color:var(--text-dim);text-align:center;padding:20px;">${translateKey('emptyBag')}</div>`;
       InvState.selectedItemIdx = -1;
@@ -9609,12 +9718,14 @@
         const it = itemById(id);
         const active = idx === InvState.selectedItemIdx ? 'selected' : '';
         const mismatch = !inventoryItemFitsHero(it, hero);
+        const best = bestCandidateIds.has(id);
         const fx = formatItemMods(it).map(translateText).join(' · ');
         const roleHint = mismatch ? `${translateKey('onlyClass')}: ${itemHeroClassLabel(it)}` : '';
         const tip = [translateText(it.name), fx, roleHint, translateText(it.desc || '')].filter(Boolean).join('\n');
-        return `<div class="inv-item-card ${active}${mismatch ? ' inv-item-mismatch' : ''}" data-idx="${idx}" title="${escapeHtmlAttr(tip)}">
+        return `<div class="inv-item-card ${active}${best ? ' inv-item-best' : ''}${mismatch ? ' inv-item-mismatch' : ''}" data-idx="${idx}" title="${escapeHtmlAttr(tip)}">
           <div class="inv-item-thumb">
             ${itemIconMarkup(it, 56)}
+            ${best ? `<span class="inv-item-best-badge">${translateKey('bestBadge')}</span>` : ''}
             <span class="inv-item-price">${it.price}g</span>
           </div>
         </div>`;
