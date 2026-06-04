@@ -1349,6 +1349,21 @@
     .vic-hero-hp-fill.low { background: var(--accent-red); }
     .vic-hero-hp-text { font-size: 6px; color: var(--text-dim); }
     .vic-levelup-badge { font-size: 6px; color: var(--accent-gold); margin-top: 3px; animation: vic-levelup .8s ease-in-out infinite; }
+    .vic-hero-progress {
+      margin-top: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      color: var(--accent-gold);
+      font-size: 7px;
+      line-height: 1.25;
+    }
+    .vic-hero-progress span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     /* Loot */
     .victory-loot { width: 100%; max-width: 560px; margin-top: 4px; }
     .vic-loot-title { font-size: 7px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 6px; }
@@ -1445,6 +1460,7 @@
       .vic-stat-card-icon { font-size: 14px; top: -10px; }
       .vic-hero-card { padding: 4px; }
       .vic-hero-icon { font-size: 16px; }
+      .vic-hero-progress { font-size: 6px; gap: 1px; margin-top: 3px; }
     }
     #perk-modal, #confirm-modal, #game-alert-modal, #game-prompt-modal {
       position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 4000;
@@ -2655,6 +2671,7 @@
     .vic-hero-xp,
     .vic-hero-hp-text,
     .vic-levelup-badge,
+    .vic-hero-progress,
     .vic-loot-title,
     .vic-loot-name,
     .vic-loot-stat,
@@ -2827,6 +2844,7 @@
     #victory-screen .vic-hero-xp,
     #victory-screen .vic-hero-hp-text,
     #victory-screen .vic-levelup-badge,
+    #victory-screen .vic-hero-progress,
     #victory-screen .vic-loot-title,
     #victory-screen .vic-loot-name,
     #victory-screen .vic-loot-stat,
@@ -7051,6 +7069,17 @@
     // Detect level-ups after XP
     GameState._lastBattleLevelUps = {};
     GameState.heroes.forEach(h => { if (h.level > levelsBefore[h.id]) GameState._lastBattleLevelUps[h.id] = h.level; });
+    GameState._lastBattleProgress = {};
+    GameState.heroes.forEach(h => {
+      if (h.level <= levelsBefore[h.id]) return;
+      const unlockedSkills = (HERO_SKILLS[h.id] || []).filter(s => s.unlockLevel > levelsBefore[h.id] && s.unlockLevel <= h.level);
+      GameState._lastBattleProgress[h.id] = {
+        fromLevel: levelsBefore[h.id],
+        toLevel: h.level,
+        perkPoints: h.level - levelsBefore[h.id],
+        unlockedSkills: unlockedSkills.map(s => s.name)
+      };
+    });
     GameState.heroes.forEach(h => { h.activeStatuses = []; });
 
     if (cell) {
@@ -7090,6 +7119,7 @@
     const drop = GameState._lastBattleDrop || null;
     const enemyIds = GameState._lastBattleEnemyIds || [];
     const levelUps = GameState._lastBattleLevelUps || {};
+    const progress = GameState._lastBattleProgress || {};
     GameState._lastBattleKills = 0; GameState._lastBattleRounds = 0;
 
     // ── Particles ──
@@ -7142,11 +7172,17 @@
         const hpPct = Math.round((h.hp / h.maxHp) * 100);
         const isLow = hpPct < 40;
         const lvlUp = levelUps[h.id];
+        const prog = progress[h.id];
         const xpGained = h.hp > 0 ? `+${xp} XP` : '—';
         const tex = HERO_TEXTURE_PATHS[h.id];
         const iconHtml = tex
           ? `<img src="${tex}" style="width:32px;height:32px;object-fit:contain;border-radius:4px">`
           : `<div class="vic-hero-icon">${h.emoji}</div>`;
+        const progressHtml = prog ? `<div class="vic-hero-progress">
+          <span>LV ${prog.fromLevel} → ${prog.toLevel}</span>
+          <span>+${prog.perkPoints} ${translateText('Perk')}</span>
+          ${prog.unlockedSkills.length ? `<span>✦ ${translateText(prog.unlockedSkills[0])}</span>` : ''}
+        </div>` : '';
         return `<div class="vic-hero-card${lvlUp ? ' levelup' : ''}">
           ${iconHtml}
           <div class="vic-hero-name">${h.name}</div>
@@ -7154,6 +7190,7 @@
           <div class="vic-hero-hp-bar"><div class="vic-hero-hp-fill${isLow ? ' low' : ''}" style="width:${hpPct}%"></div></div>
           <div class="vic-hero-hp-text">${h.hp}/${h.maxHp}</div>
           ${lvlUp ? `<div class="vic-levelup-badge">${translateKey('levelBadge')} ${lvlUp}!</div>` : ''}
+          ${progressHtml}
         </div>`;
       }).join('');
     }
