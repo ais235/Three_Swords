@@ -1900,6 +1900,14 @@
     .item-detail-sub { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
     .item-detail-stats { font-size: 11px; color: var(--accent-green); margin-bottom: 8px; font-weight: bold; line-height: 1.45; }
     .item-detail-stats > div { display: block; }
+    .item-compare { border: 1px solid #26304f; background: #090d19; border-radius: 6px; padding: 7px 8px; margin: 0 0 8px; font-size: 9px; line-height: 1.35; }
+    .item-compare-title { color: var(--text-hint); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-size: 7px; }
+    .item-compare-current { color: var(--text-dim); margin-bottom: 4px; }
+    .item-compare-power { font-weight: bold; margin-bottom: 4px; }
+    .item-compare-power.better, .item-compare-row.better { color: var(--accent-green); }
+    .item-compare-power.worse, .item-compare-row.worse { color: var(--accent-red); }
+    .item-compare-power.same { color: var(--text-dim); }
+    .item-compare-row { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 3px; margin-top: 3px; }
     .item-detail-desc { font-size: 9px; color: #888aa0; line-height: 1.5; margin-bottom: 8px; font-style: italic; padding: 6px 8px; background: #0e0e1d; border-left: 2px solid var(--border); border-radius: 0 4px 4px 0; }
     .item-detail-mismatch { font-size: 11px; color: var(--accent-red); margin-top: 7px; font-weight: 700; line-height: 1.25; }
     .item-detail-btns { display: flex; gap: 5px; flex-wrap: wrap; }
@@ -3786,6 +3794,10 @@
     equippedBest: { ru: 'Надето лучшее', en: 'Equipped best', es: 'Mejor equipado' },
     noBetterGear: { ru: 'Лучшее уже надето', en: 'Best gear already equipped', es: 'Ya está lo mejor equipado' },
     bestBadge: { ru: 'BEST', en: 'BEST', es: 'MEJOR' },
+    compareGear: { ru: 'Сравнение', en: 'Compare', es: 'Comparar' },
+    currentSlot: { ru: 'Сейчас', en: 'Current', es: 'Actual' },
+    emptySlot: { ru: 'Пусто', en: 'Empty', es: 'Vacío' },
+    powerDelta: { ru: 'Сила', en: 'Power', es: 'Poder' },
     unequip: { ru: 'Снять', en: 'Unequip', es: 'Quitar' },
     clickAgain: { ru: 'Клик ещё раз.', en: 'Click again.', es: 'Haz clic otra vez.' },
     emptyBag: { ru: 'Рюкзак пуст', en: 'Bag is empty', es: 'La mochila está vacía' },
@@ -9507,6 +9519,49 @@
     return score;
   }
 
+  function itemCompareStatLabel(key) {
+    const labels = {
+      attack: translateText('Attack'),
+      armor: translateKey('armor'),
+      range: translateKey('rangeShortUi'),
+      move: translateKey('turn'),
+      maxHp: 'HP',
+      mana: translateKey('mana'),
+      armorPierce: translateText('Armor piercing'),
+      manaRegen: translateText('Mana regen/turn'),
+      reflectFlat: translateText('Thorns (damage attacker)'),
+      allyAttack: translateText('Aura') + ' ATK',
+      allyArmor: translateText('Aura') + ' ARM'
+    };
+    return labels[key] || key;
+  }
+
+  function itemCompareHtml(item, hero) {
+    if (!item || !hero || !inventoryItemFitsHero(item, hero)) return '';
+    const current = itemById(hero?.equipment?.[item.slot]);
+    const currentScore = current ? itemPowerScoreForHero(current, hero) : 0;
+    const nextScore = itemPowerScoreForHero(item, hero);
+    const delta = nextScore - currentScore;
+    const deltaClass = delta > 0.01 ? 'better' : delta < -0.01 ? 'worse' : 'same';
+    const signedDelta = `${delta >= 0 ? '+' : ''}${Math.round(delta)}`;
+    const keys = ['attack', 'armor', 'range', 'move', 'maxHp', 'mana', 'armorPierce', 'manaRegen', 'reflectFlat', 'allyAttack', 'allyArmor'];
+    const rows = keys.map(key => {
+      const oldValue = Number(current?.mods?.[key] || 0);
+      const newValue = Number(item?.mods?.[key] || 0);
+      const statDelta = newValue - oldValue;
+      if (!statDelta) return '';
+      const cls = statDelta > 0 ? 'better' : 'worse';
+      return `<div class="item-compare-row ${cls}"><span>${itemCompareStatLabel(key)}</span><span>${oldValue} -> ${newValue} (${statDelta > 0 ? '+' : ''}${statDelta})</span></div>`;
+    }).filter(Boolean).join('');
+    const currentName = current ? translateText(current.name) : translateKey('emptySlot');
+    return `<div class="item-compare">
+      <div class="item-compare-title">${translateKey('compareGear')}</div>
+      <div class="item-compare-current">${translateKey('currentSlot')}: ${currentName}</div>
+      <div class="item-compare-power ${deltaClass}">${translateKey('powerDelta')}: ${signedDelta}</div>
+      ${rows}
+    </div>`;
+  }
+
   function bestInventoryCandidateForSlot(hero, slot) {
     const current = itemById(hero?.equipment?.[slot]);
     const currentScore = current ? itemPowerScoreForHero(current, hero) : 0;
@@ -9752,6 +9807,7 @@
     const forRole = itemHeroClassLabel(sel);
     const fitsHero = inventoryItemFitsHero(sel, hero);
     const itemName = translateText(sel.name);
+    const compareHtml = itemCompareHtml(sel, hero);
     detail.innerHTML = `
     <div style="text-align:center;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px">
       <div style="display:flex;justify-content:center;align-items:center;margin-bottom:6px;min-height:40px">${itemIconMarkup(sel, 36)}</div>
@@ -9761,6 +9817,7 @@
       ${fitsHero ? '' : `<div class="item-detail-mismatch">${translateKey('notForHero')} ${hero.name}</div>`}
     </div>
     <div class="item-detail-stats" style="text-align:center;margin-bottom:6px">${statLinesHtml}</div>
+    ${compareHtml}
     ${descHtml}
     <div class="item-detail-btns" style="display:flex;flex-direction:column;gap:6px">
       <button class="btn btn-green" id="inv-equip-btn" style="width:100%;margin:0"${fitsHero ? '' : ' disabled'}>${translateKey('equip')}</button>
