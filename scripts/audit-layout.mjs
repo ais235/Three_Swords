@@ -8,6 +8,44 @@ const planPath = resolve(root, 'docs/UX_GAMEPLAY_OVERHAUL_PLAN.md');
 const index = readFileSync(indexPath, 'utf8');
 const plan = readFileSync(planPath, 'utf8');
 
+function enemyEntries() {
+  const block = index.match(/const ENEMY_IDS = \{([\s\S]*?)\n\s*\};/);
+  if (!block) return [];
+  return [...block[1].matchAll(/([A-Z0-9_]+):\s*'([^']+)'/g)]
+    .map(match => ({ key: match[1], id: match[2] }));
+}
+
+function allEnemiesHaveAbilityText() {
+  return enemyEntries().every(enemy => index.includes(`[ENEMY_IDS.${enemy.key}]:`) && index.includes('function enemyAbilityText'));
+}
+
+function allEnemiesHaveBestiaryData() {
+  const dataBlock = index.match(/const ENEMY_BESTIARY_DATA = \{([\s\S]*?)\n\s*\};/);
+  if (!dataBlock) return false;
+  return enemyEntries().every(enemy => dataBlock[1].includes(`[ENEMY_IDS.${enemy.key}]:`));
+}
+
+function enemyBehaviorSnippetsPresent() {
+  const snippets = [
+    'u.enemyId === ENEMY_IDS.SHAMAN',
+    'u.enemyId === ENEMY_IDS.PLAGUE_DOCTOR',
+    'u.enemyId === ENEMY_IDS.NECRO',
+    'spawnEnemy(ENEMY_IDS.SKELETON',
+    'u.enemyId === ENEMY_IDS.SUICIDE',
+    'dealDamage(u, h, 20',
+    'u.enemyId === ENEMY_IDS.ZOMBIE',
+    'dealDamage(u, t, 5',
+    'attacker.enemyId === ENEMY_IDS.BLOOD_KNIGHT',
+    'attacker.enemyId === ENEMY_IDS.SPIDER',
+    'attacker.enemyId === ENEMY_IDS.ICE_ELEM',
+    'attacker.enemyId === ENEMY_IDS.HEXER',
+    'attacker.enemyId === ENEMY_IDS.BANSHEE',
+    'target.enemyId === ENEMY_IDS.GHOST',
+    'findWatcher(b)'
+  ];
+  return snippets.every(snippet => index.includes(snippet));
+}
+
 const checks = [
   ['index.html exists', () => existsSync(indexPath)],
   ['plan exists', () => existsSync(planPath)],
@@ -26,6 +64,9 @@ const checks = [
   ['inventory comparison present', () => index.includes('function itemCompareHtml') && index.includes('item-compare') && index.includes('powerDelta')],
   ['battle item proc feedback present', () => index.includes('function spawnBattleTextFx') && index.includes('DODGE') && index.includes('MANA +') && index.includes('REVIVE 5')],
   ['perk descriptions are specific', () => index.includes('const PERK_DESCRIPTIONS') && index.includes('Tank path:') && index.includes('Mystic path:')],
+  ['all enemies have ability text', allEnemiesHaveAbilityText],
+  ['all enemies have bestiary data', allEnemiesHaveBestiaryData],
+  ['enemy behavior snippets present', enemyBehaviorSnippetsPresent],
   ['plan has Definition of Done', () => plan.includes('Definition of Done')],
   ['plan has Out Of Scope', () => plan.includes('Out Of Scope For This Overhaul')]
 ];

@@ -102,7 +102,7 @@ Definition of Done:
 ### Phase 4 - Make Gameplay More Gripping
 
 1. [in progress] Add enemy threat badges: healer, summoner, assassin, explosive, controller, boss.
-2. Ensure every enemy in the bestiary matches actual behavior.
+2. [in progress] Ensure every enemy in the bestiary matches actual behavior.
 3. Add attack/skill danger previews on hover/select.
 4. Review region difficulty curve with repeatable test seeds.
 5. Add positional mechanics after the UI is readable: flank/backstab, guard zones, cover clarity.
