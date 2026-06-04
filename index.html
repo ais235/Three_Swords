@@ -3305,6 +3305,7 @@
   const TILE = { GROUND: 0, FOREST: 1, MOUNTAIN: 2, WATER: 3, FORT: 4, FIRE: 5 };
   const TILE_EMOJI = { [TILE.GROUND]: '🟫', [TILE.FOREST]: '🌲', [TILE.MOUNTAIN]: '⛰️', [TILE.WATER]: '💧', [TILE.FORT]: '🏰', [TILE.FIRE]: '🔥' };
   const STATUS = { STUN: 'stun', FREEZE: 'freeze', WEB: 'web', POISON: 'poison', BURN: 'burn', SLOW: 'slow', BLIND: 'blind', CURSE: 'curse', BERSERK: 'berserk', STEALTH: 'stealth' };
+  const SFX_AUDITOR_ENABLED = /(?:\?|&)sfx-audit=1(?:&|$)/.test(window.location.search) || localStorage.getItem('threeBladesSfxAudit') === '1';
   const SAVE_KEY = 'threeHeroesSave';
   const LEGACY_SAVE_KEY = 'save';
   const RECORDS_KEY = 'threeBladesRecordsV1';
@@ -11089,9 +11090,14 @@
       settingLanguage.value = currentLanguage();
       settingLanguage.onchange = e => setGameLanguage(e.target.value);
     }
-    if (btnOpenSfxAuditor) btnOpenSfxAuditor.onclick = openSfxAuditor;
-    if (btnSfxAuditorClose) btnSfxAuditorClose.onclick = closeSfxAuditor;
-    if (btnSfxAuditorReset) btnSfxAuditorReset.onclick = resetSfxOverrides;
+    if (btnOpenSfxAuditor) {
+      btnOpenSfxAuditor.classList.toggle('hidden', !SFX_AUDITOR_ENABLED);
+      btnOpenSfxAuditor.onclick = SFX_AUDITOR_ENABLED ? openSfxAuditor : null;
+    }
+    if (SFX_AUDITOR_ENABLED) {
+      if (btnSfxAuditorClose) btnSfxAuditorClose.onclick = closeSfxAuditor;
+      if (btnSfxAuditorReset) btnSfxAuditorReset.onclick = resetSfxOverrides;
+    }
     document.getElementById('btn-menu-continue').onclick = closeGameMenu;
     document.getElementById('btn-menu-tutorial').onclick = () => {
       closeGameMenu();

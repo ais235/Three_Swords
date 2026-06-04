@@ -1,6 +1,7 @@
 # Three Blades UX / Gameplay Overhaul Plan
 
-Baseline commit: `257c0d1` (`chore: baseline before gameplay ux overhaul`).
+Initial baseline commit: `257c0d1` (`chore: baseline before gameplay ux overhaul`).
+Phase 2 baseline commit: `b5f2e91` (`fix: phase 1 map sdk inventory offline`).
 
 ## Platform Check: Yandex Games And Modules
 
@@ -38,20 +39,53 @@ Shared conclusions:
 
 ### Phase 1 - Stabilize The Current Build
 
-1. Commit the current baseline.
-2. Fix Yandex SDK loading path according to the current docs.
-3. Fix map action consistency: clicking a node and pressing Enter must trigger the same logic.
-4. Add offline fallbacks for wanderer and arena so local development remains playable without SDK.
-5. Fix broken responsive selectors for the current inventory DOM.
-6. Add a simple local audit script for viewport/layout checks.
+Status: mostly complete in `b5f2e91`; close with a repeatable audit command.
+
+1. [done] Commit the current baseline.
+2. [done] Fix Yandex SDK loading path according to the current docs.
+3. [done] Fix map action consistency: clicking a node and pressing Enter must trigger the same logic.
+4. [done] Add offline fallbacks for wanderer and arena so local development remains playable without SDK.
+5. [done] Fix broken responsive selectors for the current inventory DOM.
+6. [in progress] Add a simple local audit script for selector/platform checks.
+
+Definition of Done:
+
+- `docs/UX_GAMEPLAY_OVERHAUL_PLAN.md` is in git.
+- `npm run audit` checks the current `index.html` for key platform and layout invariants.
+- Manual smoke checklist is documented: map click equals Enter, wanderer/arena work without SDK, inventory is checked at desktop, 768px, and mobile landscape widths.
+
+### Phase 1.5 - Pre-UI Polish
+
+1. Confirm `LoadingAPI.ready()` is sent after Yandex SDK init.
+2. Verify Garet Berserk naming/cooldown consistency in code and UI.
+3. Keep SFX auditor disabled in normal play; expose only via explicit dev flag.
+4. Treat `b5f2e91` as the Phase 2 baseline.
 
 ### Phase 2 - Make The UI Feel Like A Game
 
-1. Define target viewports: desktop landscape, mobile landscape, mobile portrait.
+Target viewports:
+
+- Desktop landscape: at least 900x520; battle canvas remains primary, side panels together stay secondary.
+- Mobile landscape: 667x375 and 812x375.
+- Mobile portrait: acceptable graceful degradation is allowed if the tactical UI cannot remain readable.
+
+Reference assets:
+
+- Use `assets/ui/2026-05-09_*.png`, `assets/ui/boy.png`, `assets/ui/menyu.png`, `assets/ui/karta_mira.png`, and `assets/ui/snaryazhenie.png` as visual direction, not as strict layouts.
+
+Tasks:
+
+1. Define target viewports in CSS and audit notes.
 2. Rework battle HUD around icon-first commands, portraits, threat markers, and large skill buttons.
 3. Reduce text panels in battle; move explanations into tooltips and bestiary.
 4. Rework victory screen into a reward moment: loot, level-up, new skill, power delta.
 5. Rework inventory into a no-scroll primary workflow on desktop and mobile landscape.
+
+Definition of Done:
+
+- Battle actions are icon-first and large enough to use without reading a text wall.
+- Victory clearly shows loot and level-up stat deltas (`before -> after`) when applicable.
+- Inventory's main equip flow does not require vertical scrolling on desktop landscape.
 
 ### Phase 3 - Make Progression Feel Powerful
 
@@ -61,13 +95,22 @@ Shared conclusions:
 4. Strengthen perk descriptions so each branch promises a playstyle, not only numbers.
 5. Add battle feedback for perk/item effects: crit, pierce, reflect, aura, dodge, revive.
 
+Definition of Done:
+
+- Every implemented perk/item proc has visible feedback in combat: battle log plus at least one of flash, sound, icon, or floating marker.
+
 ### Phase 4 - Make Gameplay More Gripping
 
 1. Add enemy threat badges: healer, summoner, assassin, explosive, controller, boss.
-2. Add attack/skill danger previews on hover/select.
-3. Add positional mechanics after the UI is readable: flank/backstab, guard zones, cover clarity.
+2. Ensure every enemy in the bestiary matches actual behavior.
+3. Add attack/skill danger previews on hover/select.
 4. Review region difficulty curve with repeatable test seeds.
-5. Ensure every enemy in the bestiary matches actual behavior.
+5. Add positional mechanics after the UI is readable: flank/backstab, guard zones, cover clarity.
+
+Definition of Done:
+
+- Each `ENEMY_IDS` entry has matching `enemyAbilityText`, bestiary tactic, and code behavior.
+- Any new positional mechanic is added only after battle HUD readability is verified.
 
 ### Phase 5 - Architecture Refactor
 
@@ -84,6 +127,20 @@ Shared conclusions:
 3. Verify archive size under 100 MB uncompressed.
 4. Run Yandex debug panel checks for SDK init, language, ads, saves, and game-ready event.
 5. Capture final screenshots for moderation and store them separately from runtime assets.
+
+Definition of Done:
+
+- Release packaging excludes `chatgpt_*`, `_debug_*`, source ZIPs under `assets/`, and other scratch files.
+- Release archive keeps only `index.html` in root and runtime files in ascii-named folders.
+
+## Out Of Scope For This Overhaul
+
+- Do not add new enemies, regions, or long-term meta-progression in this milestone.
+- Do not change wave/gold balance blindly; every balance change needs a note in the commit or plan.
+- Do not start Phase 5 until Phase 2 and Phase 3 are visually checked at least on desktop.
+- Keep one logical block per commit.
+- Add new UI strings through `I18N` / translation helpers; avoid hardcoded Russian in HTML.
+- Do not rewrite the app into React/Vue or another framework.
 
 ## First Implementation Slice
 
