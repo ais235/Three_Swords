@@ -141,6 +141,58 @@
     .br-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 4px; }
     .battle-actions { display: flex; flex-direction: column; gap: 4px; }
     .battle-actions .btn { font-size: 10px; padding: 5px 8px; text-align: center; width: 100%; margin: 0; box-sizing: border-box; }
+    .battle-actions .skill-action-btn {
+      min-height: 42px;
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr);
+      grid-template-rows: 1fr auto;
+      column-gap: 7px;
+      align-items: center;
+      text-align: left;
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: linear-gradient(180deg, rgba(26,26,46,0.98), rgba(13,13,26,0.98));
+    }
+    .skill-action-btn .skill-action-icon {
+      grid-row: 1 / 3;
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid currentColor;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.18);
+      font-size: 16px;
+      line-height: 1;
+    }
+    .skill-action-btn .skill-action-name {
+      min-width: 0;
+      color: var(--text-main);
+      font-size: 10px;
+      line-height: 1.15;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .skill-action-btn .skill-action-meta {
+      color: var(--text-dim);
+      font-size: 8px;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .skill-action-btn.is-locked,
+    .skill-action-btn.is-disabled {
+      opacity: 0.45;
+    }
+    .battle-actions .battle-utility-btn {
+      min-height: 28px;
+      border-color: var(--border);
+      color: var(--text-dim);
+      background: #0d0d1a;
+    }
     .deploy-hint-box { font-size: 10px; color: var(--text-dim); padding: 6px; border: 1px solid var(--border); border-radius: 4px; line-height: 1.4; }
     .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .stats-line { font-size: 12px; color: var(--text-dim); margin: 4px 0; }
@@ -2094,6 +2146,20 @@
         width: 100%;
         box-sizing: border-box;
       }
+      .battle-actions .skill-action-btn {
+        min-height: 32px;
+        grid-template-columns: 24px minmax(0, 1fr);
+        column-gap: 5px;
+        padding: 3px 5px;
+      }
+      .skill-action-btn .skill-action-icon {
+        width: 22px;
+        height: 22px;
+        font-size: 12px;
+        border-radius: 4px;
+      }
+      .skill-action-btn .skill-action-name { font-size: 8px; }
+      .skill-action-btn .skill-action-meta { font-size: 7px; }
       .battle-actions #btn-start-battle { grid-column: unset; }
       .deploy-hint-box { display: none; }
 
@@ -2281,6 +2347,20 @@
       #unit-stats { font-size: 7px !important; margin-bottom: 1px !important; }
       .battle-actions { display: flex; flex-direction: column; gap: 2px; }
       .battle-actions .btn { min-height: 22px; padding: 1px 3px; font-size: 7px; width: 100%; box-sizing: border-box; margin: 0; }
+      .battle-actions .skill-action-btn {
+        min-height: 27px;
+        grid-template-columns: 20px minmax(0, 1fr);
+        column-gap: 4px;
+        padding: 2px 4px;
+      }
+      .skill-action-btn .skill-action-icon {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+        border-radius: 4px;
+      }
+      .skill-action-btn .skill-action-name { font-size: 7px; }
+      .skill-action-btn .skill-action-meta { font-size: 6px; }
       .battle-actions #btn-start-battle { grid-column: unset; }
       .deploy-hint-box { display: none; }
 
@@ -2583,6 +2663,22 @@
       font-size: 11px !important;
       line-height: 1.45;
     }
+    .battle-actions .skill-action-btn {
+      min-height: 42px;
+      padding: 6px 8px;
+    }
+    .battle-actions .skill-action-btn .skill-action-icon {
+      font-size: 16px !important;
+      line-height: 1 !important;
+    }
+    .battle-actions .skill-action-btn .skill-action-name {
+      font-size: 11px !important;
+      line-height: 1.15 !important;
+    }
+    .battle-actions .skill-action-btn .skill-action-meta {
+      font-size: 9px !important;
+      line-height: 1.2 !important;
+    }
     #shop-list .card-name,
     #shop-sell-list .card-name {
       font-size: 12px !important;
@@ -2821,6 +2917,54 @@
       height: 21px;
       font-size: 10px;
       flex: 0 0 21px;
+    }
+    #battle-screen .battle-actions .skill-action-btn {
+      min-height: 42px !important;
+      grid-template-columns: 30px minmax(0, 1fr);
+      padding: 6px 8px !important;
+      text-align: left;
+    }
+    #battle-screen .battle-actions .skill-action-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 16px !important;
+      line-height: 1 !important;
+    }
+    #battle-screen .battle-actions .skill-action-name {
+      font-size: 11px !important;
+      line-height: 1.15 !important;
+    }
+    #battle-screen .battle-actions .skill-action-meta {
+      font-size: 9px !important;
+      line-height: 1.2 !important;
+    }
+    @media (max-height: 520px) and (orientation: landscape) {
+      #battle-screen .battle-actions .skill-action-btn {
+        min-height: 32px !important;
+        grid-template-columns: 24px minmax(0, 1fr);
+        padding: 3px 5px !important;
+      }
+      #battle-screen .battle-actions .skill-action-icon {
+        width: 22px;
+        height: 22px;
+        font-size: 12px !important;
+      }
+      #battle-screen .battle-actions .skill-action-name { font-size: 8px !important; }
+      #battle-screen .battle-actions .skill-action-meta { font-size: 7px !important; }
+    }
+    @media (max-height: 430px) and (orientation: landscape) {
+      #battle-screen .battle-actions .skill-action-btn {
+        min-height: 27px !important;
+        grid-template-columns: 20px minmax(0, 1fr);
+        padding: 2px 4px !important;
+      }
+      #battle-screen .battle-actions .skill-action-icon {
+        width: 18px;
+        height: 18px;
+        font-size: 10px !important;
+      }
+      #battle-screen .battle-actions .skill-action-name { font-size: 7px !important; }
+      #battle-screen .battle-actions .skill-action-meta { font-size: 6px !important; }
     }
   </style>
   <script src="/sdk.js"></script>
@@ -8178,7 +8322,11 @@
       if (modeBadge) { modeBadge.className = 'm-move'; modeBadge.textContent = `↔ ${translateText('DEPLOYMENT')}`; modeBadge.classList.remove('hidden'); }
       title.textContent = translateText('Click hero → drag');
       stats.innerHTML = '';
-      actions.innerHTML = `<button class="btn btn-primary" id="btn-start-battle" style="width:100%">⚔ ${translateText('Start Battle')}</button>`;
+      actions.innerHTML = `<button class="btn btn-primary skill-action-btn" id="btn-start-battle" style="width:100%">
+        <span class="skill-action-icon">⚔</span>
+        <span class="skill-action-name">${translateText('Start Battle')}</span>
+        <span class="skill-action-meta">${translateText('DEPLOYMENT')}</span>
+      </button>`;
       const sb = document.getElementById('btn-start-battle');
       if (sb) sb.onclick = () => beginCombatFromDeploy();
       return;
@@ -8215,10 +8363,9 @@
     let html = '';
     if (!b.heroActionDone) {
       if (heroCanUndoMove(b, u)) {
-        html += `<button class="btn btn-gold" id="btn-undo-move" title="${translateKey('undoMoveTitle')}" style="margin-bottom:2px">${translateKey('undoMove')}</button>`;
+        html += `<button class="btn btn-gold battle-utility-btn" id="btn-undo-move" title="${translateKey('undoMoveTitle')}" style="margin-bottom:2px">↶ ${translateKey('undoMove')}</button>`;
       }
       // 6: Skill buttons with cooldown, level-lock, and tooltips
-      const cdLabel = (cd) => cd > 0 ? ` [${cd}]` : '';
       const hh2 = GameState.heroes.find(x => x.id === u.heroId) || u;
       const heroLevel = hh2.level || 1;
       const skillMakeBtn = (id, skillKey, icon, label, cdVal, extra) => {
@@ -8228,12 +8375,23 @@
         const lvlPrefix = currentLanguage() === 'es' ? 'nv.' : 'lv.';
         const metaStr = skDef ? (skDef.cost ? `MP: ${skDef.cost}` : skDef.cd ? `${translateKey('cooldownShort')}: ${skDef.cd}` : '') : '';
         const tooltipText = skDef ? `${translateText(skDef.name)} (${lvlPrefix}${unlockLvl})&#10;${translateText(skDef.desc)}${metaStr ? '&#10;' + metaStr : ''}` : translateText(label);
+        const actionName = skDef ? translateText(skDef.name) : translateText(label);
         if (locked) {
-          return `<button class="btn" id="${id}" title="${translateKey('unlocksAtLevel')} ${unlockLvl}&#10;${skDef ? translateText(skDef.desc) : ''}" style="opacity:0.3;cursor:not-allowed">${icon} ${translateText(label)} [${lvlPrefix}${unlockLvl}]</button>`;
+          return `<button class="btn skill-action-btn is-locked" id="${id}" title="${translateKey('unlocksAtLevel')} ${unlockLvl}&#10;${skDef ? translateText(skDef.desc) : ''}" style="cursor:not-allowed">
+            <span class="skill-action-icon">🔒</span>
+            <span class="skill-action-name">${actionName}</span>
+            <span class="skill-action-meta">${lvlPrefix}${unlockLvl}</span>
+          </button>`;
         }
         const disabled = cdVal > 0 || (extra && extra.mpFail);
-        const disStyle = disabled ? 'opacity:0.45' : '';
-        return `<button class="btn" id="${id}" title="${tooltipText.replace(/"/g,'&quot;')}"${disStyle ? ` style="${disStyle}"` : ''}>${icon} ${translateText(label)}${cdLabel(cdVal)}</button>`;
+        const currentMp = extra && typeof extra.mpCost === 'number' ? `MP ${u.mana}/${extra.mpCost}` : '';
+        const meta = cdVal > 0 ? `CD ${cdVal}` : currentMp || metaStr || translateKey('ready');
+        const disabledCls = disabled ? ' is-disabled' : '';
+        return `<button class="btn skill-action-btn${disabledCls}" id="${id}" title="${tooltipText.replace(/"/g,'&quot;')}">
+          <span class="skill-action-icon">${icon}</span>
+          <span class="skill-action-name">${actionName}</span>
+          <span class="skill-action-meta">${meta}</span>
+        </button>`;
       };
       if (u.heroId === 'garet') {
         html += skillMakeBtn('sk-shield',  'shieldBash', '🛡', 'Shield Bash',  u.cds.shieldBash, null);
@@ -8246,15 +8404,15 @@
         html += skillMakeBtn('sk-rain',  'arrowRain', '🌧','Arrow Rain',     u.cds.arrowRain,  null);
       }
       if (u.heroId === 'seris') {
-        html += skillMakeBtn('sk-fb',  'fireball', '🔥','Fireball (3mp)', u.cds.fireball, { mpFail: u.mana < 3 });
-        html += skillMakeBtn('sk-fr',  'freeze',   '🧊','Freeze (4mp)',     u.cds.freeze,   { mpFail: u.mana < 4 });
-        html += skillMakeBtn('sk-met', 'meteor',   '☄', 'Meteor (8mp)',      u.cds.meteor,   { mpFail: u.mana < 8 });
+        html += skillMakeBtn('sk-fb',  'fireball', '🔥','Fireball', u.cds.fireball, { mpFail: u.mana < 3, mpCost: 3 });
+        html += skillMakeBtn('sk-fr',  'freeze',   '🧊','Freeze',   u.cds.freeze,   { mpFail: u.mana < 4, mpCost: 4 });
+        html += skillMakeBtn('sk-met', 'meteor',   '☄', 'Meteor',   u.cds.meteor,   { mpFail: u.mana < 8, mpCost: 8 });
       }
-      if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn" id="btn-skip-move">${translateKey('skipMove')}</button>`;
-      html += `<button class="btn" id="btn-wait">${translateKey('waitTurn')}</button>`;
+      if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn battle-utility-btn" id="btn-skip-move">→ ${translateKey('skipMove')}</button>`;
+      html += `<button class="btn battle-utility-btn" id="btn-wait">⌛ ${translateKey('waitTurn')}</button>`;
     }
     // 10: Inventory button always visible in battle
-    html += `<button class="btn" id="btn-battle-inv" style="margin-top:4px">${translateKey('battleInventory')}</button>`;
+    html += `<button class="btn battle-utility-btn" id="btn-battle-inv" style="margin-top:4px">🎒 ${translateKey('battleInventory')}</button>`;
     actions.innerHTML = html;
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     const heroLvl2 = (GameState.heroes.find(x => x.id === u.heroId) || u).level || 1;
