@@ -39,14 +39,14 @@ Shared conclusions:
 
 ### Phase 1 - Stabilize The Current Build
 
-Status: mostly complete in `b5f2e91`; close with a repeatable audit command.
+Status: complete in `e45ffdc` with a repeatable audit command.
 
 1. [done] Commit the current baseline.
 2. [done] Fix Yandex SDK loading path according to the current docs.
 3. [done] Fix map action consistency: clicking a node and pressing Enter must trigger the same logic.
 4. [done] Add offline fallbacks for wanderer and arena so local development remains playable without SDK.
 5. [done] Fix broken responsive selectors for the current inventory DOM.
-6. [in progress] Add a simple local audit script for selector/platform checks.
+6. [done] Add a simple local audit script for selector/platform checks.
 
 Definition of Done:
 
@@ -56,10 +56,10 @@ Definition of Done:
 
 ### Phase 1.5 - Pre-UI Polish
 
-1. Confirm `LoadingAPI.ready()` is sent after Yandex SDK init.
-2. Verify Garet Berserk naming/cooldown consistency in code and UI.
-3. Keep SFX auditor disabled in normal play; expose only via explicit dev flag.
-4. Treat `b5f2e91` as the Phase 2 baseline.
+1. [done] Confirm `LoadingAPI.ready()` is sent after Yandex SDK init.
+2. [done] Verify Garet Berserk naming/cooldown consistency in code and UI.
+3. [done] Keep SFX auditor disabled in normal play; expose only via explicit dev flag.
+4. [done] Treat `b5f2e91` as the Phase 2 baseline.
 
 ### Phase 2 - Make The UI Feel Like A Game
 
@@ -75,10 +75,10 @@ Reference assets:
 
 Tasks:
 
-1. Define target viewports in CSS and audit notes.
-2. Rework battle HUD around icon-first commands, portraits, threat markers, and large skill buttons.
-3. Reduce text panels in battle; move explanations into tooltips and bestiary.
-4. Rework victory screen into a reward moment: loot, level-up, new skill, power delta.
+1. [done] Define target viewports in CSS and audit notes.
+2. [in progress] Rework battle HUD around icon-first commands, portraits, threat markers, and large skill buttons.
+3. [in progress] Reduce text panels in battle; move explanations into tooltips and bestiary.
+4. [done initial pass] Rework victory screen into a reward moment: loot, level-up, new skill, power delta.
 5. Rework inventory into a no-scroll primary workflow on desktop and mobile landscape.
 
 Definition of Done:
@@ -101,7 +101,7 @@ Definition of Done:
 
 ### Phase 4 - Make Gameplay More Gripping
 
-1. Add enemy threat badges: healer, summoner, assassin, explosive, controller, boss.
+1. [in progress] Add enemy threat badges: healer, summoner, assassin, explosive, controller, boss.
 2. Ensure every enemy in the bestiary matches actual behavior.
 3. Add attack/skill danger previews on hover/select.
 4. Review region difficulty curve with repeatable test seeds.

@@ -825,6 +825,23 @@
     .bestiary-weakness { font-size: 9px; color: #f39c12; line-height: 1.6; }
     .bestiary-locked { font-size: 9px; color: var(--text-hint); font-style: italic; }
     .bestiary-region-badge { font-size: 7px; padding: 2px 8px; border-radius: 3px; display: inline-block; margin-bottom: 4px; }
+    .threat-badges { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .threat-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 34px; min-height: 18px; padding: 2px 6px; border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.18); background: #111128;
+      font-size: 7px; line-height: 1; letter-spacing: 0; color: var(--text-main);
+    }
+    .threat-badges.compact { margin: 5px 0 2px; gap: 3px; }
+    .threat-badges.compact .threat-badge { min-width: 28px; min-height: 15px; padding: 1px 4px; font-size: 6px; }
+    .threat-healer { color: #7dffbf; border-color: rgba(46,204,113,.55); background: rgba(46,204,113,.12); }
+    .threat-summoner { color: #d8b4ff; border-color: rgba(155,89,182,.55); background: rgba(155,89,182,.14); }
+    .threat-assassin { color: #ff8f8f; border-color: rgba(231,76,60,.6); background: rgba(231,76,60,.14); }
+    .threat-explosive { color: #ffd06b; border-color: rgba(243,156,18,.65); background: rgba(243,156,18,.14); }
+    .threat-controller { color: #8bd3ff; border-color: rgba(74,158,255,.58); background: rgba(74,158,255,.13); }
+    .threat-boss { color: #ffe27a; border-color: rgba(240,165,0,.72); background: rgba(240,165,0,.17); }
+    .threat-tank { color: #cfd4ff; border-color: rgba(180,190,255,.45); background: rgba(180,190,255,.10); }
+    .threat-ranged { color: #9ff0ff; border-color: rgba(26,188,156,.5); background: rgba(26,188,156,.12); }
     .bregion-1 { background: rgba(74,158,255,.15); color: #4a9eff; border: 1px solid rgba(74,158,255,.4); }
     .bregion-2 { background: rgba(155,89,182,.15); color: #9b59b6; border: 1px solid rgba(155,89,182,.4); }
     .bregion-3 { background: rgba(231,76,60,.15); color: #e74c3c; border: 1px solid rgba(231,76,60,.4); }
@@ -3651,6 +3668,14 @@
     victoryRounds: { ru: 'РАУНДОВ', en: 'ROUNDS', es: 'RONDAS' },
     victoryLoot: { ru: 'ДОБЫЧА', en: 'LOOT', es: 'BOTÍN' },
     victoryStudied: { ru: 'ИЗУЧЕНО:', en: 'STUDIED:', es: 'ESTUDIADO:' },
+    threatHealer: { ru: 'HEAL', en: 'HEAL', es: 'CURA' },
+    threatSummoner: { ru: 'SUM', en: 'SUM', es: 'INV' },
+    threatAssassin: { ru: 'KILL', en: 'KILL', es: 'KILL' },
+    threatExplosive: { ru: 'BOOM', en: 'BOOM', es: 'BOOM' },
+    threatController: { ru: 'CTRL', en: 'CTRL', es: 'CTRL' },
+    threatBoss: { ru: 'BOSS', en: 'BOSS', es: 'JEFE' },
+    threatTank: { ru: 'TANK', en: 'TANK', es: 'TANK' },
+    threatRanged: { ru: 'RANGE', en: 'RANGE', es: 'DIST' },
     equipLoot: { ru: '🎒 НАДЕТЬ ДОБЫЧУ', en: '🎒 EQUIP LOOT', es: '🎒 EQUIPAR BOTÍN' },
     openBag: { ru: 'Открыть рюкзак', en: 'Open bag', es: 'Abrir mochila' },
     openBagEmpty: { ru: 'Открыть рюкзак (пусто)', en: 'Open bag (empty)', es: 'Abrir mochila (vacía)' },
@@ -9069,6 +9094,7 @@
       <div class="bestiary-detail-icon">${bestiaryEnemyPortraitHtml(id, 88)}</div>
       ${regionBadge}
       <div class="bestiary-detail-name">${translateText(d.name)}${isMiniBoss}${isBoss}</div>
+      ${enemyThreatBadgesHtml(id)}
       ${statsHtml}
       ${abilityHtml}`;
     localizeUI(document.getElementById('bestiary-screen'));
@@ -10897,6 +10923,32 @@
     return translateText(m[enemyId] || 'Dangerous enemy.');
   }
 
+  function enemyThreatTags(enemyId) {
+    const D = ENEMY_IDS;
+    const d = enemyDef(enemyId);
+    const tags = [];
+    const add = (key, cls) => tags.push({ key, cls });
+    if ([D.SHAMAN, D.PLAGUE_DOCTOR].includes(enemyId)) add('threatHealer', 'threat-healer');
+    if ([D.NECRO, D.DARK_LORD].includes(enemyId)) add('threatSummoner', 'threat-summoner');
+    if ([D.ASSASSIN, D.VOID_STALKER, D.WOLF].includes(enemyId)) add('threatAssassin', 'threat-assassin');
+    if ([D.ZOMBIE, D.SUICIDE, D.CHAOS, D.FIRE_TITAN, D.HYDRA].includes(enemyId)) add('threatExplosive', 'threat-explosive');
+    if ([D.SPIDER, D.ICE_ELEM, D.HEXER, D.BANSHEE, D.CULTIST, D.ARCANE_SENTINEL, D.BOG_LURKER, D.THORN_DRYAD, D.STONE_GOLEM].includes(enemyId)) add('threatController', 'threat-controller');
+    if (d && (d.boss || d.miniBoss)) add('threatBoss', 'threat-boss');
+    if ([D.ORC_GUARD, D.SHIELDBEARER, D.STONE_GOLEM, D.DARK_KNIGHT, D.BLOOD_KNIGHT, D.BOAR].includes(enemyId)) add('threatTank', 'threat-tank');
+    if (d && d.range > 1) add('threatRanged', 'threat-ranged');
+    return tags;
+  }
+
+  function enemyThreatBadgesHtml(enemyId, compact = false) {
+    const tags = enemyThreatTags(enemyId);
+    if (!tags.length) return '';
+    const cls = compact ? 'threat-badges compact' : 'threat-badges';
+    return `<div class="${cls}">` + tags.map(t => {
+      const label = translateKey(t.key);
+      return `<span class="threat-badge ${t.cls}" title="${label}">${label}</span>`;
+    }).join('') + `</div>`;
+  }
+
   //══════════ INPUT (battle) ══════════
   canvas.addEventListener('mousemove', e => {
     if (BattleView.dragging) {
@@ -10937,6 +10989,7 @@
       const hpPct = Math.max(0, Math.min(100, Math.round((u.hp / u.maxHp) * 100)));
       const sts = (u.activeStatuses || []).map(s => s.type === STATUS.FREEZE ? '🧊' : s.type === STATUS.POISON ? '☠️' : s.type === STATUS.SLOW ? '🐢' : '•').join(' ');
       tip.innerHTML = `<b>${u.emoji} ${u.name}</b><br/>
+      ${enemyThreatBadgesHtml(u.enemyId, true)}
       HP: ${u.hp}/${u.maxHp}
       <div style="height:6px;background:#222;border:1px solid #444;border-radius:3px;overflow:hidden;margin:4px 0">
         <div style="height:100%;width:${hpPct}%;background:#e74c3c"></div>

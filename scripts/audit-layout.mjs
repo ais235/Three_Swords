@@ -21,6 +21,7 @@ const checks = [
   ['offline arena fallback present', () => index.includes('startArena();')],
   ['SFX auditor dev flag present', () => index.includes('SFX_AUDITOR_ENABLED')],
   ['Berserk key is consistent', () => index.includes("key: 'berserk'") && index.includes('u.cds.berserk = 6') && !index.includes('inspire')],
+  ['enemy threat badges present', () => index.includes('function enemyThreatTags') && index.includes('threat-badges') && index.includes('enemyThreatBadgesHtml')],
   ['plan has Definition of Done', () => plan.includes('Definition of Done')],
   ['plan has Out Of Scope', () => plan.includes('Out Of Scope For This Overhaul')]
 ];
