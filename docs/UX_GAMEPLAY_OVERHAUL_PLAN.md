@@ -91,8 +91,8 @@ Definition of Done:
 
 ### Phase 3 - Make Progression Feel Powerful
 
-1. Add level-up presentation with before/after stat deltas.
-2. Give new skills strong unlock feedback.
+1. [in progress] Add level-up presentation with before/after stat deltas.
+2. [in progress] Give new skills strong unlock feedback.
 3. [done initial pass] Add visible equipment comparison and "best candidate" hints.
 4. [done initial pass] Strengthen perk descriptions so each branch promises a playstyle, not only numbers.
 5. [in progress] Add battle feedback for perk/item effects: crit, pierce, reflect, aura, dodge, revive.
@@ -100,6 +100,7 @@ Definition of Done:
 Definition of Done:
 
 - Every implemented perk/item proc has visible feedback in combat: battle log plus at least one of flash, sound, icon, or floating marker.
+- Victory has a compact power-surge summary for level-ups, perk points, new skills, and loot.
 
 ### Phase 4 - Make Gameplay More Gripping
 

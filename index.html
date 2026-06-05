@@ -1350,6 +1350,12 @@
     .vic-stat-card-icon { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 20px; background: #0a0a14; padding: 0 4px; line-height: 1.4; }
     .vic-stat-card-val { font-size: 20px; color: var(--text-main); display: block; margin-top: 6px; }
     .vic-stat-card-lbl { font-size: 6px; color: var(--text-dim); display: block; margin-top: 4px; letter-spacing: 1px; }
+    .victory-power { width: 100%; max-width: 560px; display: none; border: 1px solid rgba(240,165,0,.55); background: linear-gradient(180deg, rgba(44,30,5,.96), rgba(14,14,28,.96)); border-radius: 8px; padding: 9px 10px; box-shadow: 0 0 18px rgba(240,165,0,.12); }
+    .victory-power.show { display: block; }
+    .victory-power-title { color: var(--accent-gold); font-size: 8px; letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase; }
+    .victory-power-list { display: flex; flex-wrap: wrap; gap: 5px; }
+    .victory-power-chip { display: inline-flex; align-items: center; gap: 5px; min-height: 24px; padding: 4px 7px; border: 1px solid rgba(255,255,255,.11); border-radius: 5px; background: rgba(255,255,255,.05); color: var(--text-main); font-size: 9px; line-height: 1.2; }
+    .victory-power-chip strong { color: var(--accent-green); font-weight: 700; }
     /* Divider */
     .victory-divider { width: 100%; max-width: 560px; height: 2px; background: repeating-linear-gradient(90deg,#2a2a4a 0,#2a2a4a 8px,transparent 8px,transparent 14px); flex-shrink: 0; margin: 4px 0; }
     /* Hero cards (portrait) */
@@ -1466,6 +1472,10 @@
       .victory-center { grid-column: 2; grid-row: 2; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 4px 8px; align-items: stretch; }
       .victory-title-area { display: none; }
       .victory-stats-grid { max-width: none; margin-top: 0; }
+      .victory-power { max-width: none; padding: 5px 6px; }
+      .victory-power-title { font-size: 6px; margin-bottom: 3px; }
+      .victory-power-list { gap: 3px; }
+      .victory-power-chip { min-height: 18px; padding: 2px 5px; font-size: 6px; }
       .victory-divider { max-width: none; display: none; }
       .victory-loot { max-width: none; }
       .victory-bestiary-row { max-width: none; }
@@ -3527,6 +3537,7 @@
         <div class="victory-center">
           <div class="victory-title-area" id="victory-title-area"></div>
           <div class="victory-stats-grid" id="victory-stats"></div>
+          <div class="victory-power" id="victory-power"></div>
           <div class="victory-divider"></div>
           <!-- Hero cards — portrait only (inside center) -->
           <div class="victory-heroes-portrait" id="victory-heroes-portrait"></div>
@@ -3916,6 +3927,10 @@
     victoryRounds: { ru: 'РАУНДОВ', en: 'ROUNDS', es: 'RONDAS' },
     victoryLoot: { ru: 'ДОБЫЧА', en: 'LOOT', es: 'BOTÍN' },
     victoryStudied: { ru: 'ИЗУЧЕНО:', en: 'STUDIED:', es: 'ESTUDIADO:' },
+    powerSurge: { ru: 'РОСТ СИЛЫ', en: 'POWER SURGE', es: 'AUMENTO DE PODER' },
+    powerReady: { ru: 'готово к бою', en: 'battle-ready', es: 'listo para batalla' },
+    perkPoint: { ru: 'перк', en: 'perk', es: 'mejora' },
+    newSkill: { ru: 'новый навык', en: 'new skill', es: 'nueva habilidad' },
     threatHealer: { ru: 'HEAL', en: 'HEAL', es: 'CURA' },
     threatSummoner: { ru: 'SUM', en: 'SUM', es: 'INV' },
     threatAssassin: { ru: 'KILL', en: 'KILL', es: 'KILL' },
@@ -7539,6 +7554,28 @@
         <span class="vic-stat-card-val">${rounds}</span>
         <span class="vic-stat-card-lbl">${translateKey('victoryRounds')}</span>
       </div>`;
+
+    const powerEl = document.getElementById('victory-power');
+    if (powerEl) {
+      const chips = [];
+      GameState.heroes.forEach(h => {
+        const prog = progress[h.id];
+        if (!prog) return;
+        chips.push(`<span class="victory-power-chip">${h.emoji} ${h.name}: <strong>LV ${prog.fromLevel} -> ${prog.toLevel}</strong></span>`);
+        if (prog.perkPoints > 0) chips.push(`<span class="victory-power-chip">+${prog.perkPoints} ${translateKey('perkPoint')}</span>`);
+        (prog.unlockedSkills || []).forEach(skillName => {
+          chips.push(`<span class="victory-power-chip">✦ ${translateKey('newSkill')}: <strong>${translateText(skillName)}</strong></span>`);
+        });
+      });
+      if (drop) chips.push(`<span class="victory-power-chip">${drop.emoji || ''} ${translateKey('victoryLoot')}: <strong>${translateText(drop.name)}</strong></span>`);
+      if (chips.length) {
+        powerEl.classList.add('show');
+        powerEl.innerHTML = `<div class="victory-power-title">${translateKey('powerSurge')} · ${translateKey('powerReady')}</div><div class="victory-power-list">${chips.join('')}</div>`;
+      } else {
+        powerEl.classList.remove('show');
+        powerEl.innerHTML = '';
+      }
+    }
 
     // ── Hero cards builder ──
     function buildHeroCards() {
