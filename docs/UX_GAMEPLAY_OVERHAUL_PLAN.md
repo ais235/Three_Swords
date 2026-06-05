@@ -80,12 +80,14 @@ Tasks:
 3. [in progress] Reduce text panels in battle; move explanations into tooltips and bestiary.
 4. [done initial pass] Rework victory screen into a reward moment: loot, level-up, new skill, power delta.
 5. [in progress] Rework inventory into a no-scroll primary workflow on desktop and mobile landscape.
+6. [in progress] Stabilize phone landscape battle/inventory layout after player feedback.
 
 Definition of Done:
 
 - Battle actions are icon-first and large enough to use without reading a text wall.
 - Victory clearly shows loot and level-up stat deltas (`before -> after`) when applicable.
 - Inventory's main equip flow does not require vertical scrolling on desktop landscape.
+- Phone landscape prioritizes canvas/actions and avoids text overflow in battle and inventory.
 
 ### Phase 3 - Make Progression Feel Powerful
 
