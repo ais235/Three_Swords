@@ -3045,11 +3045,60 @@
       }
       #battle-screen .battle-layout {
         grid-template-columns: minmax(0, 1fr) 148px !important;
-        grid-template-areas: "field actions";
+        grid-template-rows: 34px minmax(0, 1fr);
+        grid-template-areas:
+          "heroes actions"
+          "field actions";
         border-width: 1px;
       }
       #battle-screen .battle-left {
+        grid-area: heroes;
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 3px !important;
+        padding: 3px !important;
+        overflow: hidden !important;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        min-height: 0;
+      }
+      #battle-screen .battle-left .hero-card {
+        padding: 3px !important;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
+      }
+      #battle-screen .battle-left .hero-card-top {
+        gap: 3px;
+        margin: 0 0 2px !important;
+      }
+      #battle-screen .battle-left .hero-icon-large,
+      #battle-screen .battle-left .hero-icon-large-img {
+        width: 16px !important;
+        height: 16px !important;
+        font-size: 12px !important;
+        flex: 0 0 16px;
+      }
+      #battle-screen .battle-left .hero-card-name {
+        font-size: 7px !important;
+        line-height: 1.05 !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #battle-screen .battle-left .hero-card-class,
+      #battle-screen .battle-left .hero-mini-stats,
+      #battle-screen .battle-left .skills-row,
+      #battle-screen .battle-left .bar-label {
         display: none !important;
+      }
+      #battle-screen .battle-left .bar-wrap {
+        margin: 0 !important;
+      }
+      #battle-screen .battle-left .bar {
+        height: 3px !important;
       }
       #battle-screen #battle-wrap {
         grid-area: field;
@@ -7227,7 +7276,14 @@
       const eqWep = getEquippedItem(target, 'weapon');
       if (eqWep && eqWep.mods.armor) armor += eqWep.mods.armor;
     }
-    if (attacker.isHero && attacker.heroId === 'garet' && attacker.perks && attacker.perks.includes('armorPierce')) armor = Math.max(0, armor - 2);
+    if (attacker.isHero && attacker.heroId === 'garet' && attacker.perks && attacker.perks.includes('armorPierce')) {
+      const beforeArmor = armor;
+      armor = Math.max(0, armor - 2);
+      if (beforeArmor > armor) {
+        pushBattleLog(`${attacker.name}: armor pierce -${beforeArmor - armor}`, 'status');
+        spawnBattleTextFx(target.x, target.y, 'PIERCE -' + (beforeArmor - armor), '#f5d76e');
+      }
+    }
     if (attacker.enemyId === ENEMY_IDS.ORC_GUARD && !opts.ignoreOrc) armor = Math.max(0, armor - 2);
     dmg = Math.max(0, dmg - armor);
     if (target.isHero && target.heroId === 'seris' && target.flags && target.flags.mysticShield > 0) {
@@ -7260,8 +7316,11 @@
     if (attacker.isHero && b) {
       const garetUnit = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
         u.heroId !== attacker.heroId && u.perks && u.perks.includes('auraDmg'));
-      if (garetUnit && unitDistance(attacker, garetUnit) <= 2)
+      if (garetUnit && unitDistance(attacker, garetUnit) <= 2) {
         dmg = Math.floor(dmg * 1.1);
+        pushBattleLog(`${attacker.name}: Garet aura +10% damage`, 'status');
+        spawnBattleTextFx(attacker.x, attacker.y, 'AURA +10%', '#8cffb0');
+      }
     }
 
     // Item mod: dodge (armor): target has 20% dodge chance.
@@ -7325,7 +7384,11 @@
 
     // ── Item mod: burnSpell perk + burnSpell weapon ──
     if (attacker.isHero && opts.magic && target.hp > 0) {
-      if (attacker.perks && attacker.perks.includes('burnSpell')) addStatus(target, STATUS.BURN, 2);
+      if (attacker.perks && attacker.perks.includes('burnSpell')) {
+        addStatus(target, STATUS.BURN, 2);
+        pushBattleLog(`${attacker.name}: burn spell`, 'status');
+        spawnBattleTextFx(target.x, target.y, 'BURN', '#ff9b42');
+      }
     }
 
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags) attacker.flags.firstAttackTurn = false;
@@ -7348,7 +7411,11 @@
       // Perk: killHeal (Seris): +5 HP on kill.
       if (b) {
         const serisUnit = b.units.find(uu => uu.isHero && uu.heroId === 'seris' && uu.hp > 0 && uu.perks && uu.perks.includes('killHeal'));
-        if (serisUnit) { serisUnit.hp = Math.min(serisUnit.maxHp, serisUnit.hp + 5); pushBattleLog(`💚 Seris: +5 HP for a kill`, 'status'); }
+        if (serisUnit) {
+          serisUnit.hp = Math.min(serisUnit.maxHp, serisUnit.hp + 5);
+          pushBattleLog(`💚 Seris: +5 HP for a kill`, 'status');
+          spawnBattleTextFx(serisUnit.x, serisUnit.y, 'HEAL +5', '#7dffbf');
+        }
       }
     }
 

@@ -67,6 +67,7 @@ const checks = [
   ['inventory equip best present', () => index.includes('function equipBestForHero') && index.includes('btn-inv-equip-best') && index.includes('inv-item-best')],
   ['inventory comparison present', () => index.includes('function itemCompareHtml') && index.includes('item-compare') && index.includes('powerDelta')],
   ['battle item proc feedback present', () => index.includes('function spawnBattleTextFx') && index.includes('DODGE') && index.includes('MANA +') && index.includes('REVIVE 5')],
+  ['battle perk feedback present', () => index.includes('PIERCE -') && index.includes('AURA +10%') && index.includes('HEAL +5') && index.includes("spawnBattleTextFx(target.x, target.y, 'BURN'")],
   ['victory power surge present', () => index.includes('victory-power') && index.includes('powerSurge') && index.includes('POWER SURGE')],
   ['perk descriptions are specific', () => index.includes('const PERK_DESCRIPTIONS') && index.includes('Tank path:') && index.includes('Mystic path:')],
   ['all enemies have ability text', allEnemiesHaveAbilityText],
@@ -74,7 +75,7 @@ const checks = [
   ['enemy behavior snippets present', enemyBehaviorSnippetsPresent],
   ['battle hover previews present', () => index.includes('function skillPreviewCells') && index.includes('function enemyHoverDangerCells') && index.includes('hoverCell')],
   ['battle terrain hints present', () => index.includes('function terrainInfo') && index.includes('function shouldDrawTerrainMarkers') && index.includes('terrainBlocksSight') && index.includes('terrain.defense')],
-  ['phone landscape rescue css present', () => index.includes('Phone landscape rescue pass') && index.includes('grid-template-areas: "field actions"')],
+  ['phone landscape rescue css present', () => index.includes('Phone landscape rescue pass') && index.includes('"heroes actions"') && index.includes('"field actions"')],
   ['plan has Definition of Done', () => plan.includes('Definition of Done')],
   ['plan has Out Of Scope', () => plan.includes('Out Of Scope For This Overhaul')]
 ];
