@@ -6,7 +6,8 @@
   "scripts": {
     "audit": "node scripts/audit-layout.mjs",
     "test": "npm run audit",
-    "dev": "serve . -l 5173"
+    "dev": "serve . -l 5173",
+    "balance:seeds": "node scripts/balance-seeds.mjs"
   },
   "keywords": [],
   "author": "",

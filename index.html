@@ -10116,7 +10116,11 @@
       3: [ENEMY_IDS.NECRO, ENEMY_IDS.CHAOS, ENEMY_IDS.ASSASSIN, ENEMY_IDS.HYDRA, ENEMY_IDS.GHOST,
           ENEMY_IDS.VOID_STALKER, ENEMY_IDS.BLOOD_KNIGHT, ENEMY_IDS.BANSHEE, ENEMY_IDS.PLAGUE_DOCTOR, ENEMY_IDS.ARCANE_SENTINEL]
     };
-    if (cell.type === 'boss') return [cell.region === 2 ? ENEMY_IDS.FIRE_TITAN : ENEMY_IDS.HYDRA];
+    if (cell.type === 'boss') {
+      if (cell.region === 1) return [ENEMY_IDS.SHAMAN];
+      if (cell.region === 2) return [ENEMY_IDS.FIRE_TITAN];
+      return [ENEMY_IDS.HYDRA];
+    }
     if (cell.type === 'final') return [ENEMY_IDS.DARK_LORD];
     const pool = pools[cell.region];
     let cnt = cell.type === 'dungeon' ? 4 : cell.type === 'arena' ? 1 : 3;

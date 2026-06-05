@@ -111,6 +111,9 @@ Definition of Done:
 
 - Each `ENEMY_IDS` entry has matching `enemyAbilityText`, bestiary tactic, and code behavior.
 - Repeatable balance passes can start from a URL seed such as `?seed=12345`.
+- `npm run balance:seeds` reports mission/dungeon/boss threat curves across fixed seeds before balance edits.
+- Region bosses follow the intended curve: Shaman -> Fire Titan -> Hydra -> Dark Lord.
+- Current balance notes are recorded in `docs/BALANCE_SEED_REPORT.md`.
 - Any new positional mechanic is added only after battle HUD readability is verified.
 
 ### Phase 5 - Architecture Refactor

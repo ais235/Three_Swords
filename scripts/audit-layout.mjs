@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const indexPath = resolve(root, 'index.html');
 const planPath = resolve(root, 'docs/UX_GAMEPLAY_OVERHAUL_PLAN.md');
+const balanceSeedsPath = resolve(root, 'scripts/balance-seeds.mjs');
 const index = readFileSync(indexPath, 'utf8');
 const plan = readFileSync(planPath, 'utf8');
 
@@ -60,6 +61,8 @@ const checks = [
   ['SFX auditor dev flag present', () => index.includes('SFX_AUDITOR_ENABLED')],
   ['Berserk key is consistent', () => index.includes("key: 'berserk'") && index.includes('u.cds.berserk = 6') && !index.includes('inspire')],
   ['repeatable test seed present', () => index.includes('const TEST_SEED') && index.includes('function createSeededRandom') && index.includes("new URLSearchParams(window.location.search).get('seed')")],
+  ['balance seed report present', () => existsSync(balanceSeedsPath)],
+  ['regional boss wave mapping present', () => index.includes('cell.region === 1) return [ENEMY_IDS.SHAMAN]') && index.includes('cell.region === 2) return [ENEMY_IDS.FIRE_TITAN]')],
   ['enemy threat badges present', () => index.includes('function enemyThreatTags') && index.includes('threat-badges') && index.includes('enemyThreatBadgesHtml')],
   ['inventory equip best present', () => index.includes('function equipBestForHero') && index.includes('btn-inv-equip-best') && index.includes('inv-item-best')],
   ['inventory comparison present', () => index.includes('function itemCompareHtml') && index.includes('item-compare') && index.includes('powerDelta')],
