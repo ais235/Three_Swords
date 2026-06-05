@@ -105,7 +105,7 @@ Definition of Done:
 2. [in progress] Ensure every enemy in the bestiary matches actual behavior.
 3. [in progress] Add attack/skill danger previews on hover/select.
 4. [in progress] Review region difficulty curve with repeatable test seeds.
-5. Add positional mechanics after the UI is readable: flank/backstab, guard zones, cover clarity.
+5. [in progress] Add positional mechanics after the UI is readable: flank/backstab, guard zones, cover clarity.
 
 Definition of Done:
 
@@ -114,6 +114,7 @@ Definition of Done:
 - `npm run balance:seeds` reports mission/dungeon/boss threat curves across fixed seeds before balance edits.
 - Region bosses follow the intended curve: Shaman -> Fire Titan -> Hydra -> Dark Lord.
 - Current balance notes are recorded in `docs/BALANCE_SEED_REPORT.md`.
+- Battle terrain shows cover/movement/blocking hints before adding deeper positional rules.
 - Any new positional mechanic is added only after battle HUD readability is verified.
 
 ### Phase 5 - Architecture Refactor

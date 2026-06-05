@@ -3776,6 +3776,18 @@
     preview: { ru: 'Предпросмотр', en: 'Preview', es: 'Vista previa' },
     enemyReach: { ru: 'Зона угрозы', en: 'Threat zone', es: 'Zona de amenaza' },
     affectedTiles: { ru: 'клеток заденет', en: 'tiles affected', es: 'casillas afectadas' },
+    terrain: { ru: 'Местность', en: 'Terrain', es: 'Terreno' },
+    terrainGround: { ru: 'Равнина', en: 'Ground', es: 'Suelo' },
+    terrainForest: { ru: 'Лес', en: 'Forest', es: 'Bosque' },
+    terrainMountain: { ru: 'Горы', en: 'Mountain', es: 'Montaña' },
+    terrainWater: { ru: 'Вода', en: 'Water', es: 'Agua' },
+    terrainFort: { ru: 'Форт', en: 'Fort', es: 'Fuerte' },
+    terrainFire: { ru: 'Огонь', en: 'Fire', es: 'Fuego' },
+    terrainCover: { ru: 'укрытие', en: 'cover', es: 'cobertura' },
+    terrainBlocksSight: { ru: 'блокирует выстрелы', en: 'blocks shots', es: 'bloquea disparos' },
+    terrainBlocksMove: { ru: 'непроходимо', en: 'blocks movement', es: 'bloquea movimiento' },
+    terrainSlows: { ru: 'замедляет', en: 'slows movement', es: 'ralentiza' },
+    terrainNoBonus: { ru: 'без бонуса', en: 'no bonus', es: 'sin bonificación' },
     battleMove: { ru: '◇ Движение', en: '◇ Move', es: '◇ Mover' },
     battleAttack: { ru: '⚔ Атака', en: '⚔ Attack', es: '⚔ Atacar' },
     enemyTurn: { ru: 'Ход противника…', en: 'Enemy turn...', es: 'Turno enemigo...' },
@@ -6233,6 +6245,31 @@
     if (t === TILE.FORT) return 4;
     return 0;
   }
+  function terrainInfo(t, unit) {
+    const names = {
+      [TILE.GROUND]: 'terrainGround',
+      [TILE.FOREST]: 'terrainForest',
+      [TILE.MOUNTAIN]: 'terrainMountain',
+      [TILE.WATER]: 'terrainWater',
+      [TILE.FORT]: 'terrainFort',
+      [TILE.FIRE]: 'terrainFire'
+    };
+    const effects = [];
+    const def = tileDefenseBonus(t);
+    const cost = tileMoveCost(t, unit);
+    if (def > 0) effects.push(`+${def} ${translateKey('armor')} ${translateKey('terrainCover')}`);
+    if (t === TILE.FOREST) effects.push(translateKey('terrainBlocksSight'));
+    if (t === TILE.MOUNTAIN) effects.push(translateKey('terrainBlocksMove'));
+    if (cost > 1) effects.push(`${translateKey('terrainSlows')}: ${cost}`);
+    return {
+      name: translateKey(names[t] || 'terrainGround'),
+      defense: def,
+      moveCost: cost,
+      blocksMove: t === TILE.MOUNTAIN,
+      blocksSight: t === TILE.FOREST || t === TILE.MOUNTAIN,
+      effects
+    };
+  }
   function hasForestBetween(ax, ay, bx, by, grid) {
     const dx = Math.sign(bx - ax), dy = Math.sign(by - ay);
     let x = ax, y = ay;
@@ -7627,6 +7664,20 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(TILE_EMOJI[t] || '🟫', px + CELL / 2, py + CELL / 2);
+      }
+      const terrain = terrainInfo(t, sel || undefined);
+      if (terrain.defense > 0 || terrain.moveCost > 1 || terrain.blocksMove) {
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = 'rgba(7,10,20,0.58)';
+        ctx.fillRect(px + 4, py + 4, 22, 14);
+        ctx.font = '9px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = terrain.blocksMove ? '#e8c860' : terrain.defense > 0 ? '#8fd7ff' : '#b7f0b1';
+        const mark = terrain.blocksMove ? 'X' : terrain.defense > 0 ? `+${terrain.defense}` : `>${terrain.moveCost}`;
+        ctx.fillText(mark, px + 15, py + 11);
+        ctx.restore();
       }
       if (sel && pointInUnit(sel, x, y)) {
         ctx.fillStyle = 'rgba(255,255,0,0.25)';
@@ -11359,6 +11410,18 @@
       <span class="stats-line">${enemyAbilityText(u.enemyId)}</span>`;
       const vw = window.innerWidth, vh = window.innerHeight;
       const tw = 220, th = 120;
+      let lx = e.clientX + 12, ly = e.clientY + 12;
+      if (lx + tw > vw - 8) lx = vw - tw - 8;
+      if (ly + th > vh - 8) ly = vh - th - 8;
+      tip.style.left = lx + 'px';
+      tip.style.top = ly + 'px';
+    } else if (BattleView.hoverCell && inBounds(gx, gy)) {
+      const terrain = terrainInfo(b.grid[gy][gx], getActiveUnit() || undefined);
+      tip.style.display = 'block';
+      const effects = terrain.effects.length ? terrain.effects.join('<br/>') : translateKey('terrainNoBonus');
+      tip.innerHTML = `<b>${translateKey('terrain')}: ${terrain.name}</b><br/><span class="stats-line">${effects}</span>`;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const tw = 220, th = 72;
       let lx = e.clientX + 12, ly = e.clientY + 12;
       if (lx + tw > vw - 8) lx = vw - tw - 8;
       if (ly + th > vh - 8) ly = vh - th - 8;
