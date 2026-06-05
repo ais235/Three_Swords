@@ -6270,6 +6270,9 @@
       effects
     };
   }
+  function shouldDrawTerrainMarkers() {
+    return window.innerWidth >= 900 && window.innerHeight >= 500;
+  }
   function hasForestBetween(ax, ay, bx, by, grid) {
     const dx = Math.sign(bx - ax), dy = Math.sign(by - ay);
     let x = ax, y = ay;
@@ -7666,7 +7669,7 @@
         ctx.fillText(TILE_EMOJI[t] || '🟫', px + CELL / 2, py + CELL / 2);
       }
       const terrain = terrainInfo(t, sel || undefined);
-      if (terrain.defense > 0 || terrain.moveCost > 1 || terrain.blocksMove) {
+      if (shouldDrawTerrainMarkers() && (terrain.defense > 0 || terrain.moveCost > 1 || terrain.blocksMove)) {
         ctx.save();
         ctx.globalAlpha = 0.9;
         ctx.fillStyle = 'rgba(7,10,20,0.58)';

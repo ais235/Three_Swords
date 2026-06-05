@@ -1,4 +1,55 @@
-# Balance Seed Report
+# Overhaul Progress And Balance Report
+
+This file records what has actually changed, what is still mostly invisible to the player, and what remains before the game can feel like a finished game instead of a web prototype.
+
+## Current Baseline
+
+- Original overhaul baseline: `257c0d1`
+- Phase 2 baseline: `b5f2e91`
+- Latest checked work in this report: `674686c`
+
+## What Was Done
+
+### Stability And Platform
+
+- Yandex SDK path was changed to `/sdk.js`.
+- `LoadingAPI.ready()` is called after SDK init.
+- Local/offline play no longer dead-ends on Wanderer and Arena nodes when Yandex SDK is absent.
+- Map click and Enter now go through the same `enterMapNode()` path.
+- Inventory responsive selectors were repaired for the current DOM.
+- `npm run audit` checks important platform/layout invariants.
+
+### Battle UI And Readability
+
+- Battle actions were changed toward larger, icon-first buttons.
+- Enemy threat badges were added: healer, summoner, assassin, explosive, controller, boss, tank, ranged.
+- Hover previews were added for attack/skill danger zones.
+- Enemy bestiary coverage is audited against `ENEMY_IDS`.
+- Terrain/cover hints were added for desktop battle view.
+- Mobile terrain markers are now disabled on small screens because they made the mobile battle view noisier.
+
+### Progression Feedback
+
+- Victory screen now has an initial reward pass with loot and level-up stat deltas.
+- Inventory has "equip best" and item comparison hints.
+- Perk descriptions are more playstyle-oriented.
+- Some perk/item proc feedback was added in battle: dodge, revive, mana gain, etc.
+
+### Balance Tooling
+
+- `index.html?seed=12345` enables repeatable test runs.
+- `npm run balance:seeds` prints wave threat summaries across fixed seeds.
+- Region boss mapping was corrected: Shaman -> Fire Titan -> Hydra -> Dark Lord.
+
+## What The Player Still Barely Feels
+
+- The game still reads too much like a dense website in several screens.
+- Mobile landscape is not yet a first-class layout; it is still a compressed desktop UI in places.
+- Progression is mechanically present, but level-ups and new power spikes still need stronger presentation.
+- Battle has tactics, but the UI does not yet create enough drama, rhythm, or clarity.
+- The added audit/seed/balance work helps development, but it is mostly invisible to players.
+
+## Current Balance Findings
 
 Baseline command:
 
@@ -14,14 +65,38 @@ Current default seeds:
 - `phase4-c`
 - `phase4-d`
 
-## Current Findings
+Current mission threat curve across default seeds:
 
-- Repeatable seed support is available through `index.html?seed=12345`.
-- Region boss mapping now follows the intended curve: Shaman -> Fire Titan -> Hydra -> Dark Lord.
-- The current mission threat curve across default seeds is `R1:300 R2:294 R3:379`.
-- Region 2 mission threat is slightly below Region 1 by this heuristic, while Region 2 dungeons and bosses remain clearly higher pressure.
-- Next balance pass should test whether Region 2 missions feel harder in play because of control/armor enemies before changing wave counts.
+- `R1:300`
+- `R2:294`
+- `R3:379`
+
+Notes:
+
+- Region 2 mission threat is slightly below Region 1 by this heuristic.
+- Region 2 dungeons and bosses are still higher pressure.
+- Do not tune wave counts blindly from this number alone; Region 2 enemies have more control/armor, which may feel harder than the raw score.
+- Next balance pass should use seeded manual runs before changing wave size or gold.
+
+## What Remains
+
+### Highest Priority
+
+- Fix mobile landscape layout first: battle, inventory, victory, and map must fit without awkward scrolling or clutter.
+- Make battle look and feel more like a game screen: less panel text, stronger command bar, clearer active unit, better hit/skill feedback.
+- Strengthen victory and level-up moments so the player clearly feels "my heroes became stronger".
+
+### Gameplay Feel
+
+- Add stronger visible feedback for every important proc: crit, pierce, reflect, aura, dodge, revive.
+- Add one readable positional mechanic only after mobile/desktop battle HUD is stable.
+- Verify Region 2 mission difficulty through seeded manual runs.
+
+### Later
+
+- Refactor the monolithic `index.html` only after UI/progression are visually stable.
+- Add release packaging and Yandex upload checks.
 
 ## Heuristic Notes
 
-The script estimates wave threat from enemy HP, attack, armor, range, movement, speed, size, and boss flags. It does not simulate tactical positioning, player skill use, loot state, or enemy AI tempo. Use it to detect suspicious curves, then verify with seeded manual runs.
+The balance script estimates wave threat from enemy HP, attack, armor, range, movement, speed, size, and boss flags. It does not simulate tactical positioning, player skill use, loot state, or enemy AI tempo. Use it to detect suspicious curves, then verify with seeded manual runs.

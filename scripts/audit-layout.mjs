@@ -72,7 +72,7 @@ const checks = [
   ['all enemies have bestiary data', allEnemiesHaveBestiaryData],
   ['enemy behavior snippets present', enemyBehaviorSnippetsPresent],
   ['battle hover previews present', () => index.includes('function skillPreviewCells') && index.includes('function enemyHoverDangerCells') && index.includes('hoverCell')],
-  ['battle terrain hints present', () => index.includes('function terrainInfo') && index.includes('terrainBlocksSight') && index.includes('terrain.defense')],
+  ['battle terrain hints present', () => index.includes('function terrainInfo') && index.includes('function shouldDrawTerrainMarkers') && index.includes('terrainBlocksSight') && index.includes('terrain.defense')],
   ['plan has Definition of Done', () => plan.includes('Definition of Done')],
   ['plan has Out Of Scope', () => plan.includes('Out Of Scope For This Overhaul')]
 ];
