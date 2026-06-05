@@ -59,6 +59,7 @@ const checks = [
   ['offline arena fallback present', () => index.includes('startArena();')],
   ['SFX auditor dev flag present', () => index.includes('SFX_AUDITOR_ENABLED')],
   ['Berserk key is consistent', () => index.includes("key: 'berserk'") && index.includes('u.cds.berserk = 6') && !index.includes('inspire')],
+  ['repeatable test seed present', () => index.includes('const TEST_SEED') && index.includes('function createSeededRandom') && index.includes("new URLSearchParams(window.location.search).get('seed')")],
   ['enemy threat badges present', () => index.includes('function enemyThreatTags') && index.includes('threat-badges') && index.includes('enemyThreatBadgesHtml')],
   ['inventory equip best present', () => index.includes('function equipBestForHero') && index.includes('btn-inv-equip-best') && index.includes('inv-item-best')],
   ['inventory comparison present', () => index.includes('function itemCompareHtml') && index.includes('item-compare') && index.includes('powerDelta')],
