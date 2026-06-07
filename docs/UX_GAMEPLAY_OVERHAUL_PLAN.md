@@ -76,8 +76,8 @@ Reference assets:
 Tasks:
 
 1. [done] Define target viewports in CSS and audit notes.
-2. [in progress] Rework battle HUD around icon-first commands, portraits, threat markers, and large skill buttons.
-3. [in progress] Reduce text panels in battle; move explanations into tooltips and bestiary.
+2. [in progress] Rework battle HUD around icon-first commands, portraits, threat markers, large skill buttons, and a tactical action strip.
+3. [in progress] Reduce text panels in battle; move explanations into tooltips, bestiary, and compact state cues.
 4. [done initial pass] Rework victory screen into a reward moment: loot, level-up, new skill, power delta.
 5. [in progress] Rework inventory into a no-scroll primary workflow on desktop and mobile landscape.
 6. [in progress] Stabilize phone landscape battle/inventory layout after player feedback.
@@ -85,6 +85,7 @@ Tasks:
 Definition of Done:
 
 - Battle actions are icon-first and large enough to use without reading a text wall.
+- Active hero turns show a compact tactical strip for movement, attack availability, blocked lines, and target selection.
 - Victory clearly shows loot and level-up stat deltas (`before -> after`) when applicable.
 - Inventory's main equip flow does not require vertical scrolling on desktop landscape.
 - Phone landscape prioritizes canvas/actions and avoids text overflow in battle and inventory.

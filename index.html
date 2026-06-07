@@ -141,6 +141,46 @@
     .br-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 4px; }
     .battle-actions { display: flex; flex-direction: column; gap: 4px; }
     .battle-actions .btn { font-size: 10px; padding: 5px 8px; text-align: center; width: 100%; margin: 0; box-sizing: border-box; }
+    .battle-tactical-strip {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 6px;
+      align-items: center;
+      min-height: 32px;
+      padding: 5px 7px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #0b1020;
+      color: var(--text-main);
+      box-sizing: border-box;
+    }
+    .battle-tactical-strip.good { border-color: rgba(46,204,113,.55); background: #07160f; }
+    .battle-tactical-strip.warn { border-color: rgba(241,196,15,.55); background: #171307; }
+    .battle-tactical-strip.bad { border-color: rgba(231,76,60,.55); background: #190909; }
+    .battle-tactical-kicker {
+      color: var(--text-dim);
+      font-size: 8px;
+      letter-spacing: 0.8px;
+      line-height: 1;
+    }
+    .battle-tactical-main {
+      min-width: 0;
+      font-size: 10px;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .battle-tactical-sub {
+      grid-column: 1 / -1;
+      min-width: 0;
+      color: var(--text-dim);
+      font-size: 8px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .battle-actions .skill-action-btn {
       min-height: 42px;
       display: grid;
@@ -2215,6 +2255,15 @@
       }
       .skill-action-btn .skill-action-name { font-size: 8px; }
       .skill-action-btn .skill-action-meta { font-size: 7px; }
+      .battle-tactical-strip {
+        grid-template-columns: 42px minmax(0, 1fr);
+        min-height: 26px;
+        padding: 3px 5px;
+        gap: 4px;
+      }
+      .battle-tactical-kicker { font-size: 7px; letter-spacing: 0.4px; }
+      .battle-tactical-main { font-size: 8px; }
+      .battle-tactical-sub { font-size: 7px; }
       .battle-actions #btn-start-battle { grid-column: unset; }
       .deploy-hint-box { display: none; }
 
@@ -3173,6 +3222,15 @@
         font-size: 7px !important;
         line-height: 1.05 !important;
       }
+      #battle-screen .battle-tactical-strip {
+        grid-template-columns: 38px minmax(0, 1fr) !important;
+        min-height: 24px !important;
+        padding: 2px 4px !important;
+        gap: 3px !important;
+      }
+      #battle-screen .battle-tactical-kicker { font-size: 6px !important; letter-spacing: 0.2px !important; }
+      #battle-screen .battle-tactical-main { font-size: 7px !important; line-height: 1.05 !important; }
+      #battle-screen .battle-tactical-sub { font-size: 6px !important; line-height: 1.05 !important; }
 
       #inventory-screen #inv-layout {
         grid-template-columns: 84px minmax(150px, 1fr) 148px !important;
@@ -4069,6 +4127,16 @@
     skipMove: { ru: '⚡ Не двигаться', en: '⚡ Skip move', es: '⚡ No moverse' },
     waitTurn: { ru: '⏹ Ждать', en: '⏹ Wait', es: '⏹ Esperar' },
     battleInventory: { ru: '🎒 Инвентарь', en: '🎒 Inventory', es: '🎒 Inventario' },
+    tactical: { ru: 'TACTIC', en: 'TACTIC', es: 'TACTICA' },
+    moveLeft: { ru: 'MOVE', en: 'MOVE', es: 'MOVER' },
+    attackReady: { ru: 'TARGETS', en: 'TARGETS', es: 'OBJETIVOS' },
+    attackBlocked: { ru: 'BLOCKED', en: 'BLOCKED', es: 'BLOQUEADO' },
+    attackOut: { ru: 'OUT OF RANGE', en: 'OUT OF RANGE', es: 'FUERA' },
+    selectTarget: { ru: 'SELECT TARGET', en: 'SELECT TARGET', es: 'ELIGE OBJETIVO' },
+    noTargets: { ru: 'NO TARGETS', en: 'NO TARGETS', es: 'SIN OBJETIVOS' },
+    nearestEnemy: { ru: 'NEAREST', en: 'NEAREST', es: 'CERCA' },
+    lineBlocked: { ru: 'line blocked', en: 'line blocked', es: 'linea bloqueada' },
+    skipOrMove: { ru: 'move, skip, or use a skill', en: 'move, skip, or use a skill', es: 'mueve, pasa o usa habilidad' },
     unlocksAtLevel: { ru: '🔒 Открывается на уровне', en: '🔒 Unlocks at level', es: '🔒 Se desbloquea en nivel' },
     cooldownShort: { ru: 'КД', en: 'CD', es: 'REC' },
     statuses: { ru: 'Статусы', en: 'Statuses', es: 'Estados' },
@@ -8961,6 +9029,65 @@
   }
 
   //══════════ Hero UI & actions ══════════
+  function heroAttackSummary(b, u) {
+    const enemies = b.units.filter(t => !t.isHero && t.hp > 0);
+    const ignoreCover = !!(u.perks && u.perks.includes('ignoreCover'));
+    let inRange = 0;
+    let blocked = 0;
+    let nearest = null;
+    enemies.forEach(t => {
+      const dist = unitDistance(u, t);
+      if (!nearest || dist < nearest.dist) nearest = { unit: t, dist };
+      if (dist <= u.range) {
+        const lineBlocked = u.range > 1 && rangedBlocked(u.x, u.y, t.x, t.y, b.grid, ignoreCover);
+        if (lineBlocked) blocked++;
+        else inRange++;
+      }
+    });
+    return { inRange, blocked, nearest, total: enemies.length };
+  }
+
+  function battleActionHintHtml(b, u) {
+    if (!b || !u || !u.isHero || b.phase !== 'combat') return '';
+    const summary = heroAttackSummary(b, u);
+    let tone = 'warn';
+    let main = translateKey('noTargets');
+    let sub = translateKey('skipOrMove');
+
+    if (b.heroActionDone) {
+      tone = 'good';
+      main = translateKey('turnDone');
+      sub = translateKey('enemyTurn');
+    } else if (b.pendingSkill) {
+      tone = 'good';
+      main = translateKey('selectTarget');
+      sub = `${translateKey('preview')}: ${translateText(b.pendingSkill)}`;
+    } else if (summary.inRange > 0) {
+      tone = 'good';
+      main = `${translateKey('attackReady')}: ${summary.inRange}`;
+      sub = summary.blocked > 0 ? `${summary.blocked} ${translateKey('lineBlocked')}` : translateKey('selectTarget');
+    } else if (summary.blocked > 0) {
+      tone = 'bad';
+      main = translateKey('attackBlocked');
+      sub = `${summary.blocked} ${translateKey('lineBlocked')}`;
+    } else if (b.mode === 'move' && !b.heroMoved) {
+      const moveLeft = getMovePoints(u, b);
+      tone = moveLeft > 0 ? 'warn' : 'bad';
+      main = `${translateKey('moveLeft')}: ${moveLeft}`;
+      sub = summary.nearest ? `${translateKey('nearestEnemy')}: ${summary.nearest.dist}` : translateKey('noTargets');
+    } else {
+      tone = 'bad';
+      main = translateKey('attackOut');
+      sub = summary.nearest ? `${translateKey('nearestEnemy')}: ${summary.nearest.dist}` : translateKey('noTargets');
+    }
+
+    return `<div class="battle-tactical-strip ${tone}">
+      <div class="battle-tactical-kicker">${translateKey('tactical')}</div>
+      <div class="battle-tactical-main">${escapeHtml(main)}</div>
+      <div class="battle-tactical-sub">${escapeHtml(sub)}</div>
+    </div>`;
+  }
+
   function updateBattleUI() {
     const b = GameState.currentBattle;
     const left = document.getElementById('battle-left-heroes');
@@ -9050,6 +9177,7 @@
     stats.innerHTML = '';
     const hh = GameState.heroes.find(x => x.id === u.heroId);
     let html = '';
+    html += battleActionHintHtml(b, u);
     if (!b.heroActionDone) {
       if (heroCanUndoMove(b, u)) {
         html += `<button class="btn btn-gold battle-utility-btn" id="btn-undo-move" title="${translateKey('undoMoveTitle')}" style="margin-bottom:2px">↶ ${translateKey('undoMove')}</button>`;
