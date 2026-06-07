@@ -7241,10 +7241,14 @@
     u.activeStatuses.forEach(s => {
       if (s.type === STATUS.POISON) {
         u.hp -= 3;
+        pushBattleLog(`${u.name}: poison -3`, 'status');
+        spawnBattleTextFx(u.x, u.y, 'POISON -3', '#7dffbf');
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.status_tick_poison, 0.72);
       }
       if (s.type === STATUS.BURN) {
         u.hp -= 3;
+        pushBattleLog(`${u.name}: burn -3`, 'status');
+        spawnBattleTextFx(u.x, u.y, 'BURN -3', '#ff8a4d');
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.status_tick_burn, 0.72);
       }
     });
@@ -7288,7 +7292,11 @@
         spawnBattleTextFx(attacker.x, attacker.y, 'FIRST x' + (1 + wep.mods.firstShotBonus).toFixed(1), '#9ff0ff');
       }
     }
-    if (target.isHero && target.heroId === 'garet' && target.flags && target.flags.fireCallMitigateActive) dmg = Math.floor(dmg * 0.5);
+    if (target.isHero && target.heroId === 'garet' && target.flags && target.flags.fireCallMitigateActive) {
+      dmg = Math.floor(dmg * 0.5);
+      pushBattleLog(`${target.name}: fire guard halves damage`, 'status');
+      spawnBattleTextFx(target.x, target.y, 'GUARD -50%', '#ffb36b');
+    }
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags && attacker.flags.firstAttackTurn) dmg = Math.floor(dmg * 1.5);
     if (attacker.activeStatuses && attacker.activeStatuses.find(s => s.type === STATUS.BERSERK)) dmg = Math.floor(dmg * 2);
     let armor = target.armor + (b && b.grid ? tileDefenseBonus(b.grid[target.y][target.x]) : 0);

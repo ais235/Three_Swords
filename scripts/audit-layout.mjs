@@ -69,6 +69,7 @@ const checks = [
   ['battle item proc feedback present', () => index.includes('function spawnBattleTextFx') && index.includes('DODGE') && index.includes('MANA +') && index.includes('REVIVE 5')],
   ['battle perk feedback present', () => index.includes('PIERCE -') && index.includes('AURA +10%') && index.includes('HEAL +5') && index.includes("spawnBattleTextFx(target.x, target.y, 'BURN'")],
   ['battle defensive feedback present', () => index.includes('STATUS REFLECT') && index.includes('AURA +1 ARM') && index.includes('SHIELD -') && index.includes("'BLOCK'")],
+  ['status tick feedback present', () => index.includes('POISON -3') && index.includes('BURN -3') && index.includes('GUARD -50%')],
   ['hero flank mechanic present', () => index.includes('function heroFlankSupport') && index.includes('FLANK +25%') && index.includes('flankBonus')],
   ['victory power surge present', () => index.includes('victory-power') && index.includes('powerSurge') && index.includes('POWER SURGE')],
   ['perk descriptions are specific', () => index.includes('const PERK_DESCRIPTIONS') && index.includes('Tank path:') && index.includes('Mystic path:')],

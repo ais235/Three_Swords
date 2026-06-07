@@ -95,11 +95,12 @@ Definition of Done:
 2. [in progress] Give new skills strong unlock feedback.
 3. [done initial pass] Add visible equipment comparison and "best candidate" hints.
 4. [done initial pass] Strengthen perk descriptions so each branch promises a playstyle, not only numbers.
-5. [in progress] Add battle feedback for perk/item effects: crit, pierce, reflect, aura, burn, heal, block, dodge, revive.
+5. [in progress] Add battle feedback for perk/item effects: crit, pierce, reflect, aura, burn, heal, block, dodge, revive, status ticks, mitigation.
 
 Definition of Done:
 
 - Every implemented perk/item proc has visible feedback in combat: battle log plus at least one of flash, sound, icon, or floating marker.
+- Damage-over-time and mitigation effects show floating markers instead of silently changing HP.
 - Victory has a compact power-surge summary for level-ups, perk points, new skills, and loot.
 
 ### Phase 4 - Make Gameplay More Gripping
