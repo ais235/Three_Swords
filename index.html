@@ -7213,11 +7213,26 @@
   }
 
   function addStatus(u, type, turns, meta) {
+    meta = meta || {};
+    const source = meta.source || null;
+    if (u && u.isHero && source && !source.isHero && !meta.reflected) {
+      const armorItem = getEquippedItem(u, 'armor');
+      const reflectChance = armorItem && armorItem.mods && armorItem.mods.reflectStatus;
+      if (reflectChance && Math.random() < reflectChance) {
+        pushBattleLog(`${u.name}: reflected ${type}`, 'status');
+        spawnBattleTextFx(u.x, u.y, 'STATUS REFLECT', '#d8b4ff');
+        if (source.hp > 0) {
+          addStatus(source, type, turns, { reflected: true, source: u });
+          spawnBattleTextFx(source.x, source.y, 'REFLECTED', '#d8b4ff');
+        }
+        return;
+      }
+    }
     u.activeStatuses = u.activeStatuses || [];
     const ex = u.activeStatuses.find(s => s.type === type);
     if (ex) { ex.turns = Math.max(ex.turns, turns); }
     else {
-      u.activeStatuses.push({ type, turns, meta: meta || {} });
+      u.activeStatuses.push({ type, turns, meta });
       if (typeof BattleSfx !== 'undefined') BattleSfx.statusApplied(type);
     }
   }
@@ -7281,8 +7296,11 @@
     if (target.isHero && b) {
       const garetAura = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
         u.heroId !== target.heroId && u.perks && u.perks.includes('auraArmor'));
-      if (garetAura && unitDistance(garetAura, target) <= 1)
+      if (garetAura && unitDistance(garetAura, target) <= 1) {
         armor += 1;
+        pushBattleLog(`${target.name}: Garet aura +1 armor`, 'status');
+        spawnBattleTextFx(target.x, target.y, 'AURA +1 ARM', '#9ff0ff');
+      }
     }
     // Item armor bonus from equipped armor slot
     if (target.isHero) {
@@ -7305,6 +7323,10 @@
       const absorb = Math.min(3, target.flags.mysticShield, dmg);
       target.flags.mysticShield -= absorb;
       dmg -= absorb;
+      if (absorb > 0) {
+        pushBattleLog(`${target.name}: mystic shield absorbed ${absorb}`, 'status');
+        spawnBattleTextFx(target.x, target.y, 'SHIELD -' + absorb, '#b7a7ff');
+      }
     }
     if (target.enemyId === ENEMY_IDS.GHOST && (!opts.magic)) {
       if (attacker.isHero && (attacker.heroId === 'garet' || attacker.heroId === 'alira')) dmg = 0;
@@ -7316,6 +7338,7 @@
     if (target.enemyId === ENEMY_IDS.SHIELDBEARER) dmg = Math.floor(dmg * 0.75);
     if (Math.random() < 0.25 && target.isHero && target.heroId === 'garet' && !opts.blockIgnore && !opts.magic) {
       pushBattleLog(`[${target.emoji} ${target.name}] Shield block!`, 'status');
+      spawnBattleTextFx(target.x, target.y, 'BLOCK', '#8bd3ff');
       return 0;
     }
 
@@ -8831,19 +8854,19 @@
       if (!attacker.isHero && attacker.hp > 0) {
         if (attacker.enemyId === ENEMY_IDS.BLOOD_KNIGHT) attacker.hp = Math.min(attacker.maxHp, attacker.hp + 3);
       }
-      if (attacker.enemyId === ENEMY_IDS.SPIDER && target.hp > 0) addStatus(target, STATUS.WEB, 2);
-      if (attacker.enemyId === ENEMY_IDS.ICE_ELEM && target.hp > 0) addStatus(target, STATUS.FREEZE, 1);
-      if (attacker.enemyId === ENEMY_IDS.HYDRA && target.hp > 0) addStatus(target, STATUS.POISON, 2);
-      if (attacker.enemyId === ENEMY_IDS.THORN_DRYAD && target.hp > 0) addStatus(target, STATUS.SLOW, 1);
-      if (attacker.enemyId === ENEMY_IDS.BOG_LURKER && target.hp > 0 && Math.random() < 0.35) addStatus(target, STATUS.SLOW, 1);
-      if (attacker.enemyId === ENEMY_IDS.RAT_SWARM && target.hp > 0 && Math.random() < 0.45) addStatus(target, STATUS.POISON, 1);
-      if (attacker.enemyId === ENEMY_IDS.CULTIST && target.hp > 0 && Math.random() < 0.30) addStatus(target, STATUS.CURSE, 1);
-      if (attacker.enemyId === ENEMY_IDS.HEXER && target.hp > 0 && Math.random() < 0.35) addStatus(target, STATUS.BLIND, 1);
-      if (attacker.enemyId === ENEMY_IDS.BANSHEE && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.STUN, 1);
-      if (attacker.enemyId === ENEMY_IDS.PLAGUE_DOCTOR && target.hp > 0) addStatus(target, STATUS.POISON, 2);
-      if (attacker.enemyId === ENEMY_IDS.VOID_STALKER && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.CURSE, 1);
-      if (attacker.enemyId === ENEMY_IDS.STONE_GOLEM && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.STUN, 1);
-      if (attacker.enemyId === ENEMY_IDS.ARCANE_SENTINEL && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.FREEZE, 1);
+      if (attacker.enemyId === ENEMY_IDS.SPIDER && target.hp > 0) addStatus(target, STATUS.WEB, 2, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.ICE_ELEM && target.hp > 0) addStatus(target, STATUS.FREEZE, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.HYDRA && target.hp > 0) addStatus(target, STATUS.POISON, 2, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.THORN_DRYAD && target.hp > 0) addStatus(target, STATUS.SLOW, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.BOG_LURKER && target.hp > 0 && Math.random() < 0.35) addStatus(target, STATUS.SLOW, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.RAT_SWARM && target.hp > 0 && Math.random() < 0.45) addStatus(target, STATUS.POISON, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.CULTIST && target.hp > 0 && Math.random() < 0.30) addStatus(target, STATUS.CURSE, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.HEXER && target.hp > 0 && Math.random() < 0.35) addStatus(target, STATUS.BLIND, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.BANSHEE && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.STUN, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.PLAGUE_DOCTOR && target.hp > 0) addStatus(target, STATUS.POISON, 2, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.VOID_STALKER && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.CURSE, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.STONE_GOLEM && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.STUN, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.ARCANE_SENTINEL && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.FREEZE, 1, { source: attacker });
     }
     pushBattleLog(`[${attacker.emoji}] hits [${target.emoji}]`, 'enemy');
   }
