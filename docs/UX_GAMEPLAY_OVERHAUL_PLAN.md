@@ -118,6 +118,7 @@ Definition of Done:
 - Region bosses follow the intended curve: Shaman -> Fire Titan -> Hydra -> Dark Lord.
 - Current balance notes are recorded in `docs/BALANCE_SEED_REPORT.md`.
 - Battle terrain shows cover/movement/blocking hints before adding deeper positional rules.
+- Hero melee attacks can trigger a visible flank bonus when another hero is also adjacent to the target.
 - Any new positional mechanic is added only after battle HUD readability is verified.
 
 ### Phase 5 - Architecture Refactor

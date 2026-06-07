@@ -3980,6 +3980,7 @@
     powerReady: { ru: 'готово к бою', en: 'battle-ready', es: 'listo para batalla' },
     perkPoint: { ru: 'перк', en: 'perk', es: 'mejora' },
     newSkill: { ru: 'новый навык', en: 'new skill', es: 'nueva habilidad' },
+    flankBonus: { ru: 'Фланг', en: 'Flank', es: 'Flanco' },
     threatHealer: { ru: 'HEAL', en: 'HEAL', es: 'CURA' },
     threatSummoner: { ru: 'SUM', en: 'SUM', es: 'INV' },
     threatAssassin: { ru: 'KILL', en: 'KILL', es: 'KILL' },
@@ -6837,6 +6838,20 @@
     }
     return best;
   }
+  function heroFlankSupport(attacker, target, b) {
+    if (!attacker || !target || !b || !attacker.isHero || target.isHero) return null;
+    if (unitDistance(attacker, target) > 1) return null;
+    return b.units.find(u =>
+      u !== attacker &&
+      u.isHero &&
+      u.hp > 0 &&
+      unitDistance(u, target) <= 1
+    ) || null;
+  }
+  function isHeroFlankAttack(attacker, target, b, opts = {}) {
+    if (opts.magic || opts.noFlank) return false;
+    return !!heroFlankSupport(attacker, target, b);
+  }
   function canUnitOccupy(b, self, x, y, opts = {}) {
     if (!b || !self) return false;
     const ghost = self.enemyId === ENEMY_IDS.GHOST;
@@ -7321,6 +7336,13 @@
         pushBattleLog(`${attacker.name}: Garet aura +10% damage`, 'status');
         spawnBattleTextFx(attacker.x, attacker.y, 'AURA +10%', '#8cffb0');
       }
+    }
+
+    if (isHeroFlankAttack(attacker, target, b, opts)) {
+      const support = heroFlankSupport(attacker, target, b);
+      dmg = Math.floor(dmg * 1.25);
+      pushBattleLog(`${attacker.name}: flank with ${support ? support.name : 'ally'} +25% damage`, 'status');
+      spawnBattleTextFx(target.x, target.y, 'FLANK +25%', '#ffcf7a');
     }
 
     // Item mod: dodge (armor): target has 20% dodge chance.
@@ -7941,7 +7963,13 @@
   function battleHoverPreviewText(b, u) {
     if (!b || !BattleView.hoverCell) return '';
     const active = getActiveUnit();
-    if (u && !u.isHero) return `${translateKey('enemyReach')}: ${u.range}`;
+    if (u && !u.isHero) {
+      const parts = [`${translateKey('enemyReach')}: ${u.range}`];
+      if (active && active.isHero && b.mode === 'attack' && isHeroFlankAttack(active, u, b)) {
+        parts.push(`${translateKey('flankBonus')}: +25%`);
+      }
+      return parts.join(' · ');
+    }
     if (active && active.isHero && (b.mode === 'skill' || b.mode === 'attack')) {
       const cells = skillPreviewCells(b, active);
       if (cells.length) return `${translateKey('preview')}: ${cells.length} ${translateKey('affectedTiles')}`;

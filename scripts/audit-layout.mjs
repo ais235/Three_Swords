@@ -68,6 +68,7 @@ const checks = [
   ['inventory comparison present', () => index.includes('function itemCompareHtml') && index.includes('item-compare') && index.includes('powerDelta')],
   ['battle item proc feedback present', () => index.includes('function spawnBattleTextFx') && index.includes('DODGE') && index.includes('MANA +') && index.includes('REVIVE 5')],
   ['battle perk feedback present', () => index.includes('PIERCE -') && index.includes('AURA +10%') && index.includes('HEAL +5') && index.includes("spawnBattleTextFx(target.x, target.y, 'BURN'")],
+  ['hero flank mechanic present', () => index.includes('function heroFlankSupport') && index.includes('FLANK +25%') && index.includes('flankBonus')],
   ['victory power surge present', () => index.includes('victory-power') && index.includes('powerSurge') && index.includes('POWER SURGE')],
   ['perk descriptions are specific', () => index.includes('const PERK_DESCRIPTIONS') && index.includes('Tank path:') && index.includes('Mystic path:')],
   ['all enemies have ability text', allEnemiesHaveAbilityText],
