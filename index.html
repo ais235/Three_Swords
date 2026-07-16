@@ -557,13 +557,13 @@
     }
     .heroes-bar { margin-top: auto; border-top: 1px solid var(--border); padding-top: 8px; flex-shrink: 0; }
     .heroes-bar-title { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
-    .hero-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .hero-row { display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: 6px; align-items: start; margin-bottom: 7px; }
     .hero-icon-s { font-size: 14px; }
-    .hero-hp-wrap { flex: 1; }
+    .hero-hp-wrap { min-width: 0; }
     .hero-hp-name { font-size: 9px; color: var(--text-main); margin-bottom: 2px; }
     .bar { height: 4px; border-radius: 2px; background: #1a1a2e; overflow: hidden; }
     .bar-hp { background: var(--accent-green); height: 100%; border-radius: 2px; }
-    .hero-heal-btn { font-size: 9px; padding: 2px 6px; border-radius: 3px; border: 1px solid var(--accent-green); color: var(--accent-green); cursor: pointer; white-space: nowrap; background: transparent; font-family: inherit; }
+    .hero-heal-btn { grid-column: 2; width: 100%; min-width: 0; box-sizing: border-box; margin-top: 3px; font-size: 9px; padding: 2px 6px; border-radius: 3px; border: 1px solid var(--accent-green); color: var(--accent-green); cursor: pointer; white-space: nowrap; background: transparent; font-family: inherit; }
     .hero-heal-btn.grey { border-color: var(--border); color: #555577; cursor: default; }
     .city-panel { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
     .city-panel.hidden { display: none !important; }
@@ -1690,6 +1690,9 @@
     }
     .perk-modal-box { background: #0d0d1a; border: 1px solid var(--border); border-radius: 10px; width: min(680px, 96vw); max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
     .perk-modal-topbar { background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .perk-hero-portrait { width: 42px; height: 42px; flex: 0 0 42px; overflow: hidden; border: 1px solid var(--accent-gold); border-radius: 6px; background: #080816; box-shadow: 0 0 10px rgba(240,165,0,.18); }
+    .perk-hero-portrait img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center top; }
+    .perk-hero-portrait-fallback { width: 100%; height: 100%; display: none; place-items: center; font-size: 21px; background: #15152a; }
     .perk-modal-topbar-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
     .perk-modal-title { font-size: 13px; color: var(--accent-gold); letter-spacing: 1px; }
     .perk-modal-hint { font-size: 10px; color: var(--text-dim); }
@@ -1938,10 +1941,10 @@
     .inv-item-card.inv-item-mismatch.selected { border-color: var(--accent-red); }
     .inv-item-thumb { position: relative; aspect-ratio: 1; width: 100%; display: flex; align-items: stretch; justify-content: stretch; min-height: 0; }
     .inv-item-thumb .item-icon-wrap { flex: 1; width: 100%; height: 100%; min-height: 0; border-radius: 5px; box-sizing: border-box; }
-    .inv-item-thumb > span:not(.inv-item-price):not(.item-icon-wrap) { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 28px; line-height: 1; min-height: 0; }
+    .inv-item-thumb > span:not(.inv-item-price):not(.item-icon-wrap):not(.inv-item-best-badge) { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 28px; line-height: 1; min-height: 0; }
     .inv-item-thumb .item-icon-img { width: 100% !important; height: 100% !important; max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
     .inv-item-price { position: absolute; right: 3px; bottom: 2px; font-size: 8px; font-weight: bold; color: #e8c860; line-height: 1; pointer-events: none; text-shadow: 0 0 4px #000, 0 1px 2px #000, 0 -1px 2px #000; letter-spacing: 0.5px; z-index: 2; }
-    .inv-item-best-badge { position: absolute; left: 3px; top: 2px; font-size: 6px; font-weight: bold; color: #9cffc5; background: rgba(0,0,0,.65); border: 1px solid rgba(46,204,113,.55); border-radius: 3px; padding: 1px 3px; line-height: 1; z-index: 2; }
+    .inv-item-best-badge { position: absolute; left: 3px; top: 2px; display: block !important; max-width: calc(100% - 6px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; font-size: 6px !important; font-weight: bold; color: #9cffc5; background: rgba(0,0,0,.65); border: 1px solid rgba(46,204,113,.55); border-radius: 3px; padding: 1px 3px; line-height: 1 !important; z-index: 2; }
     .inv-item-name { font-size: 8px; color: var(--text-dim); line-height: 1.2; display: block; }
     #inv-detail { background: #0d0d1a; border-radius: 8px; padding: 10px; border: 1px solid var(--border); flex: 1; min-height: 0; overflow-y: auto; font-size: 10px; color: var(--text-dim); }
     .item-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -2280,10 +2283,10 @@
       .npc-tab { padding: 6px 8px; font-size: 8px; }
       .heroes-bar { padding-top: 5px; }
       .heroes-bar-title { font-size: 8px; margin-bottom: 4px; }
-      .hero-row { gap: 4px; margin-bottom: 3px; }
+      .hero-row { column-gap: 4px; margin-bottom: 5px; }
       .hero-icon-s { font-size: 12px; }
       .hero-hp-name { font-size: 8px; }
-      .hero-heal-btn { font-size: 8px; padding: 1px 4px; }
+      .hero-heal-btn { margin-top: 2px; font-size: 8px; padding: 1px 4px; }
       .shop-header { gap: 6px; }
       .shop-title { font-size: 10px; }
       .items-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
@@ -2374,6 +2377,7 @@
       /* Perk modal: keep tree readable in landscape */
       .perk-modal-box { width: min(940px, 98vw); max-height: 96vh; }
       .perk-modal-topbar { padding: 6px 8px; }
+      .perk-hero-portrait { width: 34px; height: 34px; flex-basis: 34px; }
       .perk-modal-title { font-size: 11px; }
       .perk-modal-hint { font-size: 8px; }
       .perk-modal-body { grid-template-columns: minmax(0, 1fr) 170px; }
@@ -2557,7 +2561,7 @@
       .equip-slot-name { font-size: 7px; }
       #bag-grid { grid-template-columns: repeat(5, minmax(40px, 1fr)); gap: 3px; }
       .inv-item-card { padding: 0; }
-      .inv-item-thumb > span:not(.inv-item-price):not(.item-icon-wrap) { font-size: 20px; }
+      .inv-item-thumb > span:not(.inv-item-price):not(.item-icon-wrap):not(.inv-item-best-badge) { font-size: 20px; }
       .inv-item-price { font-size: 6px; }
       .inv-item-name { font-size: 6px; }
       #inv-detail { padding: 5px; font-size: 7px; }
@@ -2575,6 +2579,7 @@
       .menu-btn { padding: 10px 12px; font-size: 7px; min-height: 36px; }
       .perk-modal-box { width: min(960px, 99vw); max-height: 98vh; }
       .perk-modal-topbar { padding: 5px 10px; }
+      .perk-hero-portrait { width: 30px; height: 30px; flex-basis: 30px; }
       .perk-modal-title { font-size: 10px; }
       .perk-modal-hint { font-size: 8px; }
       .perk-modal-body { grid-template-columns: minmax(0, 1fr) 160px; }
@@ -3071,6 +3076,19 @@
       }
       #battle-screen .battle-actions .skill-action-name { font-size: 7px !important; }
       #battle-screen .battle-actions .skill-action-meta { font-size: 6px !important; }
+      /* During deployment this is the only action: keep its label readable. */
+      #battle-screen .battle-actions #btn-start-battle {
+        min-height: 36px !important;
+        grid-template-columns: 24px minmax(0, 1fr);
+        padding: 4px 5px !important;
+      }
+      #battle-screen .battle-actions #btn-start-battle .skill-action-icon {
+        width: 22px;
+        height: 22px;
+        font-size: 12px !important;
+      }
+      #battle-screen .battle-actions #btn-start-battle .skill-action-name { font-size: 10px !important; }
+      #battle-screen .battle-actions #btn-start-battle .skill-action-meta { font-size: 8px !important; }
     }
 
     /* Phone landscape rescue pass: prioritize canvas, commands, and no-scroll equipment flow. */
@@ -3721,6 +3739,10 @@
   <div id="perk-modal" class="hidden">
     <div class="perk-modal-box">
       <div class="perk-modal-topbar">
+        <div class="perk-hero-portrait" aria-hidden="true">
+          <img id="perk-hero-portrait-img" src="" alt="">
+          <span class="perk-hero-portrait-fallback" id="perk-hero-portrait-fallback"></span>
+        </div>
         <div class="perk-modal-topbar-text">
           <span class="perk-modal-title" id="perk-hero-name">Level up!</span>
           <span class="perk-modal-hint" id="perk-modal-hint">Choose a perk — this cannot be undone</span>
@@ -4127,16 +4149,16 @@
     skipMove: { ru: '⚡ Не двигаться', en: '⚡ Skip move', es: '⚡ No moverse' },
     waitTurn: { ru: '⏹ Ждать', en: '⏹ Wait', es: '⏹ Esperar' },
     battleInventory: { ru: '🎒 Инвентарь', en: '🎒 Inventory', es: '🎒 Inventario' },
-    tactical: { ru: 'TACTIC', en: 'TACTIC', es: 'TACTICA' },
-    moveLeft: { ru: 'MOVE', en: 'MOVE', es: 'MOVER' },
-    attackReady: { ru: 'TARGETS', en: 'TARGETS', es: 'OBJETIVOS' },
-    attackBlocked: { ru: 'BLOCKED', en: 'BLOCKED', es: 'BLOQUEADO' },
-    attackOut: { ru: 'OUT OF RANGE', en: 'OUT OF RANGE', es: 'FUERA' },
-    selectTarget: { ru: 'SELECT TARGET', en: 'SELECT TARGET', es: 'ELIGE OBJETIVO' },
-    noTargets: { ru: 'NO TARGETS', en: 'NO TARGETS', es: 'SIN OBJETIVOS' },
-    nearestEnemy: { ru: 'NEAREST', en: 'NEAREST', es: 'CERCA' },
-    lineBlocked: { ru: 'line blocked', en: 'line blocked', es: 'linea bloqueada' },
-    skipOrMove: { ru: 'move, skip, or use a skill', en: 'move, skip, or use a skill', es: 'mueve, pasa o usa habilidad' },
+    tactical: { ru: 'ТАКТИКА', en: 'TACTIC', es: 'TACTICA' },
+    moveLeft: { ru: 'ХОД', en: 'MOVE', es: 'MOVER' },
+    attackReady: { ru: 'ЦЕЛЕЙ', en: 'TARGETS', es: 'OBJETIVOS' },
+    attackBlocked: { ru: 'ПЕРЕКРЫТО', en: 'BLOCKED', es: 'BLOQUEADO' },
+    attackOut: { ru: 'ВНЕ ДОСЯГАЕМОСТИ', en: 'OUT OF RANGE', es: 'FUERA' },
+    selectTarget: { ru: 'ВЫБЕРИ ЦЕЛЬ', en: 'SELECT TARGET', es: 'ELIGE OBJETIVO' },
+    noTargets: { ru: 'НЕТ ЦЕЛЕЙ', en: 'NO TARGETS', es: 'SIN OBJETIVOS' },
+    nearestEnemy: { ru: 'БЛИЖАЙШИЙ', en: 'NEAREST', es: 'CERCA' },
+    lineBlocked: { ru: 'линия перекрыта', en: 'line blocked', es: 'linea bloqueada' },
+    skipOrMove: { ru: 'двигайся, пропусти ход или используй навык', en: 'move, skip, or use a skill', es: 'mueve, pasa o usa habilidad' },
     unlocksAtLevel: { ru: '🔒 Открывается на уровне', en: '🔒 Unlocks at level', es: '🔒 Se desbloquea en nivel' },
     cooldownShort: { ru: 'КД', en: 'CD', es: 'REC' },
     statuses: { ru: 'Статусы', en: 'Statuses', es: 'Estados' },
@@ -4927,6 +4949,12 @@
     if (exact && exact[target]) return leading + exact[target] + trailing;
     return leading + translateDynamicText(core, target) + trailing;
   }
+  function localizeContent(value) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return value[currentLanguage()] || value.ru || value.en || '';
+    }
+    return translateText(value);
+  }
   function translateDynamicText(text, target) {
     const d = I18N_DYNAMIC[target] || I18N_DYNAMIC.en;
     let out = text;
@@ -4939,7 +4967,7 @@
     out = replaceTerms(out, d.terms || {});
     out = replaceTerms(out, d.classes || {});
     out = replaceTerms(out, d.stats || {});
-    out = out.replace(/\u0423\u0440\. (\d+)/g, target === 'es' ? 'Nv. $1' : 'Lv. $1');
+    out = out.replace(/\u0423\u0440\. (\d+)/g, target === 'ru' ? 'Ур. $1' : target === 'es' ? 'Nv. $1' : 'Lv. $1');
     out = out.replace(/\u0443\u0440\.(\d+)/g, target === 'es' ? 'nv.$1' : 'lv.$1');
     out = out.replace(/\u0443\u0440\. (\d+)/g, target === 'es' ? 'nv. $1' : 'lv. $1');
     out = out.replace(/stock: (\d+)/g, target === 'es' ? 'en reserva: $1' : 'stock: $1');
@@ -5936,33 +5964,33 @@
     destruction: 'DESTRUCTION', control: 'CONTROL', mystic: 'MYSTIC'
   };
   const PERK_DESCRIPTIONS = {
-    d1: 'Tank path: survive one more hit and hold the front line longer.',
-    d2: 'Tank path: reduce steady melee damage before it reaches the back line.',
-    d3: 'Tank path: punish enemies for attacking Garet.',
-    a1: 'Duelist path: turn Garet into a stronger finisher.',
-    a2: 'Duelist path: cut through armored enemies and bosses.',
-    a3: 'Duelist path: add burst damage spikes to key attacks.',
-    l1: 'Commander path: keep nearby allies safer when they stand with Garet.',
-    l2: 'Commander path: make tight formations hit harder.',
-    l3: 'Commander path: act earlier and keep the squad tempo high.',
-    m1: 'Sniper path: attack from safer positions and cover more lanes.',
-    m2: 'Sniper path: make each arrow a serious single-target threat.',
-    m3: 'Sniper path: shoot through cover when positioning gets messy.',
-    s1: 'Skirmisher path: reposition faster and escape bad tiles.',
-    s2: 'Skirmisher path: keep damage flowing after movement.',
-    s3: 'Skirmisher path: take turns earlier and finish wounded enemies.',
-    t1: 'Trapper path: make enemy movement costly.',
-    t2: 'Trapper path: slow dangerous targets before they reach the heroes.',
-    t3: 'Trapper path: control more space with layered traps.',
-    r1: 'Destruction path: raise Seris damage so spells end fights faster.',
-    r2: 'Destruction path: hit more enemies with every area spell.',
-    r3: 'Destruction path: add burning pressure after spell hits.',
-    c1: 'Control path: keep priority enemies frozen longer.',
-    c2: 'Control path: break enemy tempo with fear.',
-    c3: 'Control path: gain more mana for repeated control spells.',
-    y1: 'Mystic path: cast more often before running dry.',
-    y2: 'Mystic path: reward kills with sustain for Seris.',
-    y3: 'Mystic path: solve positioning problems with teleport.'
+    d1: { ru: 'Путь танка: переживай ещё один удар и дольше удерживай передовую.', en: 'Tank path: survive one more hit and hold the front line longer.', es: 'Ruta de tanque: resiste un golpe más y protege el frente durante más tiempo.' },
+    d2: { ru: 'Путь танка: снижай постоянный урон ближнего боя до того, как он достигнет тыла.', en: 'Tank path: reduce steady melee damage before it reaches the back line.', es: 'Ruta de tanque: reduce el daño cuerpo a cuerpo antes de que alcance la retaguardia.' },
+    d3: { ru: 'Путь танка: наказывай врагов за атаки по Гарету.', en: 'Tank path: punish enemies for attacking Garet.', es: 'Ruta de tanque: castiga a los enemigos por atacar a Garet.' },
+    a1: { ru: 'Путь дуэлянта: превращай Гарета в более сильного добивающего бойца.', en: 'Duelist path: turn Garet into a stronger finisher.', es: 'Ruta de duelista: convierte a Garet en un rematador más fuerte.' },
+    a2: { ru: 'Путь дуэлянта: пробивай бронированных врагов и боссов.', en: 'Duelist path: cut through armored enemies and bosses.', es: 'Ruta de duelista: atraviesa a enemigos acorazados y jefes.' },
+    a3: { ru: 'Путь дуэлянта: добавляй всплески урона к ключевым атакам.', en: 'Duelist path: add burst damage spikes to key attacks.', es: 'Ruta de duelista: añade picos de daño a los ataques clave.' },
+    l1: { ru: 'Путь командира: защищай соседних союзников, когда они стоят рядом с Гаретом.', en: 'Commander path: keep nearby allies safer when they stand with Garet.', es: 'Ruta de comandante: protege a los aliados cercanos junto a Garet.' },
+    l2: { ru: 'Путь командира: плотный строй наносит больше урона.', en: 'Commander path: make tight formations hit harder.', es: 'Ruta de comandante: las formaciones compactas golpean más fuerte.' },
+    l3: { ru: 'Путь командира: ходи раньше и поддерживай темп отряда.', en: 'Commander path: act earlier and keep the squad tempo high.', es: 'Ruta de comandante: actúa antes y mantiene alto el ritmo del grupo.' },
+    m1: { ru: 'Путь снайпера: атакуй из безопасных позиций и контролируй больше линий.', en: 'Sniper path: attack from safer positions and cover more lanes.', es: 'Ruta de francotirador: ataca desde posiciones seguras y cubre más líneas.' },
+    m2: { ru: 'Путь снайпера: каждая стрела становится серьёзной угрозой одной цели.', en: 'Sniper path: make each arrow a serious single-target threat.', es: 'Ruta de francotirador: cada flecha se vuelve una amenaza seria para un objetivo.' },
+    m3: { ru: 'Путь снайпера: стреляй сквозь укрытия, когда позиция становится неудобной.', en: 'Sniper path: shoot through cover when positioning gets messy.', es: 'Ruta de francotirador: dispara a través de cobertura cuando la posición se complica.' },
+    s1: { ru: 'Путь застрельщика: быстрее меняй позицию и уходи с опасных клеток.', en: 'Skirmisher path: reposition faster and escape bad tiles.', es: 'Ruta de hostigador: reposiciónate más rápido y escapa de casillas peligrosas.' },
+    s2: { ru: 'Путь застрельщика: сохраняй урон после перемещения.', en: 'Skirmisher path: keep damage flowing after movement.', es: 'Ruta de hostigador: mantiene el daño después de moverte.' },
+    s3: { ru: 'Путь застрельщика: ходи раньше и добивай раненых врагов.', en: 'Skirmisher path: take turns earlier and finish wounded enemies.', es: 'Ruta de hostigador: actúa antes y remata enemigos heridos.' },
+    t1: { ru: 'Путь ловчего: сделай перемещение врагов опасным.', en: 'Trapper path: make enemy movement costly.', es: 'Ruta de trampero: haz costoso el movimiento enemigo.' },
+    t2: { ru: 'Путь ловчего: замедляй опасные цели до их подхода к героям.', en: 'Trapper path: slow dangerous targets before they reach the heroes.', es: 'Ruta de trampero: ralentiza objetivos peligrosos antes de que alcancen a los héroes.' },
+    t3: { ru: 'Путь ловчего: контролируй больше пространства цепочками ловушек.', en: 'Trapper path: control more space with layered traps.', es: 'Ruta de trampero: controla más espacio con trampas encadenadas.' },
+    r1: { ru: 'Путь разрушения: повышай урон Сэрис, чтобы заклинания быстрее завершали бой.', en: 'Destruction path: raise Seris damage so spells end fights faster.', es: 'Ruta de destrucción: aumenta el daño de Seris para acabar combates más rápido.' },
+    r2: { ru: 'Путь разрушения: каждое заклинание по области поражает больше врагов.', en: 'Destruction path: hit more enemies with every area spell.', es: 'Ruta de destrucción: golpea a más enemigos con cada hechizo de área.' },
+    r3: { ru: 'Путь разрушения: добавляй горение после попаданий заклинаний.', en: 'Destruction path: add burning pressure after spell hits.', es: 'Ruta de destrucción: añade quemadura tras los impactos de hechizos.' },
+    c1: { ru: 'Путь контроля: дольше удерживай приоритетных врагов в заморозке.', en: 'Control path: keep priority enemies frozen longer.', es: 'Ruta de control: mantiene congelados más tiempo a los enemigos prioritarios.' },
+    c2: { ru: 'Путь контроля: ломай темп врага страхом.', en: 'Control path: break enemy tempo with fear.', es: 'Ruta de control: rompe el ritmo enemigo con miedo.' },
+    c3: { ru: 'Путь контроля: получай больше маны для повторных заклинаний контроля.', en: 'Control path: gain more mana for repeated control spells.', es: 'Ruta de control: gana más maná para repetir hechizos de control.' },
+    y1: { ru: 'Путь мистика: колдуй чаще и не оставайся без маны.', en: 'Mystic path: cast more often before running dry.', es: 'Ruta mística: lanza hechizos con más frecuencia sin quedarte sin maná.' },
+    y2: { ru: 'Путь мистика: убийства поддерживают выживание Сэрис.', en: 'Mystic path: reward kills with sustain for Seris.', es: 'Ruta mística: las bajas sostienen la supervivencia de Seris.' },
+    y3: { ru: 'Путь мистика: решай проблемы с позицией телепортацией.', en: 'Mystic path: solve positioning problems with teleport.', es: 'Ruta mística: resuelve problemas de posición con teletransporte.' }
   };
 
   function getHeroPerkBranchSlots(hero) {
@@ -6027,7 +6055,7 @@
       [D.NECRO]: { name: 'Necromancer', emoji: '🔮', hp: 28, armor: 1, attack: 8, move: 2, range: 3, speed: 8, gold: [30,40] },
       [D.CHAOS]: { name: 'Chaos Demon', emoji: '🌀', hp: 25, armor: 2, attack: 11, move: 0, range: 2, speed: 12, gold: [28,38] },
       [D.ASSASSIN]: { name: 'Assassin', emoji: '🗡️', hp: 20, armor: 0, attack: 14, move: 4, range: 1, speed: 14, gold: [30,40] },
-      [D.HYDRA]: { name: 'Hydra', emoji: '🐍', hp: 35, armor: 2, attack: 9, move: 1, range: 2, speed: 6, gold: [50,70], heads: 3, headHp: 10, sizeW: 2 },
+      [D.HYDRA]: { name: 'Hydra', emoji: '🐍', hp: 35, armor: 2, attack: 9, move: 1, range: 2, speed: 6, gold: [50,70], heads: 3, headHp: 10, boss: true, sizeW: 2 },
       [D.GHOST]: { name: 'Ghost', emoji: '👻', hp: 18, armor: 0, attack: 10, move: 3, range: 1, speed: 11, gold: [35,45] },
       [D.FIRE_TITAN]: { name: 'Fire Titan', emoji: '🔥', hp: 80, armor: 4, attack: 15, move: 2, range: 1, speed: 8, gold: [150,150], boss: true, sizeW: 2 },
       [D.DARK_LORD]: { name: 'Dark Lord', emoji: '👑', hp: 120, armor: 6, attack: 16, move: 2, range: 1, speed: 10, gold: [300,300], boss: true, sizeW: 4 }
@@ -6058,19 +6086,19 @@
   // ══════════ HERO SKILLS (unlock by level) ══════════
   const HERO_SKILLS = {
     garet: [
-      { key: 'shieldBash', name: 'Shield Bash',   icon: '🛡', unlockLevel: 2, cd: 3,  cost: null, desc: 'Attacks the target enemy and stuns it for 1 turn. CD 3.' },
-      { key: 'fireCall',   name: 'Call Fire',     icon: '🔥', unlockLevel: 3, cd: 4,  cost: null, desc: 'Ignites all enemies around Garet (AoE). CD 4.' },
-      { key: 'berserk',    name: 'Berserk',       icon: '💪', unlockLevel: 5, cd: 6,  cost: null, desc: 'Ultimate: x1.5 attack, -50% armor for 3 turns. CD 6.' }
+      { key: 'shieldBash', name: 'Shield Bash',   icon: '🛡', unlockLevel: 2, cd: 3,  cost: null, desc: { ru: 'Атакует врага и оглушает его на 1 ход. КД 3.', en: 'Attacks the target enemy and stuns it for 1 turn. CD 3.', es: 'Ataca al enemigo objetivo y lo aturde durante 1 turno. REC 3.' } },
+      { key: 'fireCall',   name: 'Call Fire',     icon: '🔥', unlockLevel: 3, cd: 4,  cost: null, desc: { ru: 'Поджигает всех врагов рядом с Гаретом (по области). КД 4.', en: 'Ignites all enemies around Garet (AoE). CD 4.', es: 'Prende fuego a todos los enemigos cerca de Garet (área). REC 4.' } },
+      { key: 'berserk',    name: 'Berserk',       icon: '💪', unlockLevel: 5, cd: 6,  cost: null, desc: { ru: 'Ульта: ×1.5 атаки, −50% брони на 3 хода. КД 6.', en: 'Ultimate: x1.5 attack, -50% armor for 3 turns. CD 6.', es: 'Definitiva: ×1.5 ataque, −50% armadura durante 3 turnos. REC 6.' } }
     ],
     alira: [
-      { key: 'doubleShot', name: 'Double Shot',   icon: '🏹', unlockLevel: 2, cd: 2, cost: null, desc: 'Two shots in a row at one target. CD 2.' },
-      { key: 'slowArrow',  name: 'Slowing Arrow', icon: '🐢', unlockLevel: 3, cd: 3, cost: null, desc: 'Slows the target: -2 movement for 2 rounds. CD 3.' },
-      { key: 'arrowRain',  name: 'Arrow Rain',    icon: '🌧', unlockLevel: 5, cd: 5, cost: null, desc: 'Ultimate: AoE attack against all nearby enemies. CD 5.' }
+      { key: 'doubleShot', name: 'Double Shot',   icon: '🏹', unlockLevel: 2, cd: 2, cost: null, desc: { ru: 'Два выстрела подряд по одной цели. КД 2.', en: 'Two shots in a row at one target. CD 2.', es: 'Dos disparos seguidos al mismo objetivo. REC 2.' } },
+      { key: 'slowArrow',  name: 'Slowing Arrow', icon: '🐢', unlockLevel: 3, cd: 3, cost: null, desc: { ru: 'Замедляет цель: −2 к перемещению на 2 раунда. КД 3.', en: 'Slows the target: -2 movement for 2 rounds. CD 3.', es: 'Ralentiza al objetivo: −2 de movimiento durante 2 rondas. REC 3.' } },
+      { key: 'arrowRain',  name: 'Arrow Rain',    icon: '🌧', unlockLevel: 5, cd: 5, cost: null, desc: { ru: 'Ульта: атака по области по всем ближайшим врагам. КД 5.', en: 'Ultimate: AoE attack against all nearby enemies. CD 5.', es: 'Definitiva: ataque de área contra todos los enemigos cercanos. REC 5.' } }
     ],
     seris: [
-      { key: 'fireball', name: 'Fireball', icon: '🔥', unlockLevel: 2, cd: 0, cost: 3, desc: 'Explosion on the target and adjacent tiles. Cost: 3 MP.' },
-      { key: 'freeze',   name: 'Freeze',   icon: '🧊', unlockLevel: 3, cd: 0, cost: 4, desc: 'Freezes the target for 1 turn. Cost: 4 MP.' },
-      { key: 'meteor',   name: 'Meteor',   icon: '☄',  unlockLevel: 5, cd: 0, cost: 8, desc: 'Ultimate: powerful AoE over a large area. Cost: 8 MP.' }
+      { key: 'fireball', name: 'Fireball', icon: '🔥', unlockLevel: 2, cd: 0, cost: 3, desc: { ru: 'Взрыв по цели и соседним клеткам. Стоимость: 3 MP.', en: 'Explosion on the target and adjacent tiles. Cost: 3 MP.', es: 'Explosión en el objetivo y las casillas adyacentes. Coste: 3 MP.' } },
+      { key: 'freeze',   name: 'Freeze',   icon: '🧊', unlockLevel: 3, cd: 0, cost: 4, desc: { ru: 'Замораживает цель на 1 ход. Стоимость: 4 MP.', en: 'Freezes the target for 1 turn. Cost: 4 MP.', es: 'Congela al objetivo durante 1 turno. Coste: 4 MP.' } },
+      { key: 'meteor',   name: 'Meteor',   icon: '☄',  unlockLevel: 5, cd: 0, cost: 8, desc: { ru: 'Ульта: мощная атака по большой области. Стоимость: 8 MP.', en: 'Ultimate: powerful AoE over a large area. Cost: 8 MP.', es: 'Definitiva: poderoso ataque de área amplia. Coste: 8 MP.' } }
     ]
   };
 
@@ -6669,6 +6697,9 @@
     [ENEMY_IDS.SHAMAN]:      { hp: 35,  attack: 8,  armor: 1 },
     [ENEMY_IDS.DARK_KNIGHT]: { hp: 65,  attack: 14, armor: 5 },
     [ENEMY_IDS.FIRE_TITAN]:  { hp: 110, attack: 16, armor: 4 },
+    // The region-3 boss attacks three times and regenerates, so its base hit is
+    // lower than the Titan's while its full turn remains a real boss threat.
+    [ENEMY_IDS.HYDRA]:       { hp: 70,  attack: 10, armor: 3 },
     [ENEMY_IDS.DARK_LORD]:   { hp: 180, attack: 20, armor: 6 }
   };
 
@@ -6994,7 +7025,7 @@
   function getSpeed(u) {
     let s = u.speed || 10;
     if (u.activeStatuses) {
-      if (u.activeStatuses.find(s => s.type === STATUS.SLOW)) s -= 2;
+      if (u.activeStatuses.find(status => status.type === STATUS.SLOW)) s -= 2;
     }
     if (!u.isHero && GameState.currentBattle?.globalBuffs?.watcherDeadMove > 0) s += 1;
     return s;
@@ -9180,7 +9211,7 @@
     html += battleActionHintHtml(b, u);
     if (!b.heroActionDone) {
       if (heroCanUndoMove(b, u)) {
-        html += `<button class="btn btn-gold battle-utility-btn" id="btn-undo-move" title="${translateKey('undoMoveTitle')}" style="margin-bottom:2px">↶ ${translateKey('undoMove')}</button>`;
+        html += `<button class="btn btn-gold battle-utility-btn" id="btn-undo-move" title="${translateKey('undoMoveTitle')}" style="margin-bottom:2px">${translateKey('undoMove')}</button>`;
       }
       // 6: Skill buttons with cooldown, level-lock, and tooltips
       const hh2 = GameState.heroes.find(x => x.id === u.heroId) || u;
@@ -9191,10 +9222,10 @@
         const locked = heroLevel < unlockLvl;
         const lvlPrefix = currentLanguage() === 'es' ? 'nv.' : 'lv.';
         const metaStr = skDef ? (skDef.cost ? `MP: ${skDef.cost}` : skDef.cd ? `${translateKey('cooldownShort')}: ${skDef.cd}` : '') : '';
-        const tooltipText = skDef ? `${translateText(skDef.name)} (${lvlPrefix}${unlockLvl})&#10;${translateText(skDef.desc)}${metaStr ? '&#10;' + metaStr : ''}` : translateText(label);
+        const tooltipText = skDef ? `${translateText(skDef.name)} (${lvlPrefix}${unlockLvl})&#10;${localizeContent(skDef.desc)}${metaStr ? '&#10;' + metaStr : ''}` : translateText(label);
         const actionName = skDef ? translateText(skDef.name) : translateText(label);
         if (locked) {
-          return `<button class="btn skill-action-btn is-locked" id="${id}" title="${translateKey('unlocksAtLevel')} ${unlockLvl}&#10;${skDef ? translateText(skDef.desc) : ''}" style="cursor:not-allowed">
+          return `<button class="btn skill-action-btn is-locked" id="${id}" title="${translateKey('unlocksAtLevel')} ${unlockLvl}&#10;${skDef ? localizeContent(skDef.desc) : ''}" style="cursor:not-allowed">
             <span class="skill-action-icon">🔒</span>
             <span class="skill-action-name">${actionName}</span>
             <span class="skill-action-meta">${lvlPrefix}${unlockLvl}</span>
@@ -9225,11 +9256,11 @@
         html += skillMakeBtn('sk-fr',  'freeze',   '🧊','Freeze',   u.cds.freeze,   { mpFail: u.mana < 4, mpCost: 4 });
         html += skillMakeBtn('sk-met', 'meteor',   '☄', 'Meteor',   u.cds.meteor,   { mpFail: u.mana < 8, mpCost: 8 });
       }
-      if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn battle-utility-btn" id="btn-skip-move">→ ${translateKey('skipMove')}</button>`;
-      html += `<button class="btn battle-utility-btn" id="btn-wait">⌛ ${translateKey('waitTurn')}</button>`;
+      if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn battle-utility-btn" id="btn-skip-move">${translateKey('skipMove')}</button>`;
+      html += `<button class="btn battle-utility-btn" id="btn-wait">${translateKey('waitTurn')}</button>`;
     }
     // 10: Inventory button always visible in battle
-    html += `<button class="btn battle-utility-btn" id="btn-battle-inv" style="margin-top:4px">🎒 ${translateKey('battleInventory')}</button>`;
+    html += `<button class="btn battle-utility-btn" id="btn-battle-inv" style="margin-top:4px">${translateKey('battleInventory')}</button>`;
     actions.innerHTML = html;
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     const heroLvl2 = (GameState.heroes.find(x => x.id === u.heroId) || u).level || 1;
@@ -11652,6 +11683,19 @@
     const modal = document.getElementById('perk-modal');
     const hintEl = document.getElementById('perk-modal-hint');
     const closeBtn = document.getElementById('perk-modal-close');
+    const portraitImg = document.getElementById('perk-hero-portrait-img');
+    const portraitFallback = document.getElementById('perk-hero-portrait-fallback');
+    if (portraitImg && portraitFallback) {
+      portraitImg.src = HERO_TEXTURE_PATHS[h.id] || `assets/heroes/${h.id}.png`;
+      portraitImg.alt = h.name;
+      portraitImg.style.display = 'block';
+      portraitFallback.textContent = h.emoji;
+      portraitFallback.style.display = 'none';
+      portraitImg.onerror = () => {
+        portraitImg.style.display = 'none';
+        portraitFallback.style.display = 'grid';
+      };
+    }
     document.getElementById('perk-hero-name').textContent = pickMode
       ? `${h.emoji} ${h.name} — ${translateText('new level')} ${h.level}`
       : `${h.emoji} ${h.name} — ${translateKey('progression')} · ${translateKey('heroLevelShort')} ${h.level}`;
@@ -11750,7 +11794,7 @@
             <div class="perk-detail-name">${translateText(perk.name)}</div>
             <div class="perk-detail-branch">${translateText(branchLabels[selectedBr] || selectedBr)}</div>
             <div class="perk-detail-effect">${translateKey('heroLevelShort')} ${perk.level || idx + 1} ${translateText('in branch')}</div>
-            <div class="perk-detail-desc">${translateText(PERK_DESCRIPTIONS[perk.id] || 'Improves the hero combat stats.')}</div>
+            <div class="perk-detail-desc">${localizeContent(PERK_DESCRIPTIONS[perk.id] || { ru: 'Улучшает боевые характеристики героя.', en: 'Improves the hero combat stats.', es: 'Mejora las estadísticas de combate del héroe.' })}</div>
             ${statusBtn}
           `;
           renderPerkTree();

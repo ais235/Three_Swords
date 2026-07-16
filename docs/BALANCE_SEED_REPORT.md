@@ -67,14 +67,15 @@ Current default seeds:
 
 Current mission threat curve across default seeds:
 
-- `R1:300`
-- `R2:294`
-- `R3:379`
+- `R1:309`
+- `R2:301`
+- `R3:500`
 
 Notes:
 
-- Region 2 mission threat is slightly below Region 1 by this heuristic.
+- Region 2 mission threat is close to Region 1 by this heuristic.
 - Region 2 dungeons and bosses are still higher pressure.
+- Boss profiles and multi-hit enemies are included in the estimate; Hydra is now measured as the region-3 boss it is in play.
 - Do not tune wave counts blindly from this number alone; Region 2 enemies have more control/armor, which may feel harder than the raw score.
 - Next balance pass should use seeded manual runs before changing wave size or gold.
 

@@ -54,6 +54,7 @@ function parseEnemyDefs(ids) {
       move: number('move'),
       range: number('range'),
       speed: number('speed'),
+      heads: number('heads') || 1,
       miniBoss: /miniBoss:\s*true/.test(body),
       boss: /boss:\s*true/.test(body),
       sizeW: number('sizeW') || 1
@@ -62,8 +63,21 @@ function parseEnemyDefs(ids) {
   return defs;
 }
 
+function parseBossProfiles(ids) {
+  const block = index.match(/const BOSS_PROFILES = \{([\s\S]*?)\n\s*\};/);
+  if (!block) throw new Error('BOSS_PROFILES block not found');
+  const profiles = {};
+  for (const match of block[1].matchAll(/\[ENEMY_IDS\.([A-Z0-9_]+)\]:\s*\{([^}]+)\}/g)) {
+    const body = match[2];
+    const number = name => Number(body.match(new RegExp(`${name}:\\s*([0-9.]+)`))?.[1] || 0);
+    profiles[ids[match[1]]] = { hp: number('hp'), attack: number('attack'), armor: number('armor') };
+  }
+  return profiles;
+}
+
 const IDS = parseEnemyIds();
 const DEFS = parseEnemyDefs(IDS);
+const BOSS_PROFILES = parseBossProfiles(IDS);
 
 function randInt(rng, a, b) {
   return a + Math.floor(rng() * (b - a + 1));
@@ -153,9 +167,13 @@ function waveForCell(rng, cell) {
 }
 
 function threat(id) {
-  const d = DEFS[id];
+  const base = DEFS[id];
+  if (!base) return 0;
+  const profile = BOSS_PROFILES[id];
+  const d = profile ? { ...base, ...profile } : base;
   if (!d) return 0;
-  let score = d.hp + d.attack * 6 + d.armor * 4 + d.range * 3 + d.move * 2 + d.speed;
+  // Hydra's three heads are three real attacks in aiAttack(), not cosmetic text.
+  let score = d.hp + d.attack * 6 * d.heads + d.armor * 4 + d.range * 3 + d.move * 2 + d.speed;
   if (d.miniBoss) score *= 1.25;
   if (d.boss) score *= 1.5;
   if (d.sizeW > 1) score *= 1.12;
