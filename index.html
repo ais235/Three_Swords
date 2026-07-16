@@ -1512,15 +1512,15 @@
       .victory-center { grid-column: 2; grid-row: 2; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 4px 8px; align-items: stretch; }
       .victory-title-area { display: none; }
       .victory-stats-grid { max-width: none; margin-top: 0; }
-      .victory-power { max-width: none; padding: 5px 6px; }
-      .victory-power-title { font-size: 6px; margin-bottom: 3px; }
+      .victory-power { max-width: none; padding: 7px 8px; }
+      .victory-power-title { font-size: 9px; margin-bottom: 4px; }
       .victory-power-list { gap: 3px; }
-      .victory-power-chip { min-height: 18px; padding: 2px 5px; font-size: 6px; }
+      .victory-power-chip { min-height: 24px; padding: 3px 6px; font-size: 9px; }
       .victory-divider { max-width: none; display: none; }
       .victory-loot { max-width: none; }
       .victory-bestiary-row { max-width: none; }
       .victory-buttons { grid-column: 3; grid-row: 2; display: flex; flex-direction: column; gap: 3px; padding: 4px; justify-content: center; max-width: none; overflow-y: auto; }
-      .victory-buttons .btn { font-size: 6px; padding: 5px 4px; min-height: 26px; letter-spacing: 0; }
+      .victory-buttons .btn { font-size: 9px; padding: 5px 4px; min-height: 30px; letter-spacing: 0; }
       .victory-particles { display: none; }
       .vic-stat-card-val { font-size: 14px; }
       .vic-stat-card { padding: 6px 4px 4px; }
@@ -8250,14 +8250,11 @@
         const spriteW = u.isHero
           ? Math.round(CELL * BATTLE_SPRITE_MULT_HERO)
           : Math.round(footprintW * BATTLE_SPRITE_MULT_ENEMY);
-        const requestedSpriteH = u.isHero
+        const spriteH = u.isHero
           ? Math.round(CELL * BATTLE_SPRITE_MULT_HERO)
           : Math.round(CELL * (unitWidth(u) > 1 ? 1.35 : BATTLE_SPRITE_MULT_ENEMY));
         // Feet anchor: py + spriteBottom stays fixed; top grows/shrinks upward
         const feetY = py + spriteBottom;                        // absolute Y of feet
-        // Units in the top row must remain fully visible inside the canvas.
-        // Reduce only their portrait height instead of clipping the head above y=0.
-        const spriteH = Math.min(requestedSpriteH, Math.max(1, feetY - 2));
 
         if (u.isHero) {
           const hTex = getHeroTexture(u.heroId);
