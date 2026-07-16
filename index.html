@@ -1908,13 +1908,19 @@
     #inv-paperdoll-area { position: relative; flex: 1; width: 100%; max-width: 300px; background: radial-gradient(ellipse at 50% 42%, #141428 0%, #06060f 75%); border: 1px solid #2a2a50; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 20px 10px; min-height: 0; }
     #inv-paperdoll-area::before { content: ''; position: absolute; inset: 6px; border: 1px solid #1e1e3a; border-radius: 8px; pointer-events: none; }
     .paperdoll-row { display: flex; align-items: center; justify-content: center; gap: 20px; width: 100%; z-index: 1; }
+    .paperdoll-row-mid {
+      display: grid;
+      grid-template-columns: minmax(64px, 1fr) auto minmax(64px, 1fr);
+    }
+    .paperdoll-row-mid .eq-slot-wrap:first-child { justify-self: end; }
+    .paperdoll-row-mid .eq-slot-wrap:last-child { justify-self: start; }
     #inv-hero-figure { font-size: 72px; line-height: 1; text-align: center; filter: drop-shadow(0 0 18px rgba(74,158,255,0.35)) drop-shadow(0 4px 8px rgba(0,0,0,.8)); transition: filter .3s; }
     #inv-hero-figure img,
     .inv-hero-figure-img { width: 72px; height: 72px; border-radius: 8px; border: 2px solid #3a3a6a; display: block; object-fit: contain; }
     .inv-hero-figure-emoji { font-size: 72px; line-height: 1; display: block; }
     .eq-slot-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; max-width: 76px; }
     .eq-slot-heading { font-size: 7px; color: var(--text-hint); letter-spacing: 1px; text-transform: uppercase; text-align: center; line-height: 1.2; }
-    .eq-slot-item-name { font-size: 7px; color: var(--text-dim); text-align: center; line-height: 1.25; max-width: 76px; min-height: 1.25em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+    .eq-slot-item-name { font-size: 8px; color: var(--text-dim); text-align: center; line-height: 1.25; max-width: 76px; min-height: 1.25em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
     .eq-slot-item-name:empty { min-height: 0; }
     .eq-zone { width: 64px; height: 64px; background: #0a0a1c; border: 2px solid #2a2a4a; border-radius: 8px; display: flex; flex-direction: column; align-items: stretch; justify-content: stretch; cursor: pointer; position: relative; transition: border-color .2s, box-shadow .2s, background .2s; flex-shrink: 0; padding: 0; overflow: hidden; }
     .eq-zone:hover { border-color: var(--accent-gold); background: #141410; box-shadow: 0 0 12px rgba(240,165,0,.2); }
@@ -2440,17 +2446,17 @@
       .hero-card { padding: 4px; }
       .hero-card-top { margin-bottom: 3px; gap: 4px; }
       .hero-icon-large { font-size: 12px; }
-      .hero-card-name { font-size: 8px; }
+      .hero-card-name { font-size: 9px; }
       .hero-card-class { display: none; }
       .bar-wrap { margin-bottom: 2px; }
-      .bar-label { font-size: 7px; margin-bottom: 1px; }
+      .bar-label { font-size: 8px; margin-bottom: 1px; }
       .skills-row { gap: 2px; margin-top: 2px; }
       .skill-btn { width: 18px; height: 18px; font-size: 9px; }
       #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
       #ui-overlay { min-width: 0; padding: 4px; gap: 2px; overflow: hidden; display: flex; flex-direction: column; }
-      .br-label { font-size: 7px; margin-bottom: 0; }
+      .br-label { font-size: 8px; margin-bottom: 0; }
       .init-slot { width: 20px; height: 20px; font-size: 10px; }
-      #battle-log { min-height: 28px; max-height: 56px; font-size: 7px; line-height: 1.25; padding: 2px; }
+      #battle-log { min-height: 28px; max-height: 56px; font-size: 8px; line-height: 1.25; padding: 2px; }
       #unit-panel { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
       #unit-stats { font-size: 7px !important; margin-bottom: 1px !important; }
       .battle-actions { display: flex; flex-direction: column; gap: 2px; }
@@ -2467,7 +2473,7 @@
         font-size: 10px;
         border-radius: 4px;
       }
-      .skill-action-btn .skill-action-name { font-size: 7px; }
+      .skill-action-btn .skill-action-name { font-size: 8px; }
       .skill-action-btn .skill-action-meta { font-size: 6px; }
       .battle-actions #btn-start-battle { grid-column: unset; }
       .deploy-hint-box { display: none; }
@@ -2534,24 +2540,24 @@
       .btn-leave::before { content: '←'; }
       .btn-leave .btn-leave-text { display: none; }
 
-      #inv-layout { grid-template-columns: 112px minmax(180px, 1fr) 156px; flex: 1; min-height: 0; overflow: hidden; }
+      #inv-layout { grid-template-columns: 126px minmax(230px, 1fr) 190px; flex: 1; min-height: 0; overflow: hidden; }
       #inv-sidebar, #inv-paperdoll, #inv-backpack { padding: 4px; gap: 4px; }
       #inv-paperdoll-area { padding: 6px 4px; gap: 6px; min-height: 0; }
       #inv-hero-figure img,
-      .inv-hero-figure-img { width: 42px; height: 42px; }
+      .inv-hero-figure-img { width: 48px; height: 48px; }
       .inv-hero-figure-emoji,
-      #inv-hero-figure { font-size: 42px; }
-      .paperdoll-row { gap: 7px; }
-      .eq-zone { width: 36px; height: 36px; }
-      .eq-slot-wrap { max-width: 48px; gap: 1px; }
+      #inv-hero-figure { font-size: 48px; }
+      .paperdoll-row { gap: 8px; }
+      .eq-zone { width: 54px; height: 54px; }
+      .eq-slot-wrap { max-width: 72px; gap: 2px; }
       .eq-slot-heading,
-      .eq-slot-item-name { font-size: 6px; }
-      .inv-tab { font-size: 7px; min-height: 24px; padding: 2px 3px; }
+      .eq-slot-item-name { font-size: 8px; }
+      .inv-tab { font-size: 8px; min-height: 28px; padding: 2px 3px; }
       .inv-portrait-icon { font-size: 18px; }
       .inv-portrait-name { font-size: 8px; }
       .inv-portrait-class, .slots-title { display: none; }
       .inv-stats { padding: 4px; }
-      .stat-row { font-size: 7px; margin-bottom: 1px; }
+      .stat-row { font-size: 8px; margin-bottom: 2px; }
       #inv-hero-perks { margin-top: 4px; }
       .inv-perks-label { font-size: 7px; margin-bottom: 3px; }
       .inv-perk-btn { max-width: 38px; height: 28px; font-size: 12px; }
@@ -3251,7 +3257,7 @@
       #battle-screen .battle-tactical-sub { font-size: 6px !important; line-height: 1.05 !important; }
 
       #inventory-screen #inv-layout {
-        grid-template-columns: 84px minmax(150px, 1fr) 148px !important;
+        grid-template-columns: 112px minmax(230px, 1fr) 180px !important;
         grid-template-rows: minmax(0, 1fr);
         overflow: hidden;
       }
@@ -3265,9 +3271,6 @@
       #inventory-screen .inv-stats,
       #inventory-screen #inv-hero-perks,
       #inventory-screen .inv-portrait-class,
-      #inventory-screen #inv-paperdoll-title,
-      #inventory-screen .eq-slot-heading,
-      #inventory-screen .eq-slot-item-name,
       #inventory-screen #inv-slot-info,
       #inventory-screen .inv-pack-header,
       #inventory-screen .item-detail-desc,
@@ -3275,12 +3278,12 @@
         display: none !important;
       }
       #inventory-screen .inv-tab {
-        min-height: 24px !important;
-        padding: 2px !important;
+        min-height: 30px !important;
+        padding: 2px 3px !important;
       }
       #inventory-screen .inv-tab img {
-        width: 22px !important;
-        height: 22px !important;
+        width: 26px !important;
+        height: 26px !important;
       }
       #inventory-screen .inv-portrait {
         padding: 2px 0 !important;
@@ -3300,26 +3303,29 @@
         font-size: 7px !important;
       }
       #inventory-screen #inv-paperdoll-area {
-        padding: 6px 4px !important;
+        padding: 8px 6px !important;
         gap: 6px !important;
         min-height: 0 !important;
       }
       #inventory-screen .paperdoll-row {
-        gap: 8px !important;
+        gap: 10px !important;
       }
       #inventory-screen #inv-hero-figure img,
       #inventory-screen .inv-hero-figure-img {
-        width: 42px !important;
-        height: 42px !important;
+        width: 50px !important;
+        height: 50px !important;
       }
       #inventory-screen #inv-hero-figure,
       #inventory-screen .inv-hero-figure-emoji {
-        font-size: 42px !important;
+        font-size: 50px !important;
       }
       #inventory-screen .eq-zone {
-        width: 38px !important;
-        height: 38px !important;
+        width: 58px !important;
+        height: 58px !important;
       }
+      #inventory-screen .eq-slot-wrap { max-width: 76px !important; gap: 2px !important; }
+      #inventory-screen .eq-slot-heading,
+      #inventory-screen .eq-slot-item-name { display: block !important; font-size: 8px !important; }
       #inventory-screen .eq-zone-fill > span:not(.item-icon-wrap) {
         font-size: 20px !important;
       }
@@ -8244,11 +8250,14 @@
         const spriteW = u.isHero
           ? Math.round(CELL * BATTLE_SPRITE_MULT_HERO)
           : Math.round(footprintW * BATTLE_SPRITE_MULT_ENEMY);
-        const spriteH = u.isHero
+        const requestedSpriteH = u.isHero
           ? Math.round(CELL * BATTLE_SPRITE_MULT_HERO)
           : Math.round(CELL * (unitWidth(u) > 1 ? 1.35 : BATTLE_SPRITE_MULT_ENEMY));
         // Feet anchor: py + spriteBottom stays fixed; top grows/shrinks upward
         const feetY = py + spriteBottom;                        // absolute Y of feet
+        // Units in the top row must remain fully visible inside the canvas.
+        // Reduce only their portrait height instead of clipping the head above y=0.
+        const spriteH = Math.min(requestedSpriteH, Math.max(1, feetY - 2));
 
         if (u.isHero) {
           const hTex = getHeroTexture(u.heroId);
@@ -9895,8 +9904,8 @@
       const hh = GameState.heroes.find(h => h.id === heroId);
       const heroName = hh ? hh.name : heroId;
       document.getElementById('skill-unlock-icon').textContent = skillDef.icon;
-      document.getElementById('skill-unlock-name').textContent = skillDef.name;
-      document.getElementById('skill-unlock-desc').textContent = skillDef.desc;
+      document.getElementById('skill-unlock-name').textContent = translateText(skillDef.name);
+      document.getElementById('skill-unlock-desc').textContent = localizeContent(skillDef.desc);
       const meta = skillDef.cost ? `Cost: ${skillDef.cost} MP` : skillDef.cd ? `${translateKey('cooldownShort')}: ${skillDef.cd}` : '';
       document.getElementById('skill-unlock-meta').textContent = `${heroName}: ${meta}`;
       const okBtn = document.getElementById('btn-skill-unlock-ok');
