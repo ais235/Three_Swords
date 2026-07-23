@@ -83,6 +83,7 @@
     .hero-card-name { font-size: 11px; color: var(--text-main); font-weight: 500; }
     .hero-card-class { font-size: 9px; color: var(--text-dim); }
     .bar-wrap { margin-bottom: 3px; }
+    .hero-mobile-resources { display: contents; }
     .bar-label { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-dim); margin-bottom: 2px; }
     .bar { height: 5px; border-radius: 3px; background: #1a1a2e; overflow: hidden; }
     .bar-fill-hp { background: var(--accent-green); height: 100%; border-radius: 3px; transition: width .2s; }
@@ -1733,10 +1734,10 @@
       border-radius: 5px; border: 1px solid var(--border);
       font-size: 15px; display: flex; align-items: center; justify-content: center;
       background: #0d0d1a; cursor: default; padding: 0; box-sizing: border-box;
+      pointer-events: none; user-select: none; -webkit-tap-highlight-color: transparent;
     }
     .inv-perk-btn.active { border-color: var(--accent-green); background: #081408; box-shadow: 0 0 6px rgba(46,204,113,.25); opacity: 1; }
     .inv-perk-btn.inactive { opacity: 0.32; filter: grayscale(0.65); border-color: #2a2a40; }
-    .inv-perk-btn:hover { border-color: #888; }
     #inv-hero-actions { margin-top: 8px; flex-shrink: 0; }
     #inv-hero-actions .btn { width: 100%; }
     .perk-skill.sel { border-color: var(--accent-gold); background: #1a1000; }
@@ -3035,6 +3036,31 @@
       font-size: 10px;
       flex: 0 0 21px;
     }
+    /* Desktop battle cards have enough vertical room for a readable hero summary. */
+    @media (min-width: 1000px) and (min-height: 600px) {
+      #battle-screen .battle-left { padding: 10px; gap: 8px; }
+      #battle-screen .battle-left .hero-card {
+        padding: 10px;
+        justify-content: space-evenly;
+      }
+      #battle-screen .battle-left .hero-card-top { gap: 8px; margin-bottom: 0; }
+      #battle-screen .battle-left .hero-icon-large-img {
+        width: 28px;
+        height: 28px;
+      }
+      #battle-screen .battle-left .hero-icon-large { font-size: 24px; }
+      #battle-screen .battle-left .hero-card-name { font-size: 14px !important; }
+      #battle-screen .battle-left .hero-card-class,
+      #battle-screen .battle-left .bar-label,
+      #battle-screen .battle-left .hero-mini-stats { font-size: 11px !important; }
+      #battle-screen .battle-left .bar { height: 7px; }
+      #battle-screen .battle-left .skill-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
+        flex-basis: 26px;
+      }
+    }
     #battle-screen .battle-actions .skill-action-btn {
       min-height: 42px !important;
       grid-template-columns: 30px minmax(0, 1fr);
@@ -3138,14 +3164,17 @@
       #battle-screen .battle-left .hero-card {
         padding: 3px !important;
         min-height: 0;
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: minmax(72px, .8fr) minmax(110px, 1.2fr);
+        align-items: center;
+        column-gap: 5px;
         justify-content: center;
         overflow: hidden;
       }
       #battle-screen .battle-left .hero-card-top {
         gap: 3px;
-        margin: 0 0 2px !important;
+        margin: 0 !important;
+        min-width: 0;
       }
       #battle-screen .battle-left .hero-icon-large,
       #battle-screen .battle-left .hero-icon-large-img {
@@ -3167,7 +3196,15 @@
       #battle-screen .battle-left .bar-label {
         display: none !important;
       }
+      #battle-screen .battle-left .hero-mobile-resources {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+      }
       #battle-screen .battle-left .bar-wrap {
+        flex: 1 1 0;
+        min-width: 0;
         margin: 0 !important;
       }
       #battle-screen .battle-left .bar {
@@ -3268,7 +3305,6 @@
         gap: 3px !important;
         min-width: 0;
       }
-      #inventory-screen .inv-stats,
       #inventory-screen #inv-hero-perks,
       #inventory-screen .inv-portrait-class,
       #inventory-screen #inv-slot-info,
@@ -3280,6 +3316,11 @@
       #inventory-screen .inv-tab {
         min-height: 30px !important;
         padding: 2px 3px !important;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
       }
       #inventory-screen .inv-tab img {
         width: 26px !important;
@@ -3296,6 +3337,27 @@
       #inventory-screen .inv-portrait-name {
         font-size: 8px !important;
         line-height: 1.1 !important;
+      }
+      #inventory-screen #inv-sidebar {
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+      }
+      #inventory-screen .inv-hero-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 3px;
+      }
+      #inventory-screen .inv-stats {
+        display: block !important;
+        padding: 4px !important;
+        margin-bottom: 3px;
+        flex-shrink: 0;
+      }
+      #inventory-screen .inv-stats .stat-row {
+        font-size: 8px !important;
+        line-height: 1.2;
+        margin-bottom: 2px;
+        padding-bottom: 2px;
       }
       #inventory-screen .inv-action-stack .btn {
         min-height: 24px !important;
@@ -9160,8 +9222,10 @@
             ${heroIconHtml(h.heroId, h.sprite)}
             <div><div class="hero-card-name">${h.name}</div><div class="hero-card-class">${roleLabel[h.heroId] || ''}</div></div>
           </div>
-          <div class="bar-wrap"><div class="bar-label"><span>HP</span><span>${h.hp}/${h.maxHp}</span></div><div class="bar"><div class="bar-fill-hp" style="width:${hpPct}%"></div></div></div>
-          ${manaBar}
+          <div class="hero-mobile-resources">
+            <div class="bar-wrap"><div class="bar-label"><span>HP</span><span>${h.hp}/${h.maxHp}</span></div><div class="bar"><div class="bar-fill-hp" style="width:${hpPct}%"></div></div></div>
+            ${manaBar}
+          </div>
           ${statsLine}
           <div class="skills-row">${skillsHtml}</div>
           <div style="font-size:9px;color:var(--text-dim);margin-top:3px">${heroEquipIcons(hh)}</div>
