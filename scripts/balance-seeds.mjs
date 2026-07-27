@@ -7,8 +7,17 @@ const index = readFileSync(resolve(root, 'index.html'), 'utf8');
 
 const MAP_COLS = 12;
 const MAP_ROWS = 8;
-const DEFAULT_SEEDS = ['12345', 'phase4-a', 'phase4-b', 'phase4-c', 'phase4-d'];
-const seeds = process.argv.slice(2).length ? process.argv.slice(2) : DEFAULT_SEEDS;
+const QUICK_SEEDS = ['12345', 'phase4-a', 'phase4-b', 'phase4-c', 'phase4-d'];
+const STANDARD_SEEDS = [
+  ...QUICK_SEEDS,
+  'early-01', 'early-02', 'early-03', 'early-04', 'early-05',
+  'normal-01', 'normal-02', 'normal-03', 'normal-04', 'normal-05',
+  'hardcore-01', 'hardcore-02', 'hardcore-03', 'hardcore-04', 'hardcore-05',
+  'boss-01', 'boss-02', 'boss-03', 'boss-04', 'boss-05',
+  'synergy-01', 'synergy-02', 'synergy-03', 'synergy-04', 'synergy-05'
+];
+const cliSeeds = process.argv.slice(2);
+const seeds = cliSeeds.includes('--quick') ? QUICK_SEEDS : (cliSeeds.length ? cliSeeds : STANDARD_SEEDS);
 
 function hashSeed(value) {
   let h = 2166136261;
@@ -157,13 +166,38 @@ function waveForCell(rng, cell) {
   if (cell.type === 'final') return [IDS.DARK_LORD];
   const pool = pools[cell.region];
   let cnt = cell.type === 'dungeon' ? 4 : cell.type === 'arena' ? 1 : 3;
-  if (cell.region === 1) {
-    if (cell.type === 'mission') cnt = 4;
-    if (cell.type === 'dungeon') cnt = 5;
-  }
+  if (cell.region === 2 && cell.type === 'mission') cnt = 4;
+  if (cell.region === 3 && cell.type === 'dungeon') cnt = 5;
+  const volatile = new Set([IDS.SUICIDE, IDS.PLAGUE_DOCTOR]);
+  const ranged = new Set([IDS.GOBLIN_ARCHER, IDS.BANDIT_THROWER, IDS.CROSSBOWMAN, IDS.HEXER, IDS.BANSHEE]);
   const wave = [];
-  for (let i = 0; i < cnt; i++) wave.push(pool[randInt(rng, 0, pool.length - 1)]);
+  for (let i = 0; i < cnt; i++) {
+    let pick = pool[randInt(rng, 0, pool.length - 1)];
+    for (let retry = 0; retry < 8; retry++) {
+      if (!(volatile.has(pick) && wave.some(id => volatile.has(id))) &&
+          !(ranged.has(pick) && wave.filter(id => ranged.has(id)).length >= 2)) break;
+      pick = pool[randInt(rng, 0, pool.length - 1)];
+    }
+    wave.push(pick);
+  }
   return wave;
+}
+
+function synergyThreat(wave) {
+  const count = id => wave.filter(x => x === id).length;
+  let bonus = 0;
+  const healer = count(IDS.SHAMAN) + count(IDS.PLAGUE_DOCTOR);
+  const tank = count(IDS.ORC_GUARD) + count(IDS.SHIELDBEARER) + count(IDS.STONE_GOLEM);
+  const control = count(IDS.SPIDER) + count(IDS.ICE_ELEM) + count(IDS.HEXER) + count(IDS.BANSHEE);
+  const assassin = count(IDS.ASSASSIN) + count(IDS.VOID_STALKER) + count(IDS.BLOOD_KNIGHT);
+  const summoner = count(IDS.NECRO) + count(IDS.SHAMAN);
+  const ranged = count(IDS.GOBLIN_ARCHER) + count(IDS.BANDIT_THROWER) + count(IDS.CROSSBOWMAN) + count(IDS.HEXER) + count(IDS.BANSHEE);
+  if (healer && tank) bonus += 45;
+  if (control && assassin) bonus += 55;
+  if (summoner && tank) bonus += 40;
+  if (ranged >= 2) bonus += 20 * (ranged - 1);
+  if (count(IDS.SUICIDE) + count(IDS.PLAGUE_DOCTOR) > 1) bonus += 80;
+  return bonus;
 }
 
 function threat(id) {
@@ -189,7 +223,7 @@ function summarize(seed) {
     const byType = new Map();
     for (const cell of cells) {
       const wave = waveForCell(rng, cell);
-      const score = wave.reduce((sum, id) => sum + threat(id), 0);
+      const score = wave.reduce((sum, id) => sum + threat(id), 0) + synergyThreat(wave);
       const bucket = byType.get(cell.type) || { count: 0, total: 0, max: 0, examples: [] };
       bucket.count += 1;
       bucket.total += score;
@@ -228,3 +262,14 @@ const curve = Object.entries(missionAverages).map(([region, values]) => {
 }).join(' ');
 
 console.log(`Mission threat curve ${curve}`);
+
+const regionalMedian = region => {
+  const values = rows.filter(row => row.type === 'mission' && row.region === region).map(row => row.avgThreat).sort((a, b) => a - b);
+  return values[Math.floor(values.length / 2)] || 0;
+};
+const curveOk = regionalMedian(2) > regionalMedian(1) && regionalMedian(3) > regionalMedian(2);
+if (!curveOk) {
+  console.error(`FAIL non-growing mission medians: R1=${regionalMedian(1)} R2=${regionalMedian(2)} R3=${regionalMedian(3)}`);
+  process.exit(1);
+}
+console.log(`PASS growing mission medians: R1=${regionalMedian(1)} R2=${regionalMedian(2)} R3=${regionalMedian(3)}`);

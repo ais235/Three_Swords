@@ -97,7 +97,7 @@
     .hero-mini.active { border-color: var(--accent-blue); }
     .hp-line { height: 4px; border-radius: 2px; background: #1a1a2e; overflow: hidden; margin-top: 3px; }
     .hp-fill { height: 100%; background: var(--accent-green); }
-    #battle-wrap { display: flex; gap: 0; align-items: center; justify-content: center; border: 2px solid var(--border); border-radius: 0; overflow: hidden; min-width: 0; min-height: 0; background: #0b0d1b; }
+    #battle-wrap { position: relative; display: flex; gap: 0; align-items: center; justify-content: center; border: 2px solid var(--border); border-radius: 0; overflow: hidden; min-width: 0; min-height: 0; background: #0b0d1b; }
     #battle-canvas {
       display: block;
       background: #111;
@@ -158,6 +158,50 @@
     .battle-tactical-strip.good { border-color: rgba(46,204,113,.55); background: #07160f; }
     .battle-tactical-strip.warn { border-color: rgba(241,196,15,.55); background: #171307; }
     .battle-tactical-strip.bad { border-color: rgba(231,76,60,.55); background: #190909; }
+    .ftue-coach {
+      border: 1px solid rgba(240,165,0,.75);
+      background: linear-gradient(180deg, rgba(38,29,8,.98), rgba(16,14,24,.98));
+      border-radius: 7px;
+      padding: 7px 8px;
+      margin-bottom: 5px;
+      box-shadow: 0 0 14px rgba(240,165,0,.12);
+    }
+    .ftue-coach-title { color: var(--accent-gold); font-size: 9px; letter-spacing: 1px; line-height: 1.25; }
+    .ftue-coach-text { color: var(--text-main); font-size: 9px; line-height: 1.45; margin-top: 4px; }
+    .ftue-coach-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px; }
+    .ftue-coach-progress { color: var(--text-dim); font-size: 8px; }
+    .ftue-coach-skip { border: 0; background: transparent; color: var(--text-dim); padding: 2px; font: inherit; font-size: 8px; cursor: pointer; }
+    .ftue-coach-skip:hover { color: var(--text-main); }
+    #battle-coach-overlay {
+      position: absolute;
+      z-index: 12;
+      left: 50%;
+      top: 10px;
+      width: min(480px, calc(100% - 20px));
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    #battle-coach-overlay:empty { display: none; }
+    #battle-coach-overlay .ftue-coach {
+      margin: 0;
+      padding: 9px 11px;
+      border-width: 2px;
+      box-shadow: 0 4px 22px rgba(0,0,0,.65), 0 0 18px rgba(240,165,0,.22);
+    }
+    #battle-coach-overlay .ftue-coach-title { font-size: 11px; }
+    #battle-coach-overlay .ftue-coach-text { font-size: 11px; }
+    #battle-coach-overlay .ftue-coach-skip { pointer-events: auto; }
+    .damage-preview-card {
+      margin: 6px 0;
+      padding: 7px 8px;
+      border: 2px solid #f0a500;
+      border-radius: 6px;
+      background: #241b05;
+      color: #fff2b5;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
     .battle-tactical-kicker {
       color: var(--text-dim);
       font-size: 8px;
@@ -458,6 +502,35 @@
       width: 100%; height: 100%; max-height: 100%; object-fit: contain;
       image-rendering: auto; pointer-events: none; display: block;
     }
+    #map-screen .map-node-face-boss {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      display: grid;
+      place-items: center;
+      padding: 3px;
+      box-sizing: border-box;
+    }
+    #map-screen .map-boss-silhouette {
+      width: min(82%, 62px);
+      height: min(82%, 62px);
+      background: linear-gradient(180deg, #aeb4bd, #656b76);
+      -webkit-mask-image: var(--boss-mask);
+      mask-image: var(--boss-mask);
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+      opacity: .88;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.8));
+    }
+    #map-screen .map-node.type-boss-revealed {
+      border-color: rgba(166,174,189,.8);
+      background: radial-gradient(circle, rgba(132,140,154,.17), rgba(8,9,18,.92) 72%);
+      box-shadow: inset 0 0 12px rgba(174,182,196,.12);
+    }
     #map-screen .map-node.type-city { background: rgba(12, 18, 28, 0.9); }
     .cell-info-icon.cell-info-icon-img { font-size: 0; line-height: 0; text-align: center; }
     .cell-info-icon-img img {
@@ -484,15 +557,37 @@
       background: var(--bg-panel);
       border-radius: 6px;
       padding: 8px;
-      font-size: 6px;
+      font-size: 9px;
       color: var(--text-dim);
-      flex: 1 1 auto;
+      flex: 0 1 190px;
       min-height: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
     .cell-info-icon { font-size: 18px; margin-bottom: 4px; }
-    .cell-info-name { color: var(--text-main); font-size: 7px; margin-bottom: 3px; line-height: 1.35; }
+    .cell-info-name { color: var(--text-main); font-size: 11px; margin-bottom: 5px; line-height: 1.4; }
+    .map-route-choices { display: grid; gap: 4px; flex: 0 0 auto; }
+    .map-route-title { color: var(--accent-gold); font-size: 10px; letter-spacing: 1px; margin: 2px 0; }
+    .map-route-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2px 8px;
+      min-height: 50px;
+      padding: 8px 9px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: rgba(255,255,255,.035);
+      color: var(--text-main);
+      text-align: left;
+      cursor: pointer;
+    }
+    .map-route-card:hover, .map-route-card:focus-visible { border-color: var(--accent-gold); background: rgba(240,165,0,.1); outline: none; }
+    .map-route-card strong { font-size: 11px; line-height: 1.3; color: var(--text-main); }
+    .map-route-card small { grid-column: 1 / -1; font-size: 9px; line-height: 1.35; color: var(--text-dim); }
+    .map-route-threat { color: #ffca6a; font-size: 10px; line-height: 1.3; white-space: nowrap; }
+    .map-route-card.first-battle-route { border-color: var(--accent-gold); background: rgba(240,165,0,.12); }
+    #map-screen .map-node.map-option { box-shadow: 0 0 0 2px rgba(89,214,132,.35), inset 0 0 12px rgba(89,214,132,.08); }
+    #map-screen .map-node.map-secondary:not(.current) { opacity: .42; }
     .city-body { display: grid; grid-template-columns: 190px 1fr 190px; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
     .city-left { background: #111128; border-right: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden; }
     .city-left .city-banner { flex-shrink: 0; }
@@ -1421,6 +1516,38 @@
       color: var(--accent-gold);
       font-size: 7px;
       line-height: 1.25;
+    }
+    .fx-impact {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      margin: -14px 0 0 -14px;
+      border: 3px solid #fff1a8;
+      border-radius: 50%;
+      box-shadow: 0 0 14px currentColor;
+      pointer-events: none;
+      z-index: 590;
+      animation: impactBurst .28s ease-out forwards;
+    }
+    .fx-impact.is-ranged { color: #a8e1ff; border-radius: 2px; transform: rotate(45deg); }
+    .fx-impact.is-magic { color: #c9a8ff; border-style: double; }
+    .fx-impact.is-strong { width: 42px; height: 42px; margin: -21px 0 0 -21px; border-width: 5px; }
+    #battle-wrap.impact-shake { animation: impactShake .14s linear; }
+    .ending-summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin: 10px 0; }
+    .ending-summary-grid > div { display: flex; justify-content: space-between; gap: 10px; padding: 7px; border: 1px solid var(--border); background: var(--bg-panel); }
+    .ending-summary-grid strong, .ending-build-title { color: var(--accent-gold); }
+    .ending-build-title { margin: 10px 0 6px; letter-spacing: 1px; }
+    .ending-build { display: grid; gap: 3px; padding: 7px; margin-bottom: 5px; border-left: 2px solid var(--accent-blue); background: rgba(255,255,255,.035); text-align: left; }
+    .ending-build span, .ending-build small, .ending-seed { color: var(--text-dim); line-height: 1.4; }
+    .ending-seed { margin-top: 8px; font-size: 8px; }
+    @keyframes impactBurst {
+      0% { opacity: 1; transform: scale(.3); }
+      100% { opacity: 0; transform: scale(1.7); }
+    }
+    @keyframes impactShake {
+      0%, 100% { transform: translateX(0); }
+      35% { transform: translateX(-2px); }
+      70% { transform: translateX(2px); }
     }
     .vic-hero-progress span {
       display: block;
@@ -2632,6 +2759,73 @@
       .btn { padding: 6px 8px; }
     }
 
+    #orientation-gate {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(74,158,255,.16), transparent 34%),
+        linear-gradient(180deg, #111128, #070712);
+      color: var(--text-main);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 28px;
+      box-sizing: border-box;
+    }
+    .orientation-gate-card { max-width: 320px; }
+    .orientation-gate-icon { font-size: 56px; line-height: 1; color: var(--accent-gold); animation: rotate-device-hint 1.8s ease-in-out infinite; }
+    .orientation-gate-title { margin-top: 18px; color: var(--accent-gold); font-size: 18px; letter-spacing: 2px; }
+    .orientation-gate-text { margin-top: 10px; color: var(--text-dim); font-size: 13px; line-height: 1.55; }
+    .battle-order-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .battle-speed-toggle {
+      min-width: 34px;
+      min-height: 28px;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: rgba(255,255,255,.06);
+      color: var(--accent-gold);
+      font: inherit;
+      cursor: pointer;
+    }
+    .battle-speed-toggle:hover { border-color: var(--accent-gold); background: rgba(255,214,102,.1); }
+    .empty-bag-state {
+      grid-column: 1 / -1;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 20px;
+      color: var(--text-dim);
+      text-align: center;
+      line-height: 1.5;
+    }
+    .empty-bag-state strong { color: var(--text-main); font-size: 12px; }
+    .empty-bag-state span { max-width: 420px; font-size: 10px; }
+    .empty-bag-icon { font-size: 32px; color: var(--accent-gold); opacity: .8; }
+    @keyframes rotate-device-hint {
+      0%, 20%, 100% { transform: rotate(0deg); }
+      55%, 75% { transform: rotate(90deg); }
+    }
+    @media (orientation: portrait) and (max-width: 899px) {
+      #orientation-gate { display: flex; }
+      #game-container,
+      #tooltip,
+      #fx-layer,
+      #game-menu-overlay,
+      #confirm-modal,
+      #game-alert-modal,
+      #game-prompt-modal,
+      #onboarding-modal,
+      #perk-modal,
+      #skill-unlock-modal,
+      #sfx-auditor-modal { visibility: hidden !important; }
+    }
+
     /* Readability pass: the local monospace font needs larger sizes than the old webfont. */
     body {
       font-size: 12px;
@@ -3143,8 +3337,8 @@
         text-overflow: ellipsis;
       }
       #battle-screen .battle-layout {
-        grid-template-columns: minmax(0, 1fr) 148px !important;
-        grid-template-rows: 34px minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) 180px !important;
+        grid-template-rows: 44px minmax(0, 1fr);
         grid-template-areas:
           "heroes actions"
           "field actions";
@@ -3184,7 +3378,7 @@
         flex: 0 0 16px;
       }
       #battle-screen .battle-left .hero-card-name {
-        font-size: 7px !important;
+        font-size: 9px !important;
         line-height: 1.05 !important;
         white-space: nowrap;
         overflow: hidden;
@@ -3219,9 +3413,19 @@
       }
       #battle-screen #battle-canvas {
         width: 100%;
-        height: auto;
-        max-height: calc(100vh - 32px);
+        height: 100%;
+        max-height: 100%;
+        object-fit: contain;
       }
+      #battle-screen #battle-coach-overlay {
+        top: 5px;
+        width: min(390px, calc(100% - 10px));
+      }
+      #battle-screen #battle-coach-overlay .ftue-coach {
+        padding: 5px 7px;
+      }
+      #battle-screen #battle-coach-overlay .ftue-coach-title { font-size: 9px; }
+      #battle-screen #battle-coach-overlay .ftue-coach-text { font-size: 9px; line-height: 1.25; }
       #battle-screen #ui-overlay {
         grid-area: actions;
         min-width: 0;
@@ -3238,10 +3442,16 @@
       #battle-screen .deploy-hint-box {
         display: none !important;
       }
+      #battle-screen .battle-order-head {
+        display: flex !important;
+        min-height: 28px;
+        margin: 0 !important;
+      }
+      #battle-screen .battle-order-head > span { display: none; }
       #battle-screen #initiative-bar {
         gap: 2px;
         margin: 0;
-        max-height: 42px;
+        max-height: 24px;
         overflow: hidden;
       }
       #battle-screen .init-slot {
@@ -3262,26 +3472,27 @@
       }
       #battle-screen .battle-actions .btn,
       #battle-screen .battle-actions .skill-action-btn {
-        min-height: 30px !important;
-        padding: 3px 5px !important;
-        font-size: 8px !important;
-        line-height: 1.1 !important;
+        min-height: 44px !important;
+        padding: 5px 7px !important;
+        font-size: 10px !important;
+        line-height: 1.15 !important;
       }
+      #battle-screen .battle-actions .skill-action-btn.is-locked { display: none !important; }
       #battle-screen .battle-actions .skill-action-btn {
-        grid-template-columns: 22px minmax(0, 1fr);
+        grid-template-columns: 30px minmax(0, 1fr);
       }
       #battle-screen .battle-actions .skill-action-icon {
-        width: 20px !important;
-        height: 20px !important;
-        font-size: 12px !important;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 16px !important;
       }
       #battle-screen .battle-actions .skill-action-name {
-        font-size: 8px !important;
-        line-height: 1.05 !important;
+        font-size: 10px !important;
+        line-height: 1.1 !important;
       }
       #battle-screen .battle-actions .skill-action-meta {
-        font-size: 7px !important;
-        line-height: 1.05 !important;
+        font-size: 9px !important;
+        line-height: 1.1 !important;
       }
       #battle-screen .battle-tactical-strip {
         grid-template-columns: 38px minmax(0, 1fr) !important;
@@ -3289,9 +3500,15 @@
         padding: 2px 4px !important;
         gap: 3px !important;
       }
-      #battle-screen .battle-tactical-kicker { font-size: 6px !important; letter-spacing: 0.2px !important; }
-      #battle-screen .battle-tactical-main { font-size: 7px !important; line-height: 1.05 !important; }
-      #battle-screen .battle-tactical-sub { font-size: 6px !important; line-height: 1.05 !important; }
+      #battle-screen .battle-tactical-kicker { font-size: 8px !important; letter-spacing: 0.2px !important; }
+      #battle-screen .battle-tactical-main { font-size: 10px !important; line-height: 1.1 !important; }
+      #battle-screen .battle-tactical-sub { font-size: 9px !important; line-height: 1.1 !important; }
+      #battle-screen .ftue-coach { padding: 5px 6px; margin-bottom: 3px; }
+      #battle-screen .ftue-coach-title { font-size: 9px; }
+      #battle-screen .ftue-coach-text { font-size: 9px; line-height: 1.25; }
+      #battle-screen .ftue-coach-foot { margin-top: 3px; }
+      #battle-screen .ftue-coach-progress,
+      #battle-screen .ftue-coach-skip { font-size: 8px !important; }
 
       #inventory-screen #inv-layout {
         grid-template-columns: 112px minmax(230px, 1fr) 180px !important;
@@ -3314,7 +3531,7 @@
         display: none !important;
       }
       #inventory-screen .inv-tab {
-        min-height: 30px !important;
+        min-height: 40px !important;
         padding: 2px 3px !important;
         min-width: 0;
         display: flex;
@@ -3360,7 +3577,7 @@
         padding-bottom: 2px;
       }
       #inventory-screen .inv-action-stack .btn {
-        min-height: 24px !important;
+        min-height: 36px !important;
         padding: 2px 3px !important;
         font-size: 7px !important;
       }
@@ -3419,15 +3636,24 @@
         gap: 3px !important;
       }
       #inventory-screen .item-detail-btns .btn {
-        min-height: 24px !important;
+        min-height: 36px !important;
         padding: 2px 3px !important;
         font-size: 7px !important;
       }
     }
   </style>
+  <link rel="stylesheet" href="styles/responsive-landscape.css">
+  <link rel="stylesheet" href="styles/perk-menu.css">
   <script src="/sdk.js"></script>
 </head>
 <body>
+  <div id="orientation-gate" role="status" aria-live="polite">
+    <div class="orientation-gate-card">
+      <div class="orientation-gate-icon" aria-hidden="true">▱</div>
+      <div class="orientation-gate-title" data-i18n="orientationTitle">ПОВЕРНИТЕ УСТРОЙСТВО</div>
+      <div class="orientation-gate-text" data-i18n="orientationText">Игра создана для ПК и мобильных устройств в альбомном режиме.</div>
+    </div>
+  </div>
   <div id="game-container">
     <div id="main-menu" class="screen">
       <div class="screen-menu" id="screen-menu">
@@ -3539,6 +3765,7 @@
             <div class="cell-info-name">Select a tile</div>
             <div>Shows information about the selected area.</div>
           </div>
+          <div id="map-route-choices" class="map-route-choices"></div>
           <div class="map-panel-actions">
             <button class="btn btn-gold btn-enter-full" id="btn-map-enter">▶ Enter</button>
             <button class="btn btn-dim" id="btn-map-bag">🎒 Bag</button>
@@ -3626,10 +3853,11 @@
         <div class="battle-left" id="battle-left-heroes"></div>
         <div id="battle-wrap">
           <canvas id="battle-canvas" width="768" height="512"></canvas>
+          <div id="battle-coach-overlay" aria-live="polite"></div>
         </div>
         <div id="ui-overlay">
           <div class="br-section">
-            <div class="br-label">TURN ORDER</div>
+            <div class="br-label battle-order-head" style="display:flex!important"><span>TURN ORDER</span><button type="button" id="battle-speed-toggle" class="battle-speed-toggle" title="Battle speed">×1</button></div>
             <div id="initiative-bar"></div>
           </div>
           <div class="br-section" style="overflow:hidden;display:flex;flex-direction:column">
@@ -3911,7 +4139,7 @@
   const COLS_LEFT = 2, COLS_RIGHT = 2;
   const TILE = { GROUND: 0, FOREST: 1, MOUNTAIN: 2, WATER: 3, FORT: 4, FIRE: 5 };
   const TILE_EMOJI = { [TILE.GROUND]: '🟫', [TILE.FOREST]: '🌲', [TILE.MOUNTAIN]: '⛰️', [TILE.WATER]: '💧', [TILE.FORT]: '🏰', [TILE.FIRE]: '🔥' };
-  const STATUS = { STUN: 'stun', FREEZE: 'freeze', WEB: 'web', POISON: 'poison', BURN: 'burn', SLOW: 'slow', BLIND: 'blind', CURSE: 'curse', BERSERK: 'berserk', STEALTH: 'stealth' };
+  const STATUS = { STUN: 'stun', FREEZE: 'freeze', FEAR: 'fear', WEB: 'web', POISON: 'poison', BURN: 'burn', SLOW: 'slow', BLIND: 'blind', CURSE: 'curse', BERSERK: 'berserk', STEALTH: 'stealth' };
   const SFX_AUDITOR_ENABLED = /(?:\?|&)sfx-audit=1(?:&|$)/.test(window.location.search) || localStorage.getItem('threeBladesSfxAudit') === '1';
   const TEST_SEED = (new URLSearchParams(window.location.search).get('seed') || '').trim();
   const SAVE_KEY = 'threeHeroesSave';
@@ -3922,7 +4150,7 @@
   const LANGUAGE_KEY = 'threeBladesLanguageV1';
   const TUTORIAL_SEEN_KEY = 'threeBladesTutorialSeenV1';
   const SUPPORTED_LANGUAGES = ['ru', 'en', 'es'];
-  const CLOUD_SAVE_VERSION = 1;
+  const CLOUD_SAVE_VERSION = 2;
   const LEADERBOARDS = {
     maxGold: 'three_blades_max_gold',
     enemiesDefeated: 'three_blades_enemies_defeated',
@@ -4040,6 +4268,21 @@
     tutorialTip4aText: { ru: 'На хардкоре меньше золота, враги опаснее, а ошибки дороже. Для первого прохождения лучше обычный режим.', en: 'Hardcore gives less gold, tougher enemies, and harsher mistakes. Normal is better for a first run.', es: 'Difícil da menos oro, enemigos más duros y errores más caros. Normal es mejor para la primera partida.' },
     tutorialTip4bTitle: { ru: 'Реклама за награду', en: 'Rewarded ads', es: 'Anuncios con recompensa' },
     tutorialTip4bText: { ru: 'Реклама необязательна: она даёт бонусы вроде лечения, разведки или золота.', en: 'Ads are optional: they give bonuses such as healing, intel, or gold.', es: 'Los anuncios son opcionales: dan bonos como curación, informes u oro.' },
+    ftueDeployTitle: { ru: 'ПЕРВАЯ СХВАТКА', en: 'FIRST CLASH', es: 'PRIMER ENCUENTRO' },
+    ftueDeployText: { ru: 'Расстановка: коснитесь героя, затем свободной подсвеченной клетки в двух левых колонках. Можно и перетащить героя. После расстановки нажмите «Начать бой».', en: 'Deployment: tap a hero, then a highlighted free tile in the two left columns. You can also drag a hero. Press Start Battle when ready.', es: 'Despliegue: toca un héroe y después una casilla libre resaltada en las dos columnas izquierdas. También puedes arrastrarlo. Pulsa Iniciar combate al terminar.' },
+    ftueGaretTitle: { ru: 'ГАРЕТ · ДЕРЖИ ЛИНИЮ', en: 'GARET · HOLD THE LINE', es: 'GARET · MANTÉN LA LÍNEA' },
+    ftueGaretText: { ru: 'Займите переднюю позицию и примените «Удар щитом»: он наносит урон и оглушает цель.', en: 'Take the front position and use Shield Bash: it deals damage and stuns the target.', es: 'Ocupa la primera línea y usa Golpe de escudo: inflige daño y aturde al objetivo.' },
+    ftueAliraTitle: { ru: 'АЛИРА · ФОКУС ЦЕЛИ', en: 'ALIRA · FOCUS FIRE', es: 'ALIRA · FUEGO CONCENTRADO' },
+    ftueAliraText: { ru: 'Держите дистанцию и примените «Двойной выстрел» по раненому или опасному врагу.', en: 'Keep your distance and use Double Shot on a wounded or dangerous enemy.', es: 'Mantén la distancia y usa Disparo doble contra un enemigo herido o peligroso.' },
+    ftueSerisTitle: { ru: 'СЭРИС · КОНТРОЛЬ ПОЛЯ', en: 'SERIS · CONTROL THE FIELD', es: 'SERIS · CONTROLA EL CAMPO' },
+    ftueSerisText: { ru: 'Выберите «Огненный шар» и наведите его на соседние цели, чтобы задеть сразу несколько врагов.', en: 'Choose Fireball and target adjacent enemies to hit more than one foe.', es: 'Elige Bola de fuego y apunta a enemigos adyacentes para golpear a varios.' },
+    ftueSkillsDoneTitle: { ru: 'РОЛИ ПОНЯТНЫ', en: 'ROLES LEARNED', es: 'ROLES APRENDIDOS' },
+    ftueSkillsDoneText: { ru: 'Используйте позицию, фокус и область, чтобы завершить бой.', en: 'Use positioning, focus fire, and area damage to finish the battle.', es: 'Usa posición, fuego concentrado y daño de área para terminar el combate.' },
+    ftueProgress: { ru: 'Фирменные умения', en: 'Signature abilities', es: 'Habilidades características' },
+    ftueSkip: { ru: 'Скрыть подсказки', en: 'Hide tips', es: 'Ocultar consejos' },
+    orientationTitle: { ru: 'ПОВЕРНИТЕ УСТРОЙСТВО', en: 'ROTATE YOUR DEVICE', es: 'GIRA EL DISPOSITIVO' },
+    orientationText: { ru: 'Игра создана для ПК и мобильных устройств в альбомном режиме.', en: 'This game is designed for PC and mobile devices in landscape mode.', es: 'Este juego está diseñado para PC y móviles en modo horizontal.' },
+    battleSpeed: { ru: 'Скорость боя', en: 'Battle speed', es: 'Velocidad de combate' },
     settings: { ru: 'Настройки', en: 'Settings', es: 'Ajustes' },
     difficulty: { ru: 'СЛОЖНОСТЬ', en: 'DIFFICULTY', es: 'DIFICULTAD' },
     normal: { ru: 'ОБЫЧНАЯ', en: 'NORMAL', es: 'NORMAL' },
@@ -4275,6 +4518,7 @@
     unequip: { ru: 'Снять', en: 'Unequip', es: 'Quitar' },
     clickAgain: { ru: 'Клик ещё раз.', en: 'Click again.', es: 'Haz clic otra vez.' },
     emptyBag: { ru: 'Рюкзак пуст', en: 'Bag is empty', es: 'La mochila está vacía' },
+    emptyBagHint: { ru: 'Первый предмет гарантирован за стартовую миссию. Затем снаряжение выпадает в боях и продаётся в городах.', en: 'Your first item is guaranteed by the opening mission. More gear drops in battles and is sold in towns.', es: 'El primer objeto está garantizado en la misión inicial. Encontrarás más equipo en combates y ciudades.' },
     onlyClass: { ru: 'Только', en: 'Only', es: 'Solo' },
     specialEffect: { ru: '— особый эффект', en: '— special effect', es: '— efecto especial' },
     notForHero: { ru: 'Не подходит', en: 'Not suitable for', es: 'No apto para' },
@@ -4321,6 +4565,30 @@
     regionLocked: { ru: 'Закрыто. Сначала босс предыдущего региона.', en: 'Locked. Defeat the previous region boss first.', es: 'Bloqueado. Derrota primero al jefe de la región anterior.' },
     regionStillLocked: { ru: 'Этот регион ещё закрыт. Победите босса в текущем регионе, чтобы открыть путь дальше.', en: 'This region is still locked. Defeat the boss in the current region to open the way forward.', es: 'Esta región sigue bloqueada. Derrota al jefe de la región actual para abrir el camino.' },
     currentPartyPosition: { ru: 'Текущая точка отряда.', en: 'Current party position.', es: 'Posición actual del grupo.' },
+    nextRoutes: { ru: 'СЛЕДУЮЩИЙ ШАГ', en: 'NEXT MOVE', es: 'SIGUIENTE PASO' },
+    threatLow: { ru: 'Низкая угроза', en: 'Low threat', es: 'Amenaza baja' },
+    threatMedium: { ru: 'Средняя угроза', en: 'Medium threat', es: 'Amenaza media' },
+    threatHigh: { ru: 'Высокая угроза', en: 'High threat', es: 'Amenaza alta' },
+    rewardGear: { ru: 'Шанс снаряжения', en: 'Gear chance', es: 'Posible equipo' },
+    rewardResources: { ru: 'Золото и ресурсы', en: 'Gold and resources', es: 'Oro y recursos' },
+    rewardRecovery: { ru: 'Отдых и торговля', en: 'Rest and trade', es: 'Descanso y comercio' },
+    rewardUnknown: { ru: 'Неизвестный исход', en: 'Unknown outcome', es: 'Resultado incierto' },
+    bossDistance: { ru: 'До босса', en: 'Boss distance', es: 'Distancia al jefe' },
+    expectedDamage: { ru: 'Ожидаемый урон', en: 'Expected damage', es: 'Daño esperado' },
+    armorAbsorb: { ru: 'Поглощено бронёй', en: 'Absorbed by armor', es: 'Absorbido por armadura' },
+    finisher: { ru: 'ДОБИВАНИЕ', en: 'FINISHER', es: 'REMATE' },
+    tapToConfirm: { ru: 'Коснитесь цели ещё раз для подтверждения', en: 'Tap the target again to confirm', es: 'Toca de nuevo el objetivo para confirmar' },
+    blockedLine: { ru: 'Линия атаки заблокирована', en: 'Attack line is blocked', es: 'Línea de ataque bloqueada' },
+    outOfRange: { ru: 'Цель вне дальности', en: 'Target is out of range', es: 'Objetivo fuera de alcance' },
+    optionalObjective: { ru: 'ДОП. ЦЕЛЬ', en: 'BONUS OBJECTIVE', es: 'OBJETIVO EXTRA' },
+    objectiveSkillful: { ru: 'Примените хотя бы одно умение', en: 'Use at least one ability', es: 'Usa al menos una habilidad' },
+    objectiveFlawless: { ru: 'Победите без потери героя', en: 'Win without losing a hero', es: 'Vence sin perder un héroe' },
+    objectiveComplete: { ru: 'Цель выполнена', en: 'Objective complete', es: 'Objetivo cumplido' },
+    objectiveReward: { ru: 'Бонус', en: 'Bonus', es: 'Bonificación' },
+    runTime: { ru: 'Время прохождения', en: 'Run time', es: 'Tiempo de partida' },
+    survivors: { ru: 'Герои в строю', en: 'Heroes standing', es: 'Héroes en pie' },
+    heroBuilds: { ru: 'Итоговые сборки', en: 'Final builds', es: 'Configuraciones finales' },
+    runSeed: { ru: 'Seed прохождения', en: 'Run seed', es: 'Seed de partida' },
     showWandererGoods: { ru: 'Посмотреть товары странника за рекламу?', en: 'View wanderer goods for an ad?', es: '¿Ver mercancías del errante por un anuncio?' },
     wandererLeft: { ru: 'Странник ушёл.', en: 'The wanderer left.', es: 'El errante se marchó.' },
     enterShadowArena: { ru: 'Войти в Арену теней за рекламу?', en: 'Enter the Shadow Arena for an ad?', es: '¿Entrar en la Arena de Sombras por un anuncio?' },
@@ -5970,12 +6238,12 @@
   const PERK_TREES = {
     garet: {
       defense: [
-        { level: 1, id: 'd1', name: '+5 HP', apply: h => { h.maxHp += 5; h.hp += 5; } },
+        { level: 1, id: 'd1', name: 'Guardian Cover', apply: h => { h.perks.push('guardianCover'); } },
         { level: 2, id: 'd2', name: '+1 armor', apply: h => { h.armor += 1; } },
         { level: 3, id: 'd3', name: 'Reflected 1 damage', apply: h => { h.perks.push('reflect1'); } }
       ],
       attack: [
-        { level: 1, id: 'a1', name: '+2 damage', apply: h => { h.attack += 2; } },
+        { level: 1, id: 'a1', name: 'Executioner', apply: h => { h.perks.push('finisher'); } },
         { level: 2, id: 'a2', name: 'Armor Pierce', apply: h => { h.perks.push('armorPierce'); } },
         { level: 3, id: 'a3', name: 'Crit 15%', apply: h => { h.perks.push('crit15'); } }
       ],
@@ -6004,7 +6272,7 @@
     },
     seris: {
       destruction: [
-        { level: 1, id: 'r1', name: '+3 magic damage', apply: h => { h.attack += 3; } },
+        { level: 1, id: 'r1', name: 'Arcane Charge', apply: h => { h.perks.push('spellCharge'); } },
         { level: 2, id: 'r2', name: 'AoE +1', apply: h => { h.perks.push('aoePlus'); } },
         { level: 3, id: 'r3', name: 'Burn 2 turns', apply: h => { h.perks.push('burnSpell'); } }
       ],
@@ -6031,6 +6299,36 @@
     accuracy: 'ACCURACY', speed: 'SPEED', traps: 'TRAPS',
     destruction: 'DESTRUCTION', control: 'CONTROL', mystic: 'MYSTIC'
   };
+  const PERK_NAMES_RU = {
+    d1:'Защитное прикрытие', d2:'+1 к броне', d3:'Ответный урон 1',
+    a1:'Палач', a2:'Пробитие брони', a3:'Критический удар 15%',
+    l1:'Соседям +1 к броне', l2:'Аура: +10% к урону', l3:'Командир',
+    m1:'+1 к дальности', m2:'+3 к урону', m3:'Игнорирование укрытий',
+    s1:'+1 к движению', s2:'Выстрел после движения', s3:'+2 к скорости',
+    t1:'Наносящая урон ловушка', t2:'Замедляющая ловушка', t3:'Двойные ловушки',
+    r1:'Магический заряд', r2:'Область действия +1', r3:'Горение на 2 хода',
+    c1:'Заморозка на 2 хода', c2:'Страх на 1 ход', c3:'Мастер контроля',
+    y1:'+3 к максимуму маны', y2:'Лечение за убийство', y3:'Телепортация'
+  };
+  const PERK_BRANCH_NAMES = {
+    defense:{ru:'ЗАЩИТА',en:'DEFENSE',es:'DEFENSA'},
+    attack:{ru:'АТАКА',en:'ATTACK',es:'ATAQUE'},
+    leader:{ru:'ЛИДЕРСТВО',en:'LEADERSHIP',es:'LIDERAZGO'},
+    accuracy:{ru:'ТОЧНОСТЬ',en:'ACCURACY',es:'PRECISIÓN'},
+    speed:{ru:'МОБИЛЬНОСТЬ',en:'SPEED',es:'VELOCIDAD'},
+    traps:{ru:'ЛОВУШКИ',en:'TRAPS',es:'TRAMPAS'},
+    destruction:{ru:'РАЗРУШЕНИЕ',en:'DESTRUCTION',es:'DESTRUCCIÓN'},
+    control:{ru:'КОНТРОЛЬ',en:'CONTROL',es:'CONTROL'},
+    mystic:{ru:'МИСТИКА',en:'MYSTIC',es:'MÍSTICA'}
+  };
+  function localizedPerkName(perk) {
+    if (!perk) return '';
+    return currentLanguage() === 'ru' ? (PERK_NAMES_RU[perk.id] || perk.name) : translateText(perk.name);
+  }
+  function localizedPerkBranch(branch) {
+    const names = PERK_BRANCH_NAMES[branch];
+    return names ? (names[currentLanguage()] || names.en) : translateText(PERK_BRANCH_LABELS[branch] || branch);
+  }
   const PERK_DESCRIPTIONS = {
     d1: { ru: 'Путь танка: переживай ещё один удар и дольше удерживай передовую.', en: 'Tank path: survive one more hit and hold the front line longer.', es: 'Ruta de tanque: resiste un golpe más y protege el frente durante más tiempo.' },
     d2: { ru: 'Путь танка: снижай постоянный урон ближнего боя до того, как он достигнет тыла.', en: 'Tank path: reduce steady melee damage before it reaches the back line.', es: 'Ruta de tanque: reduce el daño cuerpo a cuerpo antes de que alcance la retaguardia.' },
@@ -6061,6 +6359,50 @@
     y3: { ru: 'Путь мистика: решай проблемы с позицией телепортацией.', en: 'Mystic path: solve positioning problems with teleport.', es: 'Ruta mística: resuelve problemas de posición con teletransporte.' }
   };
 
+  const PERK_RULES_RU = {
+    d1: { summary:'Союзник рядом: −2 урона', trigger:'Союзник в соседней клетке от Гарета получает урон.', effect:'Входящий урон этому союзнику уменьшается на 2. На самого Гарета эффект не действует.' },
+    d2: { summary:'Постоянно: +1 к броне', trigger:'Действует постоянно после изучения.', effect:'Базовая броня Гарета увеличивается на 1 и снижает урон каждой входящей атаки.' },
+    d3: { summary:'Немагическая атака по Гарету: ответ 1', trigger:'Гарет получает больше 0 урона от немагической атаки.', effect:'Атакующий немедленно получает 1 ответного урона.' },
+    a1: { summary:'Цель ≤40% HP: +30% урона', trigger:'Гарет атакует противника, у которого осталось 40% здоровья или меньше.', effect:'Урон атаки увеличивается на 30% до вычета брони. Бонус помогает добить раненую цель.' },
+    a2: { summary:'Атаки игнорируют 2 брони', trigger:'Гарет наносит урон любой атакой.', effect:'При расчёте урона броня цели уменьшается на 2, но не ниже 0.' },
+    a3: { summary:'15% шанс: ×1,5 урона', trigger:'Каждая наносящая урон атака Гарета имеет шанс 15%.', effect:'При срабатывании итоговый урон атаки умножается на 1,5.' },
+    l1: { summary:'Соседним союзникам +1 броня', trigger:'Союзник стоит в соседней клетке от живого Гарета.', effect:'При получении урона союзник считается имеющим на 1 броню больше. Гарет себя не усиливает.' },
+    l2: { summary:'Союзникам в радиусе 2: +10% урона', trigger:'Союзник атакует, находясь не дальше 2 клеток от живого Гарета.', effect:'Урон союзника увеличивается на 10%. На атаки самого Гарета аура не действует.' },
+    l3: { summary:'Постоянно: +1 к скорости', trigger:'Действует постоянно после изучения.', effect:'Скорость Гарета увеличивается на 1 — он раньше получает ход в очереди инициативы.' },
+    m1: { summary:'Постоянно: +1 к дальности', trigger:'Действует постоянно после изучения.', effect:'Дальность обычных атак Алиры увеличивается на 1 клетку.' },
+    m2: { summary:'Постоянно: +3 к атаке', trigger:'Действует постоянно после изучения.', effect:'Базовая атака Алиры увеличивается на 3; бонус участвует в обычных выстрелах и умениях от силы атаки.' },
+    m3: { summary:'Можно стрелять в цель в лесу', trigger:'Цель Алиры находится на клетке леса.', effect:'Лес под целью больше не блокирует линию выстрела. Лес и горы между Алирой и целью всё ещё мешают.' },
+    s1: { summary:'Постоянно: +1 клетка движения', trigger:'Действует постоянно после изучения.', effect:'Алира может пройти на 1 клетку дальше за свой ход.' },
+    s2: { summary:'После движения: +20% урона', trigger:'Алира сначала переместилась, а затем атакует в тот же ход.', effect:'Урон этой атаки увеличивается на 20%.' },
+    s3: { summary:'Постоянно: +2 к скорости', trigger:'Действует постоянно после изучения.', effect:'Скорость Алиры увеличивается на 2 — она раньше получает ход в очереди инициативы.' },
+    t1: { summary:'После движения: ловушка на 4 урона', trigger:'Алира покидает клетку во время своего перемещения.', effect:'На покинутой клетке появляется ловушка. Первый наступивший враг получает 4 урона, после чего ловушка исчезает.' },
+    t2: { summary:'Ловушки замедляют на 2 хода', trigger:'Враг наступает на ловушку Алиры и выживает.', effect:'Враг получает замедление на 2 хода: −2 к движению и −2 к скорости.' },
+    t3: { summary:'После движения: до 2 ловушек', trigger:'Алира перемещается, имея изученную ловушку.', effect:'Помимо ловушки на покинутой клетке создаётся вторая на соседней доступной клетке.' },
+    r1: { summary:'Магические попадания: +3 урона', trigger:'Сэрис наносит магический урон Огненным шаром, Метеором или другим магическим эффектом.', effect:'Каждое отдельное магическое попадание получает +3 урона до вычета брони.' },
+    r2: { summary:'Огненный шар и Метеор: область +1', trigger:'Сэрис применяет Огненный шар или Метеор.', effect:'Радиус Огненного шара увеличивается с 1 до 2 клеток, а область Метеора — с 2×2 до 3×3.' },
+    r3: { summary:'Магия поджигает: 3×2 урона', trigger:'Магическая атака Сэрис попадает по выжившей цели.', effect:'Цель горит 2 хода и получает по 3 урона в начале каждого хода — до 6 дополнительного урона.' },
+    c1: { summary:'Заморозка: 2 хода вместо 1', trigger:'Сэрис применяет умение «Заморозка».', effect:'Цель пропускает 2 своих хода вместо 1.' },
+    c2: { summary:'Заморозка пугает соседей на 1 ход', trigger:'Сэрис замораживает цель, рядом с которой стоят другие враги.', effect:'Все остальные враги в соседних клетках получают страх и пропускают 1 ход.' },
+    c3: { summary:'Постоянно: +2 к максимуму маны', trigger:'Срабатывает сразу при изучении и действует постоянно.', effect:'Максимум маны Сэрис увеличивается на 2; при изучении она также сразу восстанавливает 2 маны.' },
+    y1: { summary:'Постоянно: +3 к максимуму маны', trigger:'Срабатывает сразу при изучении и действует постоянно.', effect:'Максимум маны Сэрис увеличивается на 3; при изучении она также сразу восстанавливает 3 маны.' },
+    y2: { summary:'Смерть врага: Сэрис лечится на 5 HP', trigger:'Любой враг погибает, пока Сэрис жива.', effect:'Сэрис восстанавливает 5 HP, но не выше своего максимального здоровья.' },
+    y3: { summary:'1 раз за бой: телепорт до 4 клеток', trigger:'Один раз за бой выберите свободную клетку не дальше 4 клеток от Сэрис.', effect:'Сэрис мгновенно перемещается на выбранную клетку. Телепорт считается движением, но не расходует её атаку.' }
+  };
+
+  function localizedPerkRule(perk) {
+    if (currentLanguage() === 'ru' && PERK_RULES_RU[perk?.id]) return PERK_RULES_RU[perk.id];
+    const fallback = localizeContent(PERK_DESCRIPTIONS[perk?.id] || {
+      ru: 'Улучшает боевые характеристики героя.',
+      en: 'Improves the hero combat stats.',
+      es: 'Mejora las estadísticas de combate del héroe.'
+    });
+    return {
+      summary: localizedPerkName(perk),
+      trigger: currentLanguage() === 'es' ? 'Efecto pasivo o contextual.' : 'Passive or contextual effect.',
+      effect: fallback
+    };
+  }
+
   function getHeroPerkBranchSlots(hero) {
     const tree = PERK_TREES[hero.id];
     if (!tree) return [];
@@ -6078,10 +6420,10 @@
     if (!slots.length) return '';
     const btns = slots.map(s => {
       const icon = PERK_ICONS[s.perk.id] || '◆';
-      const branch = translateText(PERK_BRANCH_LABELS[s.br] || s.br);
+      const branch = localizedPerkBranch(s.br);
       const tip = s.active
-        ? `${translateText(s.perk.name)}\n${branch}\n${translateKey('studied')} · ${s.taken}/${s.maxTier}`
-        : `${translateText(s.perk.name)}\n${branch}\n${translateKey('unknown')} · ${translateKey('progression')}`;
+        ? `${localizedPerkName(s.perk)}\n${branch}\n${translateKey('studied')} · ${s.taken}/${s.maxTier}`
+        : `${localizedPerkName(s.perk)}\n${branch}\n${translateKey('unknown')} · ${translateKey('progression')}`;
       const cls = s.active ? 'active' : 'inactive';
       const safeTip = tip.replace(/"/g, '&quot;');
       return `<div class="inv-perk-btn ${cls}" title="${safeTip}">${icon}</div>`;
@@ -6154,17 +6496,17 @@
   // ══════════ HERO SKILLS (unlock by level) ══════════
   const HERO_SKILLS = {
     garet: [
-      { key: 'shieldBash', name: 'Shield Bash',   icon: '🛡', unlockLevel: 2, cd: 3,  cost: null, desc: { ru: 'Атакует врага и оглушает его на 1 ход. КД 3.', en: 'Attacks the target enemy and stuns it for 1 turn. CD 3.', es: 'Ataca al enemigo objetivo y lo aturde durante 1 turno. REC 3.' } },
+      { key: 'shieldBash', name: 'Shield Bash',   icon: '🛡', unlockLevel: 1, cd: 3,  cost: null, signature: true, desc: { ru: 'Атакует врага и оглушает его на 1 ход. КД 3.', en: 'Attacks the target enemy and stuns it for 1 turn. CD 3.', es: 'Ataca al enemigo objetivo y lo aturde durante 1 turno. REC 3.' } },
       { key: 'fireCall',   name: 'Call Fire',     icon: '🔥', unlockLevel: 3, cd: 4,  cost: null, desc: { ru: 'Поджигает всех врагов рядом с Гаретом (по области). КД 4.', en: 'Ignites all enemies around Garet (AoE). CD 4.', es: 'Prende fuego a todos los enemigos cerca de Garet (área). REC 4.' } },
       { key: 'berserk',    name: 'Berserk',       icon: '💪', unlockLevel: 5, cd: 6,  cost: null, desc: { ru: 'Ульта: ×1.5 атаки, −50% брони на 3 хода. КД 6.', en: 'Ultimate: x1.5 attack, -50% armor for 3 turns. CD 6.', es: 'Definitiva: ×1.5 ataque, −50% armadura durante 3 turnos. REC 6.' } }
     ],
     alira: [
-      { key: 'doubleShot', name: 'Double Shot',   icon: '🏹', unlockLevel: 2, cd: 2, cost: null, desc: { ru: 'Два выстрела подряд по одной цели. КД 2.', en: 'Two shots in a row at one target. CD 2.', es: 'Dos disparos seguidos al mismo objetivo. REC 2.' } },
+      { key: 'doubleShot', name: 'Double Shot',   icon: '🏹', unlockLevel: 1, cd: 2, cost: null, signature: true, desc: { ru: 'Два выстрела подряд по одной цели. КД 2.', en: 'Two shots in a row at one target. CD 2.', es: 'Dos disparos seguidos al mismo objetivo. REC 2.' } },
       { key: 'slowArrow',  name: 'Slowing Arrow', icon: '🐢', unlockLevel: 3, cd: 3, cost: null, desc: { ru: 'Замедляет цель: −2 к перемещению на 2 раунда. КД 3.', en: 'Slows the target: -2 movement for 2 rounds. CD 3.', es: 'Ralentiza al objetivo: −2 de movimiento durante 2 rondas. REC 3.' } },
       { key: 'arrowRain',  name: 'Arrow Rain',    icon: '🌧', unlockLevel: 5, cd: 5, cost: null, desc: { ru: 'Ульта: атака по области по всем ближайшим врагам. КД 5.', en: 'Ultimate: AoE attack against all nearby enemies. CD 5.', es: 'Definitiva: ataque de área contra todos los enemigos cercanos. REC 5.' } }
     ],
     seris: [
-      { key: 'fireball', name: 'Fireball', icon: '🔥', unlockLevel: 2, cd: 0, cost: 3, desc: { ru: 'Взрыв по цели и соседним клеткам. Стоимость: 3 MP.', en: 'Explosion on the target and adjacent tiles. Cost: 3 MP.', es: 'Explosión en el objetivo y las casillas adyacentes. Coste: 3 MP.' } },
+      { key: 'fireball', name: 'Fireball', icon: '🔥', unlockLevel: 1, cd: 0, cost: 3, signature: true, desc: { ru: 'Взрыв по цели и соседним клеткам. Стоимость: 3 MP.', en: 'Explosion on the target and adjacent tiles. Cost: 3 MP.', es: 'Explosión en el objetivo y las casillas adyacentes. Coste: 3 MP.' } },
       { key: 'freeze',   name: 'Freeze',   icon: '🧊', unlockLevel: 3, cd: 0, cost: 4, desc: { ru: 'Замораживает цель на 1 ход. Стоимость: 4 MP.', en: 'Freezes the target for 1 turn. Cost: 4 MP.', es: 'Congela al objetivo durante 1 turno. Coste: 4 MP.' } },
       { key: 'meteor',   name: 'Meteor',   icon: '☄',  unlockLevel: 5, cd: 0, cost: 8, desc: { ru: 'Ульта: мощная атака по большой области. Стоимость: 8 MP.', en: 'Ultimate: powerful AoE over a large area. Cost: 8 MP.', es: 'Definitiva: poderoso ataque de área amplia. Coste: 8 MP.' } }
     ]
@@ -6364,6 +6706,11 @@
     bestiary: {},
     bestiaryKills: {},
     pendingSkillUnlocks: [],
+    firstBattleCompleted: false,
+    ftueHintsEnabled: true,
+    ftueSkillsUsed: {},
+    battleSpeed: 1,
+    runStartedAt: 0,
     testSeed: TEST_SEED || null
   };
 
@@ -6458,6 +6805,11 @@
     if (!GameState.bestiary) GameState.bestiary = {};
     if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
     if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
+    if (typeof GameState.firstBattleCompleted !== 'boolean') GameState.firstBattleCompleted = (GameState.stats?.battles || 0) > 0;
+    if (typeof GameState.ftueHintsEnabled !== 'boolean') GameState.ftueHintsEnabled = !GameState.firstBattleCompleted;
+    if (!GameState.ftueSkillsUsed || typeof GameState.ftueSkillsUsed !== 'object') GameState.ftueSkillsUsed = {};
+    GameState.battleSpeed = Number(GameState.battleSpeed) === 2 ? 2 : 1;
+    GameState.runStartedAt = Number(GameState.runStartedAt) || Date.now();
     if (!GameState.consumables || typeof GameState.consumables !== 'object') GameState.consumables = {};
     if (!GameState.stats || typeof GameState.stats !== 'object') GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
     GameState.heroes.forEach(h => { h.activeStatuses = []; });
@@ -6662,6 +7014,14 @@
     const fortX = Math.floor(GRID_W / 2);
     const fortY = Math.floor(GRID_H / 2);
     grid[fortY][fortX] = TILE.FORT;
+    return grid;
+  }
+
+  function createFirstBattleGrid() {
+    const grid = Array.from({ length: GRID_H }, () => Array(GRID_W).fill(TILE.GROUND));
+    // One readable tactical landmark without blocking the first contact.
+    grid[3][3] = TILE.FORT;
+    grid[1][4] = TILE.FOREST;
     return grid;
   }
 
@@ -6897,11 +7257,14 @@
     GameState.battleReviveUsed = false;
     const wave = node.enemyWave || [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON];
     const hasLargeEnemy = wave.some(id => (enemyDef(id).sizeW || 1) > 1 || (enemyDef(id).sizeH || 1) > 1);
-    const grid = generateBattleGrid(node.region, { spacious: hasLargeEnemy || node.boss || node.final });
+    const firstBattle = !!node.firstBattle;
+    const grid = firstBattle ? createFirstBattleGrid() : generateBattleGrid(node.region, { spacious: hasLargeEnemy || node.boss || node.final });
     const units = [];
     const heroes = GameState.heroes.filter(h => h.hp > 0).map((h, i) => makeBattleHero(h, i));
     // Auto-place heroes on valid deploy cells (first 2 columns)
-    const preferredSlots = [{ x: 0, y: 1 }, { x: 0, y: 3 }, { x: 1, y: 2 }, { x: 1, y: 4 }, { x: 0, y: 5 }, { x: 1, y: 0 }];
+    const preferredSlots = firstBattle
+      ? [{ x: 1, y: 3 }, { x: 1, y: 5 }, { x: 1, y: 1 }, { x: 0, y: 4 }, { x: 0, y: 6 }, { x: 0, y: 0 }]
+      : [{ x: 0, y: 1 }, { x: 0, y: 3 }, { x: 1, y: 2 }, { x: 1, y: 4 }, { x: 0, y: 5 }, { x: 1, y: 0 }];
     const used = new Set();
     const isFree = (x, y) => inBounds(x, y) && x <= 1 && !tileBlocksMove(grid[y][x], null) && !used.has(x + ',' + y);
     heroes.forEach((hu, i) => {
@@ -6921,10 +7284,18 @@
     // Heroes must exist in battle units immediately (for sidebar + board visibility).
     units.push(...heroes);
     const rightXs = [GRID_W - 2, GRID_W - 1, GRID_W - 3, GRID_W - 4, GRID_W - 5];
+    const firstEnemySlots = [{ x: 4, y: 3 }, { x: 4, y: 2 }, { x: 5, y: 4 }];
     let ei = 0;
     for (const t of wave) {
       let placed = false;
       const proto = { isHero: false, enemyId: t, sizeW: enemyDef(t).sizeW || 1, sizeH: enemyDef(t).sizeH || 1 };
+      if (firstBattle && firstEnemySlots[ei]) {
+        const slot = firstEnemySlots[ei];
+        if (canUnitOccupy({ grid, units }, proto, slot.x, slot.y, { end: true })) {
+          units.push(spawnEnemy(t, slot.x, slot.y));
+          placed = true;
+        }
+      }
       for (const rx of rightXs) {
         for (let y = 0; y < GRID_H && !placed; y++) {
           if (canUnitOccupy({ grid, units }, proto, rx, y, { end: true })) {
@@ -6945,13 +7316,20 @@
       }
       ei++;
     }
+    const objective = firstBattle || (GameState.stats.battles || 0) % 2 === 0 ? 'skillful' : 'flawless';
     GameState.currentBattle = {
       grid, units, phase: 'deploy', round: 1,
       activeIndex: 0, order: [], mode: 'idle',
       selected: null, moveFrom: null, nodeId: node.id,
       battleLog: [], pendingLoot: { gold: 0, items: [] },
       globalBuffs: { watcherDeadMove: 0 }, heroMoved: false, heroActionDone: false, pendingSkill: null, deployDragHeroId: null,
-      heroMoveUndo: null
+      heroMoveUndo: null,
+      firstBattle,
+      ftueSkillsUsed: { ...(GameState.ftueSkillsUsed || {}) },
+      traps: [],
+      objective,
+      objectiveUsedSkill: false,
+      objectiveHeroLost: false
     };
     GameState.screen = 'battle';
     GameState.mapNodeId = node.id;
@@ -7375,8 +7753,30 @@
     const fromX = u.x, fromY = u.y;
     u.x = cell.x;
     u.y = cell.y;
+    startUnitMoveAnimation(u, fromX, fromY, u.x, u.y);
     if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, u.x, u.y, b.grid);
+    const trapIndex = (b.traps || []).findIndex(t => t.x === u.x && t.y === u.y);
+    if (trapIndex >= 0) {
+      const trap = b.traps.splice(trapIndex, 1)[0];
+      u.hp -= trap.damage;
+      pushBattleLog(`${u.name}: trap −${trap.damage}`, 'status');
+      spawnBattleTextFx(u.x, u.y, `TRAP -${trap.damage}`, '#ffb36b');
+      if (trap.slow && u.hp > 0) addStatus(u, STATUS.SLOW, 2);
+      if (u.hp <= 0) onUnitDeath(u);
+    }
     return true;
+  }
+
+  function placeAliraTrapsAfterMove(b, u, fromX, fromY) {
+    if (!b || u?.heroId !== 'alira' || !u.perks?.includes('trapDmg')) return;
+    b.traps = b.traps || [];
+    const add = (x, y) => {
+      if (!inBounds(x, y) || b.traps.some(t => t.x === x && t.y === y)) return;
+      b.traps.push({ x, y, damage: 4, slow: u.perks.includes('trapSlow') });
+    };
+    add(fromX, fromY);
+    if (u.perks.includes('trapDouble')) add(Math.max(0, fromX - 1), fromY);
+    spawnBattleTextFx(fromX, fromY, 'TRAP', '#ffb36b');
   }
 
   function addStatus(u, type, turns, meta) {
@@ -7428,7 +7828,7 @@
   function tickStatusesEndTurn(u) {
     if (!u.activeStatuses) return;
     u.activeStatuses.forEach(s => {
-      if ([STATUS.STUN, STATUS.FREEZE, STATUS.SLOW, STATUS.WEB, STATUS.BLIND, STATUS.CURSE, STATUS.BERSERK].includes(s.type)) s.turns--;
+      if ([STATUS.STUN, STATUS.FREEZE, STATUS.FEAR, STATUS.SLOW, STATUS.WEB, STATUS.BLIND, STATUS.CURSE, STATUS.BERSERK].includes(s.type)) s.turns--;
     });
     u.activeStatuses = u.activeStatuses.filter(s => s.turns > 0);
   }
@@ -7464,7 +7864,18 @@
       pushBattleLog(`${target.name}: fire guard halves damage`, 'status');
       spawnBattleTextFx(target.x, target.y, 'GUARD -50%', '#ffb36b');
     }
+    if (target.isHero && b) {
+      const guardian = b.units.find(unit => unit.isHero && unit.heroId === 'garet' && unit.hp > 0 &&
+        unit !== target && unit.perks?.includes('guardianCover') && unitDistance(unit, target) <= 1);
+      if (guardian) {
+        dmg = Math.max(0, dmg - 2);
+        spawnBattleTextFx(target.x, target.y, 'COVER -2', '#8bd3ff');
+      }
+    }
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags && attacker.flags.firstAttackTurn) dmg = Math.floor(dmg * 1.5);
+    if (attacker.isHero && attacker.perks?.includes('finisher') && target.hp <= target.maxHp * .4) dmg = Math.floor(dmg * 1.3);
+    if (attacker.isHero && attacker.heroId === 'alira' && attacker.perks?.includes('moveAttack') && b?.heroMoved) dmg = Math.floor(dmg * 1.2);
+    if (attacker.isHero && attacker.heroId === 'seris' && attacker.perks?.includes('spellCharge') && opts.magic) dmg += 3;
     if (attacker.activeStatuses && attacker.activeStatuses.find(s => s.type === STATUS.BERSERK)) dmg = Math.floor(dmg * 2);
     let armor = target.armor + (b && b.grid ? tileDefenseBonus(b.grid[target.y][target.x]) : 0);
     // Perk: auraArmor (Garet): adjacent allies gain +1 armor.
@@ -7556,6 +7967,7 @@
     target.hp -= dmg;
     if (dmg > 0) {
       spawnDamageFx(target.x, target.y, dmg);
+      spawnImpactFx(attacker, target, opts, dmg);
       if (b) {
         if (sfxCrit) opts.sfxCrit = true;
         BattleSfx.damageEvent(attacker, target, opts, dmg);
@@ -7649,6 +8061,7 @@
         spawnBattleTextFx(u.x, u.y, 'REVIVE 5', '#ffd06b');
         return; // Survives due to revive.
       }
+      if (b) b.objectiveHeroLost = true;
     }
 
     // Item: deathExplode (death_ring): 3x3 explosion when a hero dies.
@@ -7683,6 +8096,7 @@
   }
 
   function getXpForBattle(cell) {
+    if (cell && cell.id === 'c_0_0' && !GameState.firstBattleCompleted) return 50;
     const region = (cell && cell.region) || GameState.region || 1;
     const base = 30 + (region - 1) * 10;
     const typeBonus = {
@@ -7704,12 +8118,19 @@
     if (cell?.type === 'boss') gold = randInt(120, 160);
     if (cell?.type === 'final') gold = 300;
     if (isHardcoreMode()) gold = Math.max(1, Math.round(gold * 0.85));
+    const objectiveComplete = b.objective === 'skillful' ? b.objectiveUsedSkill : !b.objectiveHeroLost;
+    const objectiveBonus = objectiveComplete ? 10 : 0;
     // Gold bonus from amulet_luck artifact
     const goldMult = GameState.heroes.reduce((m, h) => {
       const item = getEquippedItem(h, 'artifact');
       return item && item.mods.goldBonus ? m + item.mods.goldBonus : m;
     }, 1);
-    gold = Math.round(gold * goldMult);
+    gold = Math.round(gold * goldMult) + objectiveBonus;
+    GameState._lastBattleObjective = {
+      key: b.objective,
+      complete: objectiveComplete,
+      bonus: objectiveBonus
+    };
     GameState.gold += gold;
     GameState.stats.battles += 1;
     GameState.stats.goldEarned += gold;
@@ -7765,6 +8186,10 @@
         GameState.regionUnlocked = Math.max(GameState.regionUnlocked, Math.min(3, cell.region + 1));
       }
       applyBattleRewards(cell);
+      if (cell.id === 'c_0_0') {
+        GameState.firstBattleCompleted = true;
+        GameState.ftueSkillsUsed = { ...(b.ftueSkillsUsed || GameState.ftueSkillsUsed || {}) };
+      }
     }
     // Store rounds for victory screen
     GameState._lastBattleRounds = b ? b.round : 1;
@@ -7796,6 +8221,7 @@
     const enemyIds = GameState._lastBattleEnemyIds || [];
     const levelUps = GameState._lastBattleLevelUps || {};
     const progress = GameState._lastBattleProgress || {};
+    const objective = GameState._lastBattleObjective || null;
     GameState._lastBattleKills = 0; GameState._lastBattleRounds = 0;
 
     // ── Particles ──
@@ -7855,6 +8281,7 @@
         });
       });
       if (drop) chips.push(`<span class="victory-power-chip">${drop.emoji || ''} ${translateKey('victoryLoot')}: <strong>${translateText(drop.name)}</strong></span>`);
+      if (objective?.complete) chips.push(`<span class="victory-power-chip">★ ${translateKey('objectiveComplete')}: <strong>+${objective.bonus} ${translateKey('gold')}</strong></span>`);
       if (chips.length) {
         powerEl.classList.add('show');
         powerEl.innerHTML = `<div class="victory-power-title">${translateKey('powerSurge')} · ${translateKey('powerReady')}</div><div class="victory-power-list">${chips.join('')}</div>`;
@@ -7988,9 +8415,25 @@
     BattleView.moved = false;
     clampBattleView();
   }
-  function eventToCanvasPx(clientX, clientY) {
+  function canvasContentRect() {
     const r = canvas.getBoundingClientRect();
-    // Canvas is always square (aspect-ratio 1:1), simple linear mapping
+    const sourceAspect = CANVAS_W / CANVAS_H;
+    const boxAspect = r.width / Math.max(1, r.height);
+    let width = r.width;
+    let height = r.height;
+    let left = r.left;
+    let top = r.top;
+    if (boxAspect > sourceAspect) {
+      width = r.height * sourceAspect;
+      left += (r.width - width) / 2;
+    } else if (boxAspect < sourceAspect) {
+      height = r.width / sourceAspect;
+      top += (r.height - height) / 2;
+    }
+    return { left, top, width, height };
+  }
+  function eventToCanvasPx(clientX, clientY) {
+    const r = canvasContentRect();
     return {
       x: (clientX - r.left) * (CANVAS_W / r.width),
       y: (clientY - r.top) * (CANVAS_H / r.height)
@@ -8175,6 +8618,82 @@
     return '';
   }
 
+  function heroDamagePreview(b, attacker, target) {
+    if (!b || !attacker || !target || !attacker.isHero || target.isHero) return null;
+    const distance = unitDistance(attacker, target);
+    if (distance > attacker.range && !b.pendingSkill) return { blocked: translateKey('outOfRange') };
+    if (attacker.range > 1 && rangedBlocked(attacker.x, attacker.y, target.x, target.y, b.grid, !!attacker.perks?.includes('ignoreCover'))) {
+      return { blocked: translateKey('blockedLine') };
+    }
+    let raw = attacker.attack;
+    const weapon = getEquippedItem(attacker, 'weapon');
+    if (weapon?.mods?.attack) raw += weapon.mods.attack;
+    if (attacker.heroId === 'alira' && attacker.flags?.firstAttackTurn) raw = Math.floor(raw * 1.5);
+    if (attacker.activeStatuses?.some(s => s.type === STATUS.BERSERK)) raw = Math.floor(raw * 2);
+    if (b.pendingSkill === 'shieldBash') raw += 3;
+    const doubleShot = b.pendingSkill === 'double';
+    if (b.pendingSkill === 'fireball') raw = 15;
+    if (!b.pendingSkill && isHeroFlankAttack(attacker, target, b)) raw = Math.floor(raw * 1.25);
+    let armor = target.armor + tileDefenseBonus(b.grid[target.y][target.x]);
+    if (attacker.heroId === 'garet' && attacker.perks?.includes('armorPierce')) armor = Math.max(0, armor - 2);
+    let damage = Math.max(0, raw - armor);
+    if (doubleShot) damage *= 2;
+    if (target.enemyId === ENEMY_IDS.GHOST && attacker.heroId !== 'seris' && b.pendingSkill !== 'fireball') damage = 0;
+    if (target.enemyId === ENEMY_IDS.SHIELDBEARER) damage = Math.floor(damage * .75);
+    return { damage, armor: Math.min(raw, armor), kill: damage >= target.hp };
+  }
+
+  function damagePreviewText(b, attacker, target) {
+    const preview = heroDamagePreview(b, attacker, target);
+    if (!preview) return '';
+    if (preview.blocked) return preview.blocked;
+    return `${translateKey('expectedDamage')}: ${preview.damage} · ${translateKey('armorAbsorb')}: ${preview.armor}${preview.kill ? ` · ${translateKey('finisher')}` : ''}`;
+  }
+
+  function damagePreviewCardHtml(b, attacker, target) {
+    const preview = heroDamagePreview(b, attacker, target);
+    if (!preview) return '';
+    if (preview.blocked) return `<div class="damage-preview-card">${escapeHtml(preview.blocked)}</div>`;
+    return `<div class="damage-preview-card">
+      ${translateKey('expectedDamage')}: <span style="font-size:17px">${preview.damage}</span>
+      <div style="font-size:9px;font-weight:400;color:var(--text-dim);margin-top:2px">${translateKey('armorAbsorb')}: ${preview.armor}${preview.kill ? ` · <span style="color:#ffca6a">${translateKey('finisher')}</span>` : ''}</div>
+    </div>`;
+  }
+
+  function battleTouchPreviewHtml(b, active) {
+    const cell = b?.touchPreviewCell;
+    if (!cell || !active?.isHero) return '';
+    const target = unitAt(b, cell.gx, cell.gy);
+    if (!target || target.isHero || target.hp <= 0) return '';
+    return `${damagePreviewCardHtml(b, active, target)}
+      <div class="battle-tactical-sub" style="text-align:center;color:#ffca6a">${translateKey('tapToConfirm')}</div>`;
+  }
+
+  function startUnitMoveAnimation(unit, fromX, fromY, toX, toY) {
+    if (!unit || (fromX === toX && fromY === toY)) return;
+    const distance = Math.max(1, Math.abs(toX - fromX) + Math.abs(toY - fromY));
+    unit.moveAnimation = {
+      fromX, fromY, toX, toY,
+      startedAt: performance.now(),
+      duration: battleDelay(Math.min(620, 180 + distance * 85))
+    };
+  }
+
+  function unitVisualPosition(unit) {
+    const a = unit?.moveAnimation;
+    if (!a) return { x: unit.x, y: unit.y };
+    const progress = Math.min(1, (performance.now() - a.startedAt) / Math.max(1, a.duration));
+    const eased = 1 - Math.pow(1 - progress, 3);
+    if (progress >= 1) {
+      unit.moveAnimation = null;
+      return { x: unit.x, y: unit.y };
+    }
+    return {
+      x: a.fromX + (a.toX - a.fromX) * eased,
+      y: a.fromY + (a.toY - a.fromY) * eased
+    };
+  }
+
   function drawBattle() {
     const b = GameState.currentBattle;
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -8233,6 +8752,25 @@
       }
     }
 
+    (b.traps || []).forEach(trap => {
+      const cx = trap.x * CELL + CELL / 2;
+      const cy = trap.y * CELL + CELL / 2;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,150,55,.2)';
+      ctx.strokeStyle = '#ff9b42';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#ffd06b';
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('TRAP', cx, cy);
+      ctx.restore();
+    });
+
     if (shouldShowAttackHighlights(b, sel)) {
       for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
         const dist = unitDistanceFromPoint(sel, x, y);
@@ -8280,10 +8818,20 @@
     }
 
     b.units.filter(u => u.hp > 0).sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x).forEach(u => {
-      const px = u.x * CELL, py = u.y * CELL;
+      const visualPos = unitVisualPosition(u);
+      const px = visualPos.x * CELL, py = visualPos.y * CELL;
       const footprintW = unitWidth(u) * CELL;
       const footprintH = unitHeight(u) * CELL;
       const centerX = px + footprintW / 2;
+      if (b.phase === 'deploy' && u.isHero && u.heroId === b.deployDragHeroId) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(240,165,0,.18)';
+        ctx.strokeStyle = '#ffd45c';
+        ctx.lineWidth = 3;
+        ctx.fillRect(px + 2, py + 2, footprintW - 4, footprintH - 4);
+        ctx.strokeRect(px + 2, py + 2, footprintW - 4, footprintH - 4);
+        ctx.restore();
+      }
       let show = true;
       if (u.enemyId === ENEMY_IDS.ASSASSIN) {
         const t = b.grid[u.y][u.x];
@@ -8306,7 +8854,7 @@
 
         // Idle breathing: vertical stretch anchored at feet — body grows upward, feet stay fixed
         const now = performance.now();
-        const phase = (u.x * 1.7 + u.y * 3.1 + (u.isHero ? 0 : 5.3));
+        const phase = (visualPos.x * 1.7 + visualPos.y * 3.1 + (u.isHero ? 0 : 5.3));
         const scaleY = 1 + Math.sin(now * 0.0016 + phase) * 0.028; // ±2.8% vertical stretch
 
         const spriteW = u.isHero
@@ -8370,7 +8918,7 @@
 
         // 15: Compact status icons — up to 3 in bottom-left corner
         if (u.activeStatuses && u.activeStatuses.length) {
-          const icons = { stun:'⚡', freeze:'❄', web:'🕸', poison:'☠', burn:'🔥', slow:'🐢', blind:'👁', curse:'💀', berserk:'💢', stealth:'🌑' };
+          const icons = { stun:'⚡', freeze:'❄', fear:'!', web:'🕸', poison:'☠', burn:'🔥', slow:'🐢', blind:'👁', curse:'💀', berserk:'💢', stealth:'🌑' };
           const shown = u.activeStatuses.slice(0, 3);
           ctx.font = '11px serif';
           ctx.textAlign = 'left';
@@ -8435,8 +8983,7 @@
 
   // 12: Skull death animation
   function canvasToScreen(canvasPx_x, canvasPx_y) {
-    // Canvas is square with simple linear mapping (aspect-ratio: 1/1)
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvasContentRect();
     const scaleX = rect.width / CANVAS_W;
     const scaleY = rect.height / CANVAS_H;
     return {
@@ -8472,6 +9019,46 @@
     d.textContent = '-' + n;
     layer.appendChild(d);
     setTimeout(() => d.remove(), 900);
+  }
+
+  function spawnImpactFx(attacker, target, opts, damage) {
+    const layer = document.getElementById('fx-layer');
+    if (!layer || !target) return;
+    const cx = (target.x * CELL + CELL / 2) * BattleView.zoom + BattleView.offsetX;
+    const cy = (target.y * CELL + CELL / 2) * BattleView.zoom + BattleView.offsetY;
+    const { sx, sy } = canvasToScreen(cx, cy);
+    const impact = document.createElement('div');
+    const kind = opts?.magic ? ' is-magic' : (attacker?.range > 1 ? ' is-ranged' : '');
+    const strong = damage >= 10 || opts?.fire ? ' is-strong' : '';
+    impact.className = `fx-impact${kind}${strong}`;
+    impact.style.left = `${sx}px`;
+    impact.style.top = `${sy}px`;
+    layer.appendChild(impact);
+    setTimeout(() => impact.remove(), battleDelay(320));
+    if (strong) {
+      const wrap = document.getElementById('battle-wrap');
+      wrap?.classList.remove('impact-shake');
+      void wrap?.offsetWidth;
+      wrap?.classList.add('impact-shake');
+      setTimeout(() => wrap?.classList.remove('impact-shake'), battleDelay(180));
+    }
+  }
+
+  function battleDelay(ms) {
+    return Math.max(20, Math.round(ms / (GameState.battleSpeed === 2 ? 2 : 1)));
+  }
+
+  function bindBattleSpeedToggle() {
+    const btn = document.getElementById('battle-speed-toggle');
+    if (!btn) return;
+    btn.textContent = `×${GameState.battleSpeed === 2 ? 2 : 1}`;
+    btn.title = `${translateKey('battleSpeed')}: ${btn.textContent}`;
+    btn.onclick = () => {
+      GameState.battleSpeed = GameState.battleSpeed === 2 ? 1 : 2;
+      btn.textContent = `×${GameState.battleSpeed}`;
+      btn.title = `${translateKey('battleSpeed')}: ${btn.textContent}`;
+      saveGame();
+    };
   }
 
   function spawnBattleTextFx(x, y, text, color) {
@@ -8533,7 +9120,7 @@
     });
     const fu = getActiveUnit();
     if (findWatcher(b) && typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_watcher_buff, 0.55);
-    if (fu && !fu.isHero) setTimeout(() => runEnemyTurn(), 120);
+    if (fu && !fu.isHero) setTimeout(() => runEnemyTurn(), battleDelay(120));
     else {
       prepareHeroTurnMode(b, fu);
       updateBattleUI();
@@ -8627,13 +9214,13 @@
         const hh = GameState.heroes.find(x => x.id === nu.heroId);
         if (hh) hh.cds = { ...nu.cds };
       }
-      if (nu.activeStatuses && nu.activeStatuses.find(s => s.type === STATUS.STUN || s.type === STATUS.FREEZE)) {
+      if (nu.activeStatuses && nu.activeStatuses.find(s => s.type === STATUS.STUN || s.type === STATUS.FREEZE || s.type === STATUS.FEAR)) {
         pushBattleLog(`${nu.emoji} skips a turn (stun/freeze)`, 'status');
         continue;
       }
       if (nu.isHero && typeof BattleSfx !== 'undefined') BattleSfx.heroTurnEnter(nu);
       if (!nu.isHero) {
-        setTimeout(() => runEnemyTurn(), 80);
+        setTimeout(() => runEnemyTurn(), battleDelay(80));
         updateBattleUI();
         return;
       }
@@ -8652,7 +9239,7 @@
         updateRecordsFromState({ finished: true });
         saveGame();
         showScreen('ending');
-        document.getElementById('ending-stats').textContent = `${translateKey('statBattles')}: ${GameState.stats.battles}, ${translateKey('gold')}: ${GameState.gold} 💰`;
+        renderEndingSummary();
         return;
       }
       endBattleVictory();
@@ -8667,6 +9254,27 @@
       renderGameOverUI();
       showScreen('gameover');
     }
+  }
+
+  function renderEndingSummary() {
+    const root = document.getElementById('ending-stats');
+    if (!root) return;
+    const elapsedMinutes = Math.max(1, Math.round((Date.now() - (GameState.runStartedAt || Date.now())) / 60000));
+    const builds = GameState.heroes.map(hero => {
+      const perkNames = (hero.perks || []).map(p => {
+        const desc = PERK_DESCRIPTIONS[p];
+        return desc ? (desc[currentLanguage()] || desc.en || p) : p;
+      }).slice(0, 3);
+      const gear = Object.values(hero.equipment || {}).filter(Boolean).map(id => translateText(itemById(id)?.name || id));
+      return `<div class="ending-build"><strong>${hero.emoji} ${hero.name} · LV ${hero.level}</strong><span>${perkNames.join(' · ') || '—'}</span><small>${gear.join(' · ') || translateKey('emptyBag')}</small></div>`;
+    }).join('');
+    root.innerHTML = `<div class="ending-summary-grid">
+      <div><strong>${translateKey('statBattles')}</strong><span>${GameState.stats.battles}</span></div>
+      <div><strong>${translateKey('gold')}</strong><span>${GameState.gold}</span></div>
+      <div><strong>${translateKey('runTime')}</strong><span>${elapsedMinutes} min</span></div>
+      <div><strong>${translateKey('survivors')}</strong><span>${GameState.heroes.filter(h => h.hp > 0).length}/3</span></div>
+    </div><div class="ending-build-title">${translateKey('heroBuilds')}</div>${builds}
+    <div class="ending-seed">${translateKey('difficulty')}: ${translateKey(isHardcoreMode() ? 'hardcore' : 'normal')} · ${translateKey('runSeed')}: ${escapeHtml(GameState.testSeed || 'random')}</div>`;
   }
 
   function renderGameOverUI() {
@@ -9146,6 +9754,76 @@
     return { inRange, blocked, nearest, total: enemies.length };
   }
 
+  function markFtueSkillUsed(heroId, skillKey) {
+    const b = GameState.currentBattle;
+    if (!b || !b.firstBattle) return;
+    const expected = { garet: 'shieldBash', alira: 'doubleShot', seris: 'fireball' };
+    if (expected[heroId] !== skillKey) return;
+    b.ftueSkillsUsed = b.ftueSkillsUsed || {};
+    b.ftueSkillsUsed[heroId] = true;
+    GameState.ftueSkillsUsed = { ...b.ftueSkillsUsed };
+  }
+
+  function ftueCoachHtml(b, u) {
+    if (!b || !b.firstBattle || !GameState.ftueHintsEnabled) return '';
+    const used = b.ftueSkillsUsed || {};
+    const completed = ['garet', 'alira', 'seris'].filter(id => used[id]).length;
+    let titleKey = 'ftueDeployTitle';
+    let textKey = 'ftueDeployText';
+    if (b.phase === 'combat' && u && u.isHero) {
+      if (completed >= 3) {
+        titleKey = 'ftueSkillsDoneTitle';
+        textKey = 'ftueSkillsDoneText';
+      } else if (u.heroId === 'garet' && !used.garet) {
+        titleKey = 'ftueGaretTitle';
+        textKey = 'ftueGaretText';
+      } else if (u.heroId === 'alira' && !used.alira) {
+        titleKey = 'ftueAliraTitle';
+        textKey = 'ftueAliraText';
+      } else if (u.heroId === 'seris' && !used.seris) {
+        titleKey = 'ftueSerisTitle';
+        textKey = 'ftueSerisText';
+      } else {
+        titleKey = 'ftueSkillsDoneTitle';
+        textKey = 'ftueSkillsDoneText';
+      }
+    }
+    return `<div class="ftue-coach">
+      <div class="ftue-coach-title">${translateKey(titleKey)}</div>
+      <div class="ftue-coach-text">${translateKey(textKey)}</div>
+      <div class="ftue-coach-foot">
+        <span class="ftue-coach-progress">${translateKey('ftueProgress')}: ${completed}/3</span>
+        <button type="button" class="ftue-coach-skip" id="btn-ftue-skip">${translateKey('ftueSkip')}</button>
+      </div>
+    </div>`;
+  }
+
+  function battleObjectiveHtml(b) {
+    if (!b?.objective) return '';
+    const key = b.objective === 'flawless' ? 'objectiveFlawless' : 'objectiveSkillful';
+    return `<div class="battle-tactical-strip">
+      <div class="battle-tactical-kicker">${translateKey('optionalObjective')} · +10 ${translateKey('gold')}</div>
+      <div class="battle-tactical-sub">${translateKey(key)}</div>
+    </div>`;
+  }
+
+  function bindFtueCoachSkip() {
+    const btn = document.getElementById('btn-ftue-skip');
+    if (!btn) return;
+    btn.onclick = () => {
+      GameState.ftueHintsEnabled = false;
+      saveGame();
+      updateBattleUI();
+    };
+  }
+
+  function renderFtueCoachOverlay(b, unit) {
+    const overlay = document.getElementById('battle-coach-overlay');
+    if (!overlay) return;
+    overlay.innerHTML = ftueCoachHtml(b, unit);
+    bindFtueCoachSkip();
+  }
+
   function battleActionHintHtml(b, u) {
     if (!b || !u || !u.isHero || b.phase !== 'combat') return '';
     const summary = heroAttackSummary(b, u);
@@ -9195,6 +9873,9 @@
     const stats = document.getElementById('unit-stats');
     const actions = document.getElementById('action-buttons');
     if (!b) return;
+    bindBattleSpeedToggle();
+    const coachActiveUnit = getActiveUnit();
+    renderFtueCoachOverlay(b, coachActiveUnit?.isHero ? coachActiveUnit : null);
     if (left) {
       const roleLabel = { garet: translateText('Warrior'), alira: translateText('Archer'), seris: translateText('Mage') };
       left.innerHTML = b.units.filter(u => u.isHero).map(h => {
@@ -9237,9 +9918,9 @@
       deployHint.classList.remove('hidden');
       const modeBadge = document.getElementById('mode-badge');
       if (modeBadge) { modeBadge.className = 'm-move'; modeBadge.textContent = `↔ ${translateText('DEPLOYMENT')}`; modeBadge.classList.remove('hidden'); }
-      title.textContent = translateText('Click hero → drag');
+      title.textContent = currentLanguage() === 'ru' ? 'Коснитесь героя → клетки' : translateText('Click hero → drag');
       stats.innerHTML = '';
-      actions.innerHTML = `<button class="btn btn-primary skill-action-btn" id="btn-start-battle" style="width:100%">
+      actions.innerHTML = `${battleObjectiveHtml(b)}<button class="btn btn-primary skill-action-btn" id="btn-start-battle" style="width:100%">
         <span class="skill-action-icon">⚔</span>
         <span class="skill-action-name">${translateText('Start Battle')}</span>
         <span class="skill-action-meta">${translateText('DEPLOYMENT')}</span>
@@ -9277,7 +9958,8 @@
     title.innerHTML = '';
     stats.innerHTML = '';
     const hh = GameState.heroes.find(x => x.id === u.heroId);
-    let html = '';
+    let html = battleObjectiveHtml(b);
+    html += battleTouchPreviewHtml(b, u);
     html += battleActionHintHtml(b, u);
     if (!b.heroActionDone) {
       if (heroCanUndoMove(b, u)) {
@@ -9325,6 +10007,9 @@
         html += skillMakeBtn('sk-fb',  'fireball', '🔥','Fireball', u.cds.fireball, { mpFail: u.mana < 3, mpCost: 3 });
         html += skillMakeBtn('sk-fr',  'freeze',   '🧊','Freeze',   u.cds.freeze,   { mpFail: u.mana < 4, mpCost: 4 });
         html += skillMakeBtn('sk-met', 'meteor',   '☄', 'Meteor',   u.cds.meteor,   { mpFail: u.mana < 8, mpCost: 8 });
+        if (u.perks?.includes('teleport') && !b.teleportUsed) {
+          html += `<button class="btn skill-action-btn" id="sk-teleport"><span class="skill-action-icon">✦</span><span class="skill-action-name">Teleport</span><span class="skill-action-meta">1×</span></button>`;
+        }
       }
       if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn battle-utility-btn" id="btn-skip-move">${translateKey('skipMove')}</button>`;
       html += `<button class="btn battle-utility-btn" id="btn-wait">${translateKey('waitTurn')}</button>`;
@@ -9333,6 +10018,7 @@
     html += `<button class="btn battle-utility-btn" id="btn-battle-inv" style="margin-top:4px">${translateKey('battleInventory')}</button>`;
     actions.innerHTML = html;
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    bindFtueCoachSkip();
     const heroLvl2 = (GameState.heroes.find(x => x.id === u.heroId) || u).level || 1;
     const skLocked = (key) => { const s = (HERO_SKILLS[u.heroId] || []).find(x => x.key === key); return s && heroLvl2 < s.unlockLevel; };
     bind('btn-undo-move', () => undoHeroMove());
@@ -9340,13 +10026,14 @@
     bind('btn-wait', () => { if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.ui_end_turn, 0.75); b.heroActionDone = true; endUnitTurn(); });
     bind('sk-shield', () => { if (skLocked('shieldBash') || u.cds.shieldBash > 0) return; b.pendingSkill = 'shieldBash'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-firecall', () => { if (skLocked('fireCall') || u.cds.fireCall > 0) return; b.pendingSkill = 'fireCall'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-berz', () => { if (skLocked('berserk') || u.cds.berserk > 0) return; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_berserk, 0.9); addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-berz', () => { if (skLocked('berserk') || u.cds.berserk > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_berserk, 0.9); addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
     bind('sk-double', () => { if (skLocked('doubleShot') || u.cds.doubleShot > 0) return; b.pendingSkill = 'double'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-slow', () => { if (skLocked('slowArrow') || u.cds.slowArrow > 0) return; b.pendingSkill = 'slowArrow'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_arrow_rain, 0.92); const b2 = GameState.currentBattle; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && unitDistanceFromPoint(t, u.x, u.y) <= 1) dealDamage(u, t, u.attack, {}); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_arrow_rain, 0.92); const b2 = GameState.currentBattle; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && unitDistanceFromPoint(t, u.x, u.y) <= 1) dealDamage(u, t, u.attack, {}); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
     bind('sk-fb', () => { if (skLocked('fireball') || u.mana < 3 || u.cds.fireball > 0) return; b.pendingSkill = 'fireball'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-fr', () => { if (skLocked('freeze') || u.mana < 4 || u.cds.freeze > 0) return; b.pendingSkill = 'freeze'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-met', () => { if (skLocked('meteor') || u.mana < 8 || u.cds.meteor > 0) return; b.pendingSkill = 'meteor'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-teleport', () => { if (b.teleportUsed) return; b.pendingSkill = 'teleport'; b.mode = 'skill'; updateBattleUI(); });
     // 10: Inventory from battle
     bind('btn-battle-inv', () => {
       GameState._returnToVictory = false;
@@ -9359,6 +10046,8 @@
 
   function performHeroAttack(u, target) {
     const b = GameState.currentBattle;
+    const usedSkill = b.pendingSkill;
+    if (usedSkill) b.objectiveUsedSkill = true;
     const targetCell = closestUnitCellToPoint(target, u.x, u.y);
     const dist = unitDistanceFromPoint(target, u.x, u.y);
     if (dist > u.range) return;
@@ -9376,6 +10065,8 @@
       dealDamage(u, target, base, { magic: u.heroId === 'seris' });
     }
     if (b.pendingSkill === 'shieldBash' && target.hp > 0) { addStatus(target, STATUS.STUN, 1); u.cds.shieldBash = 3; }
+    if (usedSkill === 'shieldBash') markFtueSkillUsed(u.heroId, 'shieldBash');
+    if (usedSkill === 'double') markFtueSkillUsed(u.heroId, 'doubleShot');
     pushBattleLog(`[${u.sprite} ${u.name}] attacks [${target.emoji}]`, 'hero');
     b.pendingSkill = null;
     b.heroActionDone = true;
@@ -9457,7 +10148,9 @@
           snapshotHeroMoveForUndo(b, u);
           const fromX = u.x, fromY = u.y;
           u.x = gx; u.y = gy;
+          startUnitMoveAnimation(u, fromX, fromY, gx, gy);
           if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, gx, gy, b.grid);
+          placeAliraTrapsAfterMove(b, u, fromX, fromY);
           b.heroMoved = true;
           b.mode = 'attack'; // automatically switch to attack mode after moving
           syncHeroFromUnit(u);
@@ -9475,7 +10168,9 @@
       snapshotHeroMoveForUndo(b, u);
       const fromX = u.x, fromY = u.y;
       u.x = gx; u.y = gy;
+      startUnitMoveAnimation(u, fromX, fromY, gx, gy);
       if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, gx, gy, b.grid);
+      placeAliraTrapsAfterMove(b, u, fromX, fromY);
       b.heroMoved = true;
       b.mode = 'attack';
       syncHeroFromUnit(u);
@@ -9483,7 +10178,23 @@
       return;
     }
     if ((b.mode === 'attack' || b.mode === 'skill') && !b.heroActionDone) {
+      if (b.pendingSkill === 'teleport' && u.heroId === 'seris') {
+        if (unitAt(b, gx, gy) || !canEndOnTile(b, gx, gy, u) || Math.abs(u.x - gx) + Math.abs(u.y - gy) > 4) return;
+        const fromX = u.x, fromY = u.y;
+        u.x = gx; u.y = gy;
+        startUnitMoveAnimation(u, fromX, fromY, gx, gy);
+        b.teleportUsed = true;
+        b.objectiveUsedSkill = true;
+        b.pendingSkill = null;
+        b.heroMoved = true;
+        b.mode = 'attack';
+        spawnBattleTextFx(gx, gy, 'TELEPORT', '#c9a8ff');
+        if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, gx, gy, b.grid);
+        updateBattleUI();
+        return;
+      }
       if (b.pendingSkill === 'fireCall' && u.heroId === 'garet') {
+        b.objectiveUsedSkill = true;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_fire_call, 0.95);
         b.units.filter(e => !e.isHero && e.hp > 0).forEach(e => {
           if (unitDistanceFromPoint(e, u.x, u.y) <= 2) dealDamage(u, e, Math.max(1, Math.floor(u.attack * 0.5)), { fire: true, magic: true, sfxImpactOnly: true });
@@ -9499,6 +10210,7 @@
       if (b.pendingSkill === 'fireball' && u.heroId === 'seris') {
         if (u.mana < 3) return;
         if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range) return;
+        b.objectiveUsedSkill = true;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_seris_fireball, 0.95);
         u.mana -= 3; u.cds.fireball = 2;
         const splashRadius = 1 + serisAoeBonus(u);
@@ -9511,21 +10223,28 @@
         }
         damageEnemiesAtCells(b, u, splashCells, 7, { fire: true, magic: true, sfxImpactOnly: true, excludeUnits: [tgt] });
         applySerisChaosAoe(u);
+        markFtueSkillUsed(u.heroId, 'fireball');
         b.heroActionDone = true; endUnitTurn(); return;
       }
       if (b.pendingSkill === 'freeze' && u.heroId === 'seris') {
         if (u.mana < 4) return;
         if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range) return;
+        b.objectiveUsedSkill = true;
         u.mana -= 4; u.cds.freeze = 3;
         const freezeWeapon = getEquippedItem(u, 'weapon');
         const freezeTurns = (u.perks && u.perks.includes('freeze2')) || (freezeWeapon && freezeWeapon.mods && freezeWeapon.mods.freeze2) ? 2 : 1;
         addStatus(tgt, STATUS.FREEZE, freezeTurns);
+        if (u.perks?.includes('fear')) {
+          b.units.filter(enemy => !enemy.isHero && enemy.hp > 0 && enemy !== tgt && unitDistance(enemy, tgt) <= 1)
+            .forEach(enemy => addStatus(enemy, STATUS.FEAR, 1));
+        }
         pushBattleLog(`🧊 ${tgt.name} frozen`, 'status');
         applySerisChaosAoe(u);
         b.heroActionDone = true; endUnitTurn(); return;
       }
       if (b.pendingSkill === 'meteor' && u.heroId === 'seris') {
         if (u.mana < 8) return;
+        b.objectiveUsedSkill = true;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_seris_meteor, 1);
         u.mana -= 8; u.cds.meteor = 6;
         const meteorSize = 2 + serisAoeBonus(u);
@@ -9542,6 +10261,7 @@
       }
       if (b.pendingSkill === 'slowArrow') {
         if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range || rangedBlocked(u.x, u.y, gx, gy, b.grid, false)) return;
+        b.objectiveUsedSkill = true;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_slow_arrow, 0.85);
         dealDamage(u, tgt, u.attack, { sfxImpactOnly: true });
         addStatus(tgt, STATUS.SLOW, 2);
@@ -9607,26 +10327,6 @@
         tips: [
           [translateKey('tutorialTip2aTitle'), translateKey('tutorialTip2aText')],
           [translateKey('tutorialTip2bTitle'), translateKey('tutorialTip2bText')]
-        ]
-      },
-      {
-        icon: '🎯',
-        title: translateKey('tutorialTitle3'),
-        subtitle: translateKey('tutorialSub3'),
-        text: translateKey('tutorialText3'),
-        tips: [
-          [translateKey('tutorialTip3aTitle'), translateKey('tutorialTip3aText')],
-          [translateKey('tutorialTip3bTitle'), translateKey('tutorialTip3bText')]
-        ]
-      },
-      {
-        icon: '🎒',
-        title: translateKey('tutorialTitle4'),
-        subtitle: translateKey('tutorialSub4'),
-        text: translateKey('tutorialText4'),
-        tips: [
-          [translateKey('tutorialTip4aTitle'), translateKey('tutorialTip4aText')],
-          [translateKey('tutorialTip4bTitle'), translateKey('tutorialTip4bText')]
         ]
       }
     ];
@@ -10021,7 +10721,7 @@
       }
       if (GameState.pendingEnemyTurnAfterAd) {
         GameState.pendingEnemyTurnAfterAd = false;
-        setTimeout(() => runEnemyTurn(), 80);
+        setTimeout(() => runEnemyTurn(), battleDelay(80));
       }
     }
   };
@@ -10601,7 +11301,11 @@
     const invList = (GameState.inventory || []).filter(id => itemById(id));
     const bestCandidateIds = bestInventoryCandidateIdsForHero(hero);
     if (invList.length === 0) {
-      bag.innerHTML = `<div style="grid-column:1/-1;color:var(--text-dim);text-align:center;padding:20px;">${translateKey('emptyBag')}</div>`;
+      bag.innerHTML = `<div class="empty-bag-state">
+        <div class="empty-bag-icon" aria-hidden="true">◇</div>
+        <strong>${translateKey('emptyBag')}</strong>
+        <span>${translateKey('emptyBagHint')}</span>
+      </div>`;
       InvState.selectedItemIdx = -1;
       InvState.selectedItemId = null;
     } else {
@@ -10761,6 +11465,9 @@
   }
   function generateEnemyWaveForCell(cell) {
     if (!cell) return [ENEMY_IDS.SKELETON];
+    if (cell.id === 'c_0_0' && !GameState.firstBattleCompleted) {
+      return [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON, ENEMY_IDS.BANDIT_THROWER];
+    }
     const pools = {
       1: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.BOAR, ENEMY_IDS.ZOMBIE, ENEMY_IDS.SHAMAN,
           ENEMY_IDS.BANDIT, ENEMY_IDS.WOLF, ENEMY_IDS.BANDIT_THROWER,
@@ -10778,27 +11485,36 @@
     if (cell.type === 'final') return [ENEMY_IDS.DARK_LORD];
     const pool = pools[cell.region];
     let cnt = cell.type === 'dungeon' ? 4 : cell.type === 'arena' ? 1 : 3;
-    // Region 1 is the onboarding zone, but it must still create pressure to use perks/loot.
-    // We increase wave size there instead of scaling the base skeleton/zombie stats.
-    if (cell.region === 1) {
-      if (cell.type === 'mission') cnt = 4;
-      if (cell.type === 'dungeon') cnt = 5;
-    }
+    if (cell.region === 2 && cell.type === 'mission') cnt = 4;
+    if (cell.region === 3 && cell.type === 'dungeon') cnt = 5;
     if (isHardcoreMode() && ['mission', 'dungeon', 'arena'].includes(cell.type)) {
       cnt += 1;
     }
+    const volatile = new Set([ENEMY_IDS.SUICIDE, ENEMY_IDS.PLAGUE_DOCTOR]);
+    const ranged = new Set([ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.BANDIT_THROWER, ENEMY_IDS.CROSSBOWMAN, ENEMY_IDS.HEXER, ENEMY_IDS.BANSHEE]);
     const wave = [];
-    for (let i = 0; i < cnt; i++) wave.push(pool[randInt(0, pool.length - 1)]);
+    for (let i = 0; i < cnt; i++) {
+      let pick = pool[randInt(0, pool.length - 1)];
+      for (let retry = 0; retry < 8; retry++) {
+        const tooManyVolatile = volatile.has(pick) && wave.some(id => volatile.has(id));
+        const tooManyRanged = ranged.has(pick) && wave.filter(id => ranged.has(id)).length >= 2;
+        if (!tooManyVolatile && !tooManyRanged) break;
+        pick = pool[randInt(0, pool.length - 1)];
+      }
+      wave.push(pick);
+    }
     return wave;
   }
   function startBattleForCell(cell, opts) {
+    const firstBattle = cell.id === 'c_0_0' && !GameState.firstBattleCompleted;
     const node = {
       id: cell.id,
       region: cell.region,
       type: cell.type,
       enemyWave: (opts && opts.wave) || generateEnemyWaveForCell(cell),
       boss: cell.type === 'boss',
-      final: cell.type === 'final'
+      final: cell.type === 'final',
+      firstBattle
     };
     startBattle(node);
     if (opts && opts.skipDeploy) {
@@ -10812,6 +11528,7 @@
     const region = (cell && cell.region) || GameState.region || 1;
     GameState._lastBattleDrop = null;
     const type = (cell && cell.type) || 'mission';
+    const firstBattleReward = cell && cell.id === 'c_0_0' && !GameState.firstBattleCompleted;
     let forceRarity = null;
     let dropChance = 0.25;
     if (type === 'dungeon') { dropChance = 0.65; forceRarity = 'rare'; }
@@ -10821,9 +11538,9 @@
     const enemyIds = GameState._lastBattleEnemyIds || [];
     const eliteBonus = enemyIds.reduce((best, id) => Math.max(best, (LOOT_CHANCE[id] || 0) * 0.25), 0);
     dropChance = Math.min(1, dropChance + eliteBonus);
-    if (Math.random() > dropChance) return;
+    if (!firstBattleReward && Math.random() > dropChance) return;
 
-    const drop = selectLootItem(region, forceRarity, true);
+    const drop = selectLootItem(region, firstBattleReward ? 'common' : forceRarity, true);
     GameState.inventory.push(drop.id);
     GameState._lastBattleDrop = drop;
   }
@@ -11033,6 +11750,12 @@
     GameState.inventory = [];
     GameState.consumables = {};
     GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
+    GameState.firstBattleCompleted = false;
+    // Contextual first-battle coaching belongs to every new campaign.
+    // The longer onboarding remains first-run only.
+    GameState.ftueHintsEnabled = true;
+    GameState.ftueSkillsUsed = {};
+    GameState.runStartedAt = Date.now();
     GameState.testSeed = TEST_SEED || null;
     if (!GameState.difficulty) GameState.difficulty = 'normal';
     saveGame();
@@ -11066,7 +11789,24 @@
     return null;
   }
 
+  function regionBossEnemyId(region) {
+    if (region === 1) return ENEMY_IDS.SHAMAN;
+    if (region === 2) return ENEMY_IDS.FIRE_TITAN;
+    return ENEMY_IDS.HYDRA;
+  }
+
+  function mapBossSilhouetteHtml(node) {
+    const enemyId = regionBossEnemyId(node.region);
+    const src = enemyIconUrl(enemyId);
+    return `<div class="map-node-face map-node-face-boss" aria-label="${translateKey('nodeBoss')}">
+      <div class="map-boss-silhouette" style="--boss-mask:url('${src}')"></div>
+    </div>`;
+  }
+
   function mapNodeFaceHtml(node) {
+    if (node?.type === 'boss' && node.region <= GameState.regionUnlocked) {
+      return mapBossSilhouetteHtml(node);
+    }
     const src = mapNodeIconPath(node);
     const em = node.emoji || '🏘️';
     if (src) {
@@ -11088,6 +11828,25 @@
     return `<div class="cell-info-icon">${em}</div>`;
   }
 
+  function mapNodeIntel(node) {
+    const threatKey = ['dungeon', 'arena', 'boss', 'final'].includes(node.type)
+      ? 'threatHigh'
+      : ['mission', 'wanderer'].includes(node.type) ? 'threatMedium' : 'threatLow';
+    const rewardKey = node.type === 'city' ? 'rewardRecovery'
+      : node.type === 'event' ? 'rewardUnknown'
+      : ['dungeon', 'boss', 'final', 'arena'].includes(node.type) ? 'rewardGear'
+      : 'rewardResources';
+    const boss = GameState.mapGrid
+      .filter(c => c.region === node.region && c.type === 'boss' && !c.completed)
+      .sort((a, b) => (Math.abs(a.x - node.x) + Math.abs(a.y - node.y)) - (Math.abs(b.x - node.x) + Math.abs(b.y - node.y)))[0];
+    const bossSteps = boss ? Math.abs(boss.x - node.x) + Math.abs(boss.y - node.y) : 0;
+    return {
+      threat: translateKey(threatKey),
+      reward: translateKey(rewardKey),
+      boss: boss ? `${translateKey('bossDistance')}: ${bossSteps}` : ''
+    };
+  }
+
   function renderMap() {
     const root = document.getElementById('map-nodes');
     const info = document.getElementById('map-cell-info');
@@ -11097,23 +11856,29 @@
     let selectedNode = getCurrentCell();
     const px = GameState.playerPos.x;
     const py = GameState.playerPos.y;
+    const nodeElements = new Map();
     if (fogCounterEl) fogCounterEl.textContent = `${translateKey('opened')}: ${GameState.mapFogVisited.length} / ${MAP_CELL_TOTAL}`;
     GameState.mapGrid.forEach(node => {
       const el = document.createElement('div');
       el.className = 'map-node';
       el.classList.add(`map-region-${node.region}`);
       const dist = Math.abs(node.x - px) + Math.abs(node.y - py);
-      if (dist <= 2) el.classList.add('visible');
+      const adjacent = dist === 1;
+      const revealedBoss = node.type === 'boss' && node.region <= GameState.regionUnlocked;
+      if (dist <= 2 || revealedBoss) el.classList.add('visible');
       else el.classList.add('hidden');
+      if (adjacent) el.classList.add('map-option');
+      else if (dist <= 2 && dist > 0) el.classList.add('map-secondary');
 
       const unlocked = node.region <= GameState.regionUnlocked && (node.type !== 'final' || GameState.defeatedBosses >= 3);
       if (!unlocked) el.classList.add('locked');
       if (node.completed) el.classList.add('done');
       if (node.x === px && node.y === py) el.classList.add('current');
       if (node.type === 'city') el.classList.add('type-city');
+      if (revealedBoss) el.classList.add('type-boss-revealed');
       const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
       const typeLbl = unlocked ? (typeNames[node.type] || '') : '';
-      const showCellFace = dist <= 2;
+      const showCellFace = dist <= 2 || revealedBoss;
       const partyMarker = node.x === px && node.y === py ? mapPartyMarkerHtml() : '';
       if (showCellFace) {
         el.innerHTML = `${mapNodeFaceHtml(node)}${typeLbl ? `<small class="map-node-lbl">${typeLbl}</small>` : ''}${partyMarker}`;
@@ -11146,6 +11911,10 @@
         }
         setInfo(node);
         const cur = getCurrentCell();
+        if (!GameState.firstBattleCompleted && cur?.id === 'c_0_0' && node.id !== cur.id) {
+          startBattleForCell(cur, { skipDeploy: false });
+          return;
+        }
         if (!cellNeighbors(cur, node) && !(node.x === cur.x && node.y === cur.y)) return;
         GameState.playerPos = { x: node.x, y: node.y };
         mapFogVisitedAdd(node.y, node.x);
@@ -11156,12 +11925,45 @@
         renderMap();
       };
       root.appendChild(el);
+      nodeElements.set(node.id, el);
     });
     if (selectedNode) {
+      const intel = mapNodeIntel(selectedNode);
       const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
       info.innerHTML = `${mapCellInfoIconHtml(selectedNode)}
         <div class="cell-info-name">${translateKey('region')} ${selectedNode.region} · ${typeNames[selectedNode.type] || selectedNode.type}</div>
-        <div>${translateKey('currentPartyPosition')}</div>`;
+        <div>${translateKey('currentPartyPosition')}</div>
+        <div>${intel.threat} · ${intel.reward}${intel.boss ? ` · ${intel.boss}` : ''}</div>`;
+    }
+    const routeChoices = document.getElementById('map-route-choices');
+    if (routeChoices) {
+      const current = getCurrentCell();
+      const routes = GameState.mapGrid.filter(n => current && cellNeighbors(current, n) && n.region <= GameState.regionUnlocked).slice(0, 3);
+      const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
+      const firstBattlePending = !GameState.firstBattleCompleted && current?.id === 'c_0_0';
+      const firstBattleCopy = currentLanguage() === 'ru'
+        ? { title: 'ОБЯЗАТЕЛЬНЫЙ ПЕРВЫЙ БОЙ', action: '⚔ Начать обучение', detail: 'Расставьте героев, затем начните бой' }
+        : currentLanguage() === 'es'
+          ? { title: 'PRIMER COMBATE OBLIGATORIO', action: '⚔ Iniciar tutorial', detail: 'Coloca a los héroes y empieza el combate' }
+          : { title: 'REQUIRED FIRST BATTLE', action: '⚔ Start tutorial', detail: 'Deploy the heroes, then begin combat' };
+      routeChoices.innerHTML = firstBattlePending
+        ? `<div class="map-route-title">${firstBattleCopy.title}</div>
+           <button type="button" class="map-route-card first-battle-route" id="btn-first-battle-route">
+             <strong>${firstBattleCopy.action}</strong><span class="map-route-threat">!</span>
+             <small>${firstBattleCopy.detail}</small>
+           </button>`
+        : routes.length ? `<div class="map-route-title">${translateKey('nextRoutes')}</div>${routes.map(n => {
+        const intel = mapNodeIntel(n);
+        return `<button type="button" class="map-route-card" data-route-id="${n.id}">
+          <strong>${typeNames[n.type] || n.type}</strong><span class="map-route-threat">${intel.threat}</span>
+          <small>${intel.reward}${intel.boss ? ` · ${intel.boss}` : ''}</small>
+        </button>`;
+      }).join('')}` : '';
+      const firstBattleBtn = document.getElementById('btn-first-battle-route');
+      if (firstBattleBtn) firstBattleBtn.onclick = () => startBattleForCell(current, { skipDeploy: false });
+      routeChoices.querySelectorAll('[data-route-id]').forEach(btn => {
+        btn.onclick = () => nodeElements.get(btn.dataset.routeId)?.click();
+      });
     }
     updateRegionClouds();
     function enterMapNode(node) {
@@ -11214,6 +12016,10 @@
         return;
       }
       const cur = getCurrentCell();
+      if (!GameState.firstBattleCompleted && cur?.id === 'c_0_0' && node.id !== cur.id) {
+        startBattleForCell(cur, { skipDeploy: false });
+        return;
+      }
       const sameCell = cur && node.x === cur.x && node.y === cur.y;
       if (!sameCell && !cellNeighbors(cur, node)) {
         void showGameAlert(translateKey('tooFar'));
@@ -11808,7 +12614,7 @@
       box.innerHTML = branchNames.map(br => {
         const perks = tree[br];
         const color = branchColors[br] || 'bh-defense';
-        const label = translateText(branchLabels[br] || br.toUpperCase());
+        const label = localizedPerkBranch(br);
         const takenCount = h.perkLevels[br] || 0;
 
         let rows = '';
@@ -11824,11 +12630,16 @@
           else if (locked) cls += ' locked';
           if (selectedPerkId === perk.id) cls += ' sel';
           const icon = perkIcons[perk.id] || '◆';
+          const rule = localizedPerkRule(perk);
           const connector = i < perks.length - 1
             ? `<div class="perk-connector${taken ? ' lit' : ''}"></div>` : '';
           rows += `<div class="${cls}" data-br="${br}" data-idx="${i}" data-id="${perk.id}">
             <div class="perk-skill-icon">${icon}</div>
-            <div class="perk-skill-name">${translateText(perk.name)}</div>
+            <div class="perk-skill-copy">
+              <div class="perk-skill-name">${localizedPerkName(perk)}</div>
+              <div class="perk-skill-summary">${escapeHtml(rule.summary)}</div>
+            </div>
+            <div class="perk-skill-tier">${currentLanguage() === 'ru' ? 'УР.' : currentLanguage() === 'es' ? 'NV.' : 'LV.'} ${perk.level || i + 1}</div>
           </div>${connector}`;
         });
 
@@ -11844,6 +12655,7 @@
           selectedPerkId = el.dataset.id;
           const idx = +el.dataset.idx;
           const perk = tree[selectedBr][idx];
+          const rule = localizedPerkRule(perk);
           const taken = idx < (h.perkLevels[selectedBr] || 0);
           const isNextInBranch = idx === (h.perkLevels[selectedBr] || 0);
           const available = pickMode && !taken && selectedBr in nextPerkByBranch && nextPerkByBranch[selectedBr].id === perk.id;
@@ -11854,17 +12666,29 @@
           } else if (available) {
             statusBtn = `<button class="btn btn-green" id="perk-confirm-btn" style="width:100%">${translateKey('learn')}</button>`;
           } else if (!pickMode && isNextInBranch) {
-            statusBtn = `<button class="btn btn-dim" style="width:100%;cursor:default">⏳ ${translateText('At the next level-up')}</button>`;
+            const nextLevelLabel = currentLanguage() === 'ru' ? 'На следующем уровне' : currentLanguage() === 'es' ? 'En el próximo nivel' : 'At the next level-up';
+            statusBtn = `<button class="btn btn-dim" style="width:100%;cursor:default">⏳ ${nextLevelLabel}</button>`;
           } else {
             statusBtn = `<button class="btn btn-dim" style="width:100%;cursor:not-allowed">🔒 ${translateText('Previous perk first')}</button>`;
           }
 
+          const ruleLabels = currentLanguage() === 'ru'
+            ? { trigger:'КОГДА СРАБАТЫВАЕТ', effect:'ЧТО ПРОИСХОДИТ', tier:'уровень в ветке' }
+            : currentLanguage() === 'es'
+              ? { trigger:'CUÁNDO SE ACTIVA', effect:'QUÉ OCURRE', tier:'nivel en la rama' }
+              : { trigger:'WHEN IT TRIGGERS', effect:'WHAT IT DOES', tier:'branch level' };
           detailPanel.innerHTML = `
-            <div class="perk-detail-icon">${icon2}</div>
-            <div class="perk-detail-name">${translateText(perk.name)}</div>
-            <div class="perk-detail-branch">${translateText(branchLabels[selectedBr] || selectedBr)}</div>
-            <div class="perk-detail-effect">${translateKey('heroLevelShort')} ${perk.level || idx + 1} ${translateText('in branch')}</div>
-            <div class="perk-detail-desc">${localizeContent(PERK_DESCRIPTIONS[perk.id] || { ru: 'Улучшает боевые характеристики героя.', en: 'Improves the hero combat stats.', es: 'Mejora las estadísticas de combate del héroe.' })}</div>
+            <div class="perk-detail-head">
+              <div class="perk-detail-icon">${icon2}</div>
+              <div>
+                <div class="perk-detail-name">${localizedPerkName(perk)}</div>
+                <div class="perk-detail-branch">${localizedPerkBranch(selectedBr)}</div>
+              </div>
+            </div>
+            <div class="perk-detail-tierline">${ruleLabels.tier}: ${perk.level || idx + 1} / ${tree[selectedBr].length}</div>
+            <div class="perk-detail-summary">${escapeHtml(rule.summary)}</div>
+            <div class="perk-detail-rule"><span>${ruleLabels.trigger}</span><strong>${escapeHtml(rule.trigger)}</strong></div>
+            <div class="perk-detail-rule"><span>${ruleLabels.effect}</span><strong>${escapeHtml(rule.effect)}</strong></div>
             ${statusBtn}
           `;
           renderPerkTree();
@@ -11873,7 +12697,7 @@
           if (confirmBtn && pickMode) {
             confirmBtn.onclick = () => {
               document.getElementById('confirm-modal').classList.remove('hidden');
-              document.getElementById('confirm-text').textContent = `${translateKey('sure')} ${translateText('Perk')}: «${translateText(perk.name)}»`;
+              document.getElementById('confirm-text').textContent = `${translateKey('sure')} ${translateText('Perk')}: «${localizedPerkName(perk)}»`;
               document.getElementById('confirm-yes').onclick = () => {
                 h.perks = h.perks || [];
                 perk.apply(h);
@@ -11901,6 +12725,8 @@
       ? `<div style="color:#555577;font-size:10px;line-height:1.6">${translateText('Click a perk for details.')}<br><br>🟢 ${translateKey('studied')}&nbsp;&nbsp;🔵 ${translateText('Choose now')}<br>🔒 ${translateText('Previous perk required')}</div>`
       : `<div style="color:#555577;font-size:10px;line-height:1.6">${translateText('Click a perk for details.')}<br><br>🟢 ${translateKey('studied')}&nbsp;&nbsp;🟡 ${translateText('Next on level-up')}<br>🔒 ${translateText('Locked')}</div>`;
     modal.classList.remove('hidden');
+    const initialPerk = box.querySelector(pickMode ? '.perk-skill.available' : '.perk-skill.next, .perk-skill.unlocked');
+    if (initialPerk) initialPerk.click();
   }
 
   function showRewardAd(cb) { showRewardedAd(cb); }
@@ -11993,7 +12819,7 @@
       }
       const dx = e.clientX - BattleView.lastX;
       const dy = e.clientY - BattleView.lastY;
-      const r = canvas.getBoundingClientRect();
+      const r = canvasContentRect();
       BattleView.offsetX += dx * (CANVAS_W / r.width);
       BattleView.offsetY += dy * (CANVAS_H / r.height);
       BattleView.lastX = e.clientX;
@@ -12020,6 +12846,7 @@
       <div style="height:6px;background:#222;border:1px solid #444;border-radius:3px;overflow:hidden;margin:4px 0">
         <div style="height:100%;width:${hpPct}%;background:#e74c3c"></div>
       </div>
+      ${damagePreviewCardHtml(b, getActiveUnit(), u)}
       ${translateKey('battleAttack').replace(/^.\s*/, '')}: ${u.attack} | ${translateKey('armor')}: ${u.armor}<br/>
       ${translateKey('statuses')}: ${sts || translateKey('none')}<br/>
       <span class="stats-line">${battleHoverPreviewText(b, u)}</span><br/>
@@ -12152,7 +12979,7 @@
       const t = ev.touches[0];
       const dx = t.clientX - BattleView.lastX;
       const dy = t.clientY - BattleView.lastY;
-      const r = canvas.getBoundingClientRect();
+      const r = canvasContentRect();
       BattleView.offsetX += dx * (CANVAS_W / r.width);
       BattleView.offsetY += dy * (CANVAS_H / r.height);
       BattleView.lastX = t.clientX;
@@ -12170,7 +12997,23 @@
       const t = ev.changedTouches[0];
       if (t) {
         const { gx, gy } = eventToGrid(t.clientX, t.clientY);
-        if (inBounds(gx, gy)) canvasBattleClick(gx, gy);
+        if (inBounds(gx, gy)) {
+          const active = getActiveUnit();
+          const target = unitAt(b, gx, gy);
+          const previewable = b.phase === 'combat' && active?.isHero && target && !target.isHero && !b.heroActionDone &&
+            (b.mode === 'attack' || b.mode === 'skill');
+          const key = `${gx},${gy},${b.pendingSkill || b.mode}`;
+          if (previewable && b.touchConfirmKey !== key) {
+            b.touchConfirmKey = key;
+            b.touchPreviewCell = { gx, gy };
+            BattleView.hoverCell = { gx, gy };
+            updateBattleUI();
+          } else {
+            b.touchConfirmKey = null;
+            b.touchPreviewCell = null;
+            canvasBattleClick(gx, gy);
+          }
+        }
       }
     }
     if (ev.touches.length === 0) touchState.mode = 'none';

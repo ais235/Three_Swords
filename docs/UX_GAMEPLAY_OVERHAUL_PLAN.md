@@ -67,7 +67,7 @@ Target viewports:
 
 - Desktop landscape: at least 900x520; battle canvas remains primary, side panels together stay secondary.
 - Mobile landscape: 667x375 and 812x375.
-- Mobile portrait: acceptable graceful degradation is allowed if the tactical UI cannot remain readable.
+- Mobile portrait: not supported by product design. Show a fullscreen "rotate device" gate and preserve the current game state; do not maintain a portrait gameplay layout.
 
 Reference assets:
 

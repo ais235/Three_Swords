@@ -7,7 +7,9 @@
     "audit": "node scripts/audit-layout.mjs",
     "test": "npm run audit",
     "dev": "serve . -l 5173",
-    "balance:seeds": "node scripts/balance-seeds.mjs"
+    "balance:quick": "node scripts/balance-seeds.mjs --quick",
+    "balance:seeds": "node scripts/balance-seeds.mjs",
+    "package:release": "node scripts/package-release.mjs"
   },
   "keywords": [],
   "author": "",

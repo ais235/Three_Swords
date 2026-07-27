@@ -1,0 +1,55 @@
+/*
+ * Stable cross-screen platform rules live here so mobile-landscape support can
+ * evolve without touching the game-state monolith.
+ */
+@media (orientation: portrait) and (max-width: 899px) {
+  html, body { overflow: hidden; }
+}
+
+@media (orientation: landscape) and (max-width: 900px) and (max-height: 520px) {
+  button, .btn { touch-action: manipulation; }
+  #battle-speed-toggle { min-width: 40px; min-height: 32px; }
+}
+
+/*
+ * Touch map panel: hover-only cell details do not earn their space here.
+ * Route intelligence is stacked so longer localized labels never run outside
+ * the narrow right column.
+ */
+@media (orientation: landscape) and (max-height: 700px) and (pointer: coarse),
+       (orientation: landscape) and (max-height: 700px) and (any-pointer: coarse),
+       (orientation: landscape) and (max-width: 900px) {
+  #map-screen #map-cell-info {
+    display: none !important;
+  }
+
+  #map-screen .map-panel {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #map-screen .map-route-choices {
+    min-width: 0;
+  }
+
+  #map-screen .map-route-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+    min-width: 0;
+    height: auto;
+  }
+
+  #map-screen .map-route-card strong,
+  #map-screen .map-route-threat,
+  #map-screen .map-route-card small {
+    grid-column: 1;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  #map-screen .map-route-threat {
+    line-height: 1.25;
+  }
+}

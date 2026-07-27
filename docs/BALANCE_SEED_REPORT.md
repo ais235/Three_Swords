@@ -1,5 +1,15 @@
 # Overhaul Progress And Balance Report
 
+## Completed Overhaul Pass — 2026-07-23
+
+- Standard balance coverage expanded from 5 to 30 deterministic seeds; `--quick` keeps the original 5-seed daily set.
+- Wave threat now includes composition synergy (healer+tank, controller+assassin, summoner+tank, ranged stacks, explosive stacks).
+- Regular missions limit excessive volatile and ranged stacks.
+- Region 1 missions use 3 enemies and dungeons 4; Region 2 missions use 4; Region 3 dungeons use 5.
+- The quick validation curve after the pass is `R1:229`, `R2:418`, `R3:539`.
+- Median quick-seed mission threat grows `R1:228 → R2:428 → R3:530`; the script fails if this order regresses.
+- Release validation on this pass: 184 runtime files, 78.2 MB unpacked.
+
 This file records what has actually changed, what is still mostly invisible to the player, and what remains before the game can feel like a finished game instead of a web prototype.
 
 ## Current Baseline
@@ -57,24 +67,19 @@ Baseline command:
 npm run balance:seeds
 ```
 
-Current default seeds:
-
-- `12345`
-- `phase4-a`
-- `phase4-b`
-- `phase4-c`
-- `phase4-d`
+The default suite now contains 30 seeds grouped across early, normal, hardcore, boss, and synergy cases. Use `npm run balance:quick` for the original five-seed daily set.
 
 Current mission threat curve across default seeds:
 
-- `R1:309`
-- `R2:301`
-- `R3:500`
+- `R1:229`
+- `R2:418`
+- `R3:539`
 
 Notes:
 
-- Region 2 mission threat is close to Region 1 by this heuristic.
-- Region 2 dungeons and bosses are still higher pressure.
+- Region 2 mission pressure is now clearly above Region 1.
+- Region 3 remains clearly above Region 2.
+- Excessive volatile/ranged stacks are constrained in regular generated waves.
 - Boss profiles and multi-hit enemies are included in the estimate; Hydra is now measured as the region-3 boss it is in play.
 - Do not tune wave counts blindly from this number alone; Region 2 enemies have more control/armor, which may feel harder than the raw score.
 - Next balance pass should use seeded manual runs before changing wave size or gold.
