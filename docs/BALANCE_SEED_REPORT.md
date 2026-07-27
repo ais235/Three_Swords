@@ -106,3 +106,17 @@ Notes:
 ## Heuristic Notes
 
 The balance script estimates wave threat from enemy HP, attack, armor, range, movement, speed, size, and boss flags. It does not simulate tactical positioning, player skill use, loot state, or enemy AI tempo. Use it to detect suspicious curves, then verify with seeded manual runs.
+
+## Balance Pass — 2026-07-27
+
+- Region 3 Hydra is now exclusive to the boss cell and cannot appear in ordinary missions or dungeons.
+- Generated waves limit duplicate enemies and cap volatile, ranged, healer, summoner, controller, assassin, and heavy-elite combinations.
+- Region 3 missions use four enemies to preserve the regional curve; Region 3 dungeons were reduced from five to four to remove extreme spikes.
+- The 30-seed mission curve is `R1:234 → R2:427 → R3:502`.
+- Median mission threat is `R1:235 → R2:430 → R3:501`.
+- Verified maximums:
+  - R1 mission 306 / cap 380; dungeon 378 / cap 520.
+  - R2 mission 753 / cap 760; dungeon 692 / cap 820.
+  - R3 mission 605 / cap 850; dungeon 600 / cap 900.
+- Before this pass, Region 3 ordinary compositions reached threat 1125–1311. The new maximum is 605, while the final boss is 573.
+- `npm run balance:check` performs the full 30-seed validation without printing the large per-cell table; `npm run balance:seeds` keeps the detailed report.

@@ -3644,6 +3644,8 @@
   </style>
   <link rel="stylesheet" href="styles/responsive-landscape.css">
   <link rel="stylesheet" href="styles/perk-menu.css">
+  <link rel="stylesheet" href="styles/combat-ui.css">
+  <script src="src/combat-preview.js"></script>
   <script src="/sdk.js"></script>
 </head>
 <body>
@@ -4360,6 +4362,10 @@
     defeatSub: { ru: 'Отряд пал, но путь можно продолжить с последней безопасной точки.', en: 'The party has fallen, but you can continue from the last safe point.', es: 'El grupo ha caído, pero puedes continuar desde el último punto seguro.' },
     statBattles: { ru: 'Боев', en: 'Battles', es: 'Combates' },
     statEnemies: { ru: 'Врагов', en: 'Enemies', es: 'Enemigos' },
+    statObjectives: { ru: 'Доп. целей', en: 'Bonus goals', es: 'Objetivos extra' },
+    statDamageTaken: { ru: 'Получено урона', en: 'Damage taken', es: 'Daño recibido' },
+    statSkillBattles: { ru: 'Бои с умением', en: 'Skill battles', es: 'Combates con habilidad' },
+    runCode: { ru: 'Код результата', en: 'Result code', es: 'Código de resultado' },
     victory: { ru: 'ПОБЕДА!', en: 'VICTORY!', es: 'VICTORIA!' },
     missionComplete: { ru: 'МИССИЯ ЗАВЕРШЕНА', en: 'MISSION COMPLETE', es: 'MISIÓN COMPLETADA' },
     victoryGold: { ru: 'ЗОЛОТО', en: 'GOLD', es: 'ORO' },
@@ -4372,14 +4378,14 @@
     perkPoint: { ru: 'перк', en: 'perk', es: 'mejora' },
     newSkill: { ru: 'новый навык', en: 'new skill', es: 'nueva habilidad' },
     flankBonus: { ru: 'Фланг', en: 'Flank', es: 'Flanco' },
-    threatHealer: { ru: 'HEAL', en: 'HEAL', es: 'CURA' },
-    threatSummoner: { ru: 'SUM', en: 'SUM', es: 'INV' },
-    threatAssassin: { ru: 'KILL', en: 'KILL', es: 'KILL' },
-    threatExplosive: { ru: 'BOOM', en: 'BOOM', es: 'BOOM' },
-    threatController: { ru: 'CTRL', en: 'CTRL', es: 'CTRL' },
-    threatBoss: { ru: 'BOSS', en: 'BOSS', es: 'JEFE' },
-    threatTank: { ru: 'TANK', en: 'TANK', es: 'TANK' },
-    threatRanged: { ru: 'RANGE', en: 'RANGE', es: 'DIST' },
+    threatHealer: { ru: 'ЛЕКАРЬ', en: 'HEALER', es: 'CURA' },
+    threatSummoner: { ru: 'ПРИЗЫВ', en: 'SUMMON', es: 'INVOCA' },
+    threatAssassin: { ru: 'УБИЙЦА', en: 'ASSASSIN', es: 'ASESINO' },
+    threatExplosive: { ru: 'ВЗРЫВ', en: 'BLAST', es: 'EXPLOSIÓN' },
+    threatController: { ru: 'КОНТРОЛЬ', en: 'CONTROL', es: 'CONTROL' },
+    threatBoss: { ru: 'БОСС', en: 'BOSS', es: 'JEFE' },
+    threatTank: { ru: 'ТАНК', en: 'TANK', es: 'TANQUE' },
+    threatRanged: { ru: 'ДАЛЬНИЙ', en: 'RANGED', es: 'DISTANCIA' },
     equipLoot: { ru: '🎒 НАДЕТЬ ДОБЫЧУ', en: '🎒 EQUIP LOOT', es: '🎒 EQUIPAR BOTÍN' },
     openBag: { ru: 'Открыть рюкзак', en: 'Open bag', es: 'Abrir mochila' },
     openBagEmpty: { ru: 'Открыть рюкзак (пусто)', en: 'Open bag (empty)', es: 'Abrir mochila (vacía)' },
@@ -4574,9 +4580,27 @@
     rewardRecovery: { ru: 'Отдых и торговля', en: 'Rest and trade', es: 'Descanso y comercio' },
     rewardUnknown: { ru: 'Неизвестный исход', en: 'Unknown outcome', es: 'Resultado incierto' },
     bossDistance: { ru: 'До босса', en: 'Boss distance', es: 'Distancia al jefe' },
+    routeEnemies: { ru: 'Врагов', en: 'Enemies', es: 'Enemigos' },
+    routeIntel: { ru: 'Разведданные', en: 'Intel', es: 'Información' },
     expectedDamage: { ru: 'Ожидаемый урон', en: 'Expected damage', es: 'Daño esperado' },
     armorAbsorb: { ru: 'Поглощено бронёй', en: 'Absorbed by armor', es: 'Absorbido por armadura' },
     finisher: { ru: 'ДОБИВАНИЕ', en: 'FINISHER', es: 'REMATE' },
+    damageRange: { ru: 'Диапазон', en: 'Range', es: 'Rango' },
+    damageHits: { ru: 'попадания', en: 'hits', es: 'impactos' },
+    damageCritChance: { ru: 'шанс крита', en: 'crit chance', es: 'prob. de crítico' },
+    damageBurnTotal: { ru: 'горение затем', en: 'burn later', es: 'quemadura después' },
+    damageGuaranteedKill: { ru: 'ГАРАНТИРОВАННОЕ ДОБИВАНИЕ', en: 'GUARANTEED FINISH', es: 'REMATE GARANTIZADO' },
+    damagePossibleKill: { ru: 'ВОЗМОЖНОЕ ДОБИВАНИЕ', en: 'POSSIBLE FINISH', es: 'REMATE POSIBLE' },
+    damageImmune: { ru: 'Цель невосприимчива к этому типу урона', en: 'Target is immune to this damage type', es: 'El objetivo es inmune a este tipo de daño' },
+    damageFirstShot: { ru: 'первый выстрел', en: 'first shot', es: 'primer disparo' },
+    damageMoveBonus: { ru: 'бонус после движения', en: 'move bonus', es: 'bono tras moverse' },
+    damageAura: { ru: 'аура Гарета', en: 'Garet aura', es: 'aura de Garet' },
+    damageFlank: { ru: 'фланг', en: 'flank', es: 'flanqueo' },
+    damageFinisherBonus: { ru: 'Палач', en: 'Executioner', es: 'Verdugo' },
+    damageSpellCharge: { ru: 'магический заряд', en: 'arcane charge', es: 'carga arcana' },
+    damageStunOne: { ru: 'оглушение: 1 ход', en: 'stun: 1 turn', es: 'aturdimiento: 1 turno' },
+    damageSlowTwo: { ru: 'замедление: 2 хода', en: 'slow: 2 turns', es: 'ralentización: 2 turnos' },
+    damageSplash: { ru: 'взрыв по соседним клеткам', en: 'splash on adjacent tiles', es: 'explosión en casillas adyacentes' },
     tapToConfirm: { ru: 'Коснитесь цели ещё раз для подтверждения', en: 'Tap the target again to confirm', es: 'Toca de nuevo el objetivo para confirmar' },
     blockedLine: { ru: 'Линия атаки заблокирована', en: 'Attack line is blocked', es: 'Línea de ataque bloqueada' },
     outOfRange: { ru: 'Цель вне дальности', en: 'Target is out of range', es: 'Objetivo fuera de alcance' },
@@ -6389,8 +6413,71 @@
     y3: { summary:'1 раз за бой: телепорт до 4 клеток', trigger:'Один раз за бой выберите свободную клетку не дальше 4 клеток от Сэрис.', effect:'Сэрис мгновенно перемещается на выбранную клетку. Телепорт считается движением, но не расходует её атаку.' }
   };
 
+  const PERK_RULES_EXACT = {
+    en: {
+      d1:['Adjacent ally: −2 damage','An ally adjacent to Garet takes damage.','Reduce that incoming damage by 2. Garet cannot cover himself.'],
+      d2:['Permanent: +1 armor','Always active after learning.','Garet gains 1 base armor against every incoming attack.'],
+      d3:['Physical hit on Garet: reflect 1','Garet takes more than 0 physical damage.','The attacker immediately takes 1 damage.'],
+      a1:['Target ≤40% HP: +30% damage','Garet attacks an enemy at 40% HP or less.','Increase attack damage by 30% before armor is subtracted.'],
+      a2:['Attacks ignore 2 armor','Garet deals damage with any attack.','Treat the target as having 2 less armor, never below 0.'],
+      a3:['15% chance: ×1.5 damage','Each damaging attack made by Garet.','On success, multiply final attack damage by 1.5.'],
+      l1:['Adjacent allies: +1 armor','An ally stands next to living Garet.','That ally counts as having 1 additional armor. Garet does not buff himself.'],
+      l2:['Allies within 2 tiles: +10% damage','An ally attacks within 2 tiles of living Garet.','Increase that ally’s final damage by 10%.'],
+      l3:['Permanent: +1 speed','Always active after learning.','Garet gains 1 speed and acts earlier in initiative.'],
+      m1:['Permanent: +1 attack range','Always active after learning.','Alira’s normal attack range increases by 1 tile.'],
+      m2:['Permanent: +3 attack','Always active after learning.','Alira gains 3 base attack for normal shots and attack-based skills.'],
+      m3:['Can shoot a target in forest','Alira targets an enemy standing in forest.','The target’s forest tile no longer blocks the shot; obstacles between units still do.'],
+      s1:['Permanent: +1 movement','Always active after learning.','Alira can move 1 additional tile each turn.'],
+      s2:['After moving: +20% damage','Alira moves and then attacks in the same turn.','Increase that attack’s damage by 20%.'],
+      s3:['Permanent: +2 speed','Always active after learning.','Alira gains 2 speed and acts earlier in initiative.'],
+      t1:['After moving: 4-damage trap','Alira leaves a tile during her movement.','Place a trap there; the first enemy entering it takes 4 damage, then it disappears.'],
+      t2:['Traps slow for 2 turns','An enemy survives triggering Alira’s trap.','Apply −2 movement and −2 speed for 2 turns.'],
+      t3:['After moving: up to 2 traps','Alira moves while Damage Trap is learned.','Create one trap on the vacated tile and a second on a valid adjacent tile.'],
+      r1:['Magic hits: +3 damage','Seris deals magic damage with a spell or magic attack.','Add 3 damage to every separate magic hit before armor.'],
+      r2:['Fireball and Meteor: area +1','Seris casts Fireball or Meteor.','Fireball radius grows from 1 to 2; Meteor area grows from 2×2 to 3×3.'],
+      r3:['Magic hit burns: 3×2 damage','A magic attack hits a surviving target.','Burn it for 2 turns; it takes 3 damage at the start of each turn, up to 6 total.'],
+      c1:['Freeze: 2 turns instead of 1','Seris casts Freeze.','The target skips 2 of its turns instead of 1.'],
+      c2:['Freeze fears adjacent enemies for 1 turn','Seris freezes a target with other enemies adjacent to it.','All other adjacent enemies gain Fear and skip 1 turn.'],
+      c3:['Permanent: +2 maximum mana','Applied immediately and then remains active.','Increase maximum mana by 2 and immediately restore 2 mana.'],
+      y1:['Permanent: +3 maximum mana','Applied immediately and then remains active.','Increase maximum mana by 3 and immediately restore 3 mana.'],
+      y2:['Enemy death: Seris heals 5 HP','Any enemy dies while Seris is alive.','Restore 5 HP to Seris, up to her maximum HP.'],
+      y3:['Once per battle: teleport up to 4 tiles','Choose a free tile within 4 tiles of Seris once per battle.','Move there instantly. It counts as movement but does not consume her attack.']
+    },
+    es: {
+      d1:['Aliado adyacente: −2 de daño','Un aliado adyacente a Garet recibe daño.','Reduce ese daño en 2. Garet no puede protegerse a sí mismo.'],
+      d2:['Permanente: +1 armadura','Siempre activo tras aprenderlo.','Garet obtiene 1 de armadura base contra cada ataque.'],
+      d3:['Golpe físico a Garet: refleja 1','Garet recibe más de 0 de daño físico.','El atacante recibe inmediatamente 1 de daño.'],
+      a1:['Objetivo ≤40% PV: +30% daño','Garet ataca a un enemigo con 40% de PV o menos.','Aumenta el daño un 30% antes de restar la armadura.'],
+      a2:['Los ataques ignoran 2 armadura','Garet inflige daño con cualquier ataque.','La armadura del objetivo cuenta como 2 menos, nunca por debajo de 0.'],
+      a3:['15%: ×1,5 de daño','Cada ataque dañino de Garet.','Al activarse, multiplica el daño final por 1,5.'],
+      l1:['Aliados adyacentes: +1 armadura','Un aliado está junto a Garet mientras vive.','Ese aliado cuenta con 1 armadura adicional.'],
+      l2:['Aliados a 2 casillas: +10% daño','Un aliado ataca a 2 casillas o menos de Garet vivo.','Aumenta el daño final de ese aliado un 10%.'],
+      l3:['Permanente: +1 velocidad','Siempre activo tras aprenderlo.','Garet obtiene 1 velocidad y actúa antes.'],
+      m1:['Permanente: +1 alcance','Siempre activo tras aprenderlo.','El alcance del ataque normal de Alira aumenta 1 casilla.'],
+      m2:['Permanente: +3 ataque','Siempre activo tras aprenderlo.','Alira obtiene 3 ataque base para disparos y habilidades.'],
+      m3:['Puede disparar a objetivos en bosque','Alira apunta a un enemigo situado en bosque.','El bosque del objetivo ya no bloquea el disparo; los obstáculos intermedios sí.'],
+      s1:['Permanente: +1 movimiento','Siempre activo tras aprenderlo.','Alira puede mover 1 casilla adicional por turno.'],
+      s2:['Tras moverse: +20% daño','Alira se mueve y luego ataca en el mismo turno.','Aumenta el daño de ese ataque un 20%.'],
+      s3:['Permanente: +2 velocidad','Siempre activo tras aprenderlo.','Alira obtiene 2 velocidad y actúa antes.'],
+      t1:['Tras moverse: trampa de 4 daño','Alira abandona una casilla durante su movimiento.','Coloca una trampa; el primer enemigo que la pisa recibe 4 de daño.'],
+      t2:['Las trampas ralentizan 2 turnos','Un enemigo sobrevive a una trampa de Alira.','Aplica −2 movimiento y −2 velocidad durante 2 turnos.'],
+      t3:['Tras moverse: hasta 2 trampas','Alira se mueve con Trampa de daño aprendida.','Crea una trampa en la casilla abandonada y otra en una casilla adyacente válida.'],
+      r1:['Impactos mágicos: +3 daño','Seris inflige daño mágico.','Añade 3 de daño a cada impacto mágico antes de la armadura.'],
+      r2:['Bola de fuego y Meteoro: área +1','Seris lanza Bola de fuego o Meteoro.','Bola de fuego pasa de radio 1 a 2; Meteoro de 2×2 a 3×3.'],
+      r3:['Impacto mágico quema: 3×2 daño','Un ataque mágico impacta a un objetivo que sobrevive.','Arde 2 turnos y recibe 3 de daño al inicio de cada turno, hasta 6.'],
+      c1:['Congelación: 2 turnos en vez de 1','Seris usa Congelación.','El objetivo pierde 2 turnos en vez de 1.'],
+      c2:['Congelar asusta a vecinos 1 turno','Seris congela a un objetivo con otros enemigos adyacentes.','Todos los demás enemigos adyacentes ganan Miedo y pierden 1 turno.'],
+      c3:['Permanente: +2 maná máximo','Se aplica inmediatamente y permanece activo.','Aumenta el maná máximo en 2 y recupera 2 de maná.'],
+      y1:['Permanente: +3 maná máximo','Se aplica inmediatamente y permanece activo.','Aumenta el maná máximo en 3 y recupera 3 de maná.'],
+      y2:['Muere un enemigo: Seris cura 5 PV','Cualquier enemigo muere mientras Seris vive.','Seris recupera 5 PV, sin superar su máximo.'],
+      y3:['Una vez por batalla: teletransporte 4','Elige una casilla libre a 4 casillas o menos una vez por batalla.','Seris se mueve allí al instante; cuenta como movimiento pero no consume el ataque.']
+    }
+  };
+
   function localizedPerkRule(perk) {
     if (currentLanguage() === 'ru' && PERK_RULES_RU[perk?.id]) return PERK_RULES_RU[perk.id];
+    const exact = PERK_RULES_EXACT[currentLanguage()]?.[perk?.id];
+    if (exact) return { summary: exact[0], trigger: exact[1], effect: exact[2] };
     const fallback = localizeContent(PERK_DESCRIPTIONS[perk?.id] || {
       ru: 'Улучшает боевые характеристики героя.',
       en: 'Improves the hero combat stats.',
@@ -6401,6 +6488,68 @@
       trigger: currentLanguage() === 'es' ? 'Efecto pasivo o contextual.' : 'Passive or contextual effect.',
       effect: fallback
     };
+  }
+
+  function perkStatPreview(perk, hero) {
+    const direct = {
+      d2: ['armor', 1],
+      l3: ['speed', 1],
+      m1: ['range', 1],
+      m2: ['attack', 3],
+      s1: ['move', 1],
+      s3: ['speed', 2],
+      c3: ['maxMana', 2],
+      y1: ['maxMana', 3]
+    };
+    const change = direct[perk?.id];
+    if (!change) return null;
+    const [stat, delta] = change;
+    const labels = {
+      ru: { armor:'Броня', speed:'Скорость', range:'Дальность', attack:'Атака', move:'Движение', maxMana:'Макс. мана' },
+      en: { armor:'Armor', speed:'Speed', range:'Range', attack:'Attack', move:'Movement', maxMana:'Max mana' },
+      es: { armor:'Armadura', speed:'Velocidad', range:'Alcance', attack:'Ataque', move:'Movimiento', maxMana:'Maná máximo' }
+    };
+    const before = Number(hero?.[stat]) || 0;
+    return { label: labels[currentLanguage()]?.[stat] || stat, before, after: before + delta };
+  }
+
+  function perkSynergyText(branch) {
+    const copy = {
+      ru: {
+        defense:'Держите Алиру или Сэрис рядом с Гаретом: ветка превращает его позицию в защитный ресурс команды.',
+        attack:'Сначала снимайте здоровье дальними героями, затем Гарет надёжнее завершит бой.',
+        leader:'Стройте компактное построение вокруг Гарета, чтобы союзники получали бонусы ауры.',
+        accuracy:'Гарет удерживает переднюю линию, а Алира безопасно использует дальность и открытые линии огня.',
+        speed:'Перемещайтесь перед выстрелом: ветка награждает смену позиции и быстрый выбор цели.',
+        traps:'Заморозка Сэрис и позиция Гарета помогают направлять врагов в оставленные ловушки.',
+        destruction:'Собирайте врагов вокруг Гарета или сдерживайте их ловушками Алиры для сильных атак по области.',
+        control:'Заморозка и страх дают Гарету время занять фронт, а Алире — выйти на безопасную линию выстрела.',
+        mystic:'Запас маны и лечение за убийства позволяют Сэрис дольше поддерживать обе другие роли.'
+      },
+      en: {
+        defense:'Keep Alira or Seris near Garet: this branch turns his position into team protection.',
+        attack:'Soften targets with ranged heroes, then let Garet finish them reliably.',
+        leader:'Use a compact formation around Garet so allies benefit from his auras.',
+        accuracy:'Garet holds the front while Alira exploits range and clear firing lines.',
+        speed:'Move before shooting: this branch rewards repositioning and fast target selection.',
+        traps:'Seris control and Garet’s position help route enemies into Alira’s traps.',
+        destruction:'Cluster enemies around Garet or hold them with traps for stronger area spells.',
+        control:'Freeze and fear buy Garet time to hold the line and Alira time to find a safe shot.',
+        mystic:'More mana and kill healing let Seris support both other roles for longer.'
+      },
+      es: {
+        defense:'Mantén a Alira o Seris cerca de Garet: su posición se convierte en protección para el equipo.',
+        attack:'Debilita objetivos a distancia y deja que Garet los remate con seguridad.',
+        leader:'Usa una formación compacta alrededor de Garet para aprovechar sus auras.',
+        accuracy:'Garet sostiene el frente mientras Alira aprovecha el alcance y las líneas de tiro.',
+        speed:'Muévete antes de disparar: la rama premia reposicionarse y elegir objetivos rápido.',
+        traps:'El control de Seris y la posición de Garet ayudan a llevar enemigos hacia las trampas.',
+        destruction:'Agrupa enemigos alrededor de Garet o frénalos con trampas para potenciar las áreas.',
+        control:'Congelación y miedo dan tiempo a Garet para cubrir y a Alira para buscar un tiro seguro.',
+        mystic:'Más maná y curación por bajas permiten que Seris apoye al grupo durante más tiempo.'
+      }
+    };
+    return copy[currentLanguage()]?.[branch] || copy.en[branch] || '';
   }
 
   function getHeroPerkBranchSlots(hero) {
@@ -6689,7 +6838,7 @@
     shopStock: [],
     cityState: { adUpgradeUsed: false, secretRevealed: false, secretItemId: null },
     difficulty: 'normal',
-    stats: { battles: 0, kills: 0, goldEarned: 0 },
+    stats: { battles: 0, kills: 0, goldEarned: 0, objectivesCompleted: 0, damageTaken: 0, skillfulBattles: 0 },
     pendingNegativeEvent: null,
     adMeta: { lastShownAt: 0, lastBonusGoldAt: 0 },
     adPaused: false,
@@ -6812,6 +6961,9 @@
     GameState.runStartedAt = Number(GameState.runStartedAt) || Date.now();
     if (!GameState.consumables || typeof GameState.consumables !== 'object') GameState.consumables = {};
     if (!GameState.stats || typeof GameState.stats !== 'object') GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
+    GameState.stats.objectivesCompleted = Number(GameState.stats.objectivesCompleted) || 0;
+    GameState.stats.damageTaken = Number(GameState.stats.damageTaken) || 0;
+    GameState.stats.skillfulBattles = Number(GameState.stats.skillfulBattles) || 0;
     GameState.heroes.forEach(h => { h.activeStatuses = []; });
     GameState.adPaused = false;
     GameState.pendingEnemyTurnAfterAd = false;
@@ -7965,6 +8117,9 @@
     }
 
     target.hp -= dmg;
+    if (target.isHero && dmg > 0) {
+      GameState.stats.damageTaken = (GameState.stats.damageTaken || 0) + dmg;
+    }
     if (dmg > 0) {
       spawnDamageFx(target.x, target.y, dmg);
       spawnImpactFx(attacker, target, opts, dmg);
@@ -8134,6 +8289,8 @@
     GameState.gold += gold;
     GameState.stats.battles += 1;
     GameState.stats.goldEarned += gold;
+    if (objectiveComplete) GameState.stats.objectivesCompleted = (GameState.stats.objectivesCompleted || 0) + 1;
+    if (b.objectiveUsedSkill) GameState.stats.skillfulBattles = (GameState.stats.skillfulBattles || 0) + 1;
     const xpEach = getXpForBattle(cell);
 
     // Snapshot enemy IDs and battle label BEFORE clearing battle
@@ -8621,42 +8778,109 @@
   function heroDamagePreview(b, attacker, target) {
     if (!b || !attacker || !target || !attacker.isHero || target.isHero) return null;
     const distance = unitDistance(attacker, target);
-    if (distance > attacker.range && !b.pendingSkill) return { blocked: translateKey('outOfRange') };
-    if (attacker.range > 1 && rangedBlocked(attacker.x, attacker.y, target.x, target.y, b.grid, !!attacker.perks?.includes('ignoreCover'))) {
+    const rangeLimitedSkills = ['shieldBash', 'double', 'slowArrow', 'fireball', 'freeze'];
+    const rangeLimit = b.pendingSkill === 'shieldBash' ? 1 : attacker.range;
+    if ((!b.pendingSkill || rangeLimitedSkills.includes(b.pendingSkill)) && distance > rangeLimit) {
+      return { blocked: translateKey('outOfRange') };
+    }
+    const requiresClearLine = !b.pendingSkill || ['double', 'slowArrow'].includes(b.pendingSkill);
+    if (requiresClearLine && attacker.range > 1 && rangedBlocked(attacker.x, attacker.y, target.x, target.y, b.grid, !!attacker.perks?.includes('ignoreCover'))) {
       return { blocked: translateKey('blockedLine') };
     }
-    let raw = attacker.attack;
+    const isFireball = b.pendingSkill === 'fireball';
+    const isMagic = isFireball || attacker.heroId === 'seris';
+    const isFire = isFireball;
+    const tags = [];
+    if (b.pendingSkill === 'shieldBash') tags.push(translateKey('damageStunOne'));
+    if (b.pendingSkill === 'slowArrow') tags.push(translateKey('damageSlowTwo'));
+    if (isFireball) tags.push(translateKey('damageSplash'));
+    let raw = isFireball ? 15 : attacker.attack;
     const weapon = getEquippedItem(attacker, 'weapon');
     if (weapon?.mods?.attack) raw += weapon.mods.attack;
-    if (attacker.heroId === 'alira' && attacker.flags?.firstAttackTurn) raw = Math.floor(raw * 1.5);
-    if (attacker.activeStatuses?.some(s => s.type === STATUS.BERSERK)) raw = Math.floor(raw * 2);
-    if (b.pendingSkill === 'shieldBash') raw += 3;
-    const doubleShot = b.pendingSkill === 'double';
-    if (b.pendingSkill === 'fireball') raw = 15;
-    if (!b.pendingSkill && isHeroFlankAttack(attacker, target, b)) raw = Math.floor(raw * 1.25);
+    const firstShotMultiplier = attacker.heroId === 'alira' && attacker.flags?.firstAttackTurn ? 1.5 : 1;
+    if (firstShotMultiplier > 1) tags.push(translateKey('damageFirstShot'));
+    const finisherMultiplier = attacker.perks?.includes('finisher') && target.hp <= target.maxHp * .4 ? 1.3 : 1;
+    if (finisherMultiplier > 1) tags.push(translateKey('damageFinisherBonus'));
+    const moveMultiplier = attacker.heroId === 'alira' && attacker.perks?.includes('moveAttack') && b.heroMoved ? 1.2 : 1;
+    if (moveMultiplier > 1) tags.push(translateKey('damageMoveBonus'));
+    const spellCharge = attacker.heroId === 'seris' && attacker.perks?.includes('spellCharge') && isMagic ? 3 : 0;
+    if (spellCharge) tags.push(translateKey('damageSpellCharge'));
+    const berserkMultiplier = attacker.activeStatuses?.some(s => s.type === STATUS.BERSERK) ? 2 : 1;
     let armor = target.armor + tileDefenseBonus(b.grid[target.y][target.x]);
     if (attacker.heroId === 'garet' && attacker.perks?.includes('armorPierce')) armor = Math.max(0, armor - 2);
-    let damage = Math.max(0, raw - armor);
-    if (doubleShot) damage *= 2;
-    if (target.enemyId === ENEMY_IDS.GHOST && attacker.heroId !== 'seris' && b.pendingSkill !== 'fireball') damage = 0;
-    if (target.enemyId === ENEMY_IDS.SHIELDBEARER) damage = Math.floor(damage * .75);
-    return { damage, armor: Math.min(raw, armor), kill: damage >= target.hp };
+    const auraSource = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
+      u.heroId !== attacker.heroId && u.perks?.includes('auraDmg') && unitDistance(attacker, u) <= 2);
+    const auraMultiplier = auraSource ? 1.1 : 1;
+    if (auraSource) tags.push(translateKey('damageAura'));
+    const flankMultiplier = isHeroFlankAttack(attacker, target, b, { magic: isMagic }) ? 1.25 : 1;
+    if (flankMultiplier > 1) tags.push(translateKey('damageFlank'));
+    const immuneToPhysical = target.enemyId === ENEMY_IDS.GHOST && !isMagic;
+    const darkLordMagicOnly = target.enemyId === ENEMY_IDS.DARK_LORD &&
+      b.units.find(u => u.enemyId === ENEMY_IDS.DARK_LORD && u.hp > 0 && u.phase === 3) &&
+      attacker.heroId !== 'seris' && !isMagic;
+    const burnDamage = isMagic && attacker.perks?.includes('burnSpell') ? 6 : 0;
+    const previewContext = {
+      rawDamage: raw,
+      armor,
+      hitCount: 1,
+      firstShotMultiplier,
+      finisherMultiplier,
+      moveMultiplier,
+      spellCharge,
+      berserkMultiplier,
+      immune: immuneToPhysical || darkLordMagicOnly,
+      elementalMultiplier: target.enemyId === ENEMY_IDS.ICE_ELEM && isFire ? 1.5 : 1,
+      targetMultiplier: target.enemyId === ENEMY_IDS.SHIELDBEARER ? .75 : 1,
+      critChance: attacker.perks?.includes('crit15') ? .15 : 0,
+      critMultiplier: 1.5,
+      auraMultiplier,
+      flankMultiplier,
+      statusDamage: burnDamage,
+      statusLabel: burnDamage ? translateKey('damageBurnTotal') : '',
+      targetHp: target.hp,
+      tags
+    };
+    let result;
+    if (b.pendingSkill === 'double') {
+      result = ThreeBladesCombatPreview.calculateSequence(previewContext, {
+        hitCount: 2,
+        targetHp: target.hp,
+        targetMaxHp: target.maxHp,
+        firstShotOnly: true,
+        finisherEnabled: attacker.perks?.includes('finisher'),
+        finisherMultiplier: 1.3
+      });
+    } else {
+      result = ThreeBladesCombatPreview.calculate(previewContext);
+    }
+    return result;
   }
 
   function damagePreviewText(b, attacker, target) {
     const preview = heroDamagePreview(b, attacker, target);
     if (!preview) return '';
     if (preview.blocked) return preview.blocked;
-    return `${translateKey('expectedDamage')}: ${preview.damage} · ${translateKey('armorAbsorb')}: ${preview.armor}${preview.kill ? ` · ${translateKey('finisher')}` : ''}`;
+    const amount = preview.minimum === preview.maximum ? preview.minimum : `${preview.minimum}–${preview.maximum}`;
+    return `${translateKey('expectedDamage')}: ${amount} · ${translateKey('armorAbsorb')}: ${preview.armorAbsorbed}${preview.guaranteedKill ? ` · ${translateKey('damageGuaranteedKill')}` : preview.possibleKill ? ` · ${translateKey('damagePossibleKill')}` : ''}`;
   }
 
   function damagePreviewCardHtml(b, attacker, target) {
     const preview = heroDamagePreview(b, attacker, target);
     if (!preview) return '';
     if (preview.blocked) return `<div class="damage-preview-card">${escapeHtml(preview.blocked)}</div>`;
+    const amount = preview.minimum === preview.maximum ? preview.minimum : `${preview.minimum}–${preview.maximum}`;
+    const hitText = preview.hitCount > 1 ? ` · ${preview.hitCount} ${translateKey('damageHits')}` : '';
+    const critText = preview.critChance > 0 ? ` · ${Math.round(preview.critChance * 100)}% ${translateKey('damageCritChance')}` : '';
+    const statusText = preview.statusDamage > 0 ? `<div class="damage-preview-status">+${preview.statusDamage} ${preview.statusLabel}</div>` : '';
+    const tagsText = preview.tags.length ? `<div class="damage-preview-tags">${preview.tags.map(escapeHtml).join(' · ')}</div>` : '';
+    const killText = preview.guaranteedKill
+      ? `<span class="damage-kill guaranteed">${translateKey('damageGuaranteedKill')}</span>`
+      : preview.possibleKill ? `<span class="damage-kill possible">${translateKey('damagePossibleKill')}</span>` : '';
     return `<div class="damage-preview-card">
-      ${translateKey('expectedDamage')}: <span style="font-size:17px">${preview.damage}</span>
-      <div style="font-size:9px;font-weight:400;color:var(--text-dim);margin-top:2px">${translateKey('armorAbsorb')}: ${preview.armor}${preview.kill ? ` · <span style="color:#ffca6a">${translateKey('finisher')}</span>` : ''}</div>
+      <div class="damage-preview-main">${translateKey('expectedDamage')}: <span>${amount}</span>${hitText}</div>
+      <div class="damage-preview-meta">${translateKey('armorAbsorb')}: ${preview.armorAbsorbed}${critText}</div>
+      ${preview.immune ? `<div class="damage-preview-warning">${translateKey('damageImmune')}</div>` : ''}
+      ${statusText}${tagsText}${killText}
     </div>`;
   }
 
@@ -9268,13 +9492,24 @@
       const gear = Object.values(hero.equipment || {}).filter(Boolean).map(id => translateText(itemById(id)?.name || id));
       return `<div class="ending-build"><strong>${hero.emoji} ${hero.name} · LV ${hero.level}</strong><span>${perkNames.join(' · ') || '—'}</span><small>${gear.join(' · ') || translateKey('emptyBag')}</small></div>`;
     }).join('');
+    const resultCodeSource = JSON.stringify({
+      seed: GameState.testSeed || 'random',
+      difficulty: GameState.difficulty,
+      turn: GameState.turn,
+      stats: GameState.stats,
+      heroes: GameState.heroes.map(h => ({ id:h.id, level:h.level, perks:h.perksApplied || [] }))
+    });
+    const resultCode = hashSeed(resultCodeSource).toString(36).toUpperCase().padStart(7, '0');
     root.innerHTML = `<div class="ending-summary-grid">
       <div><strong>${translateKey('statBattles')}</strong><span>${GameState.stats.battles}</span></div>
       <div><strong>${translateKey('gold')}</strong><span>${GameState.gold}</span></div>
       <div><strong>${translateKey('runTime')}</strong><span>${elapsedMinutes} min</span></div>
       <div><strong>${translateKey('survivors')}</strong><span>${GameState.heroes.filter(h => h.hp > 0).length}/3</span></div>
+      <div><strong>${translateKey('statObjectives')}</strong><span>${GameState.stats.objectivesCompleted || 0}/${GameState.stats.battles || 0}</span></div>
+      <div><strong>${translateKey('statDamageTaken')}</strong><span>${GameState.stats.damageTaken || 0}</span></div>
+      <div><strong>${translateKey('statSkillBattles')}</strong><span>${GameState.stats.skillfulBattles || 0}</span></div>
     </div><div class="ending-build-title">${translateKey('heroBuilds')}</div>${builds}
-    <div class="ending-seed">${translateKey('difficulty')}: ${translateKey(isHardcoreMode() ? 'hardcore' : 'normal')} · ${translateKey('runSeed')}: ${escapeHtml(GameState.testSeed || 'random')}</div>`;
+    <div class="ending-seed">${translateKey('difficulty')}: ${translateKey(isHardcoreMode() ? 'hardcore' : 'normal')} · ${translateKey('runSeed')}: ${escapeHtml(GameState.testSeed || 'random')} · ${translateKey('runCode')}: <strong>${resultCode}</strong></div>`;
   }
 
   function renderGameOverUI() {
@@ -9788,7 +10023,7 @@
         textKey = 'ftueSkillsDoneText';
       }
     }
-    return `<div class="ftue-coach">
+    return `<div class="ftue-coach" data-ftue-hero="${u?.heroId || 'deploy'}">
       <div class="ftue-coach-title">${translateKey(titleKey)}</div>
       <div class="ftue-coach-text">${translateKey(textKey)}</div>
       <div class="ftue-coach-foot">
@@ -9822,6 +10057,18 @@
     if (!overlay) return;
     overlay.innerHTML = ftueCoachHtml(b, unit);
     bindFtueCoachSkip();
+  }
+
+  function highlightFtueRecommendedSkill(b, unit) {
+    document.querySelectorAll('.skill-action-btn.ftue-recommended').forEach(el => el.classList.remove('ftue-recommended'));
+    if (b?.phase === 'combat' && unit?.isHero) {
+      const used = b.ftueSkillsUsed || {};
+      const skillId = unit.heroId === 'garet' && !used.garet ? 'sk-shield'
+        : unit.heroId === 'alira' && !used.alira ? 'sk-double'
+        : unit.heroId === 'seris' && !used.seris ? 'sk-fb'
+        : '';
+      if (skillId) document.getElementById(skillId)?.classList.add('ftue-recommended');
+    }
   }
 
   function battleActionHintHtml(b, u) {
@@ -10017,6 +10264,7 @@
     // 10: Inventory button always visible in battle
     html += `<button class="btn battle-utility-btn" id="btn-battle-inv" style="margin-top:4px">${translateKey('battleInventory')}</button>`;
     actions.innerHTML = html;
+    highlightFtueRecommendedSkill(b, u);
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     bindFtueCoachSkip();
     const heroLvl2 = (GameState.heroes.find(x => x.id === u.heroId) || u).level || 1;
@@ -11463,6 +11711,28 @@
     const missing = GameState.heroes.reduce((s, h) => s + Math.max(0, h.maxHp - h.hp), 0);
     return Math.max(10, missing * 2);
   }
+
+  function waveCompositionAllows(wave, candidate) {
+    const countGroup = ids => wave.filter(id => ids.includes(id)).length;
+    const duplicateCount = wave.filter(id => id === candidate).length;
+    const volatile = [ENEMY_IDS.SUICIDE, ENEMY_IDS.PLAGUE_DOCTOR];
+    const ranged = [ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.BANDIT_THROWER, ENEMY_IDS.CROSSBOWMAN, ENEMY_IDS.HEXER, ENEMY_IDS.BANSHEE];
+    const healers = [ENEMY_IDS.SHAMAN, ENEMY_IDS.PLAGUE_DOCTOR];
+    const summoners = [ENEMY_IDS.NECRO, ENEMY_IDS.SHAMAN];
+    const controllers = [ENEMY_IDS.SPIDER, ENEMY_IDS.ICE_ELEM, ENEMY_IDS.HEXER, ENEMY_IDS.BANSHEE, ENEMY_IDS.ARCANE_SENTINEL];
+    const assassins = [ENEMY_IDS.ASSASSIN, ENEMY_IDS.VOID_STALKER, ENEMY_IDS.BLOOD_KNIGHT];
+    const heavyElites = [ENEMY_IDS.BLOOD_KNIGHT, ENEMY_IDS.ARCANE_SENTINEL, ENEMY_IDS.STONE_GOLEM];
+    if (duplicateCount >= 2) return false;
+    if (volatile.includes(candidate) && countGroup(volatile) >= 1) return false;
+    if (ranged.includes(candidate) && countGroup(ranged) >= 2) return false;
+    if (healers.includes(candidate) && countGroup(healers) >= 1) return false;
+    if (summoners.includes(candidate) && countGroup(summoners) >= 1) return false;
+    if (controllers.includes(candidate) && countGroup(controllers) >= 2) return false;
+    if (assassins.includes(candidate) && countGroup(assassins) >= 2) return false;
+    if (heavyElites.includes(candidate) && countGroup(heavyElites) >= 1) return false;
+    return true;
+  }
+
   function generateEnemyWaveForCell(cell) {
     if (!cell) return [ENEMY_IDS.SKELETON];
     if (cell.id === 'c_0_0' && !GameState.firstBattleCompleted) {
@@ -11474,7 +11744,7 @@
           ENEMY_IDS.SPEARMAN, ENEMY_IDS.BOG_LURKER, ENEMY_IDS.THORN_DRYAD, ENEMY_IDS.RAT_SWARM],
       2: [ENEMY_IDS.ORC_GUARD, ENEMY_IDS.SPIDER, ENEMY_IDS.SUICIDE, ENEMY_IDS.ICE_ELEM, ENEMY_IDS.WATCHER, ENEMY_IDS.DARK_KNIGHT,
           ENEMY_IDS.CULTIST, ENEMY_IDS.HEXER, ENEMY_IDS.SHIELDBEARER, ENEMY_IDS.CROSSBOWMAN, ENEMY_IDS.STONE_GOLEM],
-      3: [ENEMY_IDS.NECRO, ENEMY_IDS.CHAOS, ENEMY_IDS.ASSASSIN, ENEMY_IDS.HYDRA, ENEMY_IDS.GHOST,
+      3: [ENEMY_IDS.NECRO, ENEMY_IDS.CHAOS, ENEMY_IDS.ASSASSIN, ENEMY_IDS.GHOST,
           ENEMY_IDS.VOID_STALKER, ENEMY_IDS.BLOOD_KNIGHT, ENEMY_IDS.BANSHEE, ENEMY_IDS.PLAGUE_DOCTOR, ENEMY_IDS.ARCANE_SENTINEL]
     };
     if (cell.type === 'boss') {
@@ -11486,21 +11756,16 @@
     const pool = pools[cell.region];
     let cnt = cell.type === 'dungeon' ? 4 : cell.type === 'arena' ? 1 : 3;
     if (cell.region === 2 && cell.type === 'mission') cnt = 4;
-    if (cell.region === 3 && cell.type === 'dungeon') cnt = 5;
+    if (cell.region === 3 && cell.type === 'mission') cnt = 4;
+    if (cell.region === 3 && cell.type === 'dungeon') cnt = 4;
     if (isHardcoreMode() && ['mission', 'dungeon', 'arena'].includes(cell.type)) {
       cnt += 1;
     }
-    const volatile = new Set([ENEMY_IDS.SUICIDE, ENEMY_IDS.PLAGUE_DOCTOR]);
-    const ranged = new Set([ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.BANDIT_THROWER, ENEMY_IDS.CROSSBOWMAN, ENEMY_IDS.HEXER, ENEMY_IDS.BANSHEE]);
     const wave = [];
     for (let i = 0; i < cnt; i++) {
-      let pick = pool[randInt(0, pool.length - 1)];
-      for (let retry = 0; retry < 8; retry++) {
-        const tooManyVolatile = volatile.has(pick) && wave.some(id => volatile.has(id));
-        const tooManyRanged = ranged.has(pick) && wave.filter(id => ranged.has(id)).length >= 2;
-        if (!tooManyVolatile && !tooManyRanged) break;
-        pick = pool[randInt(0, pool.length - 1)];
-      }
+      const allowed = pool.filter(candidate => waveCompositionAllows(wave, candidate));
+      const candidates = allowed.length ? allowed : pool.filter(candidate => wave.filter(id => id === candidate).length < 2);
+      const pick = candidates[randInt(0, candidates.length - 1)];
       wave.push(pick);
     }
     return wave;
@@ -11511,7 +11776,7 @@
       id: cell.id,
       region: cell.region,
       type: cell.type,
-      enemyWave: (opts && opts.wave) || generateEnemyWaveForCell(cell),
+      enemyWave: (opts && opts.wave) || cell.enemyWavePreview || generateEnemyWaveForCell(cell),
       boss: cell.type === 'boss',
       final: cell.type === 'final',
       firstBattle
@@ -11749,7 +12014,7 @@
     GameState.turn = 1;
     GameState.inventory = [];
     GameState.consumables = {};
-    GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
+    GameState.stats = { battles: 0, kills: 0, goldEarned: 0, objectivesCompleted: 0, damageTaken: 0, skillfulBattles: 0 };
     GameState.firstBattleCompleted = false;
     // Contextual first-battle coaching belongs to every new campaign.
     // The longer onboarding remains first-run only.
@@ -11840,10 +12105,23 @@
       .filter(c => c.region === node.region && c.type === 'boss' && !c.completed)
       .sort((a, b) => (Math.abs(a.x - node.x) + Math.abs(a.y - node.y)) - (Math.abs(b.x - node.x) + Math.abs(b.y - node.y)))[0];
     const bossSteps = boss ? Math.abs(boss.x - node.x) + Math.abs(boss.y - node.y) : 0;
+    const combatNode = ['mission', 'dungeon', 'arena', 'boss', 'final'].includes(node.type);
+    if (combatNode && !node.enemyWavePreview) node.enemyWavePreview = generateEnemyWaveForCell(node);
+    const wave = combatNode ? (node.enemyWavePreview || []) : [];
+    const priority = ['threatHealer', 'threatSummoner', 'threatController', 'threatAssassin', 'threatExplosive', 'threatTank', 'threatRanged'];
+    const tagKeys = [];
+    wave.forEach(enemyId => enemyThreatTags(enemyId).forEach(tag => {
+      if (!tagKeys.includes(tag.key)) tagKeys.push(tag.key);
+    }));
+    tagKeys.sort((a, b) => priority.indexOf(a) - priority.indexOf(b));
+    const composition = wave.length
+      ? `${translateKey('routeEnemies')}: ${wave.length}${tagKeys.length ? ` · ${tagKeys.slice(0, 2).map(translateKey).join(', ')}` : ''}`
+      : '';
     return {
       threat: translateKey(threatKey),
       reward: translateKey(rewardKey),
-      boss: boss ? `${translateKey('bossDistance')}: ${bossSteps}` : ''
+      boss: boss ? `${translateKey('bossDistance')}: ${bossSteps}` : '',
+      composition
     };
   }
 
@@ -11933,7 +12211,8 @@
       info.innerHTML = `${mapCellInfoIconHtml(selectedNode)}
         <div class="cell-info-name">${translateKey('region')} ${selectedNode.region} · ${typeNames[selectedNode.type] || selectedNode.type}</div>
         <div>${translateKey('currentPartyPosition')}</div>
-        <div>${intel.threat} · ${intel.reward}${intel.boss ? ` · ${intel.boss}` : ''}</div>`;
+        <div>${intel.threat} · ${intel.reward}${intel.boss ? ` · ${intel.boss}` : ''}</div>
+        ${intel.composition ? `<div class="route-intel-line">${intel.composition}</div>` : ''}`;
     }
     const routeChoices = document.getElementById('map-route-choices');
     if (routeChoices) {
@@ -11957,6 +12236,7 @@
         return `<button type="button" class="map-route-card" data-route-id="${n.id}">
           <strong>${typeNames[n.type] || n.type}</strong><span class="map-route-threat">${intel.threat}</span>
           <small>${intel.reward}${intel.boss ? ` · ${intel.boss}` : ''}</small>
+          ${intel.composition ? `<small class="map-route-intel">${intel.composition}</small>` : ''}
         </button>`;
       }).join('')}` : '';
       const firstBattleBtn = document.getElementById('btn-first-battle-route');
@@ -12673,10 +12953,15 @@
           }
 
           const ruleLabels = currentLanguage() === 'ru'
-            ? { trigger:'КОГДА СРАБАТЫВАЕТ', effect:'ЧТО ПРОИСХОДИТ', tier:'уровень в ветке' }
+            ? { trigger:'КОГДА СРАБАТЫВАЕТ', effect:'ЧТО ПРОИСХОДИТ', tier:'уровень в ветке', preview:'ИЗМЕНЕНИЕ СРАЗУ', synergy:'КОМАНДНАЯ СИНЕРГИЯ' }
             : currentLanguage() === 'es'
-              ? { trigger:'CUÁNDO SE ACTIVA', effect:'QUÉ OCURRE', tier:'nivel en la rama' }
-              : { trigger:'WHEN IT TRIGGERS', effect:'WHAT IT DOES', tier:'branch level' };
+              ? { trigger:'CUÁNDO SE ACTIVA', effect:'QUÉ OCURRE', tier:'nivel en la rama', preview:'CAMBIO INMEDIATO', synergy:'SINERGIA DE EQUIPO' }
+              : { trigger:'WHEN IT TRIGGERS', effect:'WHAT IT DOES', tier:'branch level', preview:'IMMEDIATE CHANGE', synergy:'TEAM SYNERGY' };
+          const statPreview = perkStatPreview(perk, h);
+          const statPreviewHtml = statPreview
+            ? `<div class="perk-detail-stat-preview"><span>${ruleLabels.preview}</span><strong>${escapeHtml(statPreview.label)}: ${statPreview.before} → ${statPreview.after}</strong></div>`
+            : '';
+          const synergy = perkSynergyText(selectedBr);
           detailPanel.innerHTML = `
             <div class="perk-detail-head">
               <div class="perk-detail-icon">${icon2}</div>
@@ -12687,8 +12972,10 @@
             </div>
             <div class="perk-detail-tierline">${ruleLabels.tier}: ${perk.level || idx + 1} / ${tree[selectedBr].length}</div>
             <div class="perk-detail-summary">${escapeHtml(rule.summary)}</div>
+            ${statPreviewHtml}
             <div class="perk-detail-rule"><span>${ruleLabels.trigger}</span><strong>${escapeHtml(rule.trigger)}</strong></div>
             <div class="perk-detail-rule"><span>${ruleLabels.effect}</span><strong>${escapeHtml(rule.effect)}</strong></div>
+            <div class="perk-detail-synergy"><span>${ruleLabels.synergy}</span><strong>${escapeHtml(synergy)}</strong></div>
             ${statusBtn}
           `;
           renderPerkTree();

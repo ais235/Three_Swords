@@ -103,7 +103,14 @@ const checks = [
   ['campaign summary present', () => index.includes('function renderEndingSummary') && index.includes('runStartedAt') && index.includes('heroBuilds')],
   ['release packaging present', () => existsSync(resolve(root, 'scripts/package-release.mjs')) && existsSync(resolve(root, 'styles/responsive-landscape.css'))],
   ['plan has Definition of Done', () => plan.includes('Definition of Done')],
-  ['plan has Out Of Scope', () => plan.includes('Out Of Scope For This Overhaul')]
+  ['plan has Out Of Scope', () => plan.includes('Out Of Scope For This Overhaul')],
+  ['quality scorecard present', () => existsSync(resolve(root, 'docs/QUALITY_SCORECARD.md'))],
+  ['quality improvement plan present', () => existsSync(resolve(root, 'docs/QUALITY_IMPROVEMENT_PLAN.md'))],
+  ['combat preview module present', () => existsSync(resolve(root, 'src/combat-preview.js'))],
+  ['critical path browser test present', () => existsSync(resolve(root, 'scripts/test-critical-path.mjs'))],
+  ['route cards expose cached enemy intel', () => index.includes('enemyWavePreview') && index.includes('map-route-intel')],
+  ['ending summary tracks mastery', () => index.includes('objectivesCompleted') && index.includes('damageTaken') && index.includes('resultCode')],
+  ['perk rules are exact in all languages', () => index.includes('const PERK_RULES_EXACT') && index.includes('TEAM SYNERGY') && index.includes('SINERGIA DE EQUIPO')]
 ];
 
 let failed = 0;

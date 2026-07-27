@@ -1,4 +1,4 @@
-import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,15 +16,13 @@ for (const match of index.matchAll(/['"(](assets\/[^'"()?#]+\.(?:png|jpe?g|webp|
 for (const match of index.matchAll(/['"]((?:weapons|armor|accessories|materials|misc|consumables)\/[^'"]+\.(?:png|webp))['"]/gi)) {
   runtimeFiles.add(`assets/items/${match[1]}`);
 }
-
-if (existsSync(resolve(root, 'styles'))) {
-  cpSync(resolve(root, 'styles'), resolve(output, 'styles'), { recursive: true });
-  runtimeFiles.add('styles/responsive-landscape.css');
+for (const match of index.matchAll(/(?:src|href)=["']([^"'?#]+\.(?:js|css))["']/gi)) {
+  const relative = match[1].replaceAll('\\', '/');
+  if (!relative.startsWith('/') && !relative.includes('://')) runtimeFiles.add(relative);
 }
 
 const missing = [];
 for (const relative of [...runtimeFiles].sort()) {
-  if (relative.startsWith('styles/')) continue;
   const source = resolve(root, relative);
   if (!existsSync(source)) {
     missing.push(relative);

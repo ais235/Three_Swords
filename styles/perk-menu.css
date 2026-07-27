@@ -176,6 +176,45 @@
   background: rgba(5,5,17,.42);
 }
 
+#perk-modal .perk-detail-stat-preview,
+#perk-modal .perk-detail-synergy {
+  padding: 8px 10px;
+  border-radius: 7px;
+}
+
+#perk-modal .perk-detail-stat-preview {
+  border: 1px solid rgba(74, 158, 255, .5);
+  background: rgba(74, 158, 255, .08);
+}
+
+#perk-modal .perk-detail-synergy {
+  border: 1px solid rgba(155, 89, 182, .45);
+  background: rgba(155, 89, 182, .07);
+}
+
+#perk-modal .perk-detail-stat-preview span,
+#perk-modal .perk-detail-synergy span {
+  display: block;
+  margin-bottom: 4px;
+  color: #8187a5;
+  font-size: 7px;
+  letter-spacing: 1px;
+}
+
+#perk-modal .perk-detail-stat-preview strong,
+#perk-modal .perk-detail-synergy strong {
+  display: block;
+  color: #e4e5ef;
+  font-size: 9px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+#perk-modal .perk-detail-stat-preview strong {
+  color: #9fd7ff;
+  font-size: 11px;
+}
+
 #perk-modal .perk-detail-rule span {
   display: block;
   margin-bottom: 4px;
@@ -241,4 +280,8 @@
   #perk-modal .perk-detail-rule { padding: 6px 7px; }
   #perk-modal .perk-detail-rule strong { font-size: 8px; line-height: 1.35; }
   #perk-modal .perk-detail-summary { padding: 6px 7px; font-size: 9px; }
+  #perk-modal .perk-detail-stat-preview,
+  #perk-modal .perk-detail-synergy { padding: 5px 7px; }
+  #perk-modal .perk-detail-stat-preview strong,
+  #perk-modal .perk-detail-synergy strong { font-size: 8px; line-height: 1.3; }
 }

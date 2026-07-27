@@ -1,2 +1,4 @@
 node_modules/
 assets/audio/_extracted/
+dist/
+.npm-cache/

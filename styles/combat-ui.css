@@ -1,0 +1,102 @@
+.damage-preview-main {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 4px;
+}
+
+.damage-preview-main > span {
+  color: #fff;
+  font-size: 17px;
+}
+
+.damage-preview-meta,
+.damage-preview-status,
+.damage-preview-tags {
+  margin-top: 3px;
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.damage-preview-meta { color: var(--text-dim); }
+.damage-preview-status { color: #ff9b42; }
+.damage-preview-tags { color: #9fd7ff; }
+.damage-preview-warning { margin-top: 4px; color: #ff7b72; font-size: 10px; }
+
+.damage-kill {
+  display: block;
+  margin-top: 5px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+  font-size: 9px;
+  letter-spacing: .5px;
+}
+
+.damage-kill.guaranteed { color: #8cffb0; }
+.damage-kill.possible { color: #ffca6a; }
+
+.skill-action-btn.ftue-recommended {
+  position: relative;
+  border-color: var(--accent-gold) !important;
+  box-shadow: 0 0 0 2px rgba(240, 165, 0, .28), 0 0 18px rgba(240, 165, 0, .22);
+  animation: ftue-skill-pulse 1.25s ease-in-out infinite;
+}
+
+.skill-action-btn.ftue-recommended::after {
+  content: "!";
+  position: absolute;
+  top: -6px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  color: #12101a;
+  font-weight: 900;
+  font-size: 11px;
+}
+
+@keyframes ftue-skill-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.24); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-action-btn.ftue-recommended { animation: none; }
+}
+
+.route-intel-line,
+.map-route-intel {
+  color: #9fd7ff !important;
+}
+
+.map-route-intel {
+  padding-top: 3px;
+  border-top: 1px solid rgba(159, 215, 255, .13);
+}
+
+@media (min-width: 900px) and (min-height: 560px) and (hover: hover) and (pointer: fine) {
+  #map-screen .map-panel-title,
+  #map-screen .map-fog-counter {
+    font-size: 11px;
+  }
+
+  #map-screen .cell-info {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  #map-screen .cell-info-name,
+  #map-screen .map-route-card strong {
+    font-size: 12px;
+  }
+
+  #map-screen .map-route-card small,
+  #map-screen .map-route-threat {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+}

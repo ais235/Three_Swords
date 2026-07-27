@@ -16,8 +16,10 @@ const STANDARD_SEEDS = [
   'boss-01', 'boss-02', 'boss-03', 'boss-04', 'boss-05',
   'synergy-01', 'synergy-02', 'synergy-03', 'synergy-04', 'synergy-05'
 ];
-const cliSeeds = process.argv.slice(2);
-const seeds = cliSeeds.includes('--quick') ? QUICK_SEEDS : (cliSeeds.length ? cliSeeds : STANDARD_SEEDS);
+const cliArgs = process.argv.slice(2);
+const cliSeeds = cliArgs.filter(arg => !arg.startsWith('--'));
+const summaryOnly = cliArgs.includes('--summary');
+const seeds = cliArgs.includes('--quick') ? QUICK_SEEDS : (cliSeeds.length ? cliSeeds : STANDARD_SEEDS);
 
 function hashSeed(value) {
   let h = 2166136261;
@@ -87,6 +89,7 @@ function parseBossProfiles(ids) {
 const IDS = parseEnemyIds();
 const DEFS = parseEnemyDefs(IDS);
 const BOSS_PROFILES = parseBossProfiles(IDS);
+const ordinaryWaveViolations = [];
 
 function randInt(rng, a, b) {
   return a + Math.floor(rng() * (b - a + 1));
@@ -155,7 +158,7 @@ function waveForCell(rng, cell) {
       IDS.BANDIT, IDS.WOLF, IDS.BANDIT_THROWER, IDS.SPEARMAN, IDS.BOG_LURKER, IDS.THORN_DRYAD, IDS.RAT_SWARM],
     2: [IDS.ORC_GUARD, IDS.SPIDER, IDS.SUICIDE, IDS.ICE_ELEM, IDS.WATCHER, IDS.DARK_KNIGHT,
       IDS.CULTIST, IDS.HEXER, IDS.SHIELDBEARER, IDS.CROSSBOWMAN, IDS.STONE_GOLEM],
-    3: [IDS.NECRO, IDS.CHAOS, IDS.ASSASSIN, IDS.HYDRA, IDS.GHOST,
+    3: [IDS.NECRO, IDS.CHAOS, IDS.ASSASSIN, IDS.GHOST,
       IDS.VOID_STALKER, IDS.BLOOD_KNIGHT, IDS.BANSHEE, IDS.PLAGUE_DOCTOR, IDS.ARCANE_SENTINEL]
   };
   if (cell.type === 'boss') {
@@ -167,17 +170,32 @@ function waveForCell(rng, cell) {
   const pool = pools[cell.region];
   let cnt = cell.type === 'dungeon' ? 4 : cell.type === 'arena' ? 1 : 3;
   if (cell.region === 2 && cell.type === 'mission') cnt = 4;
-  if (cell.region === 3 && cell.type === 'dungeon') cnt = 5;
-  const volatile = new Set([IDS.SUICIDE, IDS.PLAGUE_DOCTOR]);
-  const ranged = new Set([IDS.GOBLIN_ARCHER, IDS.BANDIT_THROWER, IDS.CROSSBOWMAN, IDS.HEXER, IDS.BANSHEE]);
+  if (cell.region === 3 && cell.type === 'mission') cnt = 4;
+  if (cell.region === 3 && cell.type === 'dungeon') cnt = 4;
+  const countGroup = (wave, ids) => wave.filter(id => ids.includes(id)).length;
+  const volatile = [IDS.SUICIDE, IDS.PLAGUE_DOCTOR];
+  const ranged = [IDS.GOBLIN_ARCHER, IDS.BANDIT_THROWER, IDS.CROSSBOWMAN, IDS.HEXER, IDS.BANSHEE];
+  const healers = [IDS.SHAMAN, IDS.PLAGUE_DOCTOR];
+  const summoners = [IDS.NECRO, IDS.SHAMAN];
+  const controllers = [IDS.SPIDER, IDS.ICE_ELEM, IDS.HEXER, IDS.BANSHEE, IDS.ARCANE_SENTINEL];
+  const assassins = [IDS.ASSASSIN, IDS.VOID_STALKER, IDS.BLOOD_KNIGHT];
+  const heavyElites = [IDS.BLOOD_KNIGHT, IDS.ARCANE_SENTINEL, IDS.STONE_GOLEM];
+  const allows = (wave, candidate) => {
+    if (wave.filter(id => id === candidate).length >= 2) return false;
+    if (volatile.includes(candidate) && countGroup(wave, volatile) >= 1) return false;
+    if (ranged.includes(candidate) && countGroup(wave, ranged) >= 2) return false;
+    if (healers.includes(candidate) && countGroup(wave, healers) >= 1) return false;
+    if (summoners.includes(candidate) && countGroup(wave, summoners) >= 1) return false;
+    if (controllers.includes(candidate) && countGroup(wave, controllers) >= 2) return false;
+    if (assassins.includes(candidate) && countGroup(wave, assassins) >= 2) return false;
+    if (heavyElites.includes(candidate) && countGroup(wave, heavyElites) >= 1) return false;
+    return true;
+  };
   const wave = [];
   for (let i = 0; i < cnt; i++) {
-    let pick = pool[randInt(rng, 0, pool.length - 1)];
-    for (let retry = 0; retry < 8; retry++) {
-      if (!(volatile.has(pick) && wave.some(id => volatile.has(id))) &&
-          !(ranged.has(pick) && wave.filter(id => ranged.has(id)).length >= 2)) break;
-      pick = pool[randInt(rng, 0, pool.length - 1)];
-    }
+    const allowed = pool.filter(candidate => allows(wave, candidate));
+    const candidates = allowed.length ? allowed : pool.filter(candidate => wave.filter(id => id === candidate).length < 2);
+    const pick = candidates[randInt(rng, 0, candidates.length - 1)];
     wave.push(pick);
   }
   return wave;
@@ -223,6 +241,9 @@ function summarize(seed) {
     const byType = new Map();
     for (const cell of cells) {
       const wave = waveForCell(rng, cell);
+      if (['mission', 'dungeon', 'arena'].includes(cell.type) && wave.includes(IDS.HYDRA)) {
+        ordinaryWaveViolations.push(`${seed}:${cell.id}: regional boss hydra in ${cell.type}`);
+      }
       const score = wave.reduce((sum, id) => sum + threat(id), 0) + synergyThreat(wave);
       const bucket = byType.get(cell.type) || { count: 0, total: 0, max: 0, examples: [] };
       bucket.count += 1;
@@ -247,7 +268,7 @@ function summarize(seed) {
 }
 
 const rows = seeds.flatMap(summarize);
-console.table(rows);
+if (!summaryOnly) console.table(rows);
 
 const missionAverages = rows.filter(row => row.type === 'mission')
   .reduce((acc, row) => {
@@ -273,3 +294,32 @@ if (!curveOk) {
   process.exit(1);
 }
 console.log(`PASS growing mission medians: R1=${regionalMedian(1)} R2=${regionalMedian(2)} R3=${regionalMedian(3)}`);
+
+if (ordinaryWaveViolations.length) {
+  ordinaryWaveViolations.forEach(message => console.error(`FAIL ${message}`));
+  process.exit(1);
+}
+console.log('PASS regional boss units are absent from ordinary region 3 waves');
+
+const maxThreatFor = (region, type) => Math.max(0, ...rows
+  .filter(row => row.region === region && row.type === type)
+  .map(row => row.maxThreat));
+const threatCaps = [
+  { region: 1, type: 'mission', cap: 380 },
+  { region: 1, type: 'dungeon', cap: 520 },
+  { region: 2, type: 'mission', cap: 760 },
+  { region: 2, type: 'dungeon', cap: 820 },
+  { region: 3, type: 'mission', cap: 850 },
+  { region: 3, type: 'dungeon', cap: 900 }
+];
+let capFailed = false;
+for (const rule of threatCaps) {
+  const maximum = maxThreatFor(rule.region, rule.type);
+  if (maximum > rule.cap) {
+    capFailed = true;
+    console.error(`FAIL R${rule.region} ${rule.type} threat ${maximum} exceeds cap ${rule.cap}`);
+  } else {
+    console.log(`PASS R${rule.region} ${rule.type} max threat ${maximum}/${rule.cap}`);
+  }
+}
+if (capFailed) process.exit(1);
