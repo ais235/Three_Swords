@@ -6,8 +6,11 @@ const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const indexPath = resolve(root, 'index.html');
 const planPath = resolve(root, 'docs/UX_GAMEPLAY_OVERHAUL_PLAN.md');
 const balanceSeedsPath = resolve(root, 'scripts/balance-seeds.mjs');
+const readabilityPath = resolve(root, 'styles/readability.css');
+const readabilityTestPath = resolve(root, 'scripts/test-readability.mjs');
 const index = readFileSync(indexPath, 'utf8');
 const plan = readFileSync(planPath, 'utf8');
+const readability = existsSync(readabilityPath) ? readFileSync(readabilityPath, 'utf8') : '';
 
 function enemyEntries() {
   const block = index.match(/const ENEMY_IDS = \{([\s\S]*?)\n\s*\};/);
@@ -108,6 +111,10 @@ const checks = [
   ['quality improvement plan present', () => existsSync(resolve(root, 'docs/QUALITY_IMPROVEMENT_PLAN.md'))],
   ['combat preview module present', () => existsSync(resolve(root, 'src/combat-preview.js'))],
   ['critical path browser test present', () => existsSync(resolve(root, 'scripts/test-critical-path.mjs'))],
+  ['global readability layer loads last', () => index.includes('<link rel="stylesheet" href="styles/readability.css">') && index.indexOf('styles/readability.css') > index.indexOf('styles/combat-ui.css')],
+  ['desktop typography floor is present', () => readability.includes('--readable-compact: 12px') && readability.includes('#perk-modal .perk-skill-summary')],
+  ['mobile typography floor is present', () => readability.includes('@media (orientation: landscape) and (max-height: 560px)') && readability.includes('--readable-label: 10px')],
+  ['readability browser test present', () => existsSync(readabilityTestPath)],
   ['route cards expose cached enemy intel', () => index.includes('enemyWavePreview') && index.includes('map-route-intel')],
   ['ending summary tracks mastery', () => index.includes('objectivesCompleted') && index.includes('damageTaken') && index.includes('resultCode')],
   ['perk rules are exact in all languages', () => index.includes('const PERK_RULES_EXACT') && index.includes('TEAM SYNERGY') && index.includes('SINERGIA DE EQUIPO')]
