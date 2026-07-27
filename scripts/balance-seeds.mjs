@@ -1,9 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const index = readFileSync(resolve(root, 'index.html'), 'utf8');
+const require = createRequire(import.meta.url);
+const LeshyBoss = require('../src/leshy-boss.js');
 
 const MAP_COLS = 12;
 const MAP_ROWS = 8;
@@ -80,7 +83,12 @@ function parseBossProfiles(ids) {
   const profiles = {};
   for (const match of block[1].matchAll(/\[ENEMY_IDS\.([A-Z0-9_]+)\]:\s*\{([^}]+)\}/g)) {
     const body = match[2];
-    const number = name => Number(body.match(new RegExp(`${name}:\\s*([0-9.]+)`))?.[1] || 0);
+    const number = name => {
+      const literal = body.match(new RegExp(`${name}:\\s*([0-9.]+)`))?.[1];
+      if (literal) return Number(literal);
+      if (body.includes(`${name}: LeshyBoss.PROFILE.${name}`)) return LeshyBoss.PROFILE[name];
+      return 0;
+    };
     profiles[ids[match[1]]] = { hp: number('hp'), attack: number('attack'), armor: number('armor') };
   }
   return profiles;
@@ -162,7 +170,7 @@ function waveForCell(rng, cell) {
       IDS.VOID_STALKER, IDS.BLOOD_KNIGHT, IDS.BANSHEE, IDS.PLAGUE_DOCTOR, IDS.ARCANE_SENTINEL]
   };
   if (cell.type === 'boss') {
-    if (cell.region === 1) return [IDS.SHAMAN];
+    if (cell.region === 1) return [IDS.LESHY];
     if (cell.region === 2) return [IDS.FIRE_TITAN];
     return [IDS.HYDRA];
   }

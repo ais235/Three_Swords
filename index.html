@@ -3648,6 +3648,7 @@
   <link rel="stylesheet" href="styles/readability.css">
   <script src="src/combat-preview.js"></script>
   <script src="src/map-topology.js"></script>
+  <script src="src/leshy-boss.js"></script>
   <script src="/sdk.js"></script>
 </head>
 <body>
@@ -4386,6 +4387,9 @@
     threatExplosive: { ru: 'ВЗРЫВ', en: 'BLAST', es: 'EXPLOSIÓN' },
     threatController: { ru: 'КОНТРОЛЬ', en: 'CONTROL', es: 'CONTROL' },
     threatBoss: { ru: 'БОСС', en: 'BOSS', es: 'JEFE' },
+    leshySummons: { ru: 'призывает из чащи', en: 'summons from the thicket', es: 'invoca desde la espesura a' },
+    leshyAwakens: { ru: 'ЧАЩА ПРОБУЖДАЕТСЯ — призванные получают +2 атаки', en: 'THE THICKET AWAKENS — summons gain +2 attack', es: 'LA ESPESURA DESPIERTA — las invocaciones obtienen +2 de ataque' },
+    leshyNoTarget: { ru: 'укоренён и ждёт приближения героев', en: 'is rooted and waits for the heroes to approach', es: 'está enraizado y espera a que se acerquen los héroes' },
     threatTank: { ru: 'ТАНК', en: 'TANK', es: 'TANQUE' },
     threatRanged: { ru: 'ДАЛЬНИЙ', en: 'RANGED', es: 'DISTANCIA' },
     equipLoot: { ru: '🎒 НАДЕТЬ ДОБЫЧУ', en: '🎒 EQUIP LOOT', es: '🎒 EQUIPAR BOTÍN' },
@@ -4722,6 +4726,10 @@
         'Гидра': 'Hydra',
         'Призрак': 'Ghost',
         'Огненный титан': 'Fire Titan',
+        'Леший — хозяин чащи': 'Ancient Leshy',
+        'Неподвижный босс. В первый ход призывает двух лесных существ, затем по одному через ход (не больше 4). На 50% HP призывает ещё до двух и даёт всем своим призванным +2 атаки.': 'Rooted boss. On its first turn it summons two forest creatures, then one every other turn (maximum 4). At 50% HP it summons up to two more and gives all its summons +2 attack.',
+        'Уничтожайте опасных призванных, но не затягивайте бой: сам Леший не двигается и атакует корнями с дистанции 3.': 'Remove dangerous summons, but do not prolong the fight: the Leshy cannot move and attacks with roots from range 3.',
+        'Стоит на месте. Призывает 2 существа в первый ход, затем 1 через ход (макс. 4). На 50% HP призывает ещё до 2 и усиливает призванных на +2 атаки.': 'Does not move. Summons 2 creatures on the first turn, then 1 every other turn (max 4). At 50% HP it summons up to 2 more and gives summons +2 attack.',
         'Тяжелая броня 6, двигается медленно. Держит линию.': 'Heavy armor 6, moves slowly. Holds the line.',
         'Бежит к герою и взрывается — AoE 5 урона всем рядом.': 'Runs toward a hero and explodes: AoE 5 damage to all nearby units.',
         'При жизни даёт всем союзникам +2 хода движения. Убей первым!': 'While alive, grants all allies +2 movement. Kill first!',
@@ -5038,6 +5046,10 @@
         'Гидра': 'Hidra',
         'Призрак': 'Fantasma',
         'Огненный титан': 'Titán de fuego',
+        'Леший — хозяин чащи': 'Leshy ancestral',
+        'Неподвижный босс. В первый ход призывает двух лесных существ, затем по одному через ход (не больше 4). На 50% HP призывает ещё до двух и даёт всем своим призванным +2 атаки.': 'Jefe enraizado. En su primer turno invoca dos criaturas del bosque y luego una cada dos turnos (máximo 4). Al 50% de HP invoca hasta dos más y da +2 de ataque a todas sus invocaciones.',
+        'Уничтожайте опасных призванных, но не затягивайте бой: сам Леший не двигается и атакует корнями с дистанции 3.': 'Elimina las invocaciones peligrosas, pero no alargues el combate: el Leshy no se mueve y ataca con raíces desde alcance 3.',
+        'Стоит на месте. Призывает 2 существа в первый ход, затем 1 через ход (макс. 4). На 50% HP призывает ещё до 2 и усиливает призванных на +2 атаки.': 'No se mueve. Invoca 2 criaturas en el primer turno y luego 1 cada dos turnos (máx. 4). Al 50% de HP invoca hasta 2 más y da +2 de ataque a sus invocaciones.',
         'Тяжелая броня 6, двигается медленно. Держит линию.': 'Armadura pesada 6, se mueve lento. Mantiene la línea.',
         'Бежит к герою и взрывается — AoE 5 урона всем рядом.': 'Corre hacia un héroe y explota: área de 5 de daño a todos los cercanos.',
         'При жизни даёт всем союзникам +2 хода движения. Убей первым!': 'Mientras vive, otorga +2 movimiento a todos los aliados. ¡Mátalo primero!',
@@ -5587,7 +5599,7 @@
 
   //══════════ SECTION 2: GAME_DATA ══════════
   const ENEMY_IDS = {
-    SKELETON: 'skeleton', GOBLIN_ARCHER: 'goblin_archer', BOAR: 'boar', ZOMBIE: 'zombie', SHAMAN: 'shaman',
+    SKELETON: 'skeleton', GOBLIN_ARCHER: 'goblin_archer', BOAR: 'boar', ZOMBIE: 'zombie', SHAMAN: 'shaman', LESHY: 'leshy',
     BANDIT: 'bandit', WOLF: 'wolf', BANDIT_THROWER: 'bandit_thrower',
     SPEARMAN: 'spearman', BOG_LURKER: 'bog_lurker', THORN_DRYAD: 'thorn_dryad', RAT_SWARM: 'rat_swarm', CULTIST: 'cultist',
     HEXER: 'hexer', SHIELDBEARER: 'shieldbearer', CROSSBOWMAN: 'crossbowman', STONE_GOLEM: 'stone_golem',
@@ -5604,7 +5616,7 @@
     if (attacker.isHero && attacker.heroId === 'seris') return 'magic';
     if (!attacker.isHero) {
       const mid = attacker.enemyId;
-      if (mid === ENEMY_IDS.SHAMAN || mid === ENEMY_IDS.NECRO || mid === ENEMY_IDS.ICE_ELEM || mid === ENEMY_IDS.CHAOS) return 'magic';
+      if (mid === ENEMY_IDS.SHAMAN || mid === ENEMY_IDS.LESHY || mid === ENEMY_IDS.NECRO || mid === ENEMY_IDS.ICE_ELEM || mid === ENEMY_IDS.CHAOS) return 'magic';
       if (attacker.range > 1) return 'bow';
     }
     return 'melee';
@@ -6590,6 +6602,7 @@
       [D.BOAR]: { name: 'Boar', emoji: '🐗', hp: 15, armor: 2, attack: 7, move: 2, range: 1, speed: 8, gold: [10,15] },
       [D.ZOMBIE]: { name: 'Zombie', emoji: '🧟', hp: 12, armor: 1, attack: 6, move: 1, range: 1, speed: 5, gold: [8,12] },
       [D.SHAMAN]: { name: 'Forest Shaman', emoji: '🧙', hp: 25, armor: 1, attack: 5, move: 2, range: 2, speed: 7, gold: [40,60], miniBoss: true },
+      [D.LESHY]: { name: 'Ancient Leshy', emoji: '🌳', hp: 90, armor: 3, attack: 8, move: 0, range: 3, speed: 6, gold: [140,160], boss: true, sizeW: 2 },
       [D.BANDIT]: { name: 'Bandit', emoji: '🗡️', hp: 16, armor: 1, attack: 8, move: 2, range: 1, speed: 10, gold: [10,16] },
       [D.WOLF]: { name: 'Wolf', emoji: '🐺', hp: 12, armor: 0, attack: 7, move: 3, range: 1, speed: 12, gold: [8,12] },
       [D.BANDIT_THROWER]: { name: 'Thrower', emoji: '🪓', hp: 12, armor: 0, attack: 7, move: 2, range: 2, speed: 11, gold: [10,14] },
@@ -6629,7 +6642,8 @@
     ice_elem: 'ice_elemental.png',
     suicide: 'bomber.png',
     necro: 'necromancer.png',
-    chaos: 'chaos_beast.png'
+    chaos: 'chaos_beast.png',
+    leshy: 'leshy.png'
   };
   function enemyIconUrl(enemyId) {
     const file = ENEMY_ICON_FILE[enemyId] || (enemyId + '.png');
@@ -6670,6 +6684,7 @@
     [ENEMY_IDS.BOAR]:         { region: 1, tactic: 'Rushes the target while ignoring terrain. High HP and armor 2.', weakness: 'Slowing Arrow reduces speed. Freeze also helps.' },
     [ENEMY_IDS.ZOMBIE]:       { region: 1, tactic: 'Slow, but explodes on death for 5 damage to nearby units.', weakness: 'Keep distance. Archer and Mage are ideal.' },
     [ENEMY_IDS.SHAMAN]:       { region: 1, tactic: 'Mini-boss. Heals allies every turn. Kill first.', weakness: 'Immediate focus fire. Meteor or Arrow Rain.' },
+    [ENEMY_IDS.LESHY]:        { region: 1, tactic: 'Rooted boss. On its first turn it summons two forest creatures, then one every other turn (maximum 4). At 50% HP it summons up to two more and gives all its summons +2 attack.', weakness: 'Remove dangerous summons, but do not prolong the fight: the Leshy cannot move and attacks with roots from range 3.' },
     [ENEMY_IDS.BANDIT]:       { region: 1, tactic: 'Fast melee fighter. Tries to close in and trade damage.', weakness: 'Control with Freeze or stun, then focus fire.' },
     [ENEMY_IDS.WOLF]:         { region: 1, tactic: 'Very mobile. Flanks and punishes poor positioning quickly.', weakness: 'Slow it and keep a tight line.' },
     [ENEMY_IDS.BANDIT_THROWER]:{ region: 1, tactic: 'Range 2. Tries to finish wounded heroes while the front line holds distance.', weakness: 'Close in, focus it, and use Garet shield pressure.' },
@@ -7278,7 +7293,7 @@
 
   // Fixed stats for bosses — do NOT scale with partyPower
   const BOSS_PROFILES = {
-    [ENEMY_IDS.SHAMAN]:      { hp: 35,  attack: 8,  armor: 1 },
+    [ENEMY_IDS.LESHY]:       { hp: LeshyBoss.PROFILE.hp, attack: LeshyBoss.PROFILE.attack, armor: LeshyBoss.PROFILE.armor },
     [ENEMY_IDS.DARK_KNIGHT]: { hp: 65,  attack: 14, armor: 5 },
     [ENEMY_IDS.FIRE_TITAN]:  { hp: 110, attack: 16, armor: 4 },
     // The region-3 boss attacks three times and regenerates, so its base hit is
@@ -7326,6 +7341,7 @@
       aiVar: {}
     };
     if (type === ENEMY_IDS.HYDRA) { u.heads = 3; u.headHp = d.headHp; }
+    if (type === ENEMY_IDS.LESHY) { u.bossVar = { turn: 0, summonCooldown: 0, summonSerial: 0, phase2: false }; }
     if (type === ENEMY_IDS.DARK_LORD) { u.phase = 1; u.turnCount = 0; u.teleportCd = 0; u.aoeCd = 0; u.summonCd = 0; u.aiVar = {}; }
     if (type === ENEMY_IDS.FIRE_TITAN) { u.bossVar = { aoeCounter: 0 }; }
     if (type === ENEMY_IDS.CHAOS) { u.bossVar = { aoeTurn: 0 }; }
@@ -8682,6 +8698,7 @@
     boar: 'assets/enemies/boar.png',
     zombie: 'assets/enemies/zombie.png',
     shaman: 'assets/enemies/shaman.png',
+    leshy: 'assets/enemies/leshy.png',
     bandit: 'assets/enemies/bandit.png',
     wolf: 'assets/enemies/wolf.png',
     bandit_thrower: 'assets/enemies/bandit_thrower.png',
@@ -9107,10 +9124,15 @@
       if (show) {
         if (!u.isHero && unitWidth(u) > 1) {
           ctx.save();
-          ctx.strokeStyle = 'rgba(255, 190, 80, 0.75)';
+          const isLeshy = u.enemyId === ENEMY_IDS.LESHY;
+          ctx.strokeStyle = isLeshy ? 'rgba(143, 224, 107, 0.95)' : 'rgba(255, 190, 80, 0.75)';
           ctx.lineWidth = 2;
+          if (isLeshy) {
+            ctx.shadowColor = '#66d36e';
+            ctx.shadowBlur = 12;
+          }
           ctx.strokeRect(px + 2, py + 2, footprintW - 4, footprintH - 4);
-          ctx.fillStyle = 'rgba(255, 190, 80, 0.08)';
+          ctx.fillStyle = isLeshy ? 'rgba(76, 175, 80, 0.12)' : 'rgba(255, 190, 80, 0.08)';
           ctx.fillRect(px + 2, py + 2, footprintW - 4, footprintH - 4);
           ctx.restore();
         }
@@ -9667,6 +9689,7 @@
     // Special AI for specific enemy types
     if (u.enemyId === ENEMY_IDS.DARK_LORD) { darkLordAi(u); finishEnemyTurn(); return; }
     if (u.enemyId === ENEMY_IDS.FIRE_TITAN) { fireTitanAi(u); finishEnemyTurn(); return; }
+    if (u.enemyId === ENEMY_IDS.LESHY) { leshyAi(u); finishEnemyTurn(); return; }
     if (u.enemyId === ENEMY_IDS.SUICIDE) { bomberAi(u); finishEnemyTurn(); return; }
 
     // Shaman: heal lowest HP ally every other turn
@@ -9850,6 +9873,97 @@
       console.error('runEnemyTurn', err);
       pushBattleLog('Enemy turn failed', 'status');
       finishEnemyTurn();
+    }
+  }
+
+  function findLeshySummonCell(b, leshy, enemyId) {
+    const proto = { isHero: false, enemyId, sizeW: 1, sizeH: 1 };
+    const candidates = [];
+    const left = Math.max(0, leshy.x - 3);
+    const right = Math.min(GRID_W - 1, leshy.x + unitWidth(leshy) + 2);
+    const top = Math.max(0, leshy.y - 3);
+    const bottom = Math.min(GRID_H - 1, leshy.y + unitHeight(leshy) + 2);
+    for (let y = top; y <= bottom; y++) {
+      for (let x = left; x <= right; x++) {
+        const dx = x < leshy.x ? leshy.x - x : Math.max(0, x - (leshy.x + unitWidth(leshy) - 1));
+        const dy = y < leshy.y ? leshy.y - y : Math.max(0, y - (leshy.y + unitHeight(leshy) - 1));
+        const distance = dx + dy;
+        if (distance > 0 && distance <= 3 && canUnitOccupy(b, proto, x, y, { end: true })) {
+          candidates.push({ x, y, distance });
+        }
+      }
+    }
+    if (!candidates.length) return null;
+    candidates.sort((a, z) => a.distance - z.distance || a.y - z.y || a.x - z.x);
+    const nearestDistance = candidates[0].distance;
+    const nearest = candidates.filter(cell => cell.distance === nearestDistance);
+    return nearest[randInt(0, nearest.length - 1)];
+  }
+
+  function leshyAi(u) {
+    const b = GameState.currentBattle;
+    if (!b) return;
+    u.bossVar = u.bossVar || { turn: 0, summonCooldown: 0, summonSerial: 0, phase2: false };
+    const v = u.bossVar;
+    v.turn = (v.turn || 0) + 1;
+    const livingSummons = b.units.filter(unit => !unit.isHero && unit.hp > 0 && unit.summonedByLeshy);
+    const plan = LeshyBoss.planTurn({
+      turn: v.turn,
+      hp: u.hp,
+      maxHp: u.maxHp,
+      livingSummons: livingSummons.length,
+      summonCooldown: v.summonCooldown,
+      phase2: v.phase2
+    });
+    v.phase2 = plan.phase2;
+    v.summonCooldown = plan.nextCooldown;
+
+    if (plan.empowerSummons) {
+      livingSummons.forEach(summon => {
+        if (summon.leshyEmpowered) return;
+        summon.attack += LeshyBoss.PROFILE.phaseAttackBonus;
+        summon.leshyEmpowered = true;
+      });
+      pushBattleLog(`🌿 ${translateText(u.name)}: ${translateKey('leshyAwakens')}`, 'enemy');
+      spawnBattleTextFx(u.x, u.y, '+2 ATK', '#8fe06b');
+      if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_chaos_attack, 0.65);
+    }
+
+    let summoned = 0;
+    const summonTypes = LeshyBoss.summonTypes(v.summonSerial, plan.summonCount);
+    summonTypes.forEach(enemyId => {
+      const cell = findLeshySummonCell(b, u, enemyId);
+      if (!cell) return;
+      const summon = spawnEnemy(enemyId, cell.x, cell.y);
+      summon.summonedByLeshy = true;
+      if (v.phase2) {
+        summon.attack += LeshyBoss.PROFILE.phaseAttackBonus;
+        summon.leshyEmpowered = true;
+      }
+      b.units.push(summon);
+      summoned++;
+      pushBattleLog(`🌱 ${translateText(u.name)} ${translateKey('leshySummons')} ${translateText(summon.name)}`, 'enemy');
+    });
+    v.summonSerial = (v.summonSerial || 0) + summoned;
+    if (summoned > 0) {
+      if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_necro_raise, 0.72);
+      buildInitiative();
+      return;
+    }
+
+    const heroes = b.units.filter(hero => hero.isHero && hero.hp > 0);
+    const target = heroes
+      .filter(hero => {
+        if (unitDistance(u, hero) > u.range) return false;
+        const targetCell = closestUnitCellToPoint(hero, u.x, u.y);
+        return !rangedBlocked(u.x, u.y, targetCell.x, targetCell.y, b.grid, false);
+      })
+      .sort((a, z) => a.hp - z.hp || unitDistance(u, a) - unitDistance(u, z))[0];
+    if (target) {
+      aiAttack(u, target);
+    } else if (!v.waitingShown) {
+      v.waitingShown = true;
+      pushBattleLog(`🌳 ${translateText(u.name)} ${translateKey('leshyNoTarget')}`, 'status');
     }
   }
 
@@ -11790,7 +11904,7 @@
           ENEMY_IDS.VOID_STALKER, ENEMY_IDS.BLOOD_KNIGHT, ENEMY_IDS.BANSHEE, ENEMY_IDS.PLAGUE_DOCTOR, ENEMY_IDS.ARCANE_SENTINEL]
     };
     if (cell.type === 'boss') {
-      if (cell.region === 1) return [ENEMY_IDS.SHAMAN];
+      if (cell.region === 1) return [ENEMY_IDS.LESHY];
       if (cell.region === 2) return [ENEMY_IDS.FIRE_TITAN];
       return [ENEMY_IDS.HYDRA];
     }
@@ -12097,7 +12211,7 @@
   }
 
   function regionBossEnemyId(region) {
-    if (region === 1) return ENEMY_IDS.SHAMAN;
+    if (region === 1) return ENEMY_IDS.LESHY;
     if (region === 2) return ENEMY_IDS.FIRE_TITAN;
     return ENEMY_IDS.HYDRA;
   }
@@ -13081,6 +13195,7 @@
       [ENEMY_IDS.BOAR]: 'Charges toward the target, ignoring forest and water.',
       [ENEMY_IDS.ZOMBIE]: 'Explodes on death.',
       [ENEMY_IDS.SHAMAN]: 'Heals allies.',
+      [ENEMY_IDS.LESHY]: 'Does not move. Summons 2 creatures on the first turn, then 1 every other turn (max 4). At 50% HP it summons up to 2 more and gives summons +2 attack.',
       [ENEMY_IDS.BANDIT]: 'Fast melee fighter.',
       [ENEMY_IDS.WOLF]: 'Hunts the weakest hero.',
       [ENEMY_IDS.SPEARMAN]: 'Empowered melee strike.',
@@ -13116,12 +13231,12 @@
     const tags = [];
     const add = (key, cls) => tags.push({ key, cls });
     if ([D.SHAMAN, D.PLAGUE_DOCTOR].includes(enemyId)) add('threatHealer', 'threat-healer');
-    if ([D.NECRO, D.DARK_LORD].includes(enemyId)) add('threatSummoner', 'threat-summoner');
+    if ([D.LESHY, D.NECRO, D.DARK_LORD].includes(enemyId)) add('threatSummoner', 'threat-summoner');
     if ([D.ASSASSIN, D.VOID_STALKER, D.WOLF].includes(enemyId)) add('threatAssassin', 'threat-assassin');
     if ([D.ZOMBIE, D.SUICIDE, D.CHAOS, D.FIRE_TITAN, D.HYDRA].includes(enemyId)) add('threatExplosive', 'threat-explosive');
     if ([D.SPIDER, D.ICE_ELEM, D.HEXER, D.BANSHEE, D.CULTIST, D.ARCANE_SENTINEL, D.BOG_LURKER, D.THORN_DRYAD, D.STONE_GOLEM].includes(enemyId)) add('threatController', 'threat-controller');
     if (d && (d.boss || d.miniBoss)) add('threatBoss', 'threat-boss');
-    if ([D.ORC_GUARD, D.SHIELDBEARER, D.STONE_GOLEM, D.DARK_KNIGHT, D.BLOOD_KNIGHT, D.BOAR].includes(enemyId)) add('threatTank', 'threat-tank');
+    if ([D.LESHY, D.ORC_GUARD, D.SHIELDBEARER, D.STONE_GOLEM, D.DARK_KNIGHT, D.BLOOD_KNIGHT, D.BOAR].includes(enemyId)) add('threatTank', 'threat-tank');
     if (d && d.range > 1) add('threatRanged', 'threat-ranged');
     return tags;
   }

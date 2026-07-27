@@ -10,6 +10,9 @@ const readabilityPath = resolve(root, 'styles/readability.css');
 const readabilityTestPath = resolve(root, 'scripts/test-readability.mjs');
 const mapTopologyPath = resolve(root, 'src/map-topology.js');
 const mapTopologyTestPath = resolve(root, 'scripts/test-map-topology.mjs');
+const leshyBossPath = resolve(root, 'src/leshy-boss.js');
+const leshyBossTestPath = resolve(root, 'scripts/test-leshy-boss.mjs');
+const leshySpritePath = resolve(root, 'assets/enemies/leshy.png');
 const index = readFileSync(indexPath, 'utf8');
 const plan = readFileSync(planPath, 'utf8');
 const readability = existsSync(readabilityPath) ? readFileSync(readabilityPath, 'utf8') : '';
@@ -36,6 +39,9 @@ function enemyBehaviorSnippetsPresent() {
     'u.enemyId === ENEMY_IDS.SHAMAN',
     'u.enemyId === ENEMY_IDS.PLAGUE_DOCTOR',
     'u.enemyId === ENEMY_IDS.NECRO',
+    'u.enemyId === ENEMY_IDS.LESHY',
+    'function leshyAi',
+    'summonedByLeshy',
     'spawnEnemy(ENEMY_IDS.SKELETON',
     'u.enemyId === ENEMY_IDS.SUICIDE',
     'dealDamage(u, h, 20',
@@ -67,7 +73,7 @@ const checks = [
   ['Berserk key is consistent', () => index.includes("key: 'berserk'") && index.includes('u.cds.berserk = 6') && !index.includes('inspire')],
   ['repeatable test seed present', () => index.includes('const TEST_SEED') && index.includes('function createSeededRandom') && index.includes("new URLSearchParams(window.location.search).get('seed')")],
   ['balance seed report present', () => existsSync(balanceSeedsPath)],
-  ['regional boss wave mapping present', () => index.includes('cell.region === 1) return [ENEMY_IDS.SHAMAN]') && index.includes('cell.region === 2) return [ENEMY_IDS.FIRE_TITAN]')],
+  ['regional boss wave mapping present', () => index.includes('cell.region === 1) return [ENEMY_IDS.LESHY]') && index.includes('cell.region === 2) return [ENEMY_IDS.FIRE_TITAN]')],
   ['enemy threat badges present', () => index.includes('function enemyThreatTags') && index.includes('threat-badges') && index.includes('enemyThreatBadgesHtml')],
   ['inventory equip best present', () => index.includes('function equipBestForHero') && index.includes('btn-inv-equip-best') && index.includes('inv-item-best')],
   ['inventory comparison present', () => index.includes('function itemCompareHtml') && index.includes('item-compare') && index.includes('powerDelta')],
@@ -101,7 +107,7 @@ const checks = [
   ['damage preview has a dedicated card', () => index.includes('function damagePreviewCardHtml') && index.includes('damage-preview-card')],
   ['route choice cards present', () => index.includes('map-route-choices') && index.includes('function mapNodeIntel') && index.includes('bossDistance')],
   ['unlocked region boss has a grey silhouette', () => index.includes('function mapBossSilhouetteHtml') && index.includes('map-boss-silhouette') && index.includes('background: linear-gradient(180deg, #aeb4bd, #656b76)')],
-  ['boss silhouette uses the real regional boss asset', () => index.includes('function regionBossEnemyId') && index.includes('ENEMY_IDS.SHAMAN') && index.includes('ENEMY_IDS.FIRE_TITAN') && index.includes('ENEMY_IDS.HYDRA') && index.includes('enemyIconUrl(enemyId)')],
+  ['boss silhouette uses the real regional boss asset', () => index.includes('function regionBossEnemyId') && index.includes('if (region === 1) return ENEMY_IDS.LESHY') && index.includes('ENEMY_IDS.FIRE_TITAN') && index.includes('ENEMY_IDS.HYDRA') && index.includes('enemyIconUrl(enemyId)')],
   ['unlocked boss cell is revealed across map fog', () => index.includes("const revealedBoss = node.type === 'boss' && node.region <= GameState.regionUnlocked") && index.includes('dist <= 2 || revealedBoss')],
   ['first battle flow present', () => index.includes('function createFirstBattleGrid') && index.includes('firstBattleCompleted') && index.includes('ftueSkillsUsed')],
   ['optional battle objective present', () => index.includes('objectiveUsedSkill') && index.includes('objectiveHeroLost') && index.includes('objectiveComplete')],
@@ -122,6 +128,9 @@ const checks = [
   ['regional walls constrain map movement', () => index.includes('WorldMapTopology.isNeighbor') && index.includes('WorldMapTopology.wallClasses')],
   ['old saves migrate to the snake layout', () => index.includes('function migrateWorldMapTopology') && index.includes('mapLayoutVersion')],
   ['map topology test present', () => existsSync(mapTopologyTestPath)],
+  ['Leshy boss module and test present', () => existsSync(leshyBossPath) && existsSync(leshyBossTestPath) && index.includes('src/leshy-boss.js')],
+  ['Leshy has a dedicated sprite', () => existsSync(leshySpritePath) && index.includes("leshy: 'leshy.png'") && index.includes("leshy: 'assets/enemies/leshy.png'")],
+  ['Leshy is a rooted two-cell summoner', () => index.includes("[D.LESHY]: { name: 'Ancient Leshy'") && index.includes('move: 0, range: 3') && index.includes('sizeW: 2') && index.includes('LeshyBoss.planTurn')],
   ['route cards expose cached enemy intel', () => index.includes('enemyWavePreview') && index.includes('map-route-intel')],
   ['ending summary tracks mastery', () => index.includes('objectivesCompleted') && index.includes('damageTaken') && index.includes('resultCode')],
   ['perk rules are exact in all languages', () => index.includes('const PERK_RULES_EXACT') && index.includes('TEAM SYNERGY') && index.includes('SINERGIA DE EQUIPO')]
