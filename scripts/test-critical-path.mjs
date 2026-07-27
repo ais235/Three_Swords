@@ -54,6 +54,12 @@ try {
   check('onboarding reaches the world map', await page.locator('#map-screen:not(.hidden)').count() === 1);
   check('required first battle route is visible', await page.locator('#btn-first-battle-route').count() === 1);
   check('regional boss silhouette is visible', await page.locator('.map-boss-silhouette').count() >= 1);
+  check('region 1 boss guards the right edge', await page.locator('.map-node[data-node-type="boss"][data-region="1"][data-x="11"]').count() === 1);
+  check('region 2 boss guards the left edge', await page.locator('.map-node[data-node-type="boss"][data-region="2"][data-x="0"]').count() === 1);
+  check('region 3 boss guards the right edge', await page.locator('.map-node[data-node-type="boss"][data-region="3"][data-x="11"]').count() === 1);
+  check('final boss waits in the lower-right corner', await page.locator('.map-node[data-node-type="final"][data-x="11"][data-y="7"]').count() === 1);
+  check('regional walls render all segments', await page.locator('.map-wall-bottom').count() === 22 && await page.locator('.map-wall-top').count() === 22);
+  check('regional walls expose two marked gateways', await page.locator('.map-gateway-down').count() === 2 && await page.locator('.map-gateway-up').count() === 2);
 
   const adjacent = page.locator('.map-node.map-option').first();
   check('an adjacent route exists', await adjacent.count() === 1);

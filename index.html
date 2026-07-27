@@ -3647,6 +3647,7 @@
   <link rel="stylesheet" href="styles/combat-ui.css">
   <link rel="stylesheet" href="styles/readability.css">
   <script src="src/combat-preview.js"></script>
+  <script src="src/map-topology.js"></script>
   <script src="/sdk.js"></script>
 </head>
 <body>
@@ -4153,7 +4154,7 @@
   const LANGUAGE_KEY = 'threeBladesLanguageV1';
   const TUTORIAL_SEEN_KEY = 'threeBladesTutorialSeenV1';
   const SUPPORTED_LANGUAGES = ['ru', 'en', 'es'];
-  const CLOUD_SAVE_VERSION = 2;
+  const CLOUD_SAVE_VERSION = 3;
   const LEADERBOARDS = {
     maxGold: 'three_blades_max_gold',
     enemiesDefeated: 'three_blades_enemies_defeated',
@@ -5580,8 +5581,8 @@
   const AD_MIN_INTERVAL_MS = 3 * 60 * 1000;
   const INTERSTITIAL_MIN_INTERVAL_MS = 4 * 60 * 1000;
   const BONUS_GOLD_CD_MS = 5 * 60 * 1000;
-  const MAP_COLS = 12;
-  const MAP_ROWS = 8;
+  const MAP_COLS = WorldMapTopology.COLS;
+  const MAP_ROWS = WorldMapTopology.ROWS;
   const MAP_CELL_TOTAL = MAP_COLS * MAP_ROWS;
 
   //══════════ SECTION 2: GAME_DATA ══════════
@@ -6833,6 +6834,7 @@
     pendingPerks: [],
     selectedHeroDeploy: 0,
     mapGrid: [],
+    mapLayoutVersion: WorldMapTopology.LAYOUT_VERSION,
     mapFogVisited: [],
     playerPos: { x: 0, y: 0 },
     regionUnlocked: 1,
@@ -6946,6 +6948,7 @@
     if (!GameState.heroes || !GameState.heroes.length) initHeroesFromTemplate();
     if (!GameState.mapGrid || GameState.mapGrid.length !== MAP_CELL_TOTAL) buildWorldMap();
     else {
+      migrateWorldMapTopology();
       if (!Array.isArray(GameState.mapFogVisited)) GameState.mapFogVisited = [];
       if (GameState.mapFogVisited.length === 0) {
         GameState.mapGrid.forEach(c => { if (c.visited) mapFogVisitedAdd(c.y, c.x); });
@@ -7332,9 +7335,7 @@
   }
 
   function regionFromMapRow(y) {
-    if (y <= 2) return 1;
-    if (y <= 5) return 2;
-    return 3;
+    return WorldMapTopology.regionForRow(y);
   }
 
   function buildWorldMap() {
@@ -7349,14 +7350,9 @@
       }
     }
     const byRegion = {
-      1: { rows: [0, 1, 2], mission: 20, city: 4, dungeon: 4, event: 6, boss: 0, bossPlaced: 1, bossMinDistance: 6 },
-      2: { rows: [3, 4, 5], mission: 16, city: 3, dungeon: 4, event: 5, boss: 0, bossPlaced: 1, bossMinDistance: 7, wanderer: 3, arena: 3 },
-      3: { rows: [6, 7], mission: 8, city: 2, dungeon: 3, event: 3, boss: 0, bossPlaced: 1, bossMinDistance: 6, wanderer: 2, final: 1, arena: 3 }
-    };
-    const regionEntrance = {
-      1: { x: 0, y: 0 },
-      2: { x: 0, y: 3 },
-      3: { x: 0, y: 6 }
+      1: { rows: [0, 1, 2], mission: 20, city: 4, dungeon: 4, event: 6 },
+      2: { rows: [3, 4, 5], mission: 16, city: 3, dungeon: 4, event: 5, wanderer: 3, arena: 3 },
+      3: { rows: [6, 7], mission: 8, city: 2, dungeon: 3, event: 3, wanderer: 2, arena: 3 }
     };
     const pick = (cells, n) => {
       const arr = cells.slice();
@@ -7368,31 +7364,31 @@
       const conf = byRegion[region];
       const cells = grid.filter(c => conf.rows.includes(c.y));
       const free = cells.slice();
-      const assign = (kind, count, emoji, opts = {}) => {
-        const origin = opts.origin || regionEntrance[region] || { x: 0, y: conf.rows[0] };
-        const minDistance = opts.minDistance || 0;
-        let candidates = free;
-        if (minDistance > 0) {
-          candidates = free.filter(c => Math.abs(c.x - origin.x) + Math.abs(c.y - origin.y) >= minDistance);
-          if (candidates.length < count) candidates = free;
-        }
-        pick(candidates, count).forEach(c => {
+      const assignAt = (kind, emoji, point) => {
+        const cell = free.find(c => c.x === point.x && c.y === point.y);
+        if (!cell) throw new Error(`Missing map anchor for ${kind} at ${point.x},${point.y}`);
+        cell.type = kind;
+        cell.emoji = emoji;
+        free.splice(free.indexOf(cell), 1);
+      };
+      const assign = (kind, count, emoji) => {
+        pick(free, count).forEach(c => {
           c.type = kind; c.emoji = emoji;
           free.splice(free.indexOf(c), 1);
         });
       };
-      assign('boss', conf.bossPlaced || 0, '💀', { origin: regionEntrance[region], minDistance: conf.bossMinDistance || 0 });
+      assignAt('boss', '💀', WorldMapTopology.REGION_BOSS_ANCHORS[region]);
+      if (region === 3) assignAt('final', '👑', WorldMapTopology.FINAL_ANCHOR);
       assign('mission', conf.mission, '⚔️');
       assign('city', conf.city, '🏘️');
       assign('dungeon', conf.dungeon, '🗺️');
       assign('event', conf.event, '❓');
-      assign('boss', conf.boss, '💀');
       if (conf.wanderer) assign('wanderer', conf.wanderer, '✨');
       if (conf.arena) assign('arena', conf.arena, '🕳️');
-      if (conf.final) assign('final', conf.final, '👑');
       free.forEach(c => { c.type = 'mission'; c.emoji = '⚔️'; });
     }
     GameState.mapGrid = grid;
+    GameState.mapLayoutVersion = WorldMapTopology.LAYOUT_VERSION;
     GameState.playerPos = { x: 0, y: 0 };
     GameState.mapFogVisited = [];
     mapFogVisitedAdd(0, 0);
@@ -7402,6 +7398,51 @@
     GameState.regionUnlocked = 1;
     GameState.defeatedBosses = 0;
     GameState.worldMap = [];
+  }
+
+  function migrateWorldMapTopology() {
+    if (!Array.isArray(GameState.mapGrid) || GameState.mapGrid.length !== MAP_CELL_TOTAL) return false;
+    if (Number(GameState.mapLayoutVersion) === WorldMapTopology.LAYOUT_VERSION) return false;
+
+    const defeated = Math.max(0, Number(GameState.defeatedBosses) || 0);
+    const finalWasCompleted = GameState.mapGrid.some(cell => cell.type === 'final' && cell.completed);
+
+    GameState.mapGrid.forEach(cell => {
+      cell.region = regionFromMapRow(cell.y);
+      if (cell.type === 'boss' || cell.type === 'final') {
+        cell.type = 'mission';
+        cell.emoji = '⚔️';
+        delete cell.enemyWavePreview;
+      }
+    });
+
+    for (const region of [1, 2, 3]) {
+      const anchor = WorldMapTopology.REGION_BOSS_ANCHORS[region];
+      const cell = GameState.mapGrid.find(node => node.x === anchor.x && node.y === anchor.y);
+      if (!cell) continue;
+      cell.type = 'boss';
+      cell.emoji = '💀';
+      cell.completed = defeated >= region;
+      delete cell.enemyWavePreview;
+    }
+
+    const final = GameState.mapGrid.find(node =>
+      node.x === WorldMapTopology.FINAL_ANCHOR.x && node.y === WorldMapTopology.FINAL_ANCHOR.y
+    );
+    if (final) {
+      final.type = 'final';
+      final.emoji = '👑';
+      final.completed = finalWasCompleted;
+      delete final.enemyWavePreview;
+    }
+
+    const start = GameState.mapGrid.find(cell => cell.x === 0 && cell.y === 0);
+    if (start) {
+      start.type = 'mission';
+      start.emoji = '⚔️';
+    }
+    GameState.mapLayoutVersion = WorldMapTopology.LAYOUT_VERSION;
+    return true;
   }
 
   //══════════ Battle core ══════════
@@ -10933,7 +10974,7 @@
     }
   }
 
-  function cellNeighbors(a, b) { return Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1 && !(a.x === b.x && a.y === b.y); }
+  function cellNeighbors(a, b) { return WorldMapTopology.isNeighbor(a, b); }
   function canShowAd() {
     return window.ysdk && (Date.now() - (GameState.adMeta.lastShownAt || 0) >= AD_MIN_INTERVAL_MS);
   }
@@ -12105,7 +12146,7 @@
     const boss = GameState.mapGrid
       .filter(c => c.region === node.region && c.type === 'boss' && !c.completed)
       .sort((a, b) => (Math.abs(a.x - node.x) + Math.abs(a.y - node.y)) - (Math.abs(b.x - node.x) + Math.abs(b.y - node.y)))[0];
-    const bossSteps = boss ? Math.abs(boss.x - node.x) + Math.abs(boss.y - node.y) : 0;
+    const bossSteps = boss ? WorldMapTopology.shortestDistance(node, boss) : 0;
     const combatNode = ['mission', 'dungeon', 'arena', 'boss', 'final'].includes(node.type);
     if (combatNode && !node.enemyWavePreview) node.enemyWavePreview = generateEnemyWaveForCell(node);
     const wave = combatNode ? (node.enemyWavePreview || []) : [];
@@ -12133,6 +12174,7 @@
     root.innerHTML = '';
     renderPartyStrip();
     let selectedNode = getCurrentCell();
+    const currentCell = selectedNode;
     const px = GameState.playerPos.x;
     const py = GameState.playerPos.y;
     const nodeElements = new Map();
@@ -12140,9 +12182,17 @@
     GameState.mapGrid.forEach(node => {
       const el = document.createElement('div');
       el.className = 'map-node';
+      el.dataset.x = String(node.x);
+      el.dataset.y = String(node.y);
+      el.dataset.region = String(node.region);
+      el.dataset.nodeType = node.type;
       el.classList.add(`map-region-${node.region}`);
+      WorldMapTopology.wallClasses(node).forEach(className => el.classList.add(className));
+      if (WorldMapTopology.bossZoneContains(node.region, node) && ['boss', 'final'].includes(node.type)) {
+        el.classList.add('map-boss-gateway-zone');
+      }
       const dist = Math.abs(node.x - px) + Math.abs(node.y - py);
-      const adjacent = dist === 1;
+      const adjacent = currentCell ? cellNeighbors(currentCell, node) : false;
       const revealedBoss = node.type === 'boss' && node.region <= GameState.regionUnlocked;
       if (dist <= 2 || revealedBoss) el.classList.add('visible');
       else el.classList.add('hidden');

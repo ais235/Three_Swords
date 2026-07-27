@@ -55,6 +55,65 @@ body,
   line-height: 1.25 !important;
 }
 
+#map-screen .map-node.map-wall-bottom::after,
+#map-screen .map-node.map-wall-top::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  z-index: 7;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 117, 84, .95), rgba(139, 34, 40, .98) 45%, rgba(47, 10, 18, .98));
+  box-shadow: 0 0 7px rgba(231, 76, 60, .55);
+}
+
+#map-screen .map-node.map-wall-bottom::after {
+  bottom: 0;
+  border-top: 1px solid rgba(255, 196, 112, .8);
+}
+
+#map-screen .map-node.map-wall-top::after {
+  top: 0;
+  transform: rotate(180deg);
+  border-top: 1px solid rgba(255, 196, 112, .8);
+}
+
+#map-screen .map-node.map-gateway-down::after,
+#map-screen .map-node.map-gateway-up::after {
+  position: absolute;
+  right: 3px;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(240, 165, 0, .9);
+  border-radius: 50%;
+  background: rgba(8, 8, 19, .88);
+  color: #ffd166;
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(240, 165, 0, .45);
+}
+
+#map-screen .map-node.map-gateway-down::after {
+  content: '▼';
+  bottom: 3px;
+}
+
+#map-screen .map-node.map-gateway-up::after {
+  content: '▲';
+  top: 3px;
+}
+
+#map-screen .map-node.map-boss-gateway-zone {
+  outline: 2px solid rgba(222, 81, 81, .72);
+  outline-offset: -4px;
+}
+
 /* Battle HUD, tactical information and previews. */
 #battle-screen .hero-card-name,
 #battle-screen .hero-card-class,

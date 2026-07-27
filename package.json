@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "audit": "node scripts/audit-layout.mjs",
-    "test": "npm run audit && npm run test:preview && npm run test:e2e && npm run test:readability && npm run balance:check",
+    "test": "npm run audit && npm run test:preview && npm run test:map && npm run test:e2e && npm run test:readability && npm run balance:check",
     "dev": "node scripts/dev-server.mjs",
     "test:preview": "node scripts/test-combat-preview.mjs",
+    "test:map": "node scripts/test-map-topology.mjs",
     "test:e2e": "node scripts/test-critical-path.mjs",
     "test:readability": "node scripts/test-readability.mjs",
     "balance:quick": "node scripts/balance-seeds.mjs --quick",
