@@ -44,6 +44,16 @@ try {
   });
 
   await page.goto(url, { waitUntil: 'domcontentloaded' });
+  const animationRuntime = await page.evaluate(() => ({
+    loaded: typeof globalThis.BattleAnimations?.resolveAttack === 'function',
+    enemyProfiles: Object.keys(globalThis.BattleAnimations?.ENEMY || {}).length,
+    deathProfiles: ['hero', 'enemy', 'boss'].map(kind => kind === 'hero'
+      ? globalThis.BattleAnimations?.resolveDeath({ isHero: true }, {}).kind
+      : globalThis.BattleAnimations?.resolveDeath({ isHero: false }, { boss: kind === 'boss' }).kind)
+  }));
+  check('battle animation runtime loads in the browser', animationRuntime.loaded, JSON.stringify(animationRuntime));
+  check('browser runtime exposes all enemy animation profiles', animationRuntime.enemyProfiles >= 36, JSON.stringify(animationRuntime));
+  check('browser runtime keeps three death styles', animationRuntime.deathProfiles.join(',') === 'hero,enemy,boss', JSON.stringify(animationRuntime));
   await page.getByRole('button', { name: /Новая игра|New Game/i }).click();
 
   const next = page.getByRole('button', { name: /Далее|Next/i });

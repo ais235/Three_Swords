@@ -3662,6 +3662,7 @@
   <script src="src/combat-preview.js"></script>
   <script src="src/map-topology.js"></script>
   <script src="src/leshy-boss.js"></script>
+  <script src="src/battle-animations.js"></script>
   <script src="/sdk.js"></script>
 </head>
 <body>
@@ -7993,7 +7994,9 @@
     const trapIndex = (b.traps || []).findIndex(t => t.x === u.x && t.y === u.y);
     if (trapIndex >= 0) {
       const trap = b.traps.splice(trapIndex, 1)[0];
+      const hpBeforeTrap = u.hp;
       u.hp -= trap.damage;
+      startBattleAttackAnimation(u, u, { animationProfile: 'explosion', animationImpactOnly: true }, trap.damage, hpBeforeTrap);
       pushBattleLog(`${u.name}: trap −${trap.damage}`, 'status');
       spawnBattleTextFx(u.x, u.y, `TRAP -${trap.damage}`, '#ffb36b');
       if (trap.slow && u.hp > 0) addStatus(u, STATUS.SLOW, 2);
@@ -8036,19 +8039,50 @@
     else {
       u.activeStatuses.push({ type, turns, meta });
       if (typeof BattleSfx !== 'undefined') BattleSfx.statusApplied(type);
+      const statusProfiles = {
+        stun: 'shield',
+        freeze: 'ice',
+        fear: 'shadow',
+        web: 'root',
+        poison: 'poison',
+        burn: 'fire',
+        slow: 'ice',
+        blind: 'shadow',
+        curse: 'shadow'
+      };
+      const statusProfile = statusProfiles[type];
+      if (statusProfile && GameState.currentBattle) {
+        const profile = BattleAnimations.profileById(statusProfile);
+        const center = battleUnitCenter(u);
+        queueBattleFx({
+          type: 'impact',
+          startedAt: performance.now(),
+          duration: battleAnimationMs(340),
+          impact: profile.impact,
+          color: profile.color,
+          x: center.x,
+          y: center.y,
+          strength: 1,
+          damage: 0
+        });
+      }
     }
   }
   function tickStatusesStart(u) {
     if (!u.activeStatuses) return;
     u.activeStatuses.forEach(s => {
       if (s.type === STATUS.POISON) {
+        const hpBeforePoison = u.hp;
         u.hp -= 3;
+        startBattleAttackAnimation(u, u, { animationProfile: 'poison', animationImpactOnly: true }, 3, hpBeforePoison);
         pushBattleLog(`${u.name}: poison -3`, 'status');
         spawnBattleTextFx(u.x, u.y, 'POISON -3', '#7dffbf');
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.status_tick_poison, 0.72);
       }
       if (s.type === STATUS.BURN) {
+        const hpBeforeBurn = u.hp;
         u.hp -= 3;
+        startBattleAttackAnimation(u, u, { animationProfile: 'fire', animationImpactOnly: true }, 3, hpBeforeBurn);
         pushBattleLog(`${u.name}: burn -3`, 'status');
         spawnBattleTextFx(u.x, u.y, 'BURN -3', '#ff8a4d');
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.status_tick_burn, 0.72);
@@ -8160,6 +8194,7 @@
     if (Math.random() < 0.25 && target.isHero && target.heroId === 'garet' && !opts.blockIgnore && !opts.magic) {
       pushBattleLog(`[${target.emoji} ${target.name}] Shield block!`, 'status');
       spawnBattleTextFx(target.x, target.y, 'BLOCK', '#8bd3ff');
+      startBattleAttackAnimation(attacker, target, opts, 0, target.hp);
       return 0;
     }
 
@@ -8195,17 +8230,21 @@
       if (tArmorItem && tArmorItem.mods.dodge && Math.random() < tArmorItem.mods.dodge) {
         pushBattleLog(`💨 ${target.name} dodged!`, 'status');
         spawnBattleTextFx(target.x, target.y, 'DODGE', '#8bd3ff');
+        startBattleAttackAnimation(attacker, target, opts, 0, target.hp);
         return 0;
       }
     }
 
+    const hpBefore = target.hp;
     target.hp -= dmg;
+    const attackVisual = startBattleAttackAnimation(attacker, target, opts, dmg, hpBefore);
     if (target.isHero && dmg > 0) {
       GameState.stats.damageTaken = (GameState.stats.damageTaken || 0) + dmg;
     }
     if (dmg > 0) {
-      spawnDamageFx(target.x, target.y, dmg);
-      spawnImpactFx(attacker, target, opts, dmg);
+      const showDamageNumber = () => spawnDamageFx(target.x, target.y, dmg);
+      if (attackVisual.impactDelay > 24) setTimeout(showDamageNumber, attackVisual.impactDelay);
+      else showDamageNumber();
       if (b) {
         if (sfxCrit) opts.sfxCrit = true;
         BattleSfx.damageEvent(attacker, target, opts, dmg);
@@ -8262,6 +8301,7 @@
     }
 
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags) attacker.flags.firstAttackTurn = false;
+    if (attacker.hp <= 0) onUnitDeath(attacker);
     if (target.hp <= 0) onUnitDeath(target);
     if (b && allEnemiesDead(b)) checkBattleEnd();
     if (b && allHeroesDead(b)) checkBattleEnd();
@@ -8295,12 +8335,38 @@
       if (armorItem && armorItem.mods.revive5 && !u._reviveUsed) {
         u._reviveUsed = true;
         u.hp = 5;
+        u._deathHandled = false;
         pushBattleLog(`🔥 ${u.name}: Phoenix Robe! revived with 5 HP!`, 'status');
         spawnBattleTextFx(u.x, u.y, 'REVIVE 5', '#ffd06b');
+        playBattleAbilityFx(u, 'berserk', { glyph: '🔥' });
         return; // Survives due to revive.
       }
       if (b) b.objectiveHeroLost = true;
     }
+
+    const enemyMeta = !u.isHero ? enemyDef(u.enemyId) : null;
+    const deathProfile = BattleAnimations.resolveDeath(u, {
+      boss: !!enemyMeta?.boss,
+      large: unitWidth(u) > 1 || unitHeight(u) > 1,
+      color: enemyMeta?.boss ? '#ffd06b' : '#d8d8e8'
+    });
+    const deathStart = Math.max(performance.now(), u._lastVisualImpactAt || 0);
+    u.deathAnimation = {
+      ...deathProfile,
+      startedAt: deathStart,
+      duration: battleAnimationMs(deathProfile.duration),
+      direction: u.isHero ? -1 : 1
+    };
+    const deathCenter = battleUnitCenter(u);
+    queueBattleFx({
+      type: 'death',
+      startedAt: deathStart,
+      duration: u.deathAnimation.duration,
+      kind: deathProfile.kind,
+      color: deathProfile.color,
+      x: deathCenter.x,
+      y: deathCenter.y
+    });
 
     // Item: deathExplode (death_ring): 3x3 explosion when a hero dies.
     if (u.isHero && b) {
@@ -8314,14 +8380,17 @@
         }
         pushBattleLog(`💀 ${u.name}: Death Ring — 3×3 explosion!`, 'status');
         spawnBattleTextFx(u.x, u.y, 'DEATH RING', '#ff8f8f');
+        playBattleAbilityFx(u, 'meteor', { radius: 1, glyph: '💀', noPose: true });
       }
     }
 
     if (!u.isHero && u.enemyId === ENEMY_IDS.ZOMBIE && typeof BattleSfx !== 'undefined') {
       BattleSfx.playSampledUrl(BSX.enemies_zombie_explosion, 0.95);
+      playBattleAbilityFx(u, 'zombieExplosion', { radius: 1, glyph: '💥', noPose: true });
     }
-    if (typeof BattleSfx !== 'undefined') BattleSfx.death();
-    spawnSkullFx(u.x, u.y);
+    if (typeof BattleSfx !== 'undefined') {
+      setTimeout(() => BattleSfx.death(), Math.max(0, deathStart - performance.now()));
+    }
 
     if (!u.isHero && u.enemyId === ENEMY_IDS.ZOMBIE) {
       for (const t of (b ? b.units : [])) {
@@ -8977,6 +9046,412 @@
       <div class="battle-tactical-sub" style="text-align:center;color:#ffca6a">${translateKey('tapToConfirm')}</div>`;
   }
 
+  function battleMotionReduced() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function battleAnimationMs(ms) {
+    if (battleMotionReduced()) return Math.max(45, Math.round(ms * 0.18));
+    return Math.max(60, Math.round(ms / (GameState.battleSpeed === 2 ? 2 : 1)));
+  }
+
+  function battleUnitCenter(unit, x = unit?.x || 0, y = unit?.y || 0) {
+    return {
+      x: (x + unitWidth(unit) / 2) * CELL,
+      y: (y + unitHeight(unit) / 2) * CELL
+    };
+  }
+
+  function battleFxList(b = GameState.currentBattle) {
+    if (!b) return [];
+    if (!Array.isArray(b.combatFx)) b.combatFx = [];
+    return b.combatFx;
+  }
+
+  function queueBattleFx(event) {
+    const b = GameState.currentBattle;
+    if (!b || !event) return null;
+    const fx = {
+      startedAt: performance.now(),
+      duration: battleAnimationMs(300),
+      ...event
+    };
+    battleFxList(b).push(fx);
+    return fx;
+  }
+
+  function pushUnitAnimation(unit, key, event) {
+    if (!unit) return;
+    const list = Array.isArray(unit[key]) ? unit[key] : [];
+    const now = performance.now();
+    unit[key] = list.filter(anim => now < anim.startedAt + anim.duration + 40);
+    unit[key].push(event);
+  }
+
+  function startBattleAttackAnimation(attacker, target, opts = {}, damage = 0, hpBefore = target?.hp) {
+    if (!attacker || !target || !GameState.currentBattle) return { impactDelay: 0, impactAt: performance.now() };
+    const profile = BattleAnimations.resolveAttack(attacker, opts);
+    const now = performance.now();
+    const offset = battleAnimationMs(opts.animationOffsetMs || 0);
+    const startedAt = now + offset;
+    const duration = battleAnimationMs(profile.duration);
+    const impactDelay = battleAnimationMs(profile.impactDelay);
+    const impactAt = startedAt + impactDelay;
+    const source = battleUnitCenter(attacker);
+    const destination = battleUnitCenter(target);
+    const attackEvent = {
+      startedAt,
+      duration,
+      profile,
+      fromX: source.x,
+      fromY: source.y,
+      targetX: destination.x,
+      targetY: destination.y
+    };
+    if (!opts.animationImpactOnly) pushUnitAnimation(attacker, 'attackAnimations', attackEvent);
+    pushUnitAnimation(target, 'hitAnimations', {
+      startedAt: impactAt,
+      duration: battleAnimationMs(profile.strength >= 2 ? 240 : 190),
+      profile,
+      fromX: source.x,
+      fromY: source.y,
+      hpBefore
+    });
+    target._lastVisualImpactAt = Math.max(target._lastVisualImpactAt || 0, impactAt);
+
+    if (profile.projectile && !opts.animationImpactOnly) {
+      queueBattleFx({
+        type: 'projectile',
+        startedAt: startedAt + battleAnimationMs(45),
+        duration: Math.max(80, impactAt - startedAt - battleAnimationMs(45)),
+        projectile: profile.projectile,
+        color: profile.color,
+        fromX: source.x,
+        fromY: source.y,
+        toX: destination.x,
+        toY: destination.y,
+        strength: profile.strength,
+        shotIndex: opts.animationShotIndex || 0
+      });
+    }
+    queueBattleFx({
+      type: 'impact',
+      startedAt: impactAt,
+      duration: battleAnimationMs(profile.strength >= 2 ? 330 : 250),
+      impact: profile.impact,
+      color: profile.color,
+      x: destination.x,
+      y: destination.y,
+      strength: profile.strength,
+      damage
+    });
+    return { impactDelay: Math.max(0, impactAt - now), impactAt, profile };
+  }
+
+  function playBattleAbilityFx(owner, abilityKey, options = {}) {
+    if (!owner || !GameState.currentBattle) return null;
+    const profile = BattleAnimations.resolveAbility(owner, abilityKey);
+    const center = options.target
+      ? battleUnitCenter(options.target)
+      : options.x != null && options.y != null
+        ? { x: (options.x + 0.5) * CELL, y: (options.y + 0.5) * CELL }
+        : battleUnitCenter(owner);
+    const startedAt = performance.now() + battleAnimationMs(options.delay || 0);
+    if (!options.noPose) {
+      pushUnitAnimation(owner, 'attackAnimations', {
+        startedAt,
+        duration: battleAnimationMs(profile.duration),
+        profile,
+        fromX: center.x,
+        fromY: center.y,
+        targetX: center.x,
+        targetY: center.y
+      });
+    }
+    if (options.projectile) {
+      queueBattleFx({
+        type: 'projectile',
+        startedAt: startedAt + battleAnimationMs(70),
+        duration: battleAnimationMs(profile.impactDelay || 300),
+        projectile: options.projectile,
+        color: profile.color,
+        fromX: center.x - (options.projectile === 'meteor' ? CELL * 1.8 : 0),
+        fromY: center.y - CELL * (options.projectile === 'meteor' ? 3.2 : 2.4),
+        toX: center.x,
+        toY: center.y,
+        strength: profile.strength,
+        radius: options.radius || 1
+      });
+    }
+    return queueBattleFx({
+      type: 'ability',
+      startedAt,
+      duration: battleAnimationMs(profile.duration),
+      impact: profile.impact,
+      color: profile.color,
+      x: center.x,
+      y: center.y,
+      radius: options.radius || 1,
+      strength: profile.strength,
+      glyph: options.glyph || ''
+    });
+  }
+
+  function activeUnitAnimation(unit, key, now) {
+    const list = Array.isArray(unit?.[key]) ? unit[key] : [];
+    let active = null;
+    unit[key] = list.filter(anim => {
+      const keep = now < anim.startedAt + anim.duration + 40;
+      if (keep && now >= anim.startedAt && now <= anim.startedAt + anim.duration) active = anim;
+      return keep;
+    });
+    return active;
+  }
+
+  function unitBattlePose(unit, now = performance.now()) {
+    const pose = { dx: 0, dy: 0, rotation: 0, scaleX: 1, scaleY: 1, alpha: 1, filter: 'none' };
+    const attack = activeUnitAnimation(unit, 'attackAnimations', now);
+    if (attack) {
+      const p = Math.max(0, Math.min(1, (now - attack.startedAt) / Math.max(1, attack.duration)));
+      const dx = attack.targetX - attack.fromX;
+      const dy = attack.targetY - attack.fromY;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const nx = dx / len;
+      const ny = dy / len;
+      const wave = Math.sin(Math.PI * p);
+      const motion = attack.profile.motion;
+      if (!battleMotionReduced()) {
+        if (motion === 'lunge') { pose.dx += nx * CELL * .30 * wave; pose.dy += ny * CELL * .30 * wave; }
+        if (motion === 'thrust') { pose.dx += nx * CELL * .38 * wave; pose.dy += ny * CELL * .38 * wave; pose.rotation += nx * .05 * wave; }
+        if (motion === 'heavy') {
+          const push = p < .32 ? -p / .32 * .10 : Math.sin((p - .32) / .68 * Math.PI) * .36;
+          pose.dx += nx * CELL * push; pose.dy += ny * CELL * push;
+          pose.scaleY *= 1 - .08 * Math.sin(Math.PI * p);
+        }
+        if (motion === 'pounce') { pose.dx += nx * CELL * .42 * wave; pose.dy += ny * CELL * .42 * wave - 9 * wave; }
+        if (motion === 'recoil') { pose.dx -= nx * 5 * wave; pose.dy -= ny * 5 * wave; pose.rotation -= nx * .045 * wave; }
+        if (motion === 'blink') { pose.dx += nx * CELL * .24 * wave; pose.dy += ny * CELL * .24 * wave; pose.alpha *= .55 + .45 * Math.abs(Math.cos(Math.PI * p)); }
+        if (motion === 'cast') { pose.scaleX *= 1 + .08 * wave; pose.scaleY *= 1 + .10 * wave; pose.dy -= 3 * wave; }
+        if (motion === 'brace') { pose.scaleX *= 1 + .10 * wave; pose.scaleY *= 1 - .06 * wave; }
+        if (motion === 'teleport') { pose.alpha *= .2 + .8 * Math.abs(Math.cos(Math.PI * p)); pose.scaleX *= 1 - .2 * wave; }
+      }
+      if (['cast', 'brace', 'teleport'].includes(motion)) pose.filter = `brightness(${1 + .8 * wave}) saturate(1.35)`;
+    }
+
+    const hit = activeUnitAnimation(unit, 'hitAnimations', now);
+    if (hit) {
+      const p = Math.max(0, Math.min(1, (now - hit.startedAt) / Math.max(1, hit.duration)));
+      const center = battleUnitCenter(unit);
+      const dx = center.x - hit.fromX;
+      const dy = center.y - hit.fromY;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const wave = Math.sin(Math.PI * p);
+      if (!battleMotionReduced()) {
+        pose.dx += dx / len * CELL * .13 * wave * Math.min(1.5, hit.profile.strength);
+        pose.dy += dy / len * CELL * .13 * wave * Math.min(1.5, hit.profile.strength);
+        pose.rotation += dx / len * .07 * wave;
+      }
+      if (p < .48) pose.filter = `brightness(${2.2 - p * 1.5}) saturate(1.8)`;
+    }
+
+    const death = unit?.deathAnimation;
+    if (death && now >= death.startedAt) {
+      const p = Math.max(0, Math.min(1, (now - death.startedAt) / Math.max(1, death.duration)));
+      if (death.kind === 'enemy') {
+        pose.dy += 12 * p;
+        pose.rotation += death.direction * .18 * p;
+        pose.scaleX *= 1 - .5 * p;
+        pose.scaleY *= 1 - .36 * p;
+        pose.alpha *= 1 - Math.pow(p, 1.5);
+        pose.filter = `grayscale(${p}) brightness(${1.8 - .8 * p})`;
+      } else if (death.kind === 'hero') {
+        pose.dy += 9 * p;
+        pose.rotation -= .48 * p;
+        pose.scaleY *= 1 - .14 * p;
+        pose.alpha *= p < .58 ? 1 : 1 - (p - .58) / .42;
+        pose.filter = `grayscale(${Math.min(1, p * 1.5)}) brightness(${1.45 - .55 * p})`;
+      } else {
+        const shake = battleMotionReduced() ? 0 : Math.sin(p * Math.PI * 12) * (1 - p) * 4;
+        pose.dx += shake;
+        pose.scaleX *= 1 + Math.sin(p * Math.PI * 5) * .045 * (1 - p);
+        pose.scaleY *= 1 + Math.sin(p * Math.PI * 5) * .045 * (1 - p);
+        pose.alpha *= 1 - Math.pow(p, 2.2);
+        pose.filter = `brightness(${1.8 - .65 * p}) saturate(${1.4 - .4 * p})`;
+      }
+    }
+    return pose;
+  }
+
+  function displayedUnitHp(unit, now = performance.now()) {
+    const future = (unit?.hitAnimations || [])
+      .filter(anim => now < anim.startedAt && Number.isFinite(anim.hpBefore))
+      .sort((a, z) => a.startedAt - z.startedAt)[0];
+    return future ? future.hpBefore : unit.hp;
+  }
+
+  function isUnitDeathAnimating(unit, now = performance.now()) {
+    const death = unit?.deathAnimation;
+    return !!death && now < death.startedAt + death.duration;
+  }
+
+  function activeDeathAnimationRemaining(b, now = performance.now()) {
+    if (!b) return 0;
+    return b.units.reduce((max, unit) => {
+      const death = unit.deathAnimation;
+      if (!death) return max;
+      return Math.max(max, death.startedAt + death.duration - now);
+    }, 0);
+  }
+
+  function drawBattleProjectile(ctx2, fx, p) {
+    const eased = p * p * (3 - 2 * p);
+    const x = fx.fromX + (fx.toX - fx.fromX) * eased;
+    const y = fx.fromY + (fx.toY - fx.fromY) * eased - Math.sin(Math.PI * p) * (fx.projectile === 'axe' ? 10 : 4);
+    const angle = Math.atan2(fx.toY - fx.fromY, fx.toX - fx.fromX);
+    ctx2.save();
+    ctx2.translate(x, y);
+    ctx2.rotate(angle);
+    ctx2.shadowColor = fx.color;
+    ctx2.shadowBlur = 10;
+    if (fx.projectile === 'rain') {
+      ctx2.rotate(Math.PI / 2 - angle);
+      ctx2.strokeStyle = fx.color; ctx2.fillStyle = fx.color; ctx2.lineWidth = 2;
+      for (let i = -3; i <= 3; i++) {
+        const offsetX = i * 13;
+        const offsetY = Math.abs(i % 2) * 17 - (i % 3) * 5;
+        ctx2.beginPath(); ctx2.moveTo(offsetX, offsetY - 16); ctx2.lineTo(offsetX, offsetY + 10); ctx2.stroke();
+        ctx2.beginPath(); ctx2.moveTo(offsetX, offsetY + 13); ctx2.lineTo(offsetX - 4, offsetY + 5); ctx2.lineTo(offsetX + 4, offsetY + 5); ctx2.closePath(); ctx2.fill();
+      }
+    } else if (fx.projectile === 'meteor') {
+      ctx2.rotate(-angle);
+      const radius = 13 + 5 * (fx.strength || 1);
+      const grad = ctx2.createRadialGradient(0, 0, 2, 0, 0, radius);
+      grad.addColorStop(0, '#fff7c7'); grad.addColorStop(.35, '#ff8a42'); grad.addColorStop(1, '#8c2418');
+      ctx2.fillStyle = grad; ctx2.beginPath(); ctx2.arc(0, 0, radius, 0, Math.PI * 2); ctx2.fill();
+      ctx2.strokeStyle = 'rgba(255,138,66,.72)'; ctx2.lineWidth = 9;
+      ctx2.beginPath(); ctx2.moveTo(-42, -54); ctx2.lineTo(-8, -10); ctx2.stroke();
+    } else if (fx.projectile === 'arrow') {
+      ctx2.strokeStyle = fx.color; ctx2.fillStyle = fx.color; ctx2.lineWidth = 3;
+      ctx2.beginPath(); ctx2.moveTo(-15, 0); ctx2.lineTo(12, 0); ctx2.stroke();
+      ctx2.beginPath(); ctx2.moveTo(14, 0); ctx2.lineTo(6, -5); ctx2.lineTo(6, 5); ctx2.closePath(); ctx2.fill();
+    } else if (fx.projectile === 'axe') {
+      ctx2.rotate(p * Math.PI * 8);
+      ctx2.font = '22px serif'; ctx2.textAlign = 'center'; ctx2.textBaseline = 'middle'; ctx2.fillText('🪓', 0, 0);
+    } else if (fx.projectile === 'root') {
+      ctx2.strokeStyle = fx.color; ctx2.lineWidth = 5; ctx2.lineCap = 'round';
+      ctx2.beginPath(); ctx2.moveTo(-18, 0); ctx2.quadraticCurveTo(-5, -7, 12, 0); ctx2.stroke();
+      ctx2.fillStyle = '#d8ffad'; ctx2.beginPath(); ctx2.arc(13, 0, 4, 0, Math.PI * 2); ctx2.fill();
+    } else if (fx.projectile === 'shadow') {
+      ctx2.strokeStyle = fx.color; ctx2.lineWidth = 9; ctx2.globalAlpha = .72;
+      ctx2.beginPath(); ctx2.moveTo(-20, 0); ctx2.lineTo(12, 0); ctx2.stroke();
+    } else {
+      const radius = fx.projectile === 'fire' ? 10 : 7;
+      const grad = ctx2.createRadialGradient(0, 0, 1, 0, 0, radius);
+      grad.addColorStop(0, '#ffffff'); grad.addColorStop(.35, fx.color); grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx2.fillStyle = grad; ctx2.beginPath(); ctx2.arc(0, 0, radius, 0, Math.PI * 2); ctx2.fill();
+      if (fx.projectile === 'ice') {
+        ctx2.strokeStyle = '#d9f8ff'; ctx2.lineWidth = 2;
+        ctx2.beginPath(); ctx2.moveTo(-10, 0); ctx2.lineTo(10, 0); ctx2.stroke();
+      }
+    }
+    ctx2.restore();
+  }
+
+  function drawBattleImpact(ctx2, fx, p) {
+    const radius = (10 + 25 * p) * (fx.strength || 1);
+    ctx2.save();
+    ctx2.translate(fx.x, fx.y);
+    ctx2.globalAlpha = Math.max(0, 1 - p);
+    ctx2.strokeStyle = fx.color;
+    ctx2.fillStyle = fx.color;
+    ctx2.shadowColor = fx.color;
+    ctx2.shadowBlur = 12;
+    ctx2.lineWidth = Math.max(2, 5 - p * 3);
+    if (['slash', 'shadow', 'bite', 'pierce'].includes(fx.impact)) {
+      ctx2.beginPath();
+      if (fx.impact === 'bite') {
+        ctx2.arc(-5, 0, radius * .55, -1.15, 1.15);
+        ctx2.arc(5, 0, radius * .55, Math.PI - 1.15, Math.PI + 1.15);
+      } else {
+        ctx2.arc(0, 0, radius, -.9, .7);
+      }
+      ctx2.stroke();
+    } else if (fx.impact === 'root') {
+      for (let i = -2; i <= 2; i++) {
+        ctx2.beginPath(); ctx2.moveTo(i * 6, 12); ctx2.lineTo(i * 5, -radius * (.6 + Math.abs(i) * .1)); ctx2.stroke();
+      }
+    } else if (fx.impact === 'ice') {
+      for (let i = 0; i < 6; i++) {
+        ctx2.rotate(Math.PI / 3); ctx2.beginPath(); ctx2.moveTo(5, 0); ctx2.lineTo(radius, 0); ctx2.stroke();
+      }
+    } else if (fx.impact === 'fire' || fx.impact === 'explosion' || fx.impact === 'smash') {
+      ctx2.beginPath(); ctx2.arc(0, 0, radius, 0, Math.PI * 2); ctx2.stroke();
+      for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI / 4;
+        ctx2.fillRect(Math.cos(a) * radius, Math.sin(a) * radius, 4, 4);
+      }
+    } else {
+      ctx2.beginPath(); ctx2.arc(0, 0, radius, 0, Math.PI * 2); ctx2.stroke();
+    }
+    ctx2.restore();
+  }
+
+  function drawBattleAbility(ctx2, fx, p) {
+    ctx2.save();
+    ctx2.translate(fx.x, fx.y);
+    const wave = Math.sin(Math.PI * p);
+    const radius = CELL * (.35 + (fx.radius || 1) * .6 * p);
+    ctx2.globalAlpha = Math.max(0, 1 - p * .8);
+    ctx2.strokeStyle = fx.color;
+    ctx2.fillStyle = fx.color;
+    ctx2.shadowColor = fx.color;
+    ctx2.shadowBlur = 15;
+    ctx2.lineWidth = 3;
+    ctx2.beginPath(); ctx2.arc(0, 0, radius, 0, Math.PI * 2); ctx2.stroke();
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4 + p * 1.4;
+      const r = 8 + radius * wave;
+      ctx2.fillRect(Math.cos(a) * r - 2, Math.sin(a) * r - 2, 4, 4);
+    }
+    if (fx.glyph) {
+      ctx2.font = `${Math.round(18 + 10 * wave)}px serif`;
+      ctx2.textAlign = 'center'; ctx2.textBaseline = 'middle'; ctx2.fillText(fx.glyph, 0, 0);
+    }
+    ctx2.restore();
+  }
+
+  function drawBattleDeathParticles(ctx2, fx, p) {
+    ctx2.save();
+    ctx2.globalAlpha = Math.max(0, 1 - p);
+    ctx2.fillStyle = fx.color;
+    ctx2.shadowColor = fx.color;
+    ctx2.shadowBlur = 8;
+    const count = fx.kind === 'boss' ? 18 : fx.kind === 'hero' ? 10 : 7;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + (i % 3) * .37;
+      const speed = 12 + (i % 5) * 5 + (fx.kind === 'boss' ? 18 : 0);
+      const x = fx.x + Math.cos(a) * speed * p;
+      const y = fx.y + Math.sin(a) * speed * p - 18 * p * p;
+      const size = fx.kind === 'boss' ? 5 : 3;
+      ctx2.fillRect(x - size / 2, y - size / 2, size, size);
+    }
+    ctx2.restore();
+  }
+
+  function drawBattleCombatFx(ctx2, b) {
+    const now = performance.now();
+    const list = battleFxList(b);
+    b.combatFx = list.filter(fx => now < fx.startedAt + fx.duration + 20);
+    b.combatFx.forEach(fx => {
+      if (now < fx.startedAt) return;
+      const p = Math.max(0, Math.min(1, (now - fx.startedAt) / Math.max(1, fx.duration)));
+      if (fx.type === 'projectile') drawBattleProjectile(ctx2, fx, p);
+      else if (fx.type === 'impact') drawBattleImpact(ctx2, fx, p);
+      else if (fx.type === 'ability') drawBattleAbility(ctx2, fx, p);
+      else if (fx.type === 'death') drawBattleDeathParticles(ctx2, fx, p);
+    });
+  }
+
   function startUnitMoveAnimation(unit, fromX, fromY, toX, toY) {
     if (!unit || (fromX === toX && fromY === toY)) return;
     const distance = Math.max(1, Math.abs(toX - fromX) + Math.abs(toY - fromY));
@@ -9125,12 +9600,14 @@
       ctx.restore();
     }
 
-    b.units.filter(u => u.hp > 0).sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x).forEach(u => {
+    const combatDrawNow = performance.now();
+    b.units.filter(u => u.hp > 0 || isUnitDeathAnimating(u, combatDrawNow)).sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x).forEach(u => {
       const visualPos = unitVisualPosition(u);
       const px = visualPos.x * CELL, py = visualPos.y * CELL;
       const footprintW = unitWidth(u) * CELL;
       const footprintH = unitHeight(u) * CELL;
       const centerX = px + footprintW / 2;
+      const pose = unitBattlePose(u, combatDrawNow);
       if (b.phase === 'deploy' && u.isHero && u.heroId === b.deployDragHeroId) {
         ctx.save();
         ctx.fillStyle = 'rgba(240,165,0,.18)';
@@ -9141,7 +9618,7 @@
         ctx.restore();
       }
       let show = true;
-      if (u.enemyId === ENEMY_IDS.ASSASSIN) {
+      if (u.enemyId === ENEMY_IDS.ASSASSIN && u.hp > 0) {
         const t = b.grid[u.y][u.x];
         const nearM = [[-1,0],[1,0],[0,-1],[0,1]].some(([dx,dy]) => inBounds(u.x+dx,u.y+dy) && b.grid[u.y+dy][u.x+dx]===TILE.MOUNTAIN);
         if (t === TILE.FOREST || nearM) show = false;
@@ -9166,7 +9643,7 @@
         const spriteBottom = BAR_TOP - 2;
 
         // Idle breathing: vertical stretch anchored at feet — body grows upward, feet stay fixed
-        const now = performance.now();
+        const now = combatDrawNow;
         const phase = (visualPos.x * 1.7 + visualPos.y * 3.1 + (u.isHero ? 0 : 5.3));
         const scaleY = 1 + Math.sin(now * 0.0016 + phase) * 0.028; // ±2.8% vertical stretch
 
@@ -9183,41 +9660,63 @@
           const hTex = getHeroTexture(u.heroId);
           if (hTex) {
             ctx.save();
-            ctx.translate(centerX, feetY);   // anchor at feet center
-            ctx.scale(1, scaleY);                   // stretch upward
+            ctx.globalAlpha = pose.alpha;
+            ctx.filter = pose.filter;
+            ctx.translate(centerX + pose.dx, feetY + pose.dy);
+            ctx.rotate(pose.rotation);
+            ctx.scale(pose.scaleX, scaleY * pose.scaleY);
             ctx.drawImage(hTex, -spriteW / 2, -spriteH, spriteW, spriteH);
             ctx.restore();
           } else {
+            ctx.save();
+            ctx.globalAlpha = pose.alpha;
+            ctx.filter = pose.filter;
+            ctx.translate(centerX + pose.dx, feetY + pose.dy);
+            ctx.rotate(pose.rotation);
+            ctx.scale(pose.scaleX, scaleY * pose.scaleY);
             ctx.font = '38px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillText(u.sprite, centerX, feetY);
+            ctx.fillText(u.sprite, 0, 0);
+            ctx.restore();
           }
         } else {
           const eTex = getEnemyTexture(u.enemyId);
           if (eTex) {
             ctx.save();
-            ctx.translate(centerX, feetY);   // anchor at feet center
-            ctx.scale(-1, scaleY);                  // flip X + stretch Y
+            ctx.globalAlpha = pose.alpha;
+            ctx.filter = pose.filter;
+            ctx.translate(centerX + pose.dx, feetY + pose.dy);
+            ctx.rotate(pose.rotation);
+            ctx.scale(-pose.scaleX, scaleY * pose.scaleY);
             ctx.drawImage(eTex, -spriteW / 2, -spriteH, spriteW, spriteH);
             ctx.restore();
           } else {
+            ctx.save();
+            ctx.globalAlpha = pose.alpha;
+            ctx.filter = pose.filter;
+            ctx.translate(centerX + pose.dx, feetY + pose.dy);
+            ctx.rotate(pose.rotation);
+            ctx.scale(pose.scaleX, scaleY * pose.scaleY);
             ctx.font = '38px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'alphabetic';
-            ctx.fillText(u.emoji, centerX, feetY);
+            ctx.fillText(u.emoji, 0, 0);
+            ctx.restore();
           }
         }
 
         // 2: HP bar + hp text
+        if (u.hp > 0) {
+        const visibleHp = displayedUnitHp(u, combatDrawNow);
         const barW = footprintW - 6, barH = 4, bx = px + 3, by = py + footprintH - 7;
         ctx.fillStyle = '#1a1a2e';
         ctx.fillRect(bx, by, barW, barH);
-        const hpFrac = Math.max(0, Math.min(1, u.hp / u.maxHp));
+        const hpFrac = Math.max(0, Math.min(1, visibleHp / u.maxHp));
         ctx.fillStyle = hpFrac > 0.5 ? '#2ecc71' : hpFrac > 0.25 ? '#f39c12' : '#e74c3c';
         ctx.fillRect(bx, by, Math.round(barW * hpFrac), barH);
         // HP text — integer coords, no stroke (stroke blurs small text)
-        const hpText = `${u.hp}/${u.maxHp}`;
+        const hpText = `${visibleHp}/${u.maxHp}`;
         ctx.font = '10px Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
@@ -9238,8 +9737,10 @@
           ctx.textBaseline = 'alphabetic';
           shown.forEach((s, i) => ctx.fillText(icons[s.type] || '·', px + 2 + i * 13, py + CELL - 11));
         }
+        }
       }
     });
+    drawBattleCombatFx(ctx, b);
     ctx.restore();
   }
 
@@ -9428,11 +9929,16 @@
           const guardProto = { isHero: false, enemyId: ENEMY_IDS.ORC_GUARD, sizeW: 1, sizeH: 1 };
           if (canUnitOccupy(b, guardProto, x, y, { end: true })) { b.units.push(spawnEnemy(ENEMY_IDS.ORC_GUARD, x, y)); cnt++; }
         }
+        playBattleAbilityFx(dl, 'darkLordSummon', { radius: 2, glyph: '☠' });
         buildInitiative();
       }
     });
     const fu = getActiveUnit();
-    if (findWatcher(b) && typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_watcher_buff, 0.55);
+    const watcher = findWatcher(b);
+    if (watcher) {
+      playBattleAbilityFx(watcher, 'watcherAura', { radius: 2, glyph: '👁' });
+      if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_watcher_buff, 0.55);
+    }
     if (fu && !fu.isHero) setTimeout(() => runEnemyTurn(), battleDelay(120));
     else {
       prepareHeroTurnMode(b, fu);
@@ -9444,7 +9950,9 @@
     if (!b) return;
     const t = b.grid[u.y][u.x];
     if (t === TILE.FIRE) {
+      const hpBeforeFire = u.hp;
       u.hp -= 3;
+      startBattleAttackAnimation(u, u, { animationProfile: 'fire', animationImpactOnly: true }, 3, hpBeforeFire);
       pushBattleLog(`🔥 ${u.emoji} burns in fire (−3)`, 'status');
       if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.status_tick_burn, 0.5);
       if (u.hp <= 0) onUnitDeath(u);
@@ -9545,6 +10053,16 @@
   function checkBattleEnd() {
     const b = GameState.currentBattle;
     if (!b || b._victoryHandled) return;
+    const deathRemaining = activeDeathAnimationRemaining(b);
+    if ((allEnemiesDead(b) || allHeroesDead(b)) && deathRemaining > 20) {
+      if (!b._deathEndTimer) {
+        b._deathEndTimer = setTimeout(() => {
+          b._deathEndTimer = null;
+          checkBattleEnd();
+        }, deathRemaining + 35);
+      }
+      return;
+    }
     if (allEnemiesDead(b)) {
       const node = getCellById(b.nodeId);
       if (node?.type === 'final') {
@@ -9727,6 +10245,7 @@
         if (wounded) {
           const heal = Math.floor(wounded.maxHp * 0.3);
           wounded.hp = Math.min(wounded.maxHp, wounded.hp + heal);
+          playBattleAbilityFx(u, 'shamanHeal', { target: wounded, glyph: '✚' });
           pushBattleLog(`🧙 ${u.name} heals ${wounded.emoji} ${wounded.name} for ${heal}`, 'enemy');
           if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_shaman_heal, 0.75);
           u.aiVar.healCd = 2;
@@ -9745,6 +10264,7 @@
         if (wounded) {
           const heal = 6;
           wounded.hp = Math.min(wounded.maxHp, wounded.hp + heal);
+          playBattleAbilityFx(u, 'plagueHeal', { target: wounded, glyph: '✚' });
           pushBattleLog(`🧪 ${u.name} heals ${wounded.emoji} ${wounded.name} for ${heal}`, 'enemy');
           if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_shaman_heal, 0.65);
           u.aiVar.healCd = 3;
@@ -9767,6 +10287,7 @@
           const skelProto = { isHero: false, enemyId: ENEMY_IDS.SKELETON, sizeW: 1, sizeH: 1 };
           if (canUnitOccupy(b, skelProto, x, y, { end: true })) {
             b.units.push(spawnEnemy(ENEMY_IDS.SKELETON, x, y));
+            playBattleAbilityFx(u, 'necroRaise', { x, y, glyph: '☠' });
             if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_necro_raise, 0.78);
             pushBattleLog(`🔮 ${u.name} raises a skeleton!`, 'enemy');
             u.aiVar.raiseCd = 3;
@@ -9782,6 +10303,7 @@
     if (u.enemyId === ENEMY_IDS.HYDRA && u.hp < u.maxHp) {
       const heal = Math.min(4, u.maxHp - u.hp);
       u.hp += heal;
+      playBattleAbilityFx(u, 'hydraRegenerate', { glyph: '✚' });
       pushBattleLog(`🐍 ${u.name} regenerates +${heal} HP`, 'enemy');
     }
 
@@ -9810,8 +10332,9 @@
       const nearby = heroes.filter(h => unitDistance(u, h) <= 1);
       if (nearby.length) {
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_chaos_attack, 0.82);
+        playBattleAbilityFx(u, 'chaosAoe', { radius: 1, glyph: '🌀' });
         nearby.forEach(h => {
-          dealDamage(u, h, 7, { magic: true, sfxImpactOnly: true });
+          dealDamage(u, h, 7, { magic: true, sfxImpactOnly: true, animationProfile: 'aoe', animationImpactOnly: true, animationOffsetMs: 190 });
           if (h.hp > 0 && u.bossVar.aoeTurn % 2 === 0) addStatus(h, STATUS.CURSE, 1);
         });
         pushBattleLog(`🌀 ${u.name} warps space around itself`, 'enemy');
@@ -9951,6 +10474,7 @@
       });
       pushBattleLog(`🌿 ${translateText(u.name)}: ${translateKey('leshyAwakens')}`, 'enemy');
       spawnBattleTextFx(u.x, u.y, '+2 ATK', '#8fe06b');
+      playBattleAbilityFx(u, 'leshyAwaken', { radius: 2, glyph: '🌿' });
       if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_chaos_attack, 0.65);
     }
 
@@ -9972,6 +10496,7 @@
     v.summonSerial = (v.summonSerial || 0) + summoned;
     if (summoned > 0) {
       if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_necro_raise, 0.72);
+      playBattleAbilityFx(u, 'leshySummon', { radius: 2, glyph: '🌱' });
       buildInitiative();
       return;
     }
@@ -10004,8 +10529,9 @@
     }
     if (bd <= 1) {
       if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_suicide_explosion, 0.95);
+      playBattleAbilityFx(u, 'bomberExplosion', { radius: 1, glyph: '💥' });
       for (const h of heroes) {
-        if (unitDistance(u, h) <= 1) dealDamage(u, h, 20, { blockIgnore: true, sfxImpactOnly: true });
+        if (unitDistance(u, h) <= 1) dealDamage(u, h, 20, { blockIgnore: true, sfxImpactOnly: true, animationProfile: 'explosion', animationImpactOnly: true, animationOffsetMs: 180 });
       }
       pushBattleLog(`💥 ${u.name} explodes!`, 'enemy');
       u.hp = 0;
@@ -10049,7 +10575,13 @@
     if (attacker.enemyId === ENEMY_IDS.HYDRA) heads = 3;
     for (let h = 0; h < heads; h++) {
       if (target.hp <= 0) break;
-      dealDamage(attacker, target, Math.floor(dmg * mul), { magic: attacker.enemyId === ENEMY_IDS.GHOST, sfxImpactOnly: h > 0 });
+      dealDamage(attacker, target, Math.floor(dmg * mul), {
+        magic: attacker.enemyId === ENEMY_IDS.GHOST,
+        sfxImpactOnly: h > 0,
+        animationSkill: 'basic',
+        animationShotIndex: h,
+        animationOffsetMs: h * 125
+      });
       if (!attacker.isHero && attacker.hp > 0) {
         if (attacker.enemyId === ENEMY_IDS.BLOOD_KNIGHT) attacker.hp = Math.min(attacker.maxHp, attacker.hp + 3);
       }
@@ -10082,26 +10614,33 @@
       u.teleportCd = (u.teleportCd || 0) + 1;
       if (u.teleportCd % 2 === 0) {
         let moved = false;
+        const oldX = u.x, oldY = u.y;
         for (let t = 0; t < 20; t++) {
           const x = randInt(0, GRID_W - 1), y = randInt(0, GRID_H - 1);
           if (canUnitOccupy(b, u, x, y, { end: true })) { u.x = x; u.y = y; moved = true; break; }
         }
-        if (moved && typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_dark_lord_teleport, 0.85);
+        if (moved) {
+          playBattleAbilityFx(u, 'darkLordTeleport', { x: oldX, y: oldY, glyph: '✦' });
+          playBattleAbilityFx(u, 'darkLordTeleport', { x: u.x, y: u.y, glyph: '✦', noPose: true, delay: 110 });
+          if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_dark_lord_teleport, 0.85);
+        }
       }
       const tgt = priorityTarget(b);
       if (tgt && unitDistance(u, tgt) <= 1) aiAttack(u, tgt);
       u.aoeCd = (u.aoeCd || 0) + 1;
       if (u.aoeCd % 3 === 0) {
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_dark_lord_aoe, 0.82);
+        playBattleAbilityFx(u, 'darkLordAoe', { radius: 1, glyph: '◉' });
         b.units.forEach(t => {
           if (t.isHero && t.hp > 0 && unitDistance(u, t) === 1) {
-            dealDamage(u, t, 12, { magic: true, sfxImpactOnly: true });
+            dealDamage(u, t, 12, { magic: true, sfxImpactOnly: true, animationProfile: 'shadow', animationImpactOnly: true, animationOffsetMs: 180 });
             addStatus(t, STATUS.BLIND, 1);
           }
         });
       }
       u.summonCd = (u.summonCd || 0) + 1;
       if (u.summonCd % 4 === 0) {
+        playBattleAbilityFx(u, 'darkLordSummon', { radius: 2, glyph: '☠' });
         if (typeof BattleSfx !== 'undefined') {
           BattleSfx.playSampledUrl(BSX.enemies_dark_lord_summon, 0.78);
           BattleSfx.playSampledUrl(BSX.enemies_necro_raise, 0.55, 0.08);
@@ -10133,9 +10672,10 @@
     u.bossVar.aoeCounter = (u.bossVar.aoeCounter || 0) + 1;
     if (u.bossVar.aoeCounter % 3 === 0) {
       if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_fire_titan_aoe, 0.88);
+      playBattleAbilityFx(u, 'fireTitanAoe', { radius: 2, glyph: '🔥' });
       b.units.forEach(t => {
         if (t.isHero && t.hp > 0 && unitDistance(u, t) <= 1) {
-          dealDamage(u, t, 10, { fire: true, magic: true, sfxImpactOnly: true });
+          dealDamage(u, t, 10, { fire: true, magic: true, sfxImpactOnly: true, animationProfile: 'fire', animationImpactOnly: true, animationOffsetMs: 220 });
         }
       });
     }
@@ -10461,10 +11001,10 @@
     bind('btn-battle-consumables', () => openBattleConsumables());
     bind('sk-shield', () => { if (skLocked('shieldBash') || u.cds.shieldBash > 0) return; b.pendingSkill = 'shieldBash'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-firecall', () => { if (skLocked('fireCall') || u.cds.fireCall > 0) return; b.pendingSkill = 'fireCall'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-berz', () => { if (skLocked('berserk') || u.cds.berserk > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_berserk, 0.9); addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-berz', () => { if (skLocked('berserk') || u.cds.berserk > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_berserk, 0.9); playBattleAbilityFx(u, 'berserk', { glyph: '💢' }); addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
     bind('sk-double', () => { if (skLocked('doubleShot') || u.cds.doubleShot > 0) return; b.pendingSkill = 'double'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-slow', () => { if (skLocked('slowArrow') || u.cds.slowArrow > 0) return; b.pendingSkill = 'slowArrow'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_arrow_rain, 0.92); const b2 = GameState.currentBattle; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && unitDistanceFromPoint(t, u.x, u.y) <= 1) dealDamage(u, t, u.attack, {}); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_arrow_rain, 0.92); playBattleAbilityFx(u, 'arrowRain', { radius: 2, glyph: '🏹', projectile: 'rain' }); const b2 = GameState.currentBattle; let rainShot = 0; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && unitDistanceFromPoint(t, u.x, u.y) <= 1) dealDamage(u, t, u.attack, { animationSkill: 'arrowRain', animationShotIndex: rainShot, animationOffsetMs: 100 + rainShot++ * 90 }); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
     bind('sk-fb', () => { if (skLocked('fireball') || u.mana < 3 || u.cds.fireball > 0) return; b.pendingSkill = 'fireball'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-fr', () => { if (skLocked('freeze') || u.mana < 4 || u.cds.freeze > 0) return; b.pendingSkill = 'freeze'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-met', () => { if (skLocked('meteor') || u.mana < 8 || u.cds.meteor > 0) return; b.pendingSkill = 'meteor'; b.mode = 'skill'; updateBattleUI(); });
@@ -10493,11 +11033,11 @@
     }
     if (b.pendingSkill === 'double') {
       if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_double_shot, 0.88);
-      dealDamage(u, target, base, { sfxSkipWind: true });
-      if (target.hp > 0) dealDamage(u, target, base, { sfxImpactOnly: true, sfxSkipWind: true });
+      dealDamage(u, target, base, { sfxSkipWind: true, animationSkill: 'double', animationShotIndex: 0 });
+      if (target.hp > 0) dealDamage(u, target, base, { sfxImpactOnly: true, sfxSkipWind: true, animationSkill: 'double', animationShotIndex: 1, animationOffsetMs: 160 });
       u.cds.doubleShot = 2;
     } else {
-      dealDamage(u, target, base, { magic: u.heroId === 'seris' });
+      dealDamage(u, target, base, { magic: u.heroId === 'seris', animationSkill: usedSkill || 'basic' });
     }
     if (b.pendingSkill === 'shieldBash' && target.hp > 0) { addStatus(target, STATUS.STUN, 1); u.cds.shieldBash = 3; }
     if (usedSkill === 'shieldBash') markFtueSkillUsed(u.heroId, 'shieldBash');
@@ -10616,8 +11156,10 @@
       if (b.pendingSkill === 'teleport' && u.heroId === 'seris') {
         if (unitAt(b, gx, gy) || !canEndOnTile(b, gx, gy, u) || Math.abs(u.x - gx) + Math.abs(u.y - gy) > 4) return;
         const fromX = u.x, fromY = u.y;
+        playBattleAbilityFx(u, 'teleport', { x: fromX, y: fromY, glyph: '✦' });
         u.x = gx; u.y = gy;
         startUnitMoveAnimation(u, fromX, fromY, gx, gy);
+        playBattleAbilityFx(u, 'teleport', { x: gx, y: gy, glyph: '✦', noPose: true, delay: 110 });
         b.teleportUsed = true;
         b.objectiveUsedSkill = true;
         b.pendingSkill = null;
@@ -10631,8 +11173,9 @@
       if (b.pendingSkill === 'fireCall' && u.heroId === 'garet') {
         b.objectiveUsedSkill = true;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_fire_call, 0.95);
+        playBattleAbilityFx(u, 'fireCall', { radius: 2, glyph: '🔥' });
         b.units.filter(e => !e.isHero && e.hp > 0).forEach(e => {
-          if (unitDistanceFromPoint(e, u.x, u.y) <= 2) dealDamage(u, e, Math.max(1, Math.floor(u.attack * 0.5)), { fire: true, magic: true, sfxImpactOnly: true });
+          if (unitDistanceFromPoint(e, u.x, u.y) <= 2) dealDamage(u, e, Math.max(1, Math.floor(u.attack * 0.5)), { fire: true, magic: true, sfxImpactOnly: true, animationSkill: 'fireCall', animationImpactOnly: true, animationOffsetMs: 170 });
         });
         u.flags = u.flags || {};
         u.flags.fireCallMitigateActive = true;
@@ -10649,14 +11192,14 @@
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_seris_fireball, 0.95);
         u.mana -= 3; u.cds.fireball = 2;
         const splashRadius = 1 + serisAoeBonus(u);
-        dealDamage(u, tgt, 15, { fire: true, magic: true, sfxImpactOnly: true });
+        dealDamage(u, tgt, 15, { fire: true, magic: true, sfxImpactOnly: true, animationSkill: 'fireball' });
         const splashCells = [];
         for (let dy = -splashRadius; dy <= splashRadius; dy++) {
           for (let dx = -splashRadius; dx <= splashRadius; dx++) {
             if (Math.abs(dx) + Math.abs(dy) <= splashRadius && !(dx === 0 && dy === 0)) splashCells.push({ x: gx + dx, y: gy + dy });
           }
         }
-        damageEnemiesAtCells(b, u, splashCells, 7, { fire: true, magic: true, sfxImpactOnly: true, excludeUnits: [tgt] });
+        damageEnemiesAtCells(b, u, splashCells, 7, { fire: true, magic: true, sfxImpactOnly: true, excludeUnits: [tgt], animationSkill: 'fireball', animationImpactOnly: true, animationOffsetMs: 285 });
         applySerisChaosAoe(u);
         markFtueSkillUsed(u.heroId, 'fireball');
         b.heroActionDone = true; endUnitTurn(); return;
@@ -10666,6 +11209,7 @@
         if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range) return;
         b.objectiveUsedSkill = true;
         u.mana -= 4; u.cds.freeze = 3;
+        startBattleAttackAnimation(u, tgt, { animationSkill: 'freeze' }, 0, tgt.hp);
         const freezeWeapon = getEquippedItem(u, 'weapon');
         const freezeTurns = (u.perks && u.perks.includes('freeze2')) || (freezeWeapon && freezeWeapon.mods && freezeWeapon.mods.freeze2) ? 2 : 1;
         addStatus(tgt, STATUS.FREEZE, freezeTurns);
@@ -10685,7 +11229,8 @@
         const meteorSize = 2 + serisAoeBonus(u);
         const meteorCells = [];
         for (let dy = 0; dy < meteorSize; dy++) for (let dx = 0; dx < meteorSize; dx++) meteorCells.push({ x: gx + dx, y: gy + dy });
-        damageEnemiesAtCells(b, u, meteorCells, 30, { fire: true, magic: true, sfxImpactOnly: true });
+        playBattleAbilityFx(u, 'meteor', { x: gx + (meteorSize - 1) / 2, y: gy + (meteorSize - 1) / 2, radius: meteorSize, glyph: '☄', projectile: 'meteor' });
+        damageEnemiesAtCells(b, u, meteorCells, 30, { fire: true, magic: true, sfxImpactOnly: true, animationSkill: 'meteor', animationImpactOnly: true, animationOffsetMs: 260 });
         applySerisChaosAoe(u);
         b.heroActionDone = true; endUnitTurn(); return;
       }
@@ -10698,7 +11243,7 @@
         if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range || rangedBlocked(u.x, u.y, gx, gy, b.grid, false)) return;
         b.objectiveUsedSkill = true;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_slow_arrow, 0.85);
-        dealDamage(u, tgt, u.attack, { sfxImpactOnly: true });
+        dealDamage(u, tgt, u.attack, { sfxImpactOnly: true, animationSkill: 'slowArrow' });
         addStatus(tgt, STATUS.SLOW, 2);
         u.cds.slowArrow = 3;
         b.heroActionDone = true; endUnitTurn(); return;
