@@ -278,6 +278,8 @@
       color: var(--text-dim);
       background: #0d0d1a;
     }
+    .battle-consumable-section { border-top: 1px solid var(--border); padding-top: 5px; margin-top: 2px; }
+    .battle-consumable-label { color: var(--text-hint); font-size: 8px; letter-spacing: 1px; margin: 0 0 3px; }
     .deploy-hint-box { font-size: 10px; color: var(--text-dim); padding: 6px; border: 1px solid var(--border); border-radius: 4px; line-height: 1.4; }
     .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .stats-line { font-size: 12px; color: var(--text-dim); margin: 4px 0; }
@@ -2066,6 +2068,13 @@
     /* Backpack */
     #inv-backpack { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; background: #09090f; }
     .inv-pack-header { font-size: 9px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; padding-bottom: 6px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    #inv-consumables { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; max-height: 118px; overflow-y: auto; }
+    .inv-consumables-title { font-size: 8px; color: var(--text-hint); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+    .inv-consumable-row { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 5px; padding: 4px; border: 1px solid var(--border); border-radius: 5px; background: #0d0d1a; }
+    .inv-consumable-icon { display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .inv-consumable-name { font-size: 8px; color: var(--text-main); line-height: 1.15; }
+    .inv-consumable-count { color: var(--accent-gold); }
+    .inv-consumable-row .btn { min-height: 24px; padding: 2px 5px; font-size: 8px; margin: 0; }
     #bag-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; flex-shrink: 0; }
     .inv-item-card { background: #0d0d1a; border-radius: 6px; padding: 0; border: 1px solid var(--border); cursor: pointer; text-align: center; transition: border-color .15s; overflow: hidden; }
     .inv-item-card:hover { border-color: var(--accent-blue); background: #10102a; }
@@ -3463,7 +3472,11 @@
       #battle-screen #unit-panel {
         flex: 1;
         min-height: 0;
-        overflow: hidden;
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
       }
       #battle-screen .battle-actions {
         display: flex !important;
@@ -3944,6 +3957,7 @@
         <!-- Column 3: bag and item details -->
         <div id="inv-backpack">
           <div class="inv-pack-header">BAG</div>
+          <div id="inv-consumables"></div>
           <div id="bag-grid"></div>
           <div id="inv-detail">Choose an item in the bag.</div>
           <button class="btn" id="btn-close-inv" style="width:100%;margin-top:auto">✕ Close</button>
@@ -4472,6 +4486,11 @@
     skipMove: { ru: '⚡ Не двигаться', en: '⚡ Skip move', es: '⚡ No moverse' },
     waitTurn: { ru: '⏹ Ждать', en: '⏹ Wait', es: '⏹ Esperar' },
     battleInventory: { ru: '🎒 Инвентарь', en: '🎒 Inventory', es: '🎒 Inventario' },
+    battleConsumables: { ru: '🧪 Расходники', en: '🧪 Consumables', es: '🧪 Consumibles' },
+    consumablesEmpty: { ru: 'Расходников нет', en: 'No consumables', es: 'Sin consumibles' },
+    useItem: { ru: 'Использовать', en: 'Use', es: 'Usar' },
+    usesTurn: { ru: 'тратит ход', en: 'uses your turn', es: 'consume el turno' },
+    chooseConsumable: { ru: 'Выберите расходник', en: 'Choose a consumable', es: 'Elige un consumible' },
     tactical: { ru: 'ТАКТИКА', en: 'TACTIC', es: 'TACTICA' },
     moveLeft: { ru: 'ХОД', en: 'MOVE', es: 'MOVER' },
     attackReady: { ru: 'ЦЕЛЕЙ', en: 'TARGETS', es: 'OBJETIVOS' },
@@ -7471,14 +7490,20 @@
     const grid = firstBattle ? createFirstBattleGrid() : generateBattleGrid(node.region, { spacious: hasLargeEnemy || node.boss || node.final });
     const units = [];
     const heroes = GameState.heroes.filter(h => h.hp > 0).map((h, i) => makeBattleHero(h, i));
-    // Auto-place heroes on valid deploy cells (first 2 columns)
-    const preferredSlots = firstBattle
-      ? [{ x: 1, y: 3 }, { x: 1, y: 5 }, { x: 1, y: 1 }, { x: 0, y: 4 }, { x: 0, y: 6 }, { x: 0, y: 0 }]
-      : [{ x: 0, y: 1 }, { x: 0, y: 3 }, { x: 1, y: 2 }, { x: 1, y: 4 }, { x: 0, y: 5 }, { x: 1, y: 0 }];
+    // The same readable opening formation in every battle:
+    // Seris covers the back-left, Garet holds the forward diagonal, Alira supports below.
+    const formationByHeroId = {
+      seris: { x: 0, y: 0 },
+      garet: { x: 1, y: 1 },
+      alira: { x: 0, y: 2 }
+    };
+    Object.values(formationByHeroId).forEach(({ x, y }) => { grid[y][x] = TILE.GROUND; });
+    const fallbackSlots = [{ x: 1, y: 0 }, { x: 1, y: 2 }, { x: 0, y: 1 }, { x: 0, y: 3 }, { x: 1, y: 3 }, { x: 0, y: 4 }];
     const used = new Set();
     const isFree = (x, y) => inBounds(x, y) && x <= 1 && !tileBlocksMove(grid[y][x], null) && !used.has(x + ',' + y);
     heroes.forEach((hu, i) => {
-      let slot = preferredSlots.find(s => isFree(s.x, s.y));
+      let slot = formationByHeroId[hu.heroId];
+      if (!slot || !isFree(slot.x, slot.y)) slot = fallbackSlots.find(s => isFree(s.x, s.y));
       if (!slot) {
         for (let x = 0; x <= 1 && !slot; x++) {
           for (let y = 0; y < GRID_H && !slot; y++) {
@@ -10416,6 +10441,11 @@
       }
       if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn battle-utility-btn" id="btn-skip-move">${translateKey('skipMove')}</button>`;
       html += `<button class="btn battle-utility-btn" id="btn-wait">${translateKey('waitTurn')}</button>`;
+      const usableConsumables = combatConsumableItems().filter(item => canUseConsumableOnHero(item, u));
+      if (usableConsumables.length) {
+        const consumableCount = usableConsumables.reduce((sum, item) => sum + getConsumableCount(item.id), 0);
+        html += `<div class="battle-consumable-section"><div class="battle-consumable-label">${translateKey('battleConsumables')}</div><button class="btn battle-utility-btn" id="btn-battle-consumables">${translateKey('battleConsumables')} · ${consumableCount}</button></div>`;
+      }
     }
     // 10: Inventory button always visible in battle
     html += `<button class="btn battle-utility-btn" id="btn-battle-inv" style="margin-top:4px">${translateKey('battleInventory')}</button>`;
@@ -10428,6 +10458,7 @@
     bind('btn-undo-move', () => undoHeroMove());
     bind('btn-skip-move', () => { b.heroMoved = true; b.mode = 'attack'; updateBattleUI(); });
     bind('btn-wait', () => { if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.ui_end_turn, 0.75); b.heroActionDone = true; endUnitTurn(); });
+    bind('btn-battle-consumables', () => openBattleConsumables());
     bind('sk-shield', () => { if (skLocked('shieldBash') || u.cds.shieldBash > 0) return; b.pendingSkill = 'shieldBash'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-firecall', () => { if (skLocked('fireCall') || u.cds.fireCall > 0) return; b.pendingSkill = 'fireCall'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-berz', () => { if (skLocked('berserk') || u.cds.berserk > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_berserk, 0.9); addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
@@ -11271,6 +11302,89 @@
       if (heroId) apply(heroId);
     });
   }
+
+  function combatConsumableItems() {
+    return SHOP_ITEMS.filter(item =>
+      getConsumableCount(item.id) > 0 &&
+      (item.id === 'potion_small' || item.id === 'potion_mid' || item.id === 'potion' || item.id === 'elixir')
+    );
+  }
+
+  function useConsumableFromInventory(itemId) {
+    const item = shopItemById(itemId);
+    if (!item || getConsumableCount(itemId) <= 0) return;
+    const usable = GameState.heroes.filter(hero => canUseConsumableOnHero(item, hero));
+    if (!usable.length) {
+      void showGameAlert(`${translateKey('notForHero')} «${translateText(item.name)}». ${consumableUseHint(item)}.`);
+      return;
+    }
+    const apply = heroId => {
+      if (!useConsumableOnHero(itemId, heroId)) return;
+      saveGame();
+      renderInventoryScreen();
+    };
+    if (usable.length === 1) {
+      apply(usable[0].id);
+      return;
+    }
+    showGamePickOne(`${translateKey('useItem')} «${translateText(item.name)}»?`, usable.map(hero => ({
+      value: hero.id,
+      label: `${hero.name} (${hero.hp}/${hero.maxHp}${hero.maxMana ? ` · ${hero.mana}/${hero.maxMana} MP` : ''})`
+    }))).then(heroId => { if (heroId) apply(heroId); });
+  }
+
+  function useConsumableInBattle(itemId) {
+    const b = GameState.currentBattle;
+    const unit = getActiveUnit();
+    const item = shopItemById(itemId);
+    if (!b || b.phase !== 'combat' || !unit || !unit.isHero || b.heroActionDone || !item) return;
+    if (!combatConsumableItems().some(entry => entry.id === itemId)) return;
+    if (!canUseConsumableOnHero(item, unit)) return;
+    item.use(unit);
+    GameState.consumables[itemId]--;
+    if (GameState.consumables[itemId] <= 0) delete GameState.consumables[itemId];
+    syncHeroFromUnit(unit);
+    saveGame();
+    pushBattleLog(`[${unit.sprite} ${unit.name}] ${translateKey('useItem').toLowerCase()}: ${translateText(item.name)}`, 'hero');
+    b.heroActionDone = true;
+    b.mode = 'idle';
+    b.pendingSkill = null;
+    endUnitTurn();
+  }
+
+  function openBattleConsumables() {
+    const unit = getActiveUnit();
+    if (!unit || !unit.isHero) return;
+    const usable = combatConsumableItems().filter(item => canUseConsumableOnHero(item, unit));
+    if (!usable.length) {
+      void showGameAlert(translateKey('consumablesEmpty'));
+      return;
+    }
+    showGamePickOne(`${translateKey('chooseConsumable')} — ${translateKey('usesTurn')}`, usable.map(item => ({
+      value: item.id,
+      label: `${translateText(item.name)} ×${getConsumableCount(item.id)} · ${consumableUseHint(item)}`
+    }))).then(itemId => { if (itemId) useConsumableInBattle(itemId); });
+  }
+
+  function renderInventoryConsumables() {
+    const root = document.getElementById('inv-consumables');
+    if (!root) return;
+    if (GameState._returnToBattle && GameState.currentBattle?.phase === 'combat') {
+      root.innerHTML = '';
+      return;
+    }
+    const entries = SHOP_ITEMS.filter(item => getConsumableCount(item.id) > 0);
+    if (!entries.length) { root.innerHTML = ''; return; }
+    root.innerHTML = `<div class="inv-consumables-title">${translateKey('battleConsumables')}</div>` + entries.map(item => `
+      <div class="inv-consumable-row">
+        <div class="inv-consumable-icon">${itemIconMarkup({ id: item.id, rarity: 'common', emoji: item.emoji || '🧪' }, 22)}</div>
+        <div class="inv-consumable-name">${translateText(item.name)} <span class="inv-consumable-count">×${getConsumableCount(item.id)}</span></div>
+        <button type="button" class="btn" data-inv-consume="${item.id}">${translateKey('useItem')}</button>
+      </div>`).join('');
+    root.querySelectorAll('[data-inv-consume]').forEach(btn => {
+      btn.onclick = () => useConsumableFromInventory(btn.getAttribute('data-inv-consume'));
+    });
+  }
   function itemIconPath(itemId) {
     const rel = ITEM_ICON_MAP[itemId];
     return rel ? ITEM_ICON_BASE + rel : null;
@@ -11597,6 +11711,7 @@
     const hero = GameState.heroes.find(h => h.id === InvState.activeHeroId) || GameState.heroes[0];
     if (!hero) return;
     recalcHeroFromEquipment(hero);
+    renderInventoryConsumables();
 
     // Update tabs
     document.querySelectorAll('.inv-tab').forEach(tab => {
