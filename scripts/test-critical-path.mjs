@@ -79,10 +79,27 @@ try {
   check('first battle cannot be skipped by route click', await page.locator('#btn-start-battle').isVisible());
   check('deployment is available before combat', await page.locator('#btn-start-battle').count() === 1);
   check('field coaching is visible', await page.locator('#battle-coach-overlay .ftue-coach').count() === 1);
+  const deploymentRuntime = await page.evaluate(() => {
+    const b = GameState.currentBattle;
+    const positions = Object.fromEntries(b.units.filter(unit => unit.isHero).map(unit => [unit.heroId, { x: unit.x, y: unit.y }]));
+    const available = [];
+    for (let y = 0; y < GRID_H; y++) {
+      for (let x = 0; x < GRID_W; x++) {
+        if (isDeployCellAvailable(b, x, y)) available.push({ x, y });
+      }
+    }
+    return { positions, available };
+  });
+  check('opening heroes start two rows lower', deploymentRuntime.positions.seris?.y === 2 && deploymentRuntime.positions.garet?.y === 3 && deploymentRuntime.positions.alira?.y === 4, JSON.stringify(deploymentRuntime));
+  check('deployment highlights only valid cells in two left columns', deploymentRuntime.available.length >= 8 && deploymentRuntime.available.every(cell => cell.x <= 1), JSON.stringify(deploymentRuntime));
 
   await page.locator('#btn-start-battle').click();
   check('combat starts from deployment', await page.locator('#action-buttons .skill-action-btn').count() >= 1);
   check('recommended signature skill is highlighted', await page.locator('.skill-action-btn.ftue-recommended').count() === 1);
+  check('combat shows one strong current initiative slot', await page.locator('#initiative-bar .init-slot.current').count() === 1);
+  check('combat shows the next initiative slot', await page.locator('#initiative-bar .init-slot.next').count() === 1);
+  check('combat names current and next units', await page.locator('#turn-focus-banner:not(.hidden)').count() === 1 && (await page.locator('#turn-focus-banner').textContent())?.includes('→'));
+  check('current hero card has a turn chip', await page.locator('.hero-card.active .hero-turn-chip').count() === 1);
 
   const speed = page.locator('#battle-speed-toggle');
   check('speed toggle starts at ×1', (await speed.textContent())?.trim() === '×1');
@@ -99,12 +116,90 @@ try {
       bodyWidth: document.body.scrollWidth,
       bodyHeight: document.body.scrollHeight,
       coachWidth: coach?.getBoundingClientRect().width || 0,
-      actionFontSize: action ? parseFloat(getComputedStyle(action).fontSize) : 0
+      actionFontSize: action ? parseFloat(getComputedStyle(action).fontSize) : 0,
+      turnBannerVisible: !!document.querySelector('#turn-focus-banner:not(.hidden)'),
+      turnBannerWidth: document.querySelector('#turn-focus-banner')?.getBoundingClientRect().width || 0
     };
   });
   check('812×375 has no horizontal overflow', layout.bodyWidth <= layout.viewportWidth, JSON.stringify(layout));
   check('mobile coach stays compact', layout.coachWidth > 0 && layout.coachWidth <= 310, JSON.stringify(layout));
   check('mobile action text is at least 10px', layout.actionFontSize >= 10, JSON.stringify(layout));
+  check('mobile keeps the turn banner visible and contained', layout.turnBannerVisible && layout.turnBannerWidth > 0 && layout.turnBannerWidth < 190, JSON.stringify(layout));
+
+  const ambushRuntime = await page.evaluate(() => {
+    const ambushCell = { id: 'e2e_ambush', region: 1, type: 'mission' };
+    startBattleForCell(ambushCell, {
+      wave: [ENEMY_IDS.SKELETON, ENEMY_IDS.BOAR, ENEMY_IDS.GOBLIN_ARCHER],
+      skipDeploy: true,
+      ambush: true
+    });
+    const b = GameState.currentBattle;
+    const heroes = b.units.filter(unit => unit.isHero && unit.hp > 0);
+    const enemies = b.units.filter(unit => !unit.isHero && unit.hp > 0);
+    const enemyEdges = enemies.map(unit => {
+      const width = unitWidth(unit);
+      const height = unitHeight(unit);
+      return {
+        onEdge: unit.x === 0 || unit.y === 0 || unit.x + width === GRID_W || unit.y + height === GRID_H,
+        edge: unit.ambushEdge || ''
+      };
+    });
+
+    // A direct animation probe verifies that endUnitTurn does not advance the
+    // queue while the projectile/impact is still visible.
+    const heroIndex = b.units.indexOf(heroes[0]);
+    const enemyIndex = b.units.indexOf(enemies[0]);
+    b.order = [heroIndex, enemyIndex];
+    b.activeIndex = 0;
+    b.phase = 'combat';
+    b.visualLockUntil = 0;
+    startBattleAttackAnimation(heroes[0], enemies[0], { animationSkill: 'basic' }, 1, enemies[0].hp);
+    const activeBefore = b.activeIndex;
+    endUnitTurn();
+    const transitionWaits = b.activeIndex === activeBefore && !!b._turnAdvanceTimer && b.turnTransitionLocked === true;
+    const visualWaitMs = Math.max(0, (b.visualLockUntil || 0) - performance.now());
+    if (b._turnAdvanceTimer) clearTimeout(b._turnAdvanceTimer);
+    b._turnAdvanceTimer = null;
+    b.turnTransitionLocked = false;
+
+    return {
+      phase: b.phase,
+      ambush: b.ambush,
+      deploymentLocked: b.deploymentLocked,
+      heroPositions: heroes.map(unit => ({ x: unit.x, y: unit.y })),
+      enemyEdges,
+      distinctEdges: new Set(enemyEdges.map(item => item.edge)).size,
+      transitionWaits,
+      visualWaitMs
+    };
+  });
+  check('ambush skips deployment and locks the formation', ambushRuntime.phase === 'combat' && ambushRuntime.ambush && ambushRuntime.deploymentLocked, JSON.stringify(ambushRuntime));
+  check('ambush heroes start in the center', ambushRuntime.heroPositions.every(pos => pos.x >= 4 && pos.x <= 7 && pos.y >= 2 && pos.y <= 5), JSON.stringify(ambushRuntime));
+  check('ambush enemies surround heroes from distinct edges', ambushRuntime.enemyEdges.every(item => item.onEdge) && ambushRuntime.distinctEdges >= 3, JSON.stringify(ambushRuntime));
+  check('turn queue waits for the visible attack', ambushRuntime.transitionWaits && ambushRuntime.visualWaitMs > 100, JSON.stringify(ambushRuntime));
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.evaluate(() => {
+    GameState.firstBattleCompleted = true;
+    GameState.currentBattle = null;
+    GameState.playerPos = { x: 0, y: 0 };
+    GameState.screen = 'map';
+    showScreen('map');
+    renderMap();
+  });
+  const linkedRouteCards = page.locator('.map-route-card[data-route-id]:not(.first-battle-route)');
+  const linkedRouteCount = await linkedRouteCards.count();
+  check('map exposes route cards for hover linking', linkedRouteCount > 0, `count=${linkedRouteCount}`);
+  if (linkedRouteCount > 0) {
+    const linkedRouteCard = linkedRouteCards.first();
+    const linkedRouteId = await linkedRouteCard.getAttribute('data-route-id');
+    const linkedMapNode = page.locator(`.map-node[data-node-id="${linkedRouteId}"]`);
+    await linkedRouteCard.hover();
+    check('route card hover highlights its map cell', await linkedMapNode.evaluate(el => el.classList.contains('route-linked-highlight')), linkedRouteId || '');
+    await linkedMapNode.hover();
+    check('map cell hover highlights its route card', await linkedRouteCard.evaluate(el => el.classList.contains('route-linked-highlight')), linkedRouteId || '');
+  }
+
   check('runtime has no page errors', pageErrors.length === 0, pageErrors.join(' | '));
   check('runtime has no console errors', consoleErrors.length === 0, consoleErrors.join(' | '));
   check('runtime assets load without HTTP errors', httpErrors.length === 0, httpErrors.join(' | '));

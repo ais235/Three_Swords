@@ -104,10 +104,29 @@ try {
   await page.evaluate(() => {
     GameState._lastBattleKills = 3;
     GameState._lastBattleRounds = 2;
+    const drop = itemById('steel_sword');
+    const garet = GameState.heroes.find(hero => hero.id === 'garet');
+    garet.equipment = { ...(garet.equipment || {}), weapon: null };
+    recalcHeroFromEquipment(garet);
+    GameState.inventory = ['steel_sword'];
+    GameState._lastBattleDrop = drop;
+    GameState._lastBattleDropHandled = false;
     GameState._lastBattleLabel = 'Проверка читаемости';
     showVictoryUI(32, 10);
   });
   await auditScreen('victory and rewards', '#victory-screen', 12);
+  check('new victory loot highlights equip action',
+    await page.locator('#btn-vic-inventory.vic-btn-inventory-loot').count() === 1);
+  check('continue waits while victory loot is unresolved',
+    await page.locator('#btn-vic-continue.vic-btn-continue-ready').count() === 0);
+  await page.locator('#btn-vic-inventory').click();
+  await page.locator('.inv-item-card[data-idx="0"]').click();
+  await page.locator('#inv-equip-btn').click();
+  await page.locator('#btn-close-inv').click();
+  check('equipped victory loot stops bag highlight',
+    await page.locator('#btn-vic-inventory.vic-btn-inventory-loot').count() === 0);
+  check('equipped victory loot highlights continue',
+    await page.locator('#btn-vic-continue.vic-btn-continue-ready').count() === 1);
   await page.evaluate(() => {
     showScreen('map');
     renderMap();
