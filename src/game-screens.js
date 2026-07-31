@@ -2710,6 +2710,15 @@
 
   function showRewardAd(cb) { showRewardedAd(cb); }
 
+  function claimVictoryAdGold() {
+    if (GameState._lastBattleAdClaimed) return null;
+    GameState._lastBattleAdClaimed = true;
+    const amount = Math.max(0, Number(GameState._lastBattleAdGold) || 0);
+    GameState.gold += amount;
+    saveGame();
+    return amount;
+  }
+
   function enemyAbilityText(enemyId) {
     const m = {
       [ENEMY_IDS.SKELETON]: 'Basic attack.',
@@ -3081,13 +3090,13 @@
     };
     document.getElementById('btn-vic-bestiary').onclick = () => { showScreen('bestiary'); renderBestiaryScreen(); };
     document.getElementById('btn-vic-ad').onclick = () => {
+      if (GameState._lastBattleAdClaimed) return;
       showRewardedAd(() => {
-        const bonus = Math.round(GameState.gold * 1); // double last battle gold bonus
-        GameState.gold += (GameState._lastBattleAdGold || 0);
-        saveGame();
-        showGameAlert(`+${GameState._lastBattleAdGold || 0} 💰 ${translateKey('goldAdded')}`);
+        const amount = claimVictoryAdGold();
+        if (amount === null) return;
         document.getElementById('btn-vic-ad').disabled = true;
         document.getElementById('btn-vic-ad').style.opacity = '0.4';
+        void showGameAlert(`+${amount} 💰 ${translateKey('goldAdded')}`);
       });
     };
     document.getElementById('btn-vic-continue').onclick = () => {

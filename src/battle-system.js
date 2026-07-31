@@ -1203,6 +1203,7 @@
     const rounds = GameState._lastBattleRounds || 1;
     const label = localizedBattleLabel(GameState._lastBattleMeta) || GameState._lastBattleLabel || translateKey('missionComplete');
     GameState._lastBattleAdGold = gold;
+    GameState._lastBattleAdClaimed = false;
     const drop = GameState._lastBattleDrop || null;
     const enemyIds = GameState._lastBattleEnemyIds || [];
     const levelUps = GameState._lastBattleLevelUps || {};

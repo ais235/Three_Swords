@@ -262,6 +262,25 @@ try {
     check('map cell hover highlights its route card', await linkedRouteCard.evaluate(el => el.classList.contains('route-linked-highlight')), linkedRouteId || '');
   }
 
+  const rewardedGoldGuard = await page.evaluate(() => {
+    const originalGold = GameState.gold;
+    const originalReward = GameState._lastBattleAdGold;
+    const originalClaimed = GameState._lastBattleAdClaimed;
+    GameState.gold = 100;
+    GameState._lastBattleAdGold = 40;
+    GameState._lastBattleAdClaimed = false;
+    const first = claimVictoryAdGold();
+    const second = claimVictoryAdGold();
+    const result = { first, second, gold: GameState.gold, claimed: GameState._lastBattleAdClaimed };
+    GameState.gold = originalGold;
+    GameState._lastBattleAdGold = originalReward;
+    GameState._lastBattleAdClaimed = originalClaimed;
+    return result;
+  });
+  check('victory rewarded gold can only be claimed once',
+    rewardedGoldGuard.first === 40 && rewardedGoldGuard.second === null && rewardedGoldGuard.gold === 140 && rewardedGoldGuard.claimed,
+    JSON.stringify(rewardedGoldGuard));
+
   check('runtime has no page errors', pageErrors.length === 0, pageErrors.join(' | '));
   check('runtime has no console errors', consoleErrors.length === 0, consoleErrors.join(' | '));
   check('runtime assets load without HTTP errors', httpErrors.length === 0, httpErrors.join(' | '));

@@ -56,7 +56,8 @@
     cityFavorClaimed: {},
     runHistory: [],
     _lastBattleDrop: null,
-    _lastBattleDropHandled: true
+    _lastBattleDropHandled: true,
+    _lastBattleAdClaimed: false
   };
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
