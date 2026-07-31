@@ -1,10 +1,10 @@
-import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { loadGameRuntimeSource } from './runtime-source.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const index = readFileSync(resolve(root, 'index.html'), 'utf8');
+const index = loadGameRuntimeSource(root);
 const require = createRequire(import.meta.url);
 const LeshyBoss = require('../src/leshy-boss.js');
 

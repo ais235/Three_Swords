@@ -10,15 +10,29 @@ rmSync(output, { recursive: true, force: true });
 mkdirSync(output, { recursive: true });
 
 const runtimeFiles = new Set(['index.html']);
-for (const match of index.matchAll(/['"(](assets\/[^'"()?#]+\.(?:png|jpe?g|webp|gif|svg|mp3|wav|ogg))['")]/gi)) {
-  if (!match[1].includes('${')) runtimeFiles.add(match[1].replaceAll('\\', '/'));
-}
-for (const match of index.matchAll(/['"]((?:weapons|armor|accessories|materials|misc|consumables)\/[^'"]+\.(?:png|webp))['"]/gi)) {
-  runtimeFiles.add(`assets/items/${match[1]}`);
-}
-for (const match of index.matchAll(/(?:src|href)=["']([^"'?#]+\.(?:js|css))["']/gi)) {
-  const relative = match[1].replaceAll('\\', '/');
+const scannedSources = new Set();
+
+function addRelativePath(path) {
+  const relative = path.replaceAll('\\', '/');
   if (!relative.startsWith('/') && !relative.includes('://')) runtimeFiles.add(relative);
+}
+
+function scanRuntimeSource(relative, source) {
+  if (scannedSources.has(relative)) return;
+  scannedSources.add(relative);
+  for (const match of source.matchAll(/['"(](assets\/[^'"()?#]+\.(?:png|jpe?g|webp|gif|svg|mp3|wav|ogg))['")]/gi)) {
+    if (!match[1].includes('${')) runtimeFiles.add(match[1].replaceAll('\\', '/'));
+  }
+  for (const match of source.matchAll(/['"]((?:weapons|armor|accessories|materials|misc|consumables)\/[^'"]+\.(?:png|webp))['"]/gi)) {
+    runtimeFiles.add(`assets/items/${match[1]}`);
+  }
+  for (const match of source.matchAll(/(?:src|href)=["']([^"'?#]+\.(?:js|css))["']/gi)) addRelativePath(match[1]);
+}
+
+scanRuntimeSource('index.html', index);
+for (const relative of [...runtimeFiles].filter(path => path.endsWith('.js') || path.endsWith('.css'))) {
+  const sourcePath = resolve(root, relative);
+  if (existsSync(sourcePath)) scanRuntimeSource(relative, readFileSync(sourcePath, 'utf8'));
 }
 
 const missing = [];

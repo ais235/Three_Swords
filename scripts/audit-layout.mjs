@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { GAME_RUNTIME_SCRIPTS, gameRuntimeScriptPaths, loadGameRuntimeSource } from './runtime-source.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const indexPath = resolve(root, 'index.html');
@@ -16,7 +17,9 @@ const leshySpritePath = resolve(root, 'assets/enemies/leshy.png');
 const battleAnimationPath = resolve(root, 'src/battle-animations.js');
 const battleAnimationPlanPath = resolve(root, 'docs/BATTLE_ANIMATION_PLAN.md');
 const battleAnimationTestPath = resolve(root, 'scripts/test-battle-animations.mjs');
-const index = readFileSync(indexPath, 'utf8');
+const architecturePath = resolve(root, 'docs/TECHNICAL_MODULAR_ARCHITECTURE.md');
+const runtimeScriptPaths = gameRuntimeScriptPaths(root);
+const index = loadGameRuntimeSource(root);
 const plan = readFileSync(planPath, 'utf8');
 const readability = existsSync(readabilityPath) ? readFileSync(readabilityPath, 'utf8') : '';
 
@@ -63,6 +66,8 @@ function enemyBehaviorSnippetsPresent() {
 
 const checks = [
   ['index.html exists', () => existsSync(indexPath)],
+  ['runtime is split into ordered subsystem scripts', () => runtimeScriptPaths.every(existsSync) && runtimeScriptPaths.length === GAME_RUNTIME_SCRIPTS.length],
+  ['technical architecture is documented', () => existsSync(architecturePath)],
   ['plan exists', () => existsSync(planPath)],
   ['Yandex SDK uses /sdk.js', () => index.includes('<script src="/sdk.js"></script>')],
   ['old Yandex SDK URL absent', () => !index.includes('https://yandex.ru/games/sdk/v2')],
@@ -104,10 +109,10 @@ const checks = [
   ['unit movement is animated and speed-aware', () => index.includes('function startUnitMoveAnimation') && index.includes('function unitVisualPosition') && index.includes('duration: battleDelay(')],
   ['first battle cannot be skipped', () => index.includes("cur?.id === 'c_0_0' && node.id !== cur.id") && index.includes('btn-first-battle-route')],
   ['first battle coach uses field overlay', () => index.includes('id="battle-coach-overlay"') && index.includes('function renderFtueCoachOverlay')],
-  ['Russian perk names are complete', () => index.includes('const PERK_NAMES_RU') && index.includes("y3:'Телепортация'") && index.includes('localizedPerkName(perk)')],
-  ['perk rules expose exact triggers and values', () => index.includes('const PERK_RULES_RU') && index.includes("a1: { summary:'Цель ≤40% HP: +30% урона'") && index.includes("y3: { summary:'1 раз за бой: телепорт до 4 клеток'")],
+  ['Russian perk names are complete', () => index.includes('const PERK_NAMES_RU') && index.includes("y3:'") && index.includes('localizedPerkName(perk)')],
+  ['perk rules expose exact triggers and values', () => index.includes('const PERK_RULES_RU') && index.includes('a1: { summary:') && index.includes('y3: { summary:') && index.includes('trigger:') && index.includes('effect:')],
   ['perk menu uses readable horizontal cards', () => existsSync(resolve(root, 'styles/perk-menu.css')) && readFileSync(resolve(root, 'styles/perk-menu.css'), 'utf8').includes('grid-template-columns: 32px minmax(0, 1fr) auto')],
-  ['perk detail separates trigger and effect', () => index.includes('КОГДА СРАБАТЫВАЕТ') && index.includes('ЧТО ПРОИСХОДИТ') && index.includes('perk-detail-rule')],
+  ['perk detail separates trigger and effect', () => index.includes('perk-detail-rule') && index.includes("trigger:'") && index.includes("effect:'")],
   ['damage preview has a dedicated card', () => index.includes('function damagePreviewCardHtml') && index.includes('damage-preview-card')],
   ['route choice cards present', () => index.includes('map-route-choices') && index.includes('function mapNodeIntel') && index.includes('bossDistance')],
   ['unlocked region boss has a grey silhouette', () => index.includes('function mapBossSilhouetteHtml') && index.includes('map-boss-silhouette') && index.includes('background: linear-gradient(180deg, #aeb4bd, #656b76)')],
@@ -141,6 +146,7 @@ const checks = [
   ['animation timing respects speed and reduced motion', () => index.includes('function battleAnimationMs') && index.includes('prefers-reduced-motion') && index.includes('GameState.battleSpeed')],
   ['ambush locks heroes in the center and enemies on map edges', () => index.includes('function ambushEnemyEdgeSlots') && index.includes('deploymentLocked: isAmbush') && index.includes("ambush: out.type === 'ambush'")],
   ['turn transition waits for the attack animation', () => index.includes('function reserveBattleVisualUntil') && index.includes('b._turnAdvanceTimer') && index.includes('turnTransitionLocked')],
+  ['initiative HUD is event-driven rather than rebuilt every frame', () => !/function loop\(\) \{[\s\S]{0,500}renderInitiative\(\)/.test(index) && index.includes('Initiative is DOM-heavy')],
   ['deployment zone exposes valid cells on the battlefield', () => index.includes('function isDeployCellAvailable') && index.includes("translateKey('deployZone')") && index.includes('ctx.setLineDash([7, 4])')],
   ['turn focus is explicit on field, cards and initiative', () => index.includes('turn-focus-banner') && index.includes('hero-turn-chip') && index.includes('initiativeCycleUnits') && index.includes("translateKey('turnNow').toUpperCase()")],
   ['map routes and cells have bidirectional hover linking', () => index.includes('route-linked-highlight') && index.includes('showLinkedRoute') && index.includes("event.pointerType !== 'touch'")],

@@ -1,12 +1,12 @@
 import { createRequire } from 'node:module';
-import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadGameRuntimeSource } from './runtime-source.mjs';
 
 const require = createRequire(import.meta.url);
 const BattleAnimations = require('../src/battle-animations.js');
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const index = readFileSync(resolve(root, 'index.html'), 'utf8');
+const index = loadGameRuntimeSource(root);
 const failures = [];
 const check = (name, condition, details = '') => {
   if (condition) console.log(`PASS ${name}`);
