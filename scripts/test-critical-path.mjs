@@ -133,6 +133,7 @@ try {
   check('an adjacent route exists', await adjacent.count() === 1);
   await adjacent.click();
   await page.locator('#btn-start-battle').waitFor({ state: 'visible' });
+  await page.locator('#btn-battle-briefing-continue').click();
 
   check('first battle cannot be skipped by route click', await page.locator('#btn-start-battle').isVisible());
   check('deployment is available before combat', await page.locator('#btn-start-battle').count() === 1);
@@ -185,7 +186,7 @@ try {
   check('812×375 has no horizontal overflow', layout.bodyWidth <= layout.viewportWidth, JSON.stringify(layout));
   check('mobile coach stays compact', layout.coachWidth > 0 && layout.coachWidth <= 310, JSON.stringify(layout));
   check('mobile action text is at least 10px', layout.actionFontSize >= 10, JSON.stringify(layout));
-  check('mobile keeps the turn banner visible and contained', layout.turnBannerVisible && layout.turnBannerWidth > 0 && layout.turnBannerWidth < 190, JSON.stringify(layout));
+  check('mobile keeps the turn banner visible and contained', layout.turnBannerVisible && layout.turnBannerWidth > 0 && layout.turnBannerWidth < 224, JSON.stringify(layout));
 
   const ambushRuntime = await page.evaluate(() => {
     const ambushCell = { id: 'e2e_ambush', region: 1, type: 'mission' };

@@ -3642,6 +3642,7 @@
       <div><strong>${escapeHtml(scenario.label)}</strong><span>${escapeHtml(scenario.short)}</span></div>
     </div>` : '';
     const briefingTitle = currentLanguage() === 'ru' ? 'ЦЕЛИ БОЯ' : (currentLanguage() === 'es' ? 'OBJETIVOS' : 'BATTLE OBJECTIVES');
+    const briefingContinue = currentLanguage() === 'ru' ? 'К РАССТАНОВКЕ' : (currentLanguage() === 'es' ? 'COLOCAR HÉROES' : 'DEPLOY HEROES');
     return `<div class="battle-briefing-card">
       <div class="battle-briefing-title">${briefingTitle}</div>
       ${scenarioHtml}
@@ -3649,15 +3650,24 @@
         <span class="battle-briefing-icon">★</span>
         <div><strong>${translateKey('optionalObjective')} · +10 ${translateKey('gold')}</strong><span>${translateKey(key)}</span></div>
       </div>
+      <button type="button" class="btn btn-primary battle-briefing-continue" id="btn-battle-briefing-continue">${briefingContinue}</button>
     </div>`;
   }
 
   function renderBattleBriefing(b) {
     const briefing = document.getElementById('battle-briefing');
     if (!briefing) return;
-    const visible = b?.phase === 'deploy';
+    const visible = b?.phase === 'deploy' && !b.briefingDismissed;
+    const screen = document.getElementById('battle-screen');
     briefing.classList.toggle('hidden', !visible);
+    screen?.classList.toggle('briefing-open', visible);
     briefing.innerHTML = visible ? battleObjectiveHtml(b) : '';
+    const continueBtn = document.getElementById('btn-battle-briefing-continue');
+    if (continueBtn) continueBtn.onclick = () => {
+      b.briefingDismissed = true;
+      briefing.classList.add('hidden');
+      screen?.classList.remove('briefing-open');
+    };
   }
 
   function bindFtueCoachSkip() {

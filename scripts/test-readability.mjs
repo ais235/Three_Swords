@@ -136,6 +136,7 @@ try {
   await adjacent.click();
   await page.locator('#btn-start-battle').waitFor({ state: 'visible' });
   await auditScreen('desktop battle deployment', '#battle-screen', 12);
+  await page.locator('#btn-battle-briefing-continue').click();
   await page.locator('#btn-start-battle').click();
   await auditScreen('desktop combat HUD', '#battle-screen', 12);
 

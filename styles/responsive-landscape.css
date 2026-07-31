@@ -10,7 +10,7 @@
   place-items: center;
   padding: 18px;
   background: rgba(5, 7, 16, .72);
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .battle-briefing.hidden { display: none; }
@@ -37,6 +37,8 @@
 .battle-briefing-objective div > span { margin-top: 3px; color: var(--text-dim); }
 .battle-briefing-objective.is-bonus strong { color: #9cffc5; }
 .battle-briefing-icon { font-size: 20px; text-align: center; }
+.battle-briefing-continue { width: 100%; margin: 10px 0 0; }
+#battle-screen.briefing-open #battle-coach-overlay { visibility: hidden; }
 
 @media (orientation: portrait) and (max-width: 899px) {
   html, body { overflow: hidden; }
@@ -93,6 +95,242 @@
 
   #battle-screen .battle-left .hero-card-name {
     font-size: 10px !important;
+  }
+}
+
+/* Final phone-landscape composition. Keep this block last: older compact
+ * passes are intentionally superseded here so screens have one layout owner. */
+@media (orientation: landscape) and (max-width: 900px) and (max-height: 520px) {
+  html, body,
+  #game-container,
+  #game-container > .screen {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  /* Main menu: two rows of primary actions and one compact contract block. */
+  #main-menu .screen-menu {
+    justify-content: center;
+    padding: 5px 8px !important;
+    overflow: hidden;
+  }
+  #main-menu .menu-title-icon { display: none; }
+  #main-menu .menu-title-main {
+    margin: 0 0 5px !important;
+    font-size: 11px !important;
+    line-height: 1.2;
+    letter-spacing: 2px;
+  }
+  #main-menu .menu-pixel-frame {
+    width: min(640px, 96vw);
+    max-width: min(640px, 96vw);
+    margin: 0 !important;
+  }
+  #main-menu .menu-pixel-frame-inner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+  }
+  #main-menu .menu-btn {
+    min-height: 40px !important;
+    padding: 6px 10px !important;
+    font-size: 10px !important;
+  }
+  #main-menu .menu-diff-row,
+  #main-menu .menu-contract-row { grid-column: 1 / -1; }
+  #main-menu .menu-diff-row { margin-top: 0; }
+  #main-menu .menu-diff-label,
+  #main-menu .menu-diff-btn {
+    min-height: 34px;
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+  }
+  #main-menu .menu-contract-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    margin-top: 0;
+  }
+  #main-menu #menu-contract-label,
+  #main-menu #menu-contract-copy { grid-column: 1 / -1; }
+  #main-menu #menu-contract-label {
+    min-height: 0;
+    padding: 2px 4px !important;
+  }
+  #main-menu .menu-contract-btn {
+    min-height: 38px;
+    padding: 5px 7px;
+    font-size: 10px !important;
+    text-align: center;
+    white-space: normal;
+  }
+  #main-menu #menu-contract-copy {
+    min-height: 28px;
+    max-height: 34px;
+    overflow: auto;
+    padding: 3px 5px;
+    font-size: 9px !important;
+    line-height: 1.3;
+  }
+  #main-menu .menu-settings-overlay { padding: 6px; }
+  #main-menu .menu-settings-box {
+    max-height: calc(100dvh - 12px);
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  /* Map: restore a game-like side panel, but keep every action in view. */
+  #map-screen .map-screen-layout {
+    grid-template-columns: minmax(0, 1fr) 210px !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+  }
+  #map-screen .map-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    max-height: none;
+    padding: 7px !important;
+    overflow: hidden !important;
+    border-top: 0;
+    border-left: 1px solid var(--border);
+  }
+  #map-screen .map-route-choices {
+    display: grid;
+    gap: 5px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #map-screen .map-route-card {
+    flex: none;
+    min-height: 0;
+    padding: 6px 7px;
+  }
+  #map-screen .map-route-card small { display: none; }
+  #map-screen .map-route-card strong,
+  #map-screen .map-route-threat { font-size: 10px !important; }
+  #map-screen .map-panel-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-top: auto;
+  }
+  #map-screen .map-panel-actions .btn {
+    width: 100%;
+    min-height: 42px;
+    padding: 5px 7px;
+    color: var(--text-main);
+    text-shadow: none;
+    white-space: normal;
+    overflow: visible;
+  }
+  #map-screen .map-panel-actions .btn-enter-full { grid-column: 1 / -1; }
+  #map-screen #btn-map-bag,
+  #map-screen #btn-map-bestiary { width: 100%; font-size: 0 !important; }
+  #map-screen #btn-map-bag::before { content: '🎒'; font-size: 16px; }
+  #map-screen #btn-map-bestiary::before { content: '📖'; font-size: 16px; }
+
+  /* Battle: commands use the available width instead of a vertical button rail. */
+  #battle-screen .battle-layout {
+    grid-template-columns: minmax(0, 1fr) 224px !important;
+    grid-template-rows: 50px minmax(0, 1fr) !important;
+  }
+  #battle-screen .battle-left { min-height: 50px; }
+  #battle-screen .battle-left .hero-card {
+    grid-template-columns: minmax(74px, .9fr) minmax(74px, 1.1fr);
+  }
+  #battle-screen .battle-left .hero-card-name { font-size: 10px !important; }
+  #battle-screen #ui-overlay {
+    overflow: hidden !important;
+    padding: 5px !important;
+  }
+  #battle-screen #unit-panel {
+    overflow: hidden !important;
+    display: flex;
+    min-height: 0;
+  }
+  #battle-screen .battle-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 5px !important;
+    width: 100%;
+  }
+  #battle-screen .battle-actions .btn,
+  #battle-screen .battle-actions .skill-action-btn {
+    min-height: 42px !important;
+    height: auto;
+    padding: 5px 6px !important;
+    overflow: visible;
+    white-space: normal;
+  }
+  #battle-screen .battle-actions .skill-action-btn {
+    grid-template-columns: 26px minmax(0, 1fr);
+    min-width: 0;
+  }
+  #battle-screen .battle-actions .skill-action-icon {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 13px !important;
+  }
+  #battle-screen .battle-actions .skill-action-name {
+    overflow: visible;
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  #battle-screen .skill-action-btn.ftue-recommended::after {
+    top: 2px;
+    right: 2px;
+  }
+  #battle-screen .battle-actions .skill-action-meta { display: none; }
+  #battle-screen .battle-actions .battle-tactical-strip,
+  #battle-screen .battle-actions .damage-preview-card,
+  #battle-screen .battle-actions .battle-utility-btn,
+  #battle-screen .battle-actions #btn-start-battle { grid-column: 1 / -1; }
+  #battle-screen .battle-actions .battle-tactical-strip { display: none; }
+
+  /* All modal surfaces must stay inside the physical viewport. */
+  .modal-box,
+  .game-menu-box,
+  .game-dialog-box,
+  .perk-modal-box,
+  .skill-unlock-box,
+  .onboarding-card,
+  .gameover-card {
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 16px) !important;
+    overflow-y: auto !important;
+    box-sizing: border-box;
+  }
+  #confirm-modal,
+  #game-alert-modal,
+  #onboarding-modal,
+  #game-prompt-modal,
+  #skill-unlock-modal,
+  #perk-modal,
+  #game-menu-overlay {
+    padding: 8px !important;
+    box-sizing: border-box;
+  }
+  #main-menu .menu-settings-hint,
+  #main-menu #btn-menu-settings-back,
+  #main-menu #btn-menu-settings-back .menu-btn-label {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  #perk-modal #perk-detail-panel .btn {
+    min-height: 34px !important;
+    height: auto !important;
+    overflow: visible !important;
+    white-space: normal;
   }
 }
 
@@ -242,5 +480,56 @@
   #inventory-screen .item-detail-btns .btn {
     min-height: 42px !important;
     font-size: 10px !important;
+  }
+}
+
+/* Absolute final ownership for rules that legacy blocks above also target. */
+.skill-action-btn.ftue-recommended::after { right: 2px; }
+
+@media (orientation: landscape) and (max-width: 900px) and (max-height: 520px) {
+  #battle-screen .battle-briefing { pointer-events: auto; }
+
+  #map-screen .map-screen-layout {
+    grid-template-columns: minmax(0, 1fr) 210px !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+  }
+  #map-screen .map-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 7px !important;
+    overflow: hidden !important;
+    border-top: 0;
+    border-left: 1px solid var(--border);
+  }
+  #map-screen .map-route-choices {
+    display: grid;
+    gap: 5px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #map-screen .map-route-card { flex: none; min-height: 0; padding: 6px 7px; }
+  #map-screen .map-route-card small { display: none; }
+  #map-screen .map-panel-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-top: auto;
+  }
+  #map-screen .map-panel-actions .btn {
+    width: 100%;
+    min-height: 42px;
+    color: var(--text-main);
+    text-shadow: none;
+  }
+  #map-screen .map-panel-actions .btn-enter-full { grid-column: 1 / -1; }
+  #map-screen #btn-map-bag,
+  #map-screen #btn-map-bestiary {
+    width: 100%;
+    overflow: visible;
+    color: var(--text-main);
+    text-shadow: none;
   }
 }
