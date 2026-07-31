@@ -54,6 +54,54 @@ try {
   check('battle animation runtime loads in the browser', animationRuntime.loaded, JSON.stringify(animationRuntime));
   check('browser runtime exposes all enemy animation profiles', animationRuntime.enemyProfiles >= 36, JSON.stringify(animationRuntime));
   check('browser runtime keeps three death styles', animationRuntime.deathProfiles.join(',') === 'hero,enemy,boss', JSON.stringify(animationRuntime));
+  const campaignRuntime = await page.evaluate(() => {
+    GameState.contract = 'mercenaries';
+    CampaignExpansion.startCampaign('e2e-campaign-expansion');
+    const event = CampaignExpansion.eventForCell({ id: 'e2e-event', region: 1 });
+    CampaignExpansion.applyEventEffect({ delayed: 'druid_cache' }, { region: 1 });
+    startBattleForCell({ id: 'e2e-volcanic', region: 2, type: 'mission' }, {
+      wave: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER], scenario: 'defense'
+    });
+    const battle = GameState.currentBattle;
+    const battleCheck = {
+      scenario: battle.scenario?.id,
+      regionalRule: battle.regionalRule,
+      ward: battle.scenario?.ward?.hp,
+      texture: !!RegionBattleTextures[2]
+    };
+    const heroAtExit = { isHero: true, hp: 10, x: GRID_W - 1, sizeW: 1 };
+    const liveRitualist = { isHero: false, hp: 10, scenarioTarget: 'ritualist' };
+    const deadPrey = { isHero: false, hp: 0, scenarioTarget: 'prey' };
+    const rules = {
+      eliminate: allEnemiesDead({ units: [heroAtExit, deadPrey] }),
+      holdout: CampaignExpansion.isVictory({ round: 5, scenario: { id: 'holdout', roundTarget: 4 } }),
+      escape: CampaignExpansion.isVictory({ units: [heroAtExit], scenario: { id: 'escape' } }),
+      defense: CampaignExpansion.isVictory({ round: 5, scenario: { id: 'defense', roundTarget: 4, ward: { hp: 1 } } }) && CampaignExpansion.isDefeat({ scenario: { id: 'defense', ward: { hp: 0 } } }),
+      ritual: CampaignExpansion.isVictory({ units: [heroAtExit], scenario: { id: 'ritual' } }) && CampaignExpansion.isDefeat({ round: 7, units: [liveRitualist], scenario: { id: 'ritual', roundLimit: 6 } }),
+      hunt: CampaignExpansion.isVictory({ units: [heroAtExit, deadPrey], scenario: { id: 'hunt' } }),
+      waves: CampaignExpansion.isVictory({ round: 6, scenario: { id: 'waves', roundTarget: 5 } })
+    };
+    GameState.currentBattle = null;
+    return {
+      contracts: Object.keys(CampaignExpansion.CONTRACTS).length,
+      mutators: GameState.campaignMutators.length,
+      scenarios: Object.keys(CampaignExpansion.SCENARIOS).length,
+      eventChoices: event.choices.length,
+      delayed: GameState.campaignEvents.some(entry => entry.id === 'druid_cache'),
+      assets: Object.values(CampaignExpansion.REGION).map(region => region.asset),
+      battleCheck, rules
+    };
+  });
+  check('campaign offers three distinct starting contracts', campaignRuntime.contracts === 3, JSON.stringify(campaignRuntime));
+  check('each run receives two deterministic mutators', campaignRuntime.mutators === 2, JSON.stringify(campaignRuntime));
+  check('campaign provides seven scenario objectives', campaignRuntime.scenarios >= 7, JSON.stringify(campaignRuntime));
+  check('events contain meaningful three-way choices and delayed consequences', campaignRuntime.eventChoices === 3 && campaignRuntime.delayed, JSON.stringify(campaignRuntime));
+  check('regional terrain assets are registered', campaignRuntime.assets.every(asset => asset.startsWith('assets/tiles/region-')), JSON.stringify(campaignRuntime));
+  check('volcanic scenario carries regional rule and objective state', campaignRuntime.battleCheck.scenario === 'defense' && campaignRuntime.battleCheck.regionalRule === 'heat' && campaignRuntime.battleCheck.ward > 0 && campaignRuntime.battleCheck.texture, JSON.stringify(campaignRuntime));
+  check('every scenario has an automated victory or failure rule', Object.values(campaignRuntime.rules).every(Boolean), JSON.stringify(campaignRuntime.rules));
+  await page.evaluate(() => setCampaignContract('mercenaries'));
+  check('contract selection updates its explanatory text', (await page.locator('#menu-contract-copy').textContent())?.length > 20);
+  await page.evaluate(() => { showScreen('menu'); initMenuScreen(); });
   await page.getByRole('button', { name: /Новая игра|New Game/i }).click();
 
   const next = page.getByRole('button', { name: /Далее|Next/i });

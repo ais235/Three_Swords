@@ -5,6 +5,7 @@ export const GAME_RUNTIME_SCRIPTS = Object.freeze([
   'src/game-core.js',
   'src/game-data.js',
   'src/game-state.js',
+  'src/campaign-expansion.js',
   'src/battle-system.js',
   'src/game-screens.js'
 ]);

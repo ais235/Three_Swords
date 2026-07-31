@@ -1353,7 +1353,9 @@
       boss: cell.type === 'boss',
       final: cell.type === 'final',
       firstBattle,
-      ambush: !!(opts && opts.ambush)
+      ambush: !!(opts && opts.ambush),
+      routeCommitment: !!cell.routeCommitment,
+      scenarioPreview: (opts && opts.scenario) || cell.scenarioPreview || null
     };
     startBattle(node);
     if (opts && opts.skipDeploy) {
@@ -1379,7 +1381,9 @@
 
     const enemyIds = GameState._lastBattleEnemyIds || [];
     const eliteBonus = enemyIds.reduce((best, id) => Math.max(best, (LOOT_CHANCE[id] || 0) * 0.25), 0);
-    dropChance = Math.min(1, dropChance + eliteBonus);
+    if (CampaignExpansion.isMutatorActive('relic_hunt')) dropChance += 0.16;
+    if (GameState.campaignEffects?.mercenaryFirstDrop && GameState.stats.battles <= 1) dropChance -= 0.12;
+    dropChance = Math.min(1, Math.max(0, dropChance + eliteBonus));
     if (!firstBattleReward && Math.random() > dropChance) return;
 
     const drop = selectLootItem(region, firstBattleReward ? 'common' : forceRarity, true);
@@ -1392,57 +1396,72 @@
     if (!hero.equipment || !hero.equipment[slot]) return null;
     return ITEM_POOL.find(i => i.id === hero.equipment[slot]) || null;
   }
-  // 8: Styled event screen with icon/type
-  const EVENT_ICONS = { positive: '✨', negative: '💀', neutral: '🎲', ambush: '⚔', treasure: '💰', heal: '💚', smith: '🔨', curse: '☠', refugees: '👥', fog: '🌫', blessing: '🌟', trade: '🛒' };
-  function showEventModal(text, type, onContinue) {
+  // Choice events: every option exposes its immediate cost or benefit.
+  const EVENT_ICONS = { positive: '?', negative: '??', neutral: '??', ambush: '??', treasure: '??', heal: '??', smith: '??', curse: '?', refugees: '??', fog: '??', blessing: '??', trade: '??' };
+  function showEventModal(text, type, onContinue, choices = []) {
     const card = document.getElementById('event-card');
     const iconEl = document.getElementById('event-icon-big');
     const typeEl = document.getElementById('event-type-label');
     const textEl = document.getElementById('event-main-text');
+    const choiceRoot = document.getElementById('event-choice-list');
+    const resultEl = document.getElementById('event-result');
+    const ok = document.getElementById('btn-event-ok');
     const typeLabels = { positive: translateKey('eventPositive'), negative: translateKey('eventNegative'), neutral: translateKey('event'), ambush: translateKey('eventAmbush'), treasure: translateKey('eventTreasure'), heal: translateKey('eventHeal'), smith: translateKey('eventSmith'), curse: translateKey('eventCurse'), refugees: translateKey('eventRefugees'), fog: translateKey('eventFog'), blessing: translateKey('eventBlessing'), trade: translateKey('eventTrade') };
-    card.className = 'event-card ev-' + (type === 'negative' ? 'negative' : type === 'positive' ? 'positive' : 'neutral');
-    iconEl.textContent = EVENT_ICONS[type] || '🎲';
+    card.className = 'event-card ev-' + (type === 'negative' || type === 'curse' ? 'negative' : type === 'positive' ? 'positive' : 'neutral');
+    iconEl.textContent = EVENT_ICONS[type] || '??';
     typeEl.textContent = typeLabels[type] || translateKey('event');
     textEl.textContent = text;
+    if (choiceRoot) choiceRoot.innerHTML = '';
+    if (resultEl) { resultEl.textContent = ''; resultEl.classList.add('hidden'); }
+    if (ok) { ok.classList.toggle('hidden', choices.length > 0); ok.onclick = onContinue || null; }
+    choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'event-choice-btn';
+      btn.innerHTML = `<strong>${escapeHtml(choice.label)}</strong><span>?</span><small>${escapeHtml(choice.detail)}</small>`;
+      btn.onclick = () => choice.onSelect?.();
+      choiceRoot?.appendChild(btn);
+    });
     GameState._eventContinueFn = onContinue || null;
     showScreen('event');
   }
 
   function triggerEvent(cell) {
-    const events = [
-      () => { const g = randInt(20, 40); GameState.gold += g; return { text: `${translateKey('eventChest')}: +${g} 💰`, type: 'treasure' }; },
-      () => { GameState.heroes.forEach(h => h.hp = Math.min(h.maxHp, h.hp + 10)); return { text: translateKey('eventSpring'), type: 'heal' }; },
-      () => { const h = GameState.heroes[randInt(0, GameState.heroes.length - 1)]; h.attack += 1; return { text: `${translateKey('eventSmithText')} ${h.name}: ${translateKey('eventAttackPlus')}`, type: 'smith' }; },
-      () => { const h = GameState.heroes[randInt(0, GameState.heroes.length - 1)]; h.maxHp = Math.max(1, h.maxHp - 5); h.hp = Math.min(h.hp, h.maxHp); return { text: `${translateKey('eventCurseText')} ${h.name} ${translateKey('eventLoseMaxHp')}`, type: 'negative' }; },
-      () => { if (GameState.gold >= 30) { GameState.gold -= 30; GameState.heroes.forEach(h => h.xp += 100); return { text: translateKey('eventRefugeesHelped'), type: 'positive' }; } return { text: translateKey('eventRefugeesPassed'), type: 'neutral' }; },
-      () => { const it = randomItem(cell.region, 'common'); GameState.inventory.push(it.id); return { text: `${translateKey('eventHiddenCache')} «${translateText(it.name)}». ${translateKey('eventAddedBag')}`, type: 'treasure' }; },
-      () => { GameState.hardFlags.skipDeployNextBattle = true; return { text: translateKey('eventFogText'), type: 'fog' }; },
-      () => { const h = GameState.heroes[randInt(0, GameState.heroes.length - 1)]; h.armor += 2; return { text: `${translateKey('eventBlessingText')} ${h.name} ${translateKey('eventArmorForever')}`, type: 'blessing' }; },
-      () => { const wave = [ENEMY_IDS.SKELETON, ENEMY_IDS.BOAR, ENEMY_IDS.GOBLIN_ARCHER]; return { text: translateKey('eventAmbushText'), type: 'ambush', wave }; },
-      () => { const it = randomItem(cell.region, 'rare'); GameState.inventory.push(it.id); return { text: `${translateKey('eventRareGift')} «${translateText(it.name)}»: ${translateKey('eventFreeGift')}`, type: 'trade' }; }
-    ];
-    const out = events[randInt(0, events.length - 1)]();
-    GameState.pendingNegativeEvent = (out.type === 'negative') ? cell.id : null;
+    const event = CampaignExpansion.eventForCell(cell);
     cell.completed = true;
-    saveGame();
-    if (out.wave) {
-      showEventModal(out.text, out.type, () => {
-        startBattleForCell(cell, { wave: out.wave, skipDeploy: true, ambush: out.type === 'ambush' });
-      });
-    } else {
-      showEventModal(out.text, out.type, () => {
-        showScreen('map');
-        renderMap();
-        if (out.type === 'negative' && window.ysdk && canShowAd()) {
-          setTimeout(() => {
-            showGameConfirm(translateKey('fateSecondChance')).then(ok => {
-              if (ok) showRewardedAd(() => { GameState.pendingNegativeEvent = null; triggerEvent(cell); });
-            });
-          }, 300);
+    const choices = event.choices.map(choice => ({
+      label: choice.label,
+      detail: choice.detail,
+      onSelect: () => {
+        const result = CampaignExpansion.applyEventEffect(choice.effect, cell);
+        const choiceRoot = document.getElementById('event-choice-list');
+        const resultEl = document.getElementById('event-result');
+        const ok = document.getElementById('btn-event-ok');
+        if (choiceRoot) choiceRoot.innerHTML = '';
+        if (resultEl) { resultEl.textContent = result; resultEl.classList.remove('hidden'); }
+        if (ok) {
+          ok.classList.remove('hidden');
+          ok.textContent = translateKey('continue');
+          ok.onclick = () => {
+            CampaignExpansion.resolveDelayedEvents();
+            saveGame();
+            if (choice.effect.ambush) {
+              startBattleForCell(cell, { skipDeploy: true, ambush: true });
+              return;
+            }
+            showScreen('map');
+            renderMap();
+            if (GameState._campaignNotice) {
+              const notice = GameState._campaignNotice;
+              GameState._campaignNotice = '';
+              setTimeout(() => void showGameAlert(notice), 150);
+            }
+          };
         }
-      });
-    }
+      }
+    }));
+    showEventModal(event.text, event.type, null, choices);
   }
+
   // 13: showScreen with fade transition
   function showScreen(name) {
     ActiveScreen = name;
@@ -1515,6 +1534,20 @@
     dh.className = 'menu-diff-btn' + (GameState.difficulty === 'hardcore' ? ' active-hard' : '');
   }
 
+  function setCampaignContract(id) {
+    if (!CampaignExpansion.CONTRACTS[id]) return;
+    GameState.contract = id;
+    document.querySelectorAll('[data-contract]').forEach(button => {
+      const contract = CampaignExpansion.CONTRACTS[button.dataset.contract];
+      button.classList.toggle('active', button.dataset.contract === id);
+      if (contract) button.textContent = `${contract.icon} ${CampaignExpansion.loc(contract.name)}`;
+    });
+    const label = document.getElementById('menu-contract-label');
+    if (label) label.textContent = currentLanguage() === 'ru' ? 'КОНТРАКТ ПОХОДА' : currentLanguage() === 'es' ? 'CONTRATO DE EXPEDICIÓN' : 'EXPEDITION CONTRACT';
+    const copy = document.getElementById('menu-contract-copy');
+    if (copy) copy.textContent = CampaignExpansion.loc(CampaignExpansion.CONTRACTS[id].summary);
+  }
+
   function initMenuScreen() {
     const starsEl = document.getElementById('menu-stars');
     if (starsEl && starsEl.children.length === 0) {
@@ -1581,11 +1614,16 @@
     }
 
     setDifficulty(GameState.difficulty === 'hardcore' ? 'hardcore' : 'normal');
+    setCampaignContract(GameState.contract || 'hunters');
   }
 
   function startNewGame() {
     const showTutorial = shouldShowFirstRunTutorial();
-    applyTestSeed();
+    // Every campaign receives a concrete seed, including ordinary menu starts,
+    // so the history screen can genuinely replay its map, events and modifiers.
+    const campaignSeed = GameState.replaySeed || TEST_SEED || `run-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+    GameState.testSeed = campaignSeed;
+    applyTestSeed(campaignSeed);
     initHeroesFromTemplate();
     buildWorldMap();
     GameState.gold = isHardcoreMode() ? 10 : 20;
@@ -1599,13 +1637,24 @@
     GameState.ftueHintsEnabled = true;
     GameState.ftueSkillsUsed = {};
     GameState.runStartedAt = Date.now();
-    GameState.testSeed = TEST_SEED || null;
+    GameState.replaySeed = null;
     if (!GameState.difficulty) GameState.difficulty = 'normal';
+    CampaignExpansion.startCampaign(GameState.testSeed || Date.now());
     saveGame();
     showScreen('map');
     renderMap();
     updateMenuMeta();
     if (showTutorial) requestAnimationFrame(() => { void showOnboarding(); });
+  }
+
+  function replayCampaign(index) {
+    const entry = GameState.runHistory?.[index];
+    if (!entry || !entry.seed || entry.seed === 'random') return;
+    GameState.replaySeed = entry.seed;
+    GameState.contract = entry.contract || 'hunters';
+    const overlay = document.getElementById('menu-settings-overlay');
+    if (overlay) { overlay.classList.remove('show'); overlay.setAttribute('aria-hidden', 'true'); }
+    startNewGame();
   }
 
   function continueGame() {
@@ -1692,19 +1741,31 @@
       if (!tagKeys.includes(tag.key)) tagKeys.push(tag.key);
     }));
     tagKeys.sort((a, b) => priority.indexOf(a) - priority.indexOf(b));
-    const composition = wave.length
-      ? `${translateKey('routeEnemies')}: ${wave.length}${tagKeys.length ? ` · ${tagKeys.slice(0, 2).map(translateKey).join(', ')}` : ''}`
+    const campaignIntel = CampaignExpansion.routeIntel(node);
+    const composition = wave.length && (GameState.campaignEffects?.hunterIntel || node.type !== 'mission')
+      ? `${translateKey('routeEnemies')}: ${wave.length}${tagKeys.length ? ` ? ${tagKeys.slice(0, 2).map(translateKey).join(', ')}` : ''}`
       : '';
     return {
-      threat: translateKey(threatKey),
-      reward: translateKey(rewardKey),
+      threat: `${translateKey(threatKey)}${node.routeTension ? ' +' : ''}`,
+      reward: campaignIntel.reward || translateKey(rewardKey),
       boss: boss ? `${translateKey('bossDistance')}: ${bossSteps}` : '',
-      composition
+      composition,
+      scenario: campaignIntel.scenario,
+      risk: campaignIntel.risk,
+      region: campaignIntel.region
     };
+  }
+
+  function applyRouteDecision(from, chosen) {
+    if (!from || !chosen || !chosen.routeCommitment) return;
+    GameState.mapGrid
+      .filter(node => node.id !== chosen.id && cellNeighbors(from, node) && !node.completed)
+      .forEach(node => { node.routeTension = true; });
   }
 
   function renderMap() {
     const root = document.getElementById('map-nodes');
+    document.getElementById('map-screen')?.setAttribute('data-region', String(GameState.region || 1));
     const info = document.getElementById('map-cell-info');
     const fogCounterEl = document.getElementById('map-fog-counter');
     root.innerHTML = '';
@@ -1739,6 +1800,7 @@
       const unlocked = node.region <= GameState.regionUnlocked && (node.type !== 'final' || GameState.defeatedBosses >= 3);
       if (!unlocked) el.classList.add('locked');
       if (node.completed) el.classList.add('done');
+      if (node.routeTension) el.classList.add('route-tension');
       if (node.x === px && node.y === py) el.classList.add('current');
       if (node.type === 'city') el.classList.add('type-city');
       if (revealedBoss) el.classList.add('type-boss-revealed');
@@ -1753,9 +1815,12 @@
       }
       const setInfo = (n) => {
         const t = typeNames[n.type] || n.type;
+        const intel = mapNodeIntel(n);
         info.innerHTML = `${mapCellInfoIconHtml(n)}
           <div class="cell-info-name">${translateKey('region')} ${n.region} · ${t}</div>
-          <div>${n.completed ? translateKey('mapCleared') : translateKey('mapActive')}</div>`;
+          <div>${n.completed ? translateKey('mapCleared') : translateKey('mapActive')}</div>
+          ${intel.scenario ? `<div class="route-intel-line">${CampaignExpansion.scenarioLabel(intel.scenario)}</div>` : ''}
+          ${intel.risk ? `<div class="route-intel-line">${escapeHtml(intel.risk)}</div>` : ''}`;
         selectedNode = n;
       };
       el.onmouseenter = () => {
@@ -1782,11 +1847,13 @@
           return;
         }
         if (!cellNeighbors(cur, node) && !(node.x === cur.x && node.y === cur.y)) return;
+        applyRouteDecision(cur, node);
         GameState.playerPos = { x: node.x, y: node.y };
         mapFogVisitedAdd(node.y, node.x);
         node.visited = true;
         GameState.turn += 1;
         GameState.region = node.region;
+        CampaignExpansion.resolveDelayedEvents();
         enterMapNode(node);
         renderMap();
       };
@@ -1795,12 +1862,19 @@
     });
     if (selectedNode) {
       const intel = mapNodeIntel(selectedNode);
+      const mutators = (GameState.campaignMutators || []).map(id => {
+        const rule = CampaignExpansion.MUTATORS[id];
+        return rule ? `${rule.icon} ${CampaignExpansion.loc(rule.name)}` : id;
+      }).join(' · ');
       const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
       info.innerHTML = `${mapCellInfoIconHtml(selectedNode)}
         <div class="cell-info-name">${translateKey('region')} ${selectedNode.region} · ${typeNames[selectedNode.type] || selectedNode.type}</div>
         <div>${translateKey('currentPartyPosition')}</div>
-        <div>${intel.threat} · ${intel.reward}${intel.boss ? ` · ${intel.boss}` : ''}</div>
-        ${intel.composition ? `<div class="route-intel-line">${intel.composition}</div>` : ''}`;
+        <div>${intel.threat} ? ${intel.reward}${intel.boss ? ` ? ${intel.boss}` : ''}</div>
+        ${intel.scenario ? `<div class="route-intel-line">${CampaignExpansion.scenarioLabel(intel.scenario)}: ${CampaignExpansion.scenarioShort(intel.scenario)}</div>` : ''}
+        ${intel.risk ? `<div class="route-intel-line">? ${intel.risk}</div>` : ''}
+        ${intel.composition ? `<div class="route-intel-line">${intel.composition}</div>` : ''}
+        ${mutators ? `<div class="route-intel-line">⚙ ${escapeHtml(mutators)}</div>` : ''}`;
     }
     const routeChoices = document.getElementById('map-route-choices');
     if (routeChoices) {
@@ -1821,9 +1895,13 @@
            </button>`
         : routes.length ? `<div class="map-route-title">${translateKey('nextRoutes')}</div>${routes.map(n => {
         const intel = mapNodeIntel(n);
-        return `<button type="button" class="map-route-card" data-route-id="${n.id}">
+        const scenarioLine = intel.scenario && !['boss', 'final'].includes(n.type)
+          ? `<small class="map-route-intel">${escapeHtml(CampaignExpansion.scenarioLabel(intel.scenario))}: ${escapeHtml(CampaignExpansion.scenarioShort(intel.scenario))}</small>` : '';
+        return `<button type="button" class="map-route-card map-route-region-${n.region}" data-route-id="${n.id}">
           <strong>${typeNames[n.type] || n.type}</strong><span class="map-route-threat">${intel.threat}</span>
-          <small>${intel.reward}${intel.boss ? ` · ${intel.boss}` : ''}</small>
+          <small>${intel.reward}${intel.boss ? ` ? ${intel.boss}` : ''}</small>
+          ${scenarioLine}
+          ${intel.risk ? `<small class="map-route-intel">? ${escapeHtml(intel.risk)}</small>` : ''}
           ${intel.composition ? `<small class="map-route-intel">${intel.composition}</small>` : ''}
         </button>`;
       }).join('')}` : '';
@@ -1867,6 +1945,11 @@
     function enterMapNode(node) {
       if (!node) return;
       if (node.type === 'city') {
+        if (CampaignExpansion.isMutatorActive('city_favor') && !GameState.cityFavorClaimed[node.region]) {
+          GameState.cityFavorClaimed[node.region] = true;
+          GameState.gold += 12;
+          GameState._campaignNotice = CampaignExpansion.loc({ ru: 'Город встречает отряд: +12 золота.', en: 'The city welcomes the party: +12 gold.', es: 'La ciudad recibe al grupo: +12 oro.' });
+        }
         enterCity(node);
       } else if (node.type === 'event' && !node.completed) {
         triggerEvent(node);
@@ -1923,11 +2006,13 @@
         void showGameAlert(translateKey('tooFar'));
         return;
       }
+      applyRouteDecision(cur, node);
       GameState.playerPos = { x: node.x, y: node.y };
       mapFogVisitedAdd(node.y, node.x);
       node.visited = true;
       GameState.turn += 1;
       GameState.region = node.region;
+      CampaignExpansion.resolveDelayedEvents();
       enterMapNode(node);
       renderMap();
     };

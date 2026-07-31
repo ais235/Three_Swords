@@ -61,9 +61,9 @@
     };
   }
 
-  function applyTestSeed() {
-    if (!TEST_SEED) return;
-    Math.random = createSeededRandom(hashSeed(TEST_SEED));
+  function applyTestSeed(seed = (typeof GameState !== 'undefined' && GameState.replaySeed) || TEST_SEED) {
+    if (!seed) return;
+    Math.random = createSeededRandom(hashSeed(seed));
   }
 
   applyTestSeed();
@@ -1303,6 +1303,20 @@
       <div class="menu-record-cell"><div class="menu-record-val">${r.enemiesDefeated || 0}</div><div class="menu-record-label">${translateKey('recordKills')}</div></div>
       <div class="menu-record-cell"><div class="menu-record-val">${turns}</div><div class="menu-record-label">${translateKey('recordTurns')}</div></div>
     `;
+    const history = document.getElementById('settings-run-history');
+    if (!history) return;
+    const entries = Array.isArray(GameState.runHistory) ? GameState.runHistory.slice(0, 3) : [];
+    history.innerHTML = entries.length
+      ? entries.map((entry, index) => {
+          const contract = typeof CampaignExpansion !== 'undefined' ? CampaignExpansion.CONTRACTS[entry.contract] : null;
+          const title = contract ? `${contract.icon} ${CampaignExpansion.loc(contract.name)}` : entry.contract;
+          const seed = escapeHtml(String(entry.seed));
+          return `<button class="run-history-entry" type="button" data-replay-index="${index}"><span>${title} · ${entry.turn} ${translateKey('turn')}</span><small>${entry.result === 'victory' ? '🏆' : '☠️'} ${seed}</small></button>`;
+        }).join('')
+      : `<small class="run-history-empty">${currentLanguage() === 'ru' ? 'Завершённые походы появятся здесь.' : 'Completed runs will appear here.'}</small>`;
+    history.querySelectorAll('[data-replay-index]').forEach(button => {
+      button.onclick = () => replayCampaign(Number(button.dataset.replayIndex));
+    });
   }
   function updateHud() {
     const center = document.getElementById('topbar-center');
@@ -1470,4 +1484,3 @@
   const MAP_COLS = WorldMapTopology.COLS;
   const MAP_ROWS = WorldMapTopology.ROWS;
   const MAP_CELL_TOTAL = MAP_COLS * MAP_ROWS;
-

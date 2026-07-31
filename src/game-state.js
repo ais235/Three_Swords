@@ -49,6 +49,12 @@
     battleSpeed: 1,
     runStartedAt: 0,
     testSeed: TEST_SEED || null,
+    contract: 'hunters',
+    campaignMutators: [],
+    campaignEvents: [],
+    campaignEffects: {},
+    cityFavorClaimed: {},
+    runHistory: [],
     _lastBattleDrop: null,
     _lastBattleDropHandled: true
   };
@@ -151,6 +157,8 @@
     GameState.battleSpeed = Number(GameState.battleSpeed) === 2 ? 2 : 1;
     GameState.runStartedAt = Number(GameState.runStartedAt) || Date.now();
     if (!GameState.consumables || typeof GameState.consumables !== 'object') GameState.consumables = {};
+    // Old saves can be loaded before the campaign module has initialised.
+    if (typeof CampaignExpansion !== 'undefined') CampaignExpansion.ensureState();
     if (!GameState.stats || typeof GameState.stats !== 'object') GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
     GameState.stats.objectivesCompleted = Number(GameState.stats.objectivesCompleted) || 0;
     GameState.stats.damageTaken = Number(GameState.stats.damageTaken) || 0;
@@ -583,6 +591,10 @@
     const start = GameState.mapGrid.find(c => c.x === 0 && c.y === 0);
     start.type = 'mission';
     start.emoji = '⚔️';
+    GameState.mapGrid.forEach(cell => {
+      cell.routeCommitment = ['event', 'dungeon', 'wanderer', 'arena'].includes(cell.type) && ((cell.x * 3 + cell.y * 5) % 4 === 0);
+      if (['mission', 'dungeon'].includes(cell.type)) cell.scenarioPreview = CampaignExpansion.scenarioForPreview(cell);
+    });
     GameState.regionUnlocked = 1;
     GameState.defeatedBosses = 0;
     GameState.worldMap = [];
@@ -632,4 +644,3 @@
     GameState.mapLayoutVersion = WorldMapTopology.LAYOUT_VERSION;
     return true;
   }
-

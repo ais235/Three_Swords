@@ -30,10 +30,13 @@
   function startBattle(node) {
     GameState.lastSafeSave = deepClone(GameState);
     GameState.battleReviveUsed = false;
-    const wave = node.enemyWave || [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON];
+    const campaignAmbush = !!GameState.campaignEffects?.nextAmbush;
+    if (campaignAmbush) GameState.campaignEffects.nextAmbush = false;
+    const scenario = CampaignExpansion.createScenario(node);
+    const wave = CampaignExpansion.applyMutatorsToWave(node.enemyWave || [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON], node);
     const hasLargeEnemy = wave.some(id => (enemyDef(id).sizeW || 1) > 1 || (enemyDef(id).sizeH || 1) > 1);
     const firstBattle = !!node.firstBattle;
-    const isAmbush = !!node.ambush;
+    const isAmbush = !!node.ambush || campaignAmbush;
     const grid = firstBattle ? createFirstBattleGrid() : generateBattleGrid(node.region, { spacious: hasLargeEnemy || node.boss || node.final || isAmbush });
     const units = [];
     const heroes = GameState.heroes.filter(h => h.hp > 0).map((h, i) => makeBattleHero(h, i));
@@ -138,14 +141,18 @@
       globalBuffs: { watcherDeadMove: 0 }, heroMoved: false, heroActionDone: false, pendingSkill: null, deployDragHeroId: null,
       heroMoveUndo: null,
       firstBattle,
+      region: node.region,
+      routeCommitment: !!node.routeCommitment,
       ambush: isAmbush,
       deploymentLocked: isAmbush,
       ftueSkillsUsed: { ...(GameState.ftueSkillsUsed || {}) },
       traps: [],
       objective,
       objectiveUsedSkill: false,
-      objectiveHeroLost: false
+      objectiveHeroLost: false,
+      scenario
     };
+    CampaignExpansion.applyStartBattleEffects(GameState.currentBattle);
     GameState.screen = 'battle';
     GameState.mapNodeId = node.id;
     showScreen('battle');
@@ -307,8 +314,8 @@
   function resolveBattleIfOver() {
     const b = GameState.currentBattle;
     if (!b || b._victoryHandled) return false;
-    if (allEnemiesDead(b)) { checkBattleEnd(); return true; }
-    if (allHeroesDead(b)) { checkBattleEnd(); return true; }
+    const clearEndsScenario = !b.scenario || ['eliminate', 'ritual'].includes(b.scenario.id);
+    if (CampaignExpansion.isVictory(b) || CampaignExpansion.isDefeat(b) || (allEnemiesDead(b) && clearEndsScenario) || allHeroesDead(b)) { checkBattleEnd(); return true; }
     return false;
   }
 
@@ -911,8 +918,7 @@
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags) attacker.flags.firstAttackTurn = false;
     if (attacker.hp <= 0) onUnitDeath(attacker);
     if (target.hp <= 0) onUnitDeath(target);
-    if (b && allEnemiesDead(b)) checkBattleEnd();
-    if (b && allHeroesDead(b)) checkBattleEnd();
+    if (b) resolveBattleIfOver();
     return dmg;
   }
 
@@ -1033,6 +1039,7 @@
     if (cell?.type === 'boss') gold = randInt(120, 160);
     if (cell?.type === 'final') gold = 300;
     if (isHardcoreMode()) gold = Math.max(1, Math.round(gold * 0.85));
+    if (GameState.contract === 'guardians' && b.routeCommitment) gold = Math.max(1, Math.round(gold * 0.8));
     const objectiveComplete = b.objective === 'skillful' ? b.objectiveUsedSkill : !b.objectiveHeroLost;
     const objectiveBonus = objectiveComplete ? 10 : 0;
     // Gold bonus from amulet_luck artifact
@@ -1040,11 +1047,14 @@
       const item = getEquippedItem(h, 'artifact');
       return item && item.mods.goldBonus ? m + item.mods.goldBonus : m;
     }, 1);
-    gold = Math.round(gold * goldMult) + objectiveBonus;
+    const scenarioBonus = b.scenario?.id !== 'eliminate' ? (b.scenario.rewardGold || 15) : 0;
+    if (CampaignExpansion.isMutatorActive('scarce_supplies') && scenarioBonus) gold += 8;
+    gold = Math.round(gold * goldMult) + objectiveBonus + scenarioBonus;
     GameState._lastBattleObjective = {
       key: b.objective,
       complete: objectiveComplete,
-      bonus: objectiveBonus
+      bonus: objectiveBonus + scenarioBonus,
+      scenario: b.scenario?.id || 'eliminate'
     };
     GameState.gold += gold;
     GameState.stats.battles += 1;
@@ -1101,6 +1111,10 @@
       if (cell.type === 'boss') {
         GameState.defeatedBosses += 1;
         GameState.regionUnlocked = Math.max(GameState.regionUnlocked, Math.min(3, cell.region + 1));
+      }
+      if (cell.type === 'boss') {
+        GameState.campaignEffects.wardUntilBoss = false;
+        GameState.campaignEffects.pactUntilBoss = false;
       }
       applyBattleRewards(cell);
       if (cell.id === 'c_0_0') {
@@ -1480,12 +1494,23 @@
     [TILE.WATER]: 'assets/tiles/water.png',
     [TILE.FORT]: 'assets/tiles/castle.png'
   };
+  const REGION_BATTLE_TEXTURE_PATHS = {
+    1: 'assets/tiles/region-forest-glade.png',
+    2: 'assets/tiles/region-volcanic-depths.png',
+    3: 'assets/tiles/region-sunken-ruins.png'
+  };
   const MAP_CASTLE_ICON = 'assets/tiles/castle.png';
   const TileTextures = {};
   Object.entries(TILE_TEXTURE_PATHS).forEach(([tileType, src]) => {
     const img = new Image();
     img.src = src;
     TileTextures[tileType] = img;
+  });
+  const RegionBattleTextures = {};
+  Object.entries(REGION_BATTLE_TEXTURE_PATHS).forEach(([region, src]) => {
+    const img = new Image();
+    img.src = src;
+    RegionBattleTextures[region] = img;
   });
   function getHeroTexture(heroId) {
     const tex = HeroTextures[heroId];
@@ -2211,6 +2236,36 @@
       }
     }
 
+    const regionalTexture = RegionBattleTextures[b.region];
+    if (regionalTexture?.complete && regionalTexture.naturalWidth > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.globalCompositeOperation = 'soft-light';
+      ctx.drawImage(regionalTexture, 0, 0, CANVAS_W, CANVAS_H);
+      ctx.restore();
+    }
+    if (['escape', 'hunt'].includes(b.scenario?.id)) {
+      const px = (GRID_W - 1) * CELL;
+      ctx.save();
+      ctx.fillStyle = 'rgba(86, 230, 164, .18)';
+      ctx.fillRect(px + 4, 4, CELL - 8, CANVAS_H - 8);
+      ctx.strokeStyle = '#7fffd4'; ctx.lineWidth = 3; ctx.setLineDash([8, 5]);
+      ctx.strokeRect(px + 5, 5, CELL - 10, CANVAS_H - 10); ctx.setLineDash([]);
+      ctx.fillStyle = '#d9fff0'; ctx.font = '19px serif'; ctx.textAlign = 'center';
+      ctx.fillText('🚩', px + CELL / 2, CELL / 2);
+      ctx.restore();
+    }
+    if (b.scenario?.id === 'defense' && b.scenario.ward) {
+      const ward = b.scenario.ward;
+      const px = ward.x * CELL, py = ward.y * CELL;
+      ctx.save();
+      ctx.fillStyle = 'rgba(110,180,255,.2)'; ctx.fillRect(px + 5, py + 5, CELL - 10, CELL - 10);
+      ctx.strokeStyle = '#8bd3ff'; ctx.lineWidth = 3; ctx.strokeRect(px + 6, py + 6, CELL - 12, CELL - 12);
+      ctx.fillStyle = '#e8fbff'; ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('🛡️', px + CELL / 2, py + CELL / 2);
+      ctx.restore();
+    }
+
     (b.traps || []).forEach(trap => {
       const cx = trap.x * CELL + CELL / 2;
       const cy = trap.y * CELL + CELL / 2;
@@ -2403,6 +2458,15 @@
             ctx.fillText(u.emoji, 0, 0);
             ctx.restore();
           }
+        }
+
+        if (!u.isHero && u.scenarioTarget && u.hp > 0) {
+          ctx.save();
+          ctx.fillStyle = '#ffe16a';
+          ctx.shadowColor = '#ffb300'; ctx.shadowBlur = 10;
+          ctx.font = '19px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(u.scenarioTarget === 'ritualist' ? '🔮' : '🎯', centerX, py + 10);
+          ctx.restore();
         }
 
         // 2: HP bar + hp text
@@ -2698,6 +2762,31 @@
       if (u.hp <= 0) onUnitDeath(u);
     }
   }
+  function spawnScenarioWave(b, enemyIds) {
+    (enemyIds || []).forEach((enemyId, index) => {
+      const proto = { isHero: false, enemyId, sizeW: enemyDef(enemyId).sizeW || 1, sizeH: enemyDef(enemyId).sizeH || 1 };
+      const slots = [
+        { x: GRID_W - unitWidth(proto), y: index % GRID_H },
+        { x: GRID_W - unitWidth(proto), y: GRID_H - 1 - (index % GRID_H) },
+        { x: Math.max(0, GRID_W - unitWidth(proto) - 1), y: Math.floor(GRID_H / 2) }
+      ];
+      const slot = slots.find(point => canUnitOccupy(b, proto, point.x, point.y, { end: true }));
+      if (slot) b.units.push(spawnEnemy(enemyId, slot.x, slot.y));
+    });
+  }
+
+  function applyScenarioRoundStart(b) {
+    const outcome = CampaignExpansion.onRoundStarted(b);
+    if (outcome.spawn?.length) {
+      spawnScenarioWave(b, outcome.spawn);
+      buildInitiative();
+    }
+    if (outcome.log) pushBattleLog(outcome.log, 'status');
+    if (CampaignExpansion.isDefeat(b)) {
+      spawnBattleTextFx(4, 3, 'OBJECTIVE LOST', '#ff6b6b');
+      checkBattleEnd();
+    }
+  }
   function advanceSingleTurn() {
     const b = GameState.currentBattle;
     if (!b || !b.order.length) return null;
@@ -2708,6 +2797,7 @@
       b.units.forEach(u => { if (u.isHero) { u.flags = u.flags || {}; u.flags.firstAttackTurn = true; } });
       if (b.globalBuffs.watcherDeadMove > 0) b.globalBuffs.watcherDeadMove--;
       buildInitiative();
+      applyScenarioRoundStart(b);
     }
     let guard = 0;
     while (guard++ < 32) {
@@ -2719,6 +2809,7 @@
         b.activeIndex = 0;
         b.round++;
         buildInitiative();
+        applyScenarioRoundStart(b);
       }
     }
     return null;
@@ -2809,8 +2900,12 @@
   function checkBattleEnd() {
     const b = GameState.currentBattle;
     if (!b || b._victoryHandled) return;
+    const scenarioWon = CampaignExpansion.isVictory(b);
+    const scenarioLost = CampaignExpansion.isDefeat(b);
     const deathRemaining = activeDeathAnimationRemaining(b);
-    if ((allEnemiesDead(b) || allHeroesDead(b)) && deathRemaining > 20) {
+    const clearEndsScenario = !b.scenario || ['eliminate', 'ritual'].includes(b.scenario.id);
+    const clearVictory = allEnemiesDead(b) && clearEndsScenario;
+    if ((clearVictory || allHeroesDead(b) || scenarioWon || scenarioLost) && deathRemaining > 20) {
       if (!b._deathEndTimer) {
         b._deathEndTimer = setTimeout(() => {
           b._deathEndTimer = null;
@@ -2819,10 +2914,11 @@
       }
       return;
     }
-    if (allEnemiesDead(b)) {
+    if (scenarioWon || clearVictory) {
       const node = getCellById(b.nodeId);
       if (node?.type === 'final') {
         endBattleVictory();
+        CampaignExpansion.recordCompletedRun('victory');
         updateRecordsFromState({ finished: true });
         saveGame();
         showScreen('ending');
@@ -2832,7 +2928,8 @@
       endBattleVictory();
       return;
     }
-    if (allHeroesDead(b)) {
+    if (scenarioLost || allHeroesDead(b)) {
+      CampaignExpansion.recordCompletedRun('defeat');
       if (typeof BattleSfx !== 'undefined') {
         BattleSfx.playSampledUrl(BSX.common_defeat, 0.75);
         BattleSfx.playSampledUrl(BSX.ui_defeat_screen, 0.8, 0.05);
@@ -2863,6 +2960,12 @@
       heroes: GameState.heroes.map(h => ({ id:h.id, level:h.level, perks:h.perksApplied || [] }))
     });
     const resultCode = hashSeed(resultCodeSource).toString(36).toUpperCase().padStart(7, '0');
+    const contract = CampaignExpansion.CONTRACTS[GameState.contract];
+    const contractLine = contract ? `${contract.icon} ${CampaignExpansion.loc(contract.name)}` : '—';
+    const mutatorLine = (GameState.campaignMutators || []).map(id => {
+      const mutator = CampaignExpansion.MUTATORS[id];
+      return mutator ? `${mutator.icon} ${CampaignExpansion.loc(mutator.name)}` : id;
+    }).join(' · ');
     root.innerHTML = `<div class="ending-summary-grid">
       <div><strong>${translateKey('statBattles')}</strong><span>${GameState.stats.battles}</span></div>
       <div><strong>${translateKey('gold')}</strong><span>${GameState.gold}</span></div>
@@ -2872,7 +2975,7 @@
       <div><strong>${translateKey('statDamageTaken')}</strong><span>${GameState.stats.damageTaken || 0}</span></div>
       <div><strong>${translateKey('statSkillBattles')}</strong><span>${GameState.stats.skillfulBattles || 0}</span></div>
     </div><div class="ending-build-title">${translateKey('heroBuilds')}</div>${builds}
-    <div class="ending-seed">${translateKey('difficulty')}: ${translateKey(isHardcoreMode() ? 'hardcore' : 'normal')} · ${translateKey('runSeed')}: ${escapeHtml(GameState.testSeed || 'random')} · ${translateKey('runCode')}: <strong>${resultCode}</strong></div>`;
+    <div class="ending-seed">${translateKey('difficulty')}: ${translateKey(isHardcoreMode() ? 'hardcore' : 'normal')} · ${translateKey('runSeed')}: ${escapeHtml(GameState.testSeed || 'random')} · ${translateKey('runCode')}: <strong>${resultCode}</strong><br>${currentLanguage() === 'ru' ? 'Контракт' : 'Contract'}: ${contractLine}<br>${currentLanguage() === 'ru' ? 'Правила похода' : 'Run rules'}: ${mutatorLine || '—'}</div>`;
   }
 
   function renderGameOverUI() {
@@ -3513,8 +3616,14 @@
   function battleObjectiveHtml(b) {
     if (!b?.objective) return '';
     const key = b.objective === 'flawless' ? 'objectiveFlawless' : 'objectiveSkillful';
-    return `<div class="battle-tactical-strip">
-      <div class="battle-tactical-kicker">${translateKey('optionalObjective')} · +10 ${translateKey('gold')}</div>
+    const scenario = CampaignExpansion.scenarioStatus(b);
+    const scenarioHtml = scenario ? `<div class="battle-tactical-strip scenario-${scenario.id}">
+      <div class="battle-tactical-kicker">${scenario.icon} ${escapeHtml(scenario.label)} ? +${b.scenario.rewardGold || 0} ${translateKey('gold')}</div>
+      <div class="battle-tactical-main">${escapeHtml(scenario.short)}</div>
+      <div class="battle-tactical-sub">${escapeHtml(scenario.detail)}</div>
+    </div>` : '';
+    return `${scenarioHtml}<div class="battle-tactical-strip">
+      <div class="battle-tactical-kicker">${translateKey('optionalObjective')} ? +10 ${translateKey('gold')}</div>
       <div class="battle-tactical-sub">${translateKey(key)}</div>
     </div>`;
   }
@@ -3896,6 +4005,7 @@
           b.heroMoved = true;
           b.mode = 'attack'; // automatically switch to attack mode after moving
           syncHeroFromUnit(u);
+          if (resolveBattleIfOver()) return;
           updateBattleUI();
           return;
         }
@@ -3916,6 +4026,7 @@
       b.heroMoved = true;
       b.mode = 'attack';
       syncHeroFromUnit(u);
+      if (resolveBattleIfOver()) return;
       updateBattleUI();
       return;
     }
@@ -3934,6 +4045,7 @@
         b.mode = 'attack';
         spawnBattleTextFx(gx, gy, 'TELEPORT', '#c9a8ff');
         if (typeof BattleSfx !== 'undefined') BattleSfx.unitMoved(u, fromX, fromY, gx, gy, b.grid);
+        if (resolveBattleIfOver()) return;
         updateBattleUI();
         return;
       }

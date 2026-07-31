@@ -144,7 +144,7 @@ const checks = [
   ['ability-aware attack animation runtime present', () => index.includes('function startBattleAttackAnimation') && index.includes('BattleAnimations.resolveAttack') && index.includes('drawBattleCombatFx(ctx, b)')],
   ['hero, enemy and boss death animations are distinct', () => index.includes('BattleAnimations.resolveDeath') && index.includes('isUnitDeathAnimating') && index.includes('activeDeathAnimationRemaining')],
   ['animation timing respects speed and reduced motion', () => index.includes('function battleAnimationMs') && index.includes('prefers-reduced-motion') && index.includes('GameState.battleSpeed')],
-  ['ambush locks heroes in the center and enemies on map edges', () => index.includes('function ambushEnemyEdgeSlots') && index.includes('deploymentLocked: isAmbush') && index.includes("ambush: out.type === 'ambush'")],
+  ['ambush locks heroes in the center and enemies on map edges', () => index.includes('function ambushEnemyEdgeSlots') && index.includes('deploymentLocked: isAmbush') && index.includes('campaignAmbush')],
   ['turn transition waits for the attack animation', () => index.includes('function reserveBattleVisualUntil') && index.includes('b._turnAdvanceTimer') && index.includes('turnTransitionLocked')],
   ['initiative HUD is event-driven rather than rebuilt every frame', () => !/function loop\(\) \{[\s\S]{0,500}renderInitiative\(\)/.test(index) && index.includes('Initiative is DOM-heavy')],
   ['deployment zone exposes valid cells on the battlefield', () => index.includes('function isDeployCellAvailable') && index.includes("translateKey('deployZone')") && index.includes('ctx.setLineDash([7, 4])')],
@@ -153,6 +153,11 @@ const checks = [
   ['route cards expose cached enemy intel', () => index.includes('enemyWavePreview') && index.includes('map-route-intel')],
   ['ending summary tracks mastery', () => index.includes('objectivesCompleted') && index.includes('damageTaken') && index.includes('resultCode')],
   ['perk rules are exact in all languages', () => index.includes('const PERK_RULES_EXACT') && index.includes('TEAM SYNERGY') && index.includes('SINERGIA DE EQUIPO')]
+  ,['campaign expansion runtime is present', () => existsSync(resolve(root, 'src/campaign-expansion.js')) && index.includes('src/campaign-expansion.js')]
+  ,['campaign contracts, mutators and replay are present', () => index.includes('CampaignExpansion.CONTRACTS') && index.includes('campaignMutators') && index.includes('function replayCampaign')]
+  ,['varied battle objectives are present', () => index.includes("id === 'holdout'") && index.includes("id === 'escape'") && index.includes("id === 'defense'") && index.includes("id === 'ritual'") && index.includes("id === 'waves'")]
+  ,['event choices and delayed consequences are present', () => index.includes('event-choice-list') && index.includes('resolveDelayedEvents') && index.includes('druid_cache')]
+  ,['regional terrain assets are packaged from source', () => existsSync(resolve(root, 'assets/tiles/region-forest-glade.png')) && existsSync(resolve(root, 'assets/tiles/region-volcanic-depths.png')) && existsSync(resolve(root, 'assets/tiles/region-sunken-ruins.png'))]
 ];
 
 let failed = 0;
