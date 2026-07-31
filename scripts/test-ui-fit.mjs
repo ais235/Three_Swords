@@ -79,6 +79,7 @@ try {
     await page.locator('#btn-menu-settings-back').click();
 
     await page.locator('#btn-new-game').click();
+    await page.waitForTimeout(180);
     while (await page.locator('#onboarding-next').isVisible()) await page.locator('#onboarding-next').click();
     await page.locator('#map-screen:not(.hidden)').waitFor({ state: 'visible' });
     await audit('map', '#map-screen');
@@ -126,10 +127,26 @@ try {
 
     await page.evaluate(() => {
       const city = GameState.mapGrid.find(node => node.type === 'city');
+      GameState.activeCityNode = city.id;
+      GameState._cityStrangerOnly = false;
       showScreen('city');
       renderCityUI(city, false);
     });
     await audit('city', '#city-screen');
+    await page.locator('#btn-city-bag').click();
+    await page.locator('#inventory-screen:not(.hidden)').waitFor({ state: 'visible' });
+    const inventoryOpenedFromCity = await page.evaluate(() => ({
+      inventoryVisible: !document.getElementById('inventory-screen').classList.contains('hidden'),
+      returnFlag: GameState._returnToCity
+    }));
+    check(`${viewport.name} city opens inventory with return target`, inventoryOpenedFromCity.inventoryVisible && inventoryOpenedFromCity.returnFlag === true, JSON.stringify(inventoryOpenedFromCity));
+    await page.locator('#btn-close-inv').click();
+    await page.locator('#city-screen:not(.hidden)').waitFor({ state: 'visible' });
+    const returnedToCity = await page.evaluate(() => ({
+      cityVisible: !document.getElementById('city-screen').classList.contains('hidden'),
+      returnFlagCleared: GameState._returnToCity === false
+    }));
+    check(`${viewport.name} inventory returns to city`, returnedToCity.cityVisible && returnedToCity.returnFlagCleared, JSON.stringify(returnedToCity));
 
     await page.evaluate(() => {
       GameState._lastBattleKills = 12;

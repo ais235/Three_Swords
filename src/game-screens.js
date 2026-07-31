@@ -3050,7 +3050,7 @@
       }
       if (GameState._returnToCity) {
         GameState._returnToCity = false;
-        const node = currentCityNode();
+        const node = getActiveCityNode();
         if (node) renderCityUI(node, GameState._cityStrangerOnly);
         showScreen('city');
         return;

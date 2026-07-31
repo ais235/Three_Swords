@@ -178,6 +178,26 @@
     } catch (_) { return 0; }
   }
 
+  function persistLocalSave(snapshot) {
+    const serialized = JSON.stringify(snapshot);
+    try {
+      localStorage.setItem(SAVE_KEY, serialized);
+      localStorage.removeItem(LEGACY_SAVE_KEY);
+      return true;
+    } catch (firstError) {
+      // Older builds wrote the same campaign twice. Free that duplicate before
+      // retrying a save that has legitimately grown during a long run.
+      try {
+        localStorage.removeItem(LEGACY_SAVE_KEY);
+        localStorage.setItem(SAVE_KEY, serialized);
+        return true;
+      } catch (retryError) {
+        console.warn(retryError || firstError);
+        return false;
+      }
+    }
+  }
+
   function queueCloudSave(snap, flush = false) {
     if (!YandexServices.player) return;
     YandexServices.pendingSave = snap || createSaveSnapshot();
@@ -210,10 +230,7 @@
         if ((data.records.updatedAt || 0) > (localRecords.updatedAt || 0)) saveRecords(data.records);
       }
       if (data && data.save && (data.save.savedAt || 0) > localSaveTimestamp()) {
-        try {
-          localStorage.setItem(SAVE_KEY, JSON.stringify(data.save));
-          localStorage.setItem(LEGACY_SAVE_KEY, JSON.stringify(data.save));
-        } catch (_) {}
+        persistLocalSave(data.save);
         if (ActiveScreen === 'menu') updateMenuMeta();
       }
       YandexServices.cloudReady = true;
@@ -241,12 +258,10 @@
 
   function saveGame() {
     const snap = createSaveSnapshot();
-    try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(snap));
-      localStorage.setItem(LEGACY_SAVE_KEY, JSON.stringify(snap));
+    if (persistLocalSave(snap)) {
       updateRecordsFromState();
       queueCloudSave(snap);
-    } catch (e) { console.warn(e); }
+    }
   }
   function loadGame() {
     try {
