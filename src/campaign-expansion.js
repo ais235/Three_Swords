@@ -71,7 +71,7 @@ const CampaignExpansion = (() => {
 
   const SCENARIOS = {
     eliminate: { icon: '⚔️', label: { ru: 'Разгром', en: 'Elimination', es: 'Eliminación' }, short: { ru: 'Победите всех врагов.', en: 'Defeat all enemies.', es: 'Derrota a todos.' } },
-    holdout: { icon: '⏳', label: { ru: 'Выдержка', en: 'Holdout', es: 'Resistencia' }, short: { ru: 'Выдержите до конца 4-го раунда.', en: 'Survive through round 4.', es: 'Sobrevive hasta la ronda 4.' } },
+    holdout: { icon: '⏳', label: { ru: 'Выдержка', en: 'Holdout', es: 'Resistencia' }, short: { ru: 'Сдержите натиск 4 раунда: враги уже близко, подкрепления прибывают.', en: 'Hold for 4 rounds: foes begin close and reinforcements arrive.', es: 'Resiste 4 rondas: los enemigos empiezan cerca y llegan refuerzos.' } },
     escape: { icon: '🚩', label: { ru: 'Прорыв', en: 'Breakthrough', es: 'Avance' }, short: { ru: 'Выведите любого героя к правому краю.', en: 'Get any hero to the right edge.', es: 'Lleva a un héroe al borde derecho.' } },
     defense: { icon: '🛡️', label: { ru: 'Оборона', en: 'Defense', es: 'Defensa' }, short: { ru: 'Сохраните древний оберег до 4-го раунда.', en: 'Protect the ancient ward through round 4.', es: 'Protege el amuleto hasta la ronda 4.' } },
     ritual: { icon: '🔮', label: { ru: 'Срыв ритуала', en: 'Ritual break', es: 'Ritual roto' }, short: { ru: 'Уничтожьте отмеченного ритуалиста до 6-го раунда.', en: 'Defeat the marked ritualist before round 6.', es: 'Derrota al ritualista antes de la ronda 6.' } },
@@ -206,7 +206,7 @@ const CampaignExpansion = (() => {
   function createScenario(node) {
     const id = scenarioForNode(node);
     const scenario = { id, ...SCENARIOS[id], startedRound: 1, completed: false, failed: false, rewardGold: id === 'eliminate' ? 0 : 15 };
-    if (id === 'holdout') scenario.roundTarget = 4;
+    if (id === 'holdout') { scenario.roundTarget = 4; scenario.waveRounds = [2, 3]; }
     if (id === 'waves') { scenario.roundTarget = 5; scenario.waveRounds = [2, 3, 4]; }
     if (id === 'escape') scenario.exit = { x: GRID_W - 1, y: 3 };
     if (id === 'defense') { scenario.roundTarget = 4; scenario.ward = { x: 2, y: 3, hp: 24, maxHp: 24 }; }
@@ -260,7 +260,7 @@ const CampaignExpansion = (() => {
     const scenario = b?.scenario;
     if (!scenario) return null;
     const base = { id: scenario.id, label: scenarioLabel(scenario.id), icon: scenario.icon, short: scenarioShort(scenario.id), tone: 'warn' };
-    if (scenario.id === 'holdout' || scenario.id === 'waves') return { ...base, detail: `${Math.min(b.round, scenario.roundTarget)}/${scenario.roundTarget} ${loc({ ru: 'раунд', en: 'round', es: 'ronda' })}` };
+    if (scenario.id === 'holdout' || scenario.id === 'waves') return { ...base, detail: `${Math.min(b.round, scenario.roundTarget)}/${scenario.roundTarget} ${loc({ ru: 'раунд', en: 'round', es: 'ronda' })}${scenario.id === 'holdout' ? ` · ${loc({ ru: 'подкрепления: 2 и 3', en: 'reinforcements: 2 and 3', es: 'refuerzos: 2 y 3' })}` : ''}` };
     if (scenario.id === 'escape') return { ...base, detail: loc({ ru: 'Выход: правая граница поля', en: 'Exit: right edge of the field', es: 'Salida: borde derecho' }) };
     if (scenario.id === 'defense') return { ...base, detail: `${loc({ ru: 'Оберег', en: 'Ward', es: 'Amuleto' })}: ${scenario.ward.hp}/${scenario.ward.maxHp} · ${b.round}/${scenario.roundTarget}` };
     if (scenario.id === 'ritual') return { ...base, detail: `${loc({ ru: 'Лимит', en: 'Limit', es: 'Límite' })}: ${scenario.roundLimit - b.round + 1}` };
@@ -295,6 +295,14 @@ const CampaignExpansion = (() => {
       const pool = b.region === 3 ? [ENEMY_IDS.GHOST, ENEMY_IDS.BANSHEE, ENEMY_IDS.VOID_STALKER] : [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER];
       out.spawn = [pick(pool, b.round), pick(pool, b.round + 1)];
       out.log = loc({ ru: 'Новая волна приходит с края поля!', en: 'A new wave arrives from the field edge!', es: '¡Llega una nueva oleada!' });
+    }
+    if (scenario.id === 'holdout' && scenario.waveRounds.includes(b.round)) {
+      const pool = b.region === 1 ? [ENEMY_IDS.WOLF, ENEMY_IDS.BOAR, ENEMY_IDS.SKELETON]
+        : b.region === 2 ? [ENEMY_IDS.ORC_GUARD, ENEMY_IDS.SPIDER, ENEMY_IDS.SUICIDE]
+          : [ENEMY_IDS.GHOST, ENEMY_IDS.BANSHEE, ENEMY_IDS.VOID_STALKER];
+      out.spawn = [pick(pool, b.round), pick(pool, b.round + 4)];
+      out.spawnMode = 'pressure';
+      out.log = loc({ ru: 'Подкрепление прорывается к вашему рубежу!', en: 'Reinforcements breach toward your line!', es: '¡Los refuerzos irrumpen hacia tu línea!' });
     }
     if (scenario.id === 'defense') {
       const attackers = b.units.filter(unit => !unit.isHero && unit.hp > 0 && Math.abs(unit.x - scenario.ward.x) + Math.abs(unit.y - scenario.ward.y) <= 1);
@@ -373,12 +381,15 @@ const CampaignExpansion = (() => {
   }
 
   function routeIntel(node) {
-    const scenario = node.scenarioPreview || scenarioForPreview(node);
+    const combatNode = ['mission', 'dungeon', 'arena', 'boss', 'final'].includes(node.type);
+    const scenario = combatNode ? (node.scenarioPreview || scenarioForPreview(node)) : null;
     const region = regionInfo(node.region);
     const reward = node.type === 'event' ? loc({ ru: 'Выбор с последствиями', en: 'Choice with consequences', es: 'Elección con consecuencias' })
       : node.type === 'city' ? loc({ ru: 'Лечение и торговля', en: 'Recovery and trade', es: 'Curación y comercio' })
         : scenarioLabel(scenario);
-    const risk = node.routeCommitment ? loc({ ru: 'Закроет альтернативу', en: 'Commits this route', es: 'Compromete la ruta' }) : region.feature;
+    const risk = node.routeCommitment
+      ? loc({ ru: 'Закроет альтернативу', en: 'Commits this route', es: 'Compromete la ruta' })
+      : combatNode ? loc(region.feature) : '';
     return { scenario, reward, risk, region };
   }
 

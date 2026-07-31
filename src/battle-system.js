@@ -132,6 +132,17 @@
       }
       ei++;
     }
+    // Holdout must feel like a defence under pressure, not four empty turns.
+    // A vanguard starts within a few steps of the left deployment zone.
+    if (scenario.id === 'holdout' && !isAmbush) {
+      const vanguard = [wave[0], wave[1] || wave[0]].filter(Boolean);
+      const vanguardSlots = [{ x: 5, y: 2 }, { x: 5, y: 5 }, { x: 4, y: 3 }, { x: 4, y: 4 }];
+      vanguard.forEach((enemyId, index) => {
+        const proto = { isHero: false, enemyId, sizeW: enemyDef(enemyId).sizeW || 1, sizeH: enemyDef(enemyId).sizeH || 1 };
+        const slot = vanguardSlots.find(point => canUnitOccupy({ grid, units }, proto, point.x, point.y, { end: true }));
+        if (slot) units.push(spawnEnemy(enemyId, slot.x, slot.y));
+      });
+    }
     const objective = firstBattle || (GameState.stats.battles || 0) % 2 === 0 ? 'skillful' : 'flawless';
     GameState.currentBattle = {
       grid, units, phase: 'deploy', round: 1,
@@ -2762,14 +2773,20 @@
       if (u.hp <= 0) onUnitDeath(u);
     }
   }
-  function spawnScenarioWave(b, enemyIds) {
+  function spawnScenarioWave(b, enemyIds, mode = 'edge') {
     (enemyIds || []).forEach((enemyId, index) => {
       const proto = { isHero: false, enemyId, sizeW: enemyDef(enemyId).sizeW || 1, sizeH: enemyDef(enemyId).sizeH || 1 };
-      const slots = [
+      const edgeSlots = [
         { x: GRID_W - unitWidth(proto), y: index % GRID_H },
         { x: GRID_W - unitWidth(proto), y: GRID_H - 1 - (index % GRID_H) },
         { x: Math.max(0, GRID_W - unitWidth(proto) - 1), y: Math.floor(GRID_H / 2) }
       ];
+      const pressureSlots = [
+        { x: 5, y: 1 + (index * 3) % 6 },
+        { x: 4, y: 2 + (index * 2) % 4 },
+        { x: 6, y: index % GRID_H }
+      ];
+      const slots = mode === 'pressure' ? pressureSlots.concat(edgeSlots) : edgeSlots;
       const slot = slots.find(point => canUnitOccupy(b, proto, point.x, point.y, { end: true }));
       if (slot) b.units.push(spawnEnemy(enemyId, slot.x, slot.y));
     });
@@ -2778,7 +2795,7 @@
   function applyScenarioRoundStart(b) {
     const outcome = CampaignExpansion.onRoundStarted(b);
     if (outcome.spawn?.length) {
-      spawnScenarioWave(b, outcome.spawn);
+      spawnScenarioWave(b, outcome.spawn, outcome.spawnMode);
       buildInitiative();
     }
     if (outcome.log) pushBattleLog(outcome.log, 'status');

@@ -69,6 +69,15 @@ try {
       ward: battle.scenario?.ward?.hp,
       texture: !!RegionBattleTextures[2]
     };
+    startBattleForCell({ id: 'e2e-holdout', region: 1, type: 'mission' }, {
+      wave: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER], scenario: 'holdout'
+    });
+    const holdout = GameState.currentBattle;
+    const holdoutCheck = {
+      enemies: holdout.units.filter(unit => !unit.isHero).length,
+      nearbyVanguard: holdout.units.some(unit => !unit.isHero && unit.x <= 5),
+      reinforcements: holdout.scenario?.waveRounds
+    };
     const heroAtExit = { isHero: true, hp: 10, x: GRID_W - 1, sizeW: 1 };
     const liveRitualist = { isHero: false, hp: 10, scenarioTarget: 'ritualist' };
     const deadPrey = { isHero: false, hp: 0, scenarioTarget: 'prey' };
@@ -89,7 +98,7 @@ try {
       eventChoices: event.choices.length,
       delayed: GameState.campaignEvents.some(entry => entry.id === 'druid_cache'),
       assets: Object.values(CampaignExpansion.REGION).map(region => region.asset),
-      battleCheck, rules
+      battleCheck, holdoutCheck, rules
     };
   });
   check('campaign offers three distinct starting contracts', campaignRuntime.contracts === 3, JSON.stringify(campaignRuntime));
@@ -98,6 +107,7 @@ try {
   check('events contain meaningful three-way choices and delayed consequences', campaignRuntime.eventChoices === 3 && campaignRuntime.delayed, JSON.stringify(campaignRuntime));
   check('regional terrain assets are registered', campaignRuntime.assets.every(asset => asset.startsWith('assets/tiles/region-')), JSON.stringify(campaignRuntime));
   check('volcanic scenario carries regional rule and objective state', campaignRuntime.battleCheck.scenario === 'defense' && campaignRuntime.battleCheck.regionalRule === 'heat' && campaignRuntime.battleCheck.ward > 0 && campaignRuntime.battleCheck.texture, JSON.stringify(campaignRuntime));
+  check('holdout starts under pressure and schedules reinforcements', campaignRuntime.holdoutCheck.enemies >= 4 && campaignRuntime.holdoutCheck.nearbyVanguard && campaignRuntime.holdoutCheck.reinforcements?.join(',') === '2,3', JSON.stringify(campaignRuntime.holdoutCheck));
   check('every scenario has an automated victory or failure rule', Object.values(campaignRuntime.rules).every(Boolean), JSON.stringify(campaignRuntime.rules));
   await page.evaluate(() => setCampaignContract('mercenaries'));
   check('contract selection updates its explanatory text', (await page.locator('#menu-contract-copy').textContent())?.length > 20);
