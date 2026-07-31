@@ -1164,7 +1164,6 @@
     const forRole = itemHeroClassLabel(sel);
     const fitsHero = inventoryItemFitsHero(sel, hero);
     const itemName = translateText(sel.name);
-    const compareHtml = itemCompareHtml(sel, hero);
     detail.innerHTML = `
     <div style="text-align:center;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px">
       <div style="display:flex;justify-content:center;align-items:center;margin-bottom:6px;min-height:40px">${itemIconMarkup(sel, 36)}</div>
@@ -1174,7 +1173,6 @@
       ${fitsHero ? '' : `<div class="item-detail-mismatch">${translateKey('notForHero')} ${hero.name}</div>`}
     </div>
     <div class="item-detail-stats" style="text-align:center;margin-bottom:6px">${statLinesHtml}</div>
-    ${compareHtml}
     ${descHtml}
     <div class="item-detail-btns" style="display:flex;flex-direction:column;gap:6px">
       <button class="btn btn-green" id="inv-equip-btn" style="width:100%;margin:0"${fitsHero ? '' : ' disabled'}>${translateKey('equip')}</button>
