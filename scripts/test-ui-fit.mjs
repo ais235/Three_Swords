@@ -84,7 +84,26 @@ try {
     await audit('map', '#map-screen');
 
     await page.locator('#btn-map-bag').click();
+    await page.evaluate(() => {
+      if (!GameState.inventory.length) {
+        GameState.inventory.push('luck_amulet');
+        renderInventoryScreen();
+      }
+    });
     await audit('inventory', '#inventory-screen');
+    const inventoryItems = page.locator('#bag-grid .inv-item-card');
+    const inventoryItemCount = await inventoryItems.count();
+    if (inventoryItemCount) {
+      await inventoryItems.first().click();
+      const inventoryAction = await page.locator('#inv-detail .item-detail-btns').evaluate(el => {
+        const rect = el.getBoundingClientRect();
+        const panel = el.closest('#inv-detail').getBoundingClientRect();
+        return rect.top >= panel.top - 1 && rect.bottom <= panel.bottom + 1 && rect.bottom <= innerHeight + 1;
+      });
+      check(`${viewport.name} inventory actions are visible without scrolling`, inventoryAction);
+      check(`${viewport.name} inventory comparison is hidden`, await page.locator('#inv-detail .item-compare').count() === 0);
+      check(`${viewport.name} inventory detail does not duplicate item art`, await page.locator('#inv-detail .item-icon-wrap').count() === 0);
+    }
     await page.locator('#btn-inv-perks').click();
     await audit('perk modal', '#perk-modal');
     await page.locator('#perk-tree-ui .perk-skill').first().click();

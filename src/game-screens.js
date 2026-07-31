@@ -1164,19 +1164,20 @@
     const forRole = itemHeroClassLabel(sel);
     const fitsHero = inventoryItemFitsHero(sel, hero);
     const itemName = translateText(sel.name);
-    const compareHtml = itemCompareHtml(sel, hero);
     detail.innerHTML = `
-    <div style="text-align:center;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px">
-      <div style="display:flex;justify-content:center;align-items:center;margin-bottom:6px;min-height:40px">${itemIconMarkup(sel, 36)}</div>
-      <div class="item-detail-title">${itemName}</div>
-      <div class="item-detail-sub" style="margin-top:4px">${slotNames[sel.slot] || sel.slot} · ${forRole}</div>
-      <div style="margin-top:4px">${rarBadge(sel.rarity)}</div>
+    <div class="item-detail-scroll">
+      <div class="item-detail-headline">
+        <div>
+          <div class="item-detail-title">${itemName}</div>
+          <div class="item-detail-sub">${slotNames[sel.slot] || sel.slot} · ${forRole}</div>
+        </div>
+        ${rarBadge(sel.rarity)}
+      </div>
       ${fitsHero ? '' : `<div class="item-detail-mismatch">${translateKey('notForHero')} ${hero.name}</div>`}
+      <div class="item-detail-stats">${statLinesHtml}</div>
+      ${descHtml}
     </div>
-    <div class="item-detail-stats" style="text-align:center;margin-bottom:6px">${statLinesHtml}</div>
-    ${compareHtml}
-    ${descHtml}
-    <div class="item-detail-btns" style="display:flex;flex-direction:column;gap:6px">
+    <div class="item-detail-btns">
       <button class="btn btn-green" id="inv-equip-btn" style="width:100%;margin:0"${fitsHero ? '' : ' disabled'}>${translateKey('equip')}</button>
       <button class="btn btn-red" id="inv-drop-btn" style="width:100%;margin:0">${translateKey('drop')}</button>
     </div>`;

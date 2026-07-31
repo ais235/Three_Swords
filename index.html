@@ -2223,7 +2223,9 @@
     .inv-item-price { position: absolute; right: 3px; bottom: 2px; font-size: 8px; font-weight: bold; color: #e8c860; line-height: 1; pointer-events: none; text-shadow: 0 0 4px #000, 0 1px 2px #000, 0 -1px 2px #000; letter-spacing: 0.5px; z-index: 2; }
     .inv-item-best-badge { position: absolute; left: 3px; top: 2px; display: block !important; max-width: calc(100% - 6px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-sizing: border-box; font-size: 6px !important; font-weight: bold; color: #9cffc5; background: rgba(0,0,0,.65); border: 1px solid rgba(46,204,113,.55); border-radius: 3px; padding: 1px 3px; line-height: 1 !important; z-index: 2; }
     .inv-item-name { font-size: 8px; color: var(--text-dim); line-height: 1.2; display: block; }
-    #inv-detail { background: #0d0d1a; border-radius: 8px; padding: 10px; border: 1px solid var(--border); flex: 1; min-height: 0; overflow-y: auto; font-size: 10px; color: var(--text-dim); }
+    #inv-detail { background: #0d0d1a; border-radius: 8px; padding: 10px; border: 1px solid var(--border); flex: 1; min-height: 0; overflow: hidden; font-size: 10px; color: var(--text-dim); display: flex; flex-direction: column; gap: 8px; }
+    .item-detail-scroll { min-height: 0; overflow-x: hidden; overflow-y: auto; }
+    .item-detail-headline { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
     .item-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
     .item-detail-icon { font-size: 30px; }
     .item-detail-title { font-size: 13px; color: var(--text-main); font-weight: bold; }
@@ -2240,7 +2242,7 @@
     .item-compare-row { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 3px; margin-top: 3px; }
     .item-detail-desc { font-size: 9px; color: #888aa0; line-height: 1.5; margin-bottom: 8px; font-style: italic; padding: 6px 8px; background: #0e0e1d; border-left: 2px solid var(--border); border-radius: 0 4px 4px 0; }
     .item-detail-mismatch { font-size: 11px; color: var(--accent-red); margin-top: 7px; font-weight: 700; line-height: 1.25; }
-    .item-detail-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+    .item-detail-btns { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; padding-top: 8px; border-top: 1px solid var(--border); }
     .item-detail-btns .btn { font-size: 10px; padding: 5px 10px; margin: 0; }
     .bag-item { border: 1px solid var(--border); border-radius: 6px; padding: 6px; cursor: pointer; }
     .bag-item.active { outline: 2px solid var(--accent-gold); }
@@ -3786,7 +3788,9 @@
         padding: 5px !important;
         font-size: 7px !important;
         line-height: 1.2 !important;
+        gap: 4px !important;
       }
+      #inventory-screen .item-detail-headline { padding-bottom: 4px; margin-bottom: 4px; }
       #inventory-screen .item-detail-title {
         font-size: 8px !important;
         line-height: 1.1 !important;
@@ -3799,6 +3803,7 @@
       }
       #inventory-screen .item-detail-btns {
         gap: 3px !important;
+        padding-top: 4px !important;
       }
       #inventory-screen .item-detail-btns .btn {
         min-height: 36px !important;
