@@ -87,6 +87,17 @@ try {
     await audit('inventory', '#inventory-screen');
     await page.locator('#btn-inv-perks').click();
     await audit('perk modal', '#perk-modal');
+    await page.locator('#perk-tree-ui .perk-skill').first().click();
+    const perkAction = await page.locator('#perk-detail-panel .perk-detail-action').evaluate(el => {
+      const rect = el.getBoundingClientRect();
+      const panel = el.closest('#perk-detail-panel').getBoundingClientRect();
+      return {
+        visible: rect.top >= panel.top - 1 && rect.bottom <= panel.bottom + 1 && rect.bottom <= innerHeight + 1,
+        rect: [Math.round(rect.left), Math.round(rect.top), Math.round(rect.right), Math.round(rect.bottom)],
+        viewportHeight: innerHeight
+      };
+    });
+    check(`${viewport.name} perk action is visible without scrolling`, perkAction.visible, JSON.stringify(perkAction));
     await page.locator('#perk-modal-close').click();
     await page.locator('#btn-close-inv').click();
 

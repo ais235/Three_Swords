@@ -2650,20 +2650,24 @@
             : '';
           const synergy = perkSynergyText(selectedBr);
           detailPanel.innerHTML = `
-            <div class="perk-detail-head">
-              <div class="perk-detail-icon">${icon2}</div>
-              <div>
-                <div class="perk-detail-name">${localizedPerkName(perk)}</div>
-                <div class="perk-detail-branch">${localizedPerkBranch(selectedBr)}</div>
+            <div class="perk-detail-scroll">
+              <div class="perk-detail-head">
+                <div class="perk-detail-icon">${icon2}</div>
+                <div>
+                  <div class="perk-detail-name">${localizedPerkName(perk)}</div>
+                  <div class="perk-detail-branch">${localizedPerkBranch(selectedBr)}</div>
+                </div>
               </div>
+              <div class="perk-detail-tierline">${ruleLabels.tier}: ${perk.level || idx + 1} / ${tree[selectedBr].length}</div>
+              <div class="perk-detail-summary">${escapeHtml(rule.summary)}</div>
+              ${statPreviewHtml}
+              <div class="perk-detail-rules">
+                <div class="perk-detail-rule"><span>${ruleLabels.trigger}</span><strong>${escapeHtml(rule.trigger)}</strong></div>
+                <div class="perk-detail-rule"><span>${ruleLabels.effect}</span><strong>${escapeHtml(rule.effect)}</strong></div>
+              </div>
+              <div class="perk-detail-synergy"><span>${ruleLabels.synergy}</span><strong>${escapeHtml(synergy)}</strong></div>
             </div>
-            <div class="perk-detail-tierline">${ruleLabels.tier}: ${perk.level || idx + 1} / ${tree[selectedBr].length}</div>
-            <div class="perk-detail-summary">${escapeHtml(rule.summary)}</div>
-            ${statPreviewHtml}
-            <div class="perk-detail-rule"><span>${ruleLabels.trigger}</span><strong>${escapeHtml(rule.trigger)}</strong></div>
-            <div class="perk-detail-rule"><span>${ruleLabels.effect}</span><strong>${escapeHtml(rule.effect)}</strong></div>
-            <div class="perk-detail-synergy"><span>${ruleLabels.synergy}</span><strong>${escapeHtml(synergy)}</strong></div>
-            ${statusBtn}
+            <div class="perk-detail-action">${statusBtn}</div>
           `;
           renderPerkTree();
 

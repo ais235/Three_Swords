@@ -117,11 +117,32 @@
 
 #perk-modal .perk-detail-panel {
   padding: 16px;
-  gap: 7px;
-  overflow-y: auto;
+  gap: 9px;
+  overflow: hidden;
   background:
     radial-gradient(circle at 85% 5%, rgba(74,158,255,.09), transparent 34%),
     #111128;
+}
+
+#perk-modal .perk-detail-scroll {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#perk-modal .perk-detail-rules {
+  display: grid;
+  gap: 7px;
+}
+
+#perk-modal .perk-detail-action {
+  flex: 0 0 auto;
+  padding-top: 8px;
+  border-top: 1px solid #303052;
+  background: #111128;
 }
 
 #perk-modal .perk-detail-head {
@@ -237,10 +258,6 @@
   line-height: 1.3;
 }
 
-#perk-modal #perk-confirm-btn {
-  margin-top: auto;
-}
-
 @media (orientation: landscape) and (max-height: 560px) {
   #perk-modal .perk-modal-box {
     width: min(1040px, 99vw);
@@ -277,6 +294,11 @@
   #perk-modal .perk-skill-name { font-size: 8px !important; }
   #perk-modal .perk-skill-summary { font-size: 7px; }
   #perk-modal .perk-detail-panel { padding: 9px; gap: 5px; }
+  #perk-modal .perk-detail-scroll { gap: 5px; }
+  #perk-modal .perk-detail-action { padding-top: 5px; }
+  #perk-modal .perk-detail-rules { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+  #perk-modal .perk-detail-summary { display: none; }
+  #perk-modal .perk-detail-synergy { display: none; }
   #perk-modal .perk-detail-rule { padding: 6px 7px; }
   #perk-modal .perk-detail-rule strong { font-size: 8px; line-height: 1.35; }
   #perk-modal .perk-detail-summary { padding: 6px 7px; font-size: 9px; }
