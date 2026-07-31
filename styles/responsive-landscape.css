@@ -2,6 +2,42 @@
  * Stable cross-screen platform rules live here so mobile-landscape support can
  * evolve without touching the game-state monolith.
  */
+.battle-briefing {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5, 7, 16, .72);
+  pointer-events: none;
+}
+
+.battle-briefing.hidden { display: none; }
+.battle-briefing-card {
+  width: min(440px, calc(100% - 32px));
+  padding: 16px;
+  border: 1px solid rgba(240, 165, 0, .65);
+  border-radius: 10px;
+  background: rgba(13, 13, 29, .96);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+}
+.battle-briefing-title { margin-bottom: 10px; color: var(--accent-gold); font-size: 15px; font-weight: 800; }
+.battle-briefing-objective {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+}
+.battle-briefing-objective strong,
+.battle-briefing-objective span { display: block; }
+.battle-briefing-objective strong { color: var(--text-main); }
+.battle-briefing-objective div > span { margin-top: 3px; color: var(--text-dim); }
+.battle-briefing-objective.is-bonus strong { color: #9cffc5; }
+.battle-briefing-icon { font-size: 20px; text-align: center; }
+
 @media (orientation: portrait) and (max-width: 899px) {
   html, body { overflow: hidden; }
 }
@@ -100,5 +136,111 @@
 
   #map-screen .map-route-threat {
     line-height: 1.25;
+  }
+}
+
+/* UX overhaul: keep primary actions visible in phone landscape. */
+@media (orientation: landscape) and (max-width: 900px) and (max-height: 520px) {
+  #battle-speed-toggle { min-width: 0; min-height: 36px; }
+
+  #battle-screen .battle-briefing {
+    position: absolute;
+    inset: 0;
+    z-index: 12;
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    background: rgba(5, 7, 16, .72);
+    pointer-events: none;
+  }
+
+  #battle-screen .battle-briefing.hidden { display: none; }
+  #battle-screen .battle-briefing-card {
+    width: min(390px, calc(100% - 20px));
+    padding: 12px;
+    border: 1px solid rgba(240, 165, 0, .65);
+    border-radius: 10px;
+    background: rgba(13, 13, 29, .96);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+  }
+  #battle-screen .battle-briefing-title {
+    margin-bottom: 8px;
+    color: var(--accent-gold);
+    font-size: 13px;
+    font-weight: 800;
+  }
+  #battle-screen .battle-briefing-objective {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 7px 0;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+  }
+  #battle-screen .battle-briefing-objective strong,
+  #battle-screen .battle-briefing-objective span { display: block; }
+  #battle-screen .battle-briefing-objective strong { font-size: 11px; color: var(--text-main); }
+  #battle-screen .battle-briefing-objective div > span { margin-top: 2px; font-size: 10px; color: var(--text-dim); }
+  #battle-screen .battle-briefing-objective.is-bonus strong { color: #9cffc5; }
+  #battle-screen .battle-briefing-icon { font-size: 18px; text-align: center; }
+
+  #map-screen .map-screen-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) auto !important;
+  }
+  #map-screen .map-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 10px;
+    max-height: none;
+    padding: 6px 8px !important;
+    overflow: visible !important;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+  #map-screen .map-panel-title,
+  #map-screen .map-fog-counter,
+  #map-screen #btn-map-reveal-ad,
+  #map-screen #map-help { display: none !important; }
+  #map-screen .map-route-choices {
+    display: flex;
+    gap: 5px;
+    min-width: 0;
+    overflow-x: auto;
+  }
+  #map-screen .map-route-card { flex: 1 0 145px; min-height: 44px; }
+  #map-screen .map-panel-actions {
+    display: grid;
+    grid-template-columns: minmax(108px, 1fr) 40px 40px;
+    gap: 5px;
+  }
+  #map-screen .map-panel-actions .btn {
+    width: auto;
+    min-height: 42px;
+    margin: 0;
+    padding: 5px 8px;
+  }
+  #map-screen #btn-map-bag,
+  #map-screen #btn-map-bestiary {
+    width: 40px;
+    overflow: hidden;
+    white-space: nowrap;
+    color: transparent;
+    text-shadow: 0 0 0 var(--text-main);
+  }
+
+  #inventory-screen #inv-layout {
+    grid-template-columns: 150px minmax(250px, .9fr) minmax(320px, 1.2fr) !important;
+  }
+  #inventory-screen #inv-backpack { padding: 7px !important; }
+  #inventory-screen #inv-detail { min-height: 0; }
+  #inventory-screen .item-detail-btns {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+  }
+  #inventory-screen .item-detail-btns .btn {
+    min-height: 42px !important;
+    font-size: 10px !important;
   }
 }

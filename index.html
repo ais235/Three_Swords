@@ -4035,10 +4035,11 @@
         <div id="battle-wrap">
           <canvas id="battle-canvas" width="768" height="512"></canvas>
           <div id="battle-coach-overlay" aria-live="polite"></div>
+          <div id="battle-briefing" class="battle-briefing hidden" aria-live="polite"></div>
         </div>
         <div id="ui-overlay">
           <div class="br-section">
-            <div class="br-label battle-order-head" style="display:flex!important"><span>TURN ORDER</span><button type="button" id="battle-speed-toggle" class="battle-speed-toggle" title="Battle speed">×1</button></div>
+            <div class="br-label battle-order-head" style="display:flex!important"><span>TURN ORDER</span></div>
             <div id="initiative-bar"></div>
             <div id="turn-focus-banner" class="turn-focus-banner hidden" aria-live="polite"></div>
           </div>
@@ -4309,6 +4310,7 @@
       <div class="game-menu-actions">
         <button class="btn btn-primary" id="btn-menu-continue">Continue</button>
         <button class="btn" id="btn-menu-tutorial">Tutorial</button>
+        <button type="button" class="btn game-menu-speed" id="battle-speed-toggle" title="Battle speed">Battle speed: ×1</button>
         <button class="btn game-menu-wide" id="btn-menu-save-exit">Save and exit</button>
         <button class="btn game-menu-danger" id="btn-menu-exit">Exit without saving</button>
       </div>

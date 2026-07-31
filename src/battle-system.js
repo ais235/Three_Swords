@@ -2681,12 +2681,15 @@
   function bindBattleSpeedToggle() {
     const btn = document.getElementById('battle-speed-toggle');
     if (!btn) return;
-    btn.textContent = `×${GameState.battleSpeed === 2 ? 2 : 1}`;
-    btn.title = `${translateKey('battleSpeed')}: ${btn.textContent}`;
+    const updateLabel = () => {
+      const value = `×${GameState.battleSpeed === 2 ? 2 : 1}`;
+      btn.textContent = `${translateKey('battleSpeed')}: ${value}`;
+      btn.title = btn.textContent;
+    };
+    updateLabel();
     btn.onclick = () => {
       GameState.battleSpeed = GameState.battleSpeed === 2 ? 1 : 2;
-      btn.textContent = `×${GameState.battleSpeed}`;
-      btn.title = `${translateKey('battleSpeed')}: ${btn.textContent}`;
+      updateLabel();
       saveGame();
     };
   }
@@ -3634,15 +3637,27 @@
     if (!b?.objective) return '';
     const key = b.objective === 'flawless' ? 'objectiveFlawless' : 'objectiveSkillful';
     const scenario = CampaignExpansion.scenarioStatus(b);
-    const scenarioHtml = scenario ? `<div class="battle-tactical-strip scenario-${scenario.id}">
-      <div class="battle-tactical-kicker">${scenario.icon} ${escapeHtml(scenario.label)} ? +${b.scenario.rewardGold || 0} ${translateKey('gold')}</div>
-      <div class="battle-tactical-main">${escapeHtml(scenario.short)}</div>
-      <div class="battle-tactical-sub">${escapeHtml(scenario.detail)}</div>
+    const scenarioHtml = scenario ? `<div class="battle-briefing-objective scenario-${scenario.id}">
+      <span class="battle-briefing-icon">${scenario.icon}</span>
+      <div><strong>${escapeHtml(scenario.label)}</strong><span>${escapeHtml(scenario.short)}</span></div>
     </div>` : '';
-    return `${scenarioHtml}<div class="battle-tactical-strip">
-      <div class="battle-tactical-kicker">${translateKey('optionalObjective')} ? +10 ${translateKey('gold')}</div>
-      <div class="battle-tactical-sub">${translateKey(key)}</div>
+    const briefingTitle = currentLanguage() === 'ru' ? 'ЦЕЛИ БОЯ' : (currentLanguage() === 'es' ? 'OBJETIVOS' : 'BATTLE OBJECTIVES');
+    return `<div class="battle-briefing-card">
+      <div class="battle-briefing-title">${briefingTitle}</div>
+      ${scenarioHtml}
+      <div class="battle-briefing-objective is-bonus">
+        <span class="battle-briefing-icon">★</span>
+        <div><strong>${translateKey('optionalObjective')} · +10 ${translateKey('gold')}</strong><span>${translateKey(key)}</span></div>
+      </div>
     </div>`;
+  }
+
+  function renderBattleBriefing(b) {
+    const briefing = document.getElementById('battle-briefing');
+    if (!briefing) return;
+    const visible = b?.phase === 'deploy';
+    briefing.classList.toggle('hidden', !visible);
+    briefing.innerHTML = visible ? battleObjectiveHtml(b) : '';
   }
 
   function bindFtueCoachSkip() {
@@ -3781,7 +3796,8 @@
       if (modeBadge) { modeBadge.className = 'm-move'; modeBadge.textContent = `↔ ${translateText('DEPLOYMENT')}`; modeBadge.classList.remove('hidden'); }
       title.textContent = currentLanguage() === 'ru' ? 'Коснитесь героя → клетки' : translateText('Click hero → drag');
       stats.innerHTML = '';
-      actions.innerHTML = `${battleObjectiveHtml(b)}<button class="btn btn-primary skill-action-btn" id="btn-start-battle" style="width:100%">
+      renderBattleBriefing(b);
+      actions.innerHTML = `<button class="btn btn-primary skill-action-btn" id="btn-start-battle" style="width:100%">
         <span class="skill-action-icon">⚔</span>
         <span class="skill-action-name">${translateText('Start Battle')}</span>
         <span class="skill-action-meta">${translateText('DEPLOYMENT')}</span>
@@ -3819,7 +3835,8 @@
     title.innerHTML = '';
     stats.innerHTML = '';
     const hh = GameState.heroes.find(x => x.id === u.heroId);
-    let html = battleObjectiveHtml(b);
+    renderBattleBriefing(b);
+    let html = '';
     html += battleTouchPreviewHtml(b, u);
     html += battleActionHintHtml(b, u);
     if (!b.heroActionDone) {

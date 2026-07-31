@@ -1164,6 +1164,7 @@
     const forRole = itemHeroClassLabel(sel);
     const fitsHero = inventoryItemFitsHero(sel, hero);
     const itemName = translateText(sel.name);
+    const compareHtml = itemCompareHtml(sel, hero);
     detail.innerHTML = `
     <div style="text-align:center;padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px">
       <div style="display:flex;justify-content:center;align-items:center;margin-bottom:6px;min-height:40px">${itemIconMarkup(sel, 36)}</div>
@@ -1173,10 +1174,10 @@
       ${fitsHero ? '' : `<div class="item-detail-mismatch">${translateKey('notForHero')} ${hero.name}</div>`}
     </div>
     <div class="item-detail-stats" style="text-align:center;margin-bottom:6px">${statLinesHtml}</div>
+    ${compareHtml}
     ${descHtml}
     <div class="item-detail-btns" style="display:flex;flex-direction:column;gap:6px">
       <button class="btn btn-green" id="inv-equip-btn" style="width:100%;margin:0"${fitsHero ? '' : ' disabled'}>${translateKey('equip')}</button>
-      <button class="btn" id="inv-transfer-btn" style="width:100%;margin:0">${translateKey('transfer')}</button>
       <button class="btn btn-red" id="inv-drop-btn" style="width:100%;margin:0">${translateKey('drop')}</button>
     </div>`;
     const equipBtn = document.getElementById('inv-equip-btn');
@@ -1207,21 +1208,6 @@
         return;
       }
       applyEquip();
-    };
-    document.getElementById('inv-transfer-btn').onclick = () => {
-      const others = GameState.heroes.filter(h => h.id !== hero.id);
-      if (!others.length) return;
-      showGamePickOne(translateKey('transferToWhom'), others.map(h => ({ value: h.id, label: `${h.emoji} ${h.name}` }))).then(targetId => {
-        if (!targetId) return;
-        const target = GameState.heroes.find(h => h.id === targetId);
-        if (!target) return;
-        if (!inventoryItemFitsHero(sel, target)) {
-          void showGameAlert(`${translateText(sel.name)} ${translateKey('notForHero').toLowerCase()} ${target.name} (${itemHeroClassLabel(sel)}).`);
-          return;
-        }
-        InvState.activeHeroId = target.id;
-        renderInventoryScreen();
-      });
     };
     document.getElementById('inv-drop-btn').onclick = () => {
       showGameConfirm(translateKey('dropItemConfirm')).then(ok => {
@@ -3224,6 +3210,19 @@
       closeGameMenu();
       void showOnboarding({ manual: true });
     };
+    const battleSpeedBtn = document.getElementById('battle-speed-toggle');
+    if (battleSpeedBtn) {
+      const updateBattleSpeedLabel = () => {
+        battleSpeedBtn.textContent = `${translateKey('battleSpeed')}: ×${GameState.battleSpeed === 2 ? 2 : 1}`;
+        battleSpeedBtn.title = battleSpeedBtn.textContent;
+      };
+      updateBattleSpeedLabel();
+      battleSpeedBtn.onclick = () => {
+        GameState.battleSpeed = GameState.battleSpeed === 2 ? 1 : 2;
+        updateBattleSpeedLabel();
+        saveGame();
+      };
+    }
     document.getElementById('btn-menu-save-exit').onclick = () => {
       saveGame();
       closeGameMenu();

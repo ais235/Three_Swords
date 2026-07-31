@@ -159,10 +159,13 @@ try {
   check('combat names current and next units', await page.locator('#turn-focus-banner:not(.hidden)').count() === 1 && (await page.locator('#turn-focus-banner').textContent())?.includes('→'));
   check('current hero card has a turn chip', await page.locator('.hero-card.active .hero-turn-chip').count() === 1);
 
+  await page.locator('#btn-open-menu').click();
   const speed = page.locator('#battle-speed-toggle');
-  check('speed toggle starts at ×1', (await speed.textContent())?.trim() === '×1');
+  check('speed control lives in the pause menu', await speed.isVisible());
+  check('speed toggle starts at ×1', (await speed.textContent())?.includes('×1'));
   await speed.click();
-  check('speed toggle switches to ×2', (await speed.textContent())?.trim() === '×2');
+  check('speed toggle switches to ×2', (await speed.textContent())?.includes('×2'));
+  await page.locator('#btn-menu-continue').click();
 
   await page.setViewportSize({ width: 812, height: 375 });
   await page.waitForTimeout(100);
