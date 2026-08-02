@@ -3043,7 +3043,7 @@
 
   function localizedBattleLabel(meta) {
     if (!meta || !meta.region) return translateKey('missionComplete');
-    return `${translateKey('region')} ${meta.region} · ${localizedNodeType(meta.type)}`;
+    return `${campaignRegionName(meta.region)} · ${localizedNodeType(meta.type)}`;
   }
 
   //══════════ AI ══════════

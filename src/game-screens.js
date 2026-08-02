@@ -60,6 +60,45 @@
       }
     ];
   }
+  function mapIntroductionSlides() {
+    const lang = currentLanguage();
+    if (lang === 'en') return [
+      {
+        icon: '🗺️', title: 'THE ROAD OF THREE BLADES', subtitle: 'The path is yours now',
+        text: 'The first blood has been spilled. From here, choose one of the neighboring trails: each may lead to battle, shelter, treasure, or trouble.',
+        tips: [['Follow the marks', 'Select one of the available neighboring locations to advance.'], ['Prepare', 'Towns offer healing, equipment, and supplies before harder battles.']]
+      },
+      {
+        icon: '🏰', title: 'THREE CURSED LANDS', subtitle: 'Break the seals on the road to the Dark Lord',
+        text: `${campaignRegionName(1)}, ${campaignRegionName(2)}, and ${campaignRegionName(3)} stand between the party and its quarry.`,
+        tips: [['Your task', 'Find and defeat the guardian of each land. Its fall opens the road onward.'], ['Choose wisely', 'Short routes save strength; detours may bring gold, equipment, and safer preparation.']]
+      }
+    ];
+    if (lang === 'es') return [
+      {
+        icon: '🗺️', title: 'LA SENDA DE LAS TRES ESPADAS', subtitle: 'Ahora el camino es tuyo',
+        text: 'La primera sangre ya se ha derramado. Desde aquí, elige una senda cercana: puede llevar a una batalla, un refugio, un tesoro o un peligro.',
+        tips: [['Sigue las señales', 'Elige una ubicación cercana disponible para avanzar.'], ['Prepárate', 'En las ciudades puedes curarte y comprar equipo y provisiones.']]
+      },
+      {
+        icon: '🏰', title: 'TRES TIERRAS MALDITAS', subtitle: 'Rompe los sellos del camino al Señor Oscuro',
+        text: `${campaignRegionName(1)}, ${campaignRegionName(2)} y ${campaignRegionName(3)} se alzan entre el grupo y su presa.`,
+        tips: [['Tu misión', 'Encuentra y derrota al guardián de cada tierra para abrir el siguiente camino.'], ['Elige bien', 'La ruta corta ahorra fuerzas; los desvíos pueden dar oro, equipo y preparación.']]
+      }
+    ];
+    return [
+      {
+        icon: '🗺️', title: 'ТРОПА ТРЁХ КЛИНКОВ', subtitle: 'Теперь путь выбираете вы',
+        text: 'Первая кровь пролита. Отныне выбирайте одну из соседних троп: за ней может ждать битва, приют, добыча или беда.',
+        tips: [['Следуйте знакам', 'Чтобы продолжить поход, выберите одну из доступных соседних точек.'], ['Готовьтесь', 'В городах можно вылечиться, купить снаряжение и пополнить припасы.']]
+      },
+      {
+        icon: '🏰', title: 'ТРИ ПРОКЛЯТЫЕ ЗЕМЛИ', subtitle: 'Сорвите печати на пути к Тёмному Лорду',
+        text: `${campaignRegionName(1)}, ${campaignRegionName(2)} и ${campaignRegionName(3)} лежат между отрядом и его целью.`,
+        tips: [['Ваша задача', 'Найдите и одолейте хранителя каждой земли — его гибель откроет путь дальше.'], ['Выбирайте путь', 'Короткая дорога бережёт силы, а обходная может принести золото, снаряжение и передышку.']]
+      }
+    ];
+  }
   function markTutorialSeen() {
     try { localStorage.setItem(TUTORIAL_SEEN_KEY, '1'); } catch (_) {}
   }
@@ -84,14 +123,14 @@
         resolve();
         return;
       }
-      const slides = tutorialSlides();
+      const slides = Array.isArray(options.slides) && options.slides.length ? options.slides : tutorialSlides();
       let idx = 0;
       const finish = () => {
         modal.classList.add('hidden');
         modal.setAttribute('aria-hidden', 'true');
         skipBtn.onclick = null;
         nextBtn.onclick = null;
-        markTutorialSeen();
+        if (options.markSeen !== false) markTutorialSeen();
         resolve();
       };
       const render = () => {
@@ -108,7 +147,7 @@
         `).join('');
         progressEl.innerHTML = slides.map((_, i) => `<span class="onboarding-dot${i === idx ? ' active' : ''}"></span>`).join('');
         skipBtn.textContent = idx === 0 ? translateKey('tutorialSkip') : translateKey('tutorialBack');
-        nextBtn.textContent = idx === slides.length - 1 ? translateKey('tutorialPlay') : translateKey('tutorialNext');
+        nextBtn.textContent = idx === slides.length - 1 ? (options.finishLabel || translateKey('tutorialPlay')) : translateKey('tutorialNext');
       };
       skipBtn.onclick = () => {
         if (idx > 0) {
@@ -131,6 +170,13 @@
       modal.setAttribute('aria-hidden', 'false');
       if (options.manual) markTutorialSeen();
     });
+  }
+  function showMapIntroduction() {
+    if (GameState.mapIntroShown) return Promise.resolve();
+    GameState.mapIntroShown = true;
+    saveGame();
+    const finishLabel = currentLanguage() === 'ru' ? 'В путь' : currentLanguage() === 'es' ? 'En marcha' : 'Set out';
+    return showOnboarding({ slides: mapIntroductionSlides(), markSeen: false, finishLabel });
   }
   /** In-game confirmation shown instead of browser confirm. */
   function showGameConfirm(message) {
@@ -338,7 +384,6 @@
     const d = enemyDef(id);
     const bd = ENEMY_BESTIARY_DATA[id] || {};
     const kills = (GameState.bestiaryKills || {})[id] || 0;
-    const regionNames = { 1: 'Region 1 — Wild Forest', 2: 'Region 2 — Dark Lands', 3: 'Region 3 — Citadel of Darkness' };
     const regionClass = `bregion-${bd.region || 1}`;
 
     if (st === 'new') {
@@ -350,7 +395,7 @@
       return;
     }
 
-    const regionBadge = `<span class="bestiary-region-badge ${regionClass}">${translateText(regionNames[bd.region] || '')}</span>`;
+    const regionBadge = `<span class="bestiary-region-badge ${regionClass}">${escapeHtml(campaignRegionName(bd.region))}</span>`;
     const isMiniBoss = d.miniBoss ? translateKey('miniBossLabel') : '';
     const isBoss = d.boss ? translateKey('bossLabel') : '';
     const killsLine = kills > 0 ? `<div class="bestiary-stat"><b>${kills}</b>${translateKey('killsStat')}</div>` : '';
@@ -1603,7 +1648,6 @@
   }
 
   function startNewGame() {
-    const showTutorial = shouldShowFirstRunTutorial();
     // Every campaign receives a concrete seed, including ordinary menu starts,
     // so the history screen can genuinely replay its map, events and modifiers.
     const campaignSeed = GameState.replaySeed || TEST_SEED || `run-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
@@ -1617,6 +1661,7 @@
     GameState.consumables = {};
     GameState.stats = { battles: 0, kills: 0, goldEarned: 0, objectivesCompleted: 0, damageTaken: 0, skillfulBattles: 0 };
     GameState.firstBattleCompleted = false;
+    GameState.mapIntroShown = false;
     // Contextual first-battle coaching belongs to every new campaign.
     // The longer onboarding remains first-run only.
     GameState.ftueHintsEnabled = true;
@@ -1626,10 +1671,10 @@
     if (!GameState.difficulty) GameState.difficulty = 'normal';
     CampaignExpansion.startCampaign(GameState.testSeed || Date.now());
     saveGame();
-    showScreen('map');
-    renderMap();
     updateMenuMeta();
-    if (showTutorial) requestAnimationFrame(() => { void showOnboarding(); });
+    const firstCell = getCurrentCell();
+    if (firstCell) startBattleForCell(firstCell, { skipDeploy: false });
+    else { showScreen('map'); renderMap(); }
   }
 
   function replayCampaign(index) {
@@ -1648,6 +1693,12 @@
       return;
     }
     loadGame();
+    const firstCell = getCurrentCell();
+    if (!GameState.firstBattleCompleted && firstCell?.id === 'c_0_0') {
+      startBattleForCell(firstCell, { skipDeploy: false });
+      updateMenuMeta();
+      return;
+    }
     showScreen('map');
     renderMap();
     updateMenuMeta();
@@ -1802,7 +1853,7 @@
         const t = typeNames[n.type] || n.type;
         const intel = mapNodeIntel(n);
         info.innerHTML = `${mapCellInfoIconHtml(n)}
-          <div class="cell-info-name">${translateKey('region')} ${n.region} · ${t}</div>
+          <div class="cell-info-name">${escapeHtml(campaignRegionName(n.region))} · ${t}</div>
           <div>${n.completed ? translateKey('mapCleared') : translateKey('mapActive')}</div>
           ${intel.scenario ? `<div class="route-intel-line">${CampaignExpansion.scenarioLabel(intel.scenario)}</div>` : ''}
           ${intel.risk ? `<div class="route-intel-line">${escapeHtml(intel.risk)}</div>` : ''}`;
@@ -1814,7 +1865,7 @@
           return;
         }
         if (!unlocked) {
-          info.innerHTML = `<div class="cell-info-icon">🔒</div><div class="cell-info-name">${translateKey('region')} ${node.region}</div><div>${translateKey('regionLocked')}</div>`;
+          info.innerHTML = `<div class="cell-info-icon">🔒</div><div class="cell-info-name">${escapeHtml(campaignRegionName(node.region))}</div><div>${translateKey('regionLocked')}</div>`;
           return;
         }
         setInfo(node);
@@ -1853,7 +1904,7 @@
       }).join(' · ');
       const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
       info.innerHTML = `${mapCellInfoIconHtml(selectedNode)}
-        <div class="cell-info-name">${translateKey('region')} ${selectedNode.region} · ${typeNames[selectedNode.type] || selectedNode.type}</div>
+        <div class="cell-info-name">${escapeHtml(campaignRegionName(selectedNode.region))} · ${typeNames[selectedNode.type] || selectedNode.type}</div>
         <div>${translateKey('currentPartyPosition')}</div>
         <div>${intel.threat} ? ${intel.reward}${intel.boss ? ` ? ${intel.boss}` : ''}</div>
         ${intel.scenario ? `<div class="route-intel-line">${CampaignExpansion.scenarioLabel(intel.scenario)}: ${CampaignExpansion.scenarioShort(intel.scenario)}</div>` : ''}
@@ -3103,6 +3154,9 @@
       document.getElementById('victory-screen').classList.add('hidden');
       showScreen('map');
       renderMap();
+      if (GameState.firstBattleCompleted && !GameState.mapIntroShown && (GameState.stats?.battles || 0) === 1) {
+        requestAnimationFrame(() => { void showMapIntroduction(); });
+      }
       const _ss = GameState.shopStock && GameState.shopStock.stock ? GameState.shopStock.stock : (GameState.shopStock || []);
       const expensive = _ss.find(i => i.price > GameState.gold && i.price <= GameState.gold + 50);
       if (expensive && window.ysdk && Date.now() - (GameState.adMeta.lastBonusGoldAt || 0) > BONUS_GOLD_CD_MS) {

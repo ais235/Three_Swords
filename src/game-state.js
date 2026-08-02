@@ -44,6 +44,7 @@
     bestiaryKills: {},
     pendingSkillUnlocks: [],
     firstBattleCompleted: false,
+    mapIntroShown: false,
     ftueHintsEnabled: true,
     ftueSkillsUsed: {},
     battleSpeed: 1,
@@ -153,6 +154,7 @@
     if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
     if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
     if (typeof GameState.firstBattleCompleted !== 'boolean') GameState.firstBattleCompleted = (GameState.stats?.battles || 0) > 0;
+    if (typeof GameState.mapIntroShown !== 'boolean') GameState.mapIntroShown = (GameState.stats?.battles || 0) > 1;
     if (typeof GameState.ftueHintsEnabled !== 'boolean') GameState.ftueHintsEnabled = !GameState.firstBattleCompleted;
     if (!GameState.ftueSkillsUsed || typeof GameState.ftueSkillsUsed !== 'object') GameState.ftueSkillsUsed = {};
     GameState.battleSpeed = Number(GameState.battleSpeed) === 2 ? 2 : 1;

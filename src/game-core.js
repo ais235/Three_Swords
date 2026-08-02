@@ -180,6 +180,9 @@
     pauseMenuSub: { ru: 'Пауза, обучение и выход из текущей партии.', en: 'Pause, tutorial, and current run exit options.', es: 'Pausa, tutorial y opciones para salir de la partida.' },
     gold: { ru: 'Золото', en: 'Gold', es: 'Oro' },
     region: { ru: 'Регион', en: 'Region', es: 'Región' },
+    regionName1: { ru: 'Лес Лешего', en: "Leshy's Forest", es: 'Bosque del Leshi' },
+    regionName2: { ru: 'Огненные глубины', en: 'Fire Depths', es: 'Profundidades de Fuego' },
+    regionName3: { ru: 'Затонувшие руины', en: 'Sunken Ruins', es: 'Ruinas Sumergidas' },
     turn: { ru: 'Ход', en: 'Turn', es: 'Turno' },
     location: { ru: 'ЛОКАЦИЯ', en: 'LOCATION', es: 'UBICACIÓN' },
     opened: { ru: 'ОТКРЫТО', en: 'OPENED', es: 'ABIERTO' },
@@ -1170,6 +1173,10 @@
 
   function currentLanguage() { return SUPPORTED_LANGUAGES.includes(GameLanguage) ? GameLanguage : 'ru'; }
   function translateKey(key) { return (I18N[key] && I18N[key][currentLanguage()]) || (I18N[key] && I18N[key].ru) || key; }
+  function campaignRegionName(region) {
+    const value = Math.max(1, Math.min(3, Number(region) || 1));
+    return translateKey(`regionName${value}`);
+  }
   function normalizeI18nText(text) { return String(text || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim(); }
   function reverseMap(obj) { return Object.fromEntries(Object.entries(obj || {}).map(([k, v]) => [v, k])); }
   I18N_DYNAMIC.ru = {
@@ -1321,7 +1328,7 @@
   function updateHud() {
     const center = document.getElementById('topbar-center');
     if (center) {
-      center.innerHTML = `${translateKey('gold')}: <span id="gold-display">${GameState.gold}</span> | ${translateKey('region')}: <span id="region-display">${GameState.region}</span> | ${translateKey('turn')}: <span id="turn-display">${GameState.turn}</span>`;
+      center.innerHTML = `${translateKey('gold')}: <span id="gold-display">${GameState.gold}</span> | <span id="region-display">${campaignRegionName(GameState.region)}</span> | ${translateKey('turn')}: <span id="turn-display">${GameState.turn}</span>`;
     }
     const menuBtn = document.getElementById('btn-open-menu');
     if (menuBtn) menuBtn.textContent = `☰ ${translateKey('menu')}`;

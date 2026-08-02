@@ -79,8 +79,14 @@ try {
     await page.locator('#btn-menu-settings-back').click();
 
     await page.locator('#btn-new-game').click();
-    await page.waitForTimeout(180);
-    while (await page.locator('#onboarding-next').isVisible()) await page.locator('#onboarding-next').click();
+    await page.locator('#battle-screen:not(.hidden)').waitFor({ state: 'visible' });
+    await page.evaluate(() => {
+      GameState.firstBattleCompleted = true;
+      GameState.mapIntroShown = true;
+      GameState.currentBattle = null;
+      showScreen('map');
+      renderMap();
+    });
     await page.locator('#map-screen:not(.hidden)').waitFor({ state: 'visible' });
     await audit('map', '#map-screen');
 
@@ -202,8 +208,7 @@ try {
     await page.locator('#btn-skill-unlock-ok').click();
 
     await page.evaluate(() => { showScreen('map'); renderMap(); });
-    const route = page.locator('.map-node.map-option').first();
-    await route.click();
+    await page.evaluate(() => startBattleForCell(getCurrentCell(), { skipDeploy: false }));
     await page.locator('#btn-start-battle').waitFor({ state: 'visible' });
     await audit('battle deployment', '#battle-screen');
     await page.locator('#btn-battle-briefing-continue').click();

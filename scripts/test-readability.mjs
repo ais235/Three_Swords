@@ -59,8 +59,14 @@ try {
   await auditScreen('main menu', '#main-menu', 12);
 
   await page.locator('#btn-new-game').click();
-  if (await page.locator('#onboarding-next').isVisible()) await page.locator('#onboarding-next').click();
-  if (await page.locator('#onboarding-next').isVisible()) await page.locator('#onboarding-next').click();
+  await page.locator('#battle-screen:not(.hidden)').waitFor({ state: 'visible' });
+  await page.evaluate(() => {
+    GameState.firstBattleCompleted = true;
+    GameState.mapIntroShown = true;
+    GameState.currentBattle = null;
+    showScreen('map');
+    renderMap();
+  });
   await page.locator('#map-screen:not(.hidden)').waitFor({ state: 'visible' });
 
   await auditScreen('world map', '#map-screen', 12);

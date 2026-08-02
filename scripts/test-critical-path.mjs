@@ -119,23 +119,12 @@ try {
   const play = page.getByRole('button', { name: /Играть|Play/i });
   if (await play.count()) await play.click();
 
-  check('onboarding reaches the world map', await page.locator('#map-screen:not(.hidden)').count() === 1);
-  check('required first battle route is visible', await page.locator('#btn-first-battle-route').count() === 1);
-  check('regional boss silhouette is visible', await page.locator('.map-boss-silhouette').count() >= 1);
-  check('region 1 boss guards the right edge', await page.locator('.map-node[data-node-type="boss"][data-region="1"][data-x="11"]').count() === 1);
-  check('region 2 boss guards the left edge', await page.locator('.map-node[data-node-type="boss"][data-region="2"][data-x="0"]').count() === 1);
-  check('region 3 boss guards the right edge', await page.locator('.map-node[data-node-type="boss"][data-region="3"][data-x="11"]').count() === 1);
-  check('final boss waits in the lower-right corner', await page.locator('.map-node[data-node-type="final"][data-x="11"][data-y="7"]').count() === 1);
-  check('regional walls render all segments', await page.locator('.map-wall-bottom').count() === 22 && await page.locator('.map-wall-top').count() === 22);
-  check('regional walls expose two marked gateways', await page.locator('.map-gateway-down').count() === 2 && await page.locator('.map-gateway-up').count() === 2);
-
-  const adjacent = page.locator('.map-node.map-option').first();
-  check('an adjacent route exists', await adjacent.count() === 1);
-  await adjacent.click();
+  check('new campaign opens directly in the first battle', await page.locator('#battle-screen:not(.hidden)').count() === 1);
+  check('world map stays hidden before the first victory', await page.locator('#map-screen.hidden').count() === 1);
   await page.locator('#btn-start-battle').waitFor({ state: 'visible' });
   await page.locator('#btn-battle-briefing-continue').click();
 
-  check('first battle cannot be skipped by route click', await page.locator('#btn-start-battle').isVisible());
+  check('first battle cannot be skipped through the world map', await page.locator('#map-screen.hidden').count() === 1);
   check('deployment is available before combat', await page.locator('#btn-start-battle').count() === 1);
   check('field coaching is visible', await page.locator('#battle-coach-overlay .ftue-coach').count() === 1);
   const deploymentRuntime = await page.evaluate(() => {
@@ -243,12 +232,31 @@ try {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.evaluate(() => {
     GameState.firstBattleCompleted = true;
+    GameState.mapIntroShown = true;
     GameState.currentBattle = null;
     GameState.playerPos = { x: 0, y: 0 };
     GameState.screen = 'map';
     showScreen('map');
     renderMap();
   });
+  check('regional boss silhouette is visible', await page.locator('.map-boss-silhouette').count() >= 1);
+  check('region 1 boss guards the right edge', await page.locator('.map-node[data-node-type="boss"][data-region="1"][data-x="11"]').count() === 1);
+  check('region 2 boss guards the left edge', await page.locator('.map-node[data-node-type="boss"][data-region="2"][data-x="0"]').count() === 1);
+  check('region 3 boss guards the right edge', await page.locator('.map-node[data-node-type="boss"][data-region="3"][data-x="11"]').count() === 1);
+  check('final boss waits in the lower-right corner', await page.locator('.map-node[data-node-type="final"][data-x="11"][data-y="7"]').count() === 1);
+  check('regional walls render all segments', await page.locator('.map-wall-bottom').count() === 22 && await page.locator('.map-wall-top').count() === 22);
+  check('regional walls expose two marked gateways', await page.locator('.map-gateway-down').count() === 2 && await page.locator('.map-gateway-up').count() === 2);
+  check('an adjacent route exists after the first victory', await page.locator('.map-node.map-option').count() > 0);
+  const hudText = await page.locator('#topbar-center').textContent();
+  check('fantasy land name replaces the numeric region in HUD', hudText?.includes("Leshy's Forest") || hudText?.includes('Лес Лешего'), hudText || '');
+  await page.evaluate(() => { GameState.mapIntroShown = false; void showMapIntroduction(); });
+  check('map introduction appears after the first victory', await page.locator('#onboarding-modal:not(.hidden)').count() === 1);
+  check('map introduction explains route choice', (await page.locator('#onboarding-text').textContent())?.length > 40);
+  await page.locator('#onboarding-next').click();
+  const landsText = await page.locator('#onboarding-modal').textContent();
+  check('map introduction names all three lands', ['Лес Лешего', 'Огненные глубины', 'Затонувшие руины'].every(name => landsText?.includes(name)), landsText || '');
+  await page.locator('#onboarding-next').click();
+  check('map introduction is stored as shown', await page.evaluate(() => GameState.mapIntroShown === true));
   const linkedRouteCards = page.locator('.map-route-card[data-route-id]:not(.first-battle-route)');
   const linkedRouteCount = await linkedRouteCards.count();
   check('map exposes route cards for hover linking', linkedRouteCount > 0, `count=${linkedRouteCount}`);
