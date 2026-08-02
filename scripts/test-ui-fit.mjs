@@ -184,6 +184,11 @@ try {
     await audit('onboarding', '#onboarding-modal');
     await page.locator('#onboarding-skip').click();
 
+    await page.evaluate(() => { void showStoryScene('region1'); });
+    await page.locator('#story-modal:not(.hidden)').waitFor({ state: 'visible' });
+    await audit('story dialogue', '#story-modal');
+    for (let storyLine = 0; storyLine < 3; storyLine++) await page.locator('#story-next').click();
+
     await page.evaluate(() => void showGameAlert('Очень длинное системное сообщение должно полностью помещаться в диалоге и переноситься на новые строки без обрезания.'));
     await audit('alert dialog', '#game-alert-modal');
     await page.locator('#game-alert-ok').click();

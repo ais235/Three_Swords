@@ -1122,6 +1122,7 @@
       if (cell.type === 'boss') {
         GameState.defeatedBosses += 1;
         GameState.regionUnlocked = Math.max(GameState.regionUnlocked, Math.min(3, cell.region + 1));
+        if (typeof queueRegionalStory === 'function') queueRegionalStory(cell.region);
       }
       if (cell.type === 'boss') {
         GameState.campaignEffects.wardUntilBoss = false;
@@ -2939,11 +2940,21 @@
       const node = getCellById(b.nodeId);
       if (node?.type === 'final') {
         endBattleVictory();
+        // There is no battle after the final victory, so a post-campaign perk
+        // choice would only cover the epilogue and could never be used.
+        GameState.pendingPerks = [];
+        GameState.pendingSkillUnlocks = [];
+        document.getElementById('perk-modal')?.classList.add('hidden');
+        document.getElementById('skill-unlock-modal')?.classList.add('hidden');
         CampaignExpansion.recordCompletedRun('victory');
         updateRecordsFromState({ finished: true });
+        GameState.screen = 'ending';
         saveGame();
         showScreen('ending');
         renderEndingSummary();
+        if (!(GameState.storyScenesSeen || []).includes('finale') && typeof showStoryScene === 'function') {
+          requestAnimationFrame(() => { void showStoryScene('finale'); });
+        }
         return;
       }
       endBattleVictory();
@@ -2964,6 +2975,15 @@
   function renderEndingSummary() {
     const root = document.getElementById('ending-stats');
     if (!root) return;
+    const endingCopy = {
+      ru: ['Победа над Тьмой!', 'Три печати разрушены, Тёмный Лорд повержен. Лес Лешего снова слышит птиц, в Огненных глубинах остывают кузни, а Затонувшие руины впервые встречают спокойный прилив. Поход трёх клинков завершён.'],
+      en: ['Victory over Darkness!', 'Three seals are broken and the Dark Lord is defeated. Birds return to Leshy’s Forest, the forges of the Fiery Depths grow cold, and a peaceful tide reaches the Sunken Ruins. The road of the three blades is complete.'],
+      es: ['¡Victoria sobre la Oscuridad!', 'Los tres sellos están rotos y el Señor Oscuro ha caído. Las aves regresan al Bosque del Leshy, las forjas de las Profundidades Ardientes se enfrían y una marea tranquila alcanza las Ruinas Sumergidas.']
+    }[currentLanguage()] || null;
+    const endingTitle = document.getElementById('ending-title');
+    const endingEpilogue = document.getElementById('ending-epilogue');
+    if (endingTitle) endingTitle.textContent = endingCopy[0];
+    if (endingEpilogue) endingEpilogue.textContent = endingCopy[1];
     const elapsedMinutes = Math.max(1, Math.round((Date.now() - (GameState.runStartedAt || Date.now())) / 60000));
     const builds = GameState.heroes.map(hero => {
       const perkNames = (hero.perks || []).map(p => {

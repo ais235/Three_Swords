@@ -17,6 +17,8 @@ const leshySpritePath = resolve(root, 'assets/enemies/leshy.png');
 const battleAnimationPath = resolve(root, 'src/battle-animations.js');
 const battleAnimationPlanPath = resolve(root, 'docs/BATTLE_ANIMATION_PLAN.md');
 const battleAnimationTestPath = resolve(root, 'scripts/test-battle-animations.mjs');
+const fullCampaignTestPath = resolve(root, 'scripts/test-full-campaign.mjs');
+const storyPortraitPaths = ['garet', 'alira', 'seris'].map(id => resolve(root, `assets/portraits/${id}-dialog.png`));
 const architecturePath = resolve(root, 'docs/TECHNICAL_MODULAR_ARCHITECTURE.md');
 const runtimeScriptPaths = gameRuntimeScriptPaths(root);
 const index = loadGameRuntimeSource(root);
@@ -158,6 +160,9 @@ const checks = [
   ,['varied battle objectives are present', () => index.includes("id === 'holdout'") && index.includes("id === 'escape'") && index.includes("id === 'defense'") && index.includes("id === 'ritual'") && index.includes("id === 'waves'")]
   ,['event choices and delayed consequences are present', () => index.includes('event-choice-list') && index.includes('resolveDelayedEvents') && index.includes('druid_cache')]
   ,['regional terrain assets are packaged from source', () => existsSync(resolve(root, 'assets/tiles/region-forest-glade.png')) && existsSync(resolve(root, 'assets/tiles/region-volcanic-depths.png')) && existsSync(resolve(root, 'assets/tiles/region-sunken-ruins.png'))]
+  ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
+  ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
+  ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]
 ];
 
 let failed = 0;

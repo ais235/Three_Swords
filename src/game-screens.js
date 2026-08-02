@@ -99,6 +99,141 @@
       }
     ];
   }
+
+  const STORY_PORTRAITS = {
+    garet: 'assets/portraits/garet-dialog.png',
+    alira: 'assets/portraits/alira-dialog.png',
+    seris: 'assets/portraits/seris-dialog.png'
+  };
+
+  function storySceneData(sceneId) {
+    const lang = currentLanguage();
+    const scenes = {
+      ru: {
+        region1: {
+          kicker: 'ПЕЧАТЬ ЛЕСА СОРВАНА', title: 'Шёпот под корнями',
+          lines: [
+            ['alira', 'Алира', 'Леший пал, и лес снова дышит. Но послушайте: под землёй гудит огонь. Кто-то разбудил древние кузни.'],
+            ['seris', 'Сэрис', 'Это не просто пламя. Первая печать питала врата Тёмного Лорда. Теперь путь ведёт в Огненные глубины.'],
+            ['garet', 'Гарет', 'Значит, передышка будет короткой. Соберём припасы в городе и спустимся туда вместе.']
+          ]
+        },
+        region2: {
+          kicker: 'ПЕЧАТЬ ПЛАМЕНИ СОКРУШЕНА', title: 'Пепел древней клятвы',
+          lines: [
+            ['garet', 'Гарет', 'Титан погас. Его пламя больше не закалит оружие Тёмного Лорда.'],
+            ['alira', 'Алира', 'В золе я нашла морскую соль. Подземная река уходит к руинам, которых давно нет ни на одной карте.'],
+            ['seris', 'Сэрис', 'Затонувшие руины помнят последнюю печать. За ней нас уже ждёт хозяин этой войны.']
+          ]
+        },
+        region3: {
+          kicker: 'ПОСЛЕДНЯЯ ПЕЧАТЬ ПАЛА', title: 'Врата Тьмы',
+          lines: [
+            ['seris', 'Сэрис', 'Руины отпустили нас. Три печати разрушены, и крепость Тёмного Лорда проступает сквозь туман.'],
+            ['alira', 'Алира', 'Назад дороги уже не будет. Но впервые за весь поход враг боится нас сильнее, чем мы его.'],
+            ['garet', 'Гарет', 'Три клинка дошли до конца пути. Проверим снаряжение — и закончим эту войну.']
+          ]
+        },
+        finale: {
+          kicker: 'ЭПИЛОГ', title: 'Рассвет трёх клинков',
+          lines: [
+            ['garet', 'Гарет', 'Тёмный Лорд повержен. Его крепость рушится — пора уходить, пока камни не погребли нашу победу.'],
+            ['seris', 'Сэрис', 'Магия печатей исчезла. Лес, глубины и руины больше не связаны его волей. Мир снова принадлежит живым.'],
+            ['alira', 'Алира', 'Тогда вернёмся домой не легендами, а людьми. Хотя про три клинка я бы всё-таки оставила хорошую песню.'],
+            ['garet', 'Гарет', 'Пусть её поют те, кому больше не приходится брать в руки меч.']
+          ]
+        }
+      },
+      en: {
+        region1: { kicker:'THE FOREST SEAL IS BROKEN', title:'Whispers Beneath the Roots', lines:[
+          ['alira','Alira','The Leshy has fallen, and the forest breathes again. But listen—the earth hums with fire. Someone has awakened the ancient forges.'],
+          ['seris','Seris','It is more than flame. The first seal fed the Dark Lord\'s gate. Our road now descends into the Fiery Depths.'],
+          ['garet','Garet','Then our rest will be brief. We gather supplies in town and descend together.'] ] },
+        region2: { kicker:'THE FLAME SEAL IS SHATTERED', title:'Ashes of an Ancient Oath', lines:[
+          ['garet','Garet','The Titan is extinguished. Its fire will forge no more weapons for the Dark Lord.'],
+          ['alira','Alira','I found sea salt in the ashes. An underground river runs toward ruins erased from every map.'],
+          ['seris','Seris','The Sunken Ruins keep the final seal. Beyond it, the master of this war awaits us.'] ] },
+        region3: { kicker:'THE LAST SEAL HAS FALLEN', title:'The Gate of Darkness', lines:[
+          ['seris','Seris','The ruins have released us. Three seals are broken, and the Dark Lord\'s fortress is taking shape beyond the mist.'],
+          ['alira','Alira','There is no road back. But for the first time, our enemy fears us more than we fear him.'],
+          ['garet','Garet','Three blades have reached the end of the road. Check your gear—we finish this war now.'] ] },
+        finale: { kicker:'EPILOGUE', title:'Dawn of the Three Blades', lines:[
+          ['garet','Garet','The Dark Lord is defeated. His fortress is collapsing—move, before the stones bury our victory.'],
+          ['seris','Seris','The seals are gone. Forest, depths, and ruins are no longer bound to his will. The world belongs to the living again.'],
+          ['alira','Alira','Then let us return home as people, not legends. Though I would keep one good song about the three blades.'],
+          ['garet','Garet','Let it be sung by those who no longer need to carry a sword.'] ] }
+      },
+      es: {
+        region1: { kicker:'EL SELLO DEL BOSQUE SE HA ROTO', title:'Susurros bajo las raíces', lines:[
+          ['alira','Alira','El Leshy ha caído y el bosque vuelve a respirar. Pero la tierra vibra con fuego: alguien despertó las antiguas forjas.'],
+          ['seris','Seris','Es más que una llama. El primer sello alimentaba la puerta del Señor Oscuro. El camino baja hacia las Profundidades Ardientes.'],
+          ['garet','Garet','Entonces descansaremos poco. Reuniremos provisiones y descenderemos juntos.'] ] },
+        region2: { kicker:'EL SELLO DE FUEGO SE HA QUEBRADO', title:'Cenizas de un juramento', lines:[
+          ['garet','Garet','El Titán se ha apagado. Su fuego ya no forjará armas para el Señor Oscuro.'],
+          ['alira','Alira','Encontré sal marina entre las cenizas. Un río subterráneo lleva a unas ruinas borradas de todos los mapas.'],
+          ['seris','Seris','Las Ruinas Sumergidas guardan el último sello. Tras él nos espera el dueño de esta guerra.'] ] },
+        region3: { kicker:'EL ÚLTIMO SELLO HA CAÍDO', title:'La puerta de la oscuridad', lines:[
+          ['seris','Seris','Las ruinas nos han liberado. Los tres sellos están rotos y la fortaleza del Señor Oscuro aparece entre la niebla.'],
+          ['alira','Alira','Ya no hay vuelta atrás. Pero por primera vez el enemigo nos teme más de lo que nosotros le tememos.'],
+          ['garet','Garet','Las tres espadas llegaron al final del camino. Revisad el equipo: hoy terminamos esta guerra.'] ] },
+        finale: { kicker:'EPÍLOGO', title:'El alba de las tres espadas', lines:[
+          ['garet','Garet','El Señor Oscuro ha caído. Su fortaleza se derrumba; salgamos antes de que las piedras entierren la victoria.'],
+          ['seris','Seris','Los sellos desaparecieron. El bosque, las profundidades y las ruinas ya no obedecen su voluntad.'],
+          ['alira','Alira','Volvamos a casa como personas, no como leyendas. Aunque conservaría una buena canción sobre las tres espadas.'],
+          ['garet','Garet','Que la canten quienes ya no tengan que empuñar una espada.'] ] }
+      }
+    };
+    return (scenes[lang] || scenes.en)[sceneId] || null;
+  }
+
+  function showStoryScene(sceneId) {
+    const scene = storySceneData(sceneId);
+    if (!scene) return Promise.resolve(false);
+    return new Promise(resolve => {
+      const modal = document.getElementById('story-modal');
+      const next = document.getElementById('story-next');
+      let index = 0;
+      const finish = () => {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+        GameState.storyScenesSeen = Array.isArray(GameState.storyScenesSeen) ? GameState.storyScenesSeen : [];
+        if (!GameState.storyScenesSeen.includes(sceneId)) GameState.storyScenesSeen.push(sceneId);
+        if (GameState.pendingStoryScene === sceneId) GameState.pendingStoryScene = null;
+        saveGame();
+        resolve(true);
+      };
+      const render = () => {
+        const [heroId, speaker, text] = scene.lines[index];
+        const portrait = document.getElementById('story-portrait');
+        portrait.src = STORY_PORTRAITS[heroId];
+        portrait.alt = speaker;
+        document.getElementById('story-kicker').textContent = scene.kicker;
+        document.getElementById('story-title').textContent = scene.title;
+        document.getElementById('story-speaker').textContent = speaker;
+        document.getElementById('story-text').textContent = text;
+        document.getElementById('story-progress').textContent = `${index + 1} / ${scene.lines.length}`;
+        next.textContent = index === scene.lines.length - 1
+          ? (currentLanguage() === 'ru' ? 'Продолжить' : currentLanguage() === 'es' ? 'Continuar' : 'Continue')
+          : (currentLanguage() === 'ru' ? 'Далее' : currentLanguage() === 'es' ? 'Siguiente' : 'Next');
+      };
+      next.onclick = () => { if (index < scene.lines.length - 1) { index++; render(); } else finish(); };
+      modal.classList.remove('hidden');
+      modal.setAttribute('aria-hidden', 'false');
+      render();
+    });
+  }
+
+  function queueRegionalStory(region) {
+    const sceneId = `region${region}`;
+    if ((GameState.storyScenesSeen || []).includes(sceneId)) return;
+    GameState.pendingStoryScene = sceneId;
+  }
+
+  function consumePendingStoryScene() {
+    const sceneId = GameState.pendingStoryScene;
+    if (!sceneId) return Promise.resolve(false);
+    return showStoryScene(sceneId);
+  }
   function markTutorialSeen() {
     try { localStorage.setItem(TUTORIAL_SEEN_KEY, '1'); } catch (_) {}
   }
@@ -1660,6 +1795,8 @@
     GameState.inventory = [];
     GameState.consumables = {};
     GameState.stats = { battles: 0, kills: 0, goldEarned: 0, objectivesCompleted: 0, damageTaken: 0, skillfulBattles: 0 };
+    GameState.storyScenesSeen = [];
+    GameState.pendingStoryScene = null;
     GameState.firstBattleCompleted = false;
     GameState.mapIntroShown = false;
     // Contextual first-battle coaching belongs to every new campaign.
@@ -1701,6 +1838,9 @@
     }
     showScreen('map');
     renderMap();
+    if (GameState.pendingStoryScene) {
+      requestAnimationFrame(() => { void consumePendingStoryScene(); });
+    }
     updateMenuMeta();
   }
 
@@ -3154,6 +3294,9 @@
       document.getElementById('victory-screen').classList.add('hidden');
       showScreen('map');
       renderMap();
+      if (GameState.pendingStoryScene) {
+        requestAnimationFrame(() => { void consumePendingStoryScene(); });
+      }
       if (GameState.firstBattleCompleted && !GameState.mapIntroShown && (GameState.stats?.battles || 0) === 1) {
         requestAnimationFrame(() => { void showMapIntroduction(); });
       }

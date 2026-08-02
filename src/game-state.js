@@ -56,6 +56,8 @@
     campaignEffects: {},
     cityFavorClaimed: {},
     runHistory: [],
+    storyScenesSeen: [],
+    pendingStoryScene: null,
     _lastBattleDrop: null,
     _lastBattleDropHandled: true,
     _lastBattleAdClaimed: false
@@ -153,6 +155,8 @@
     if (!GameState.bestiary) GameState.bestiary = {};
     if (!GameState.bestiaryKills) GameState.bestiaryKills = {};
     if (!GameState.pendingSkillUnlocks) GameState.pendingSkillUnlocks = [];
+    if (!Array.isArray(GameState.storyScenesSeen)) GameState.storyScenesSeen = [];
+    if (typeof GameState.pendingStoryScene !== 'string') GameState.pendingStoryScene = null;
     if (typeof GameState.firstBattleCompleted !== 'boolean') GameState.firstBattleCompleted = (GameState.stats?.battles || 0) > 0;
     if (typeof GameState.mapIntroShown !== 'boolean') GameState.mapIntroShown = (GameState.stats?.battles || 0) > 1;
     if (typeof GameState.ftueHintsEnabled !== 'boolean') GameState.ftueHintsEnabled = !GameState.firstBattleCompleted;
