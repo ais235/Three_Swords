@@ -256,6 +256,99 @@ try {
   check('elemental guards reduce boss damage until destroyed', campaignRuntime.fireBossCheck.shieldedDamage < campaignRuntime.fireBossCheck.openDamage && campaignRuntime.waterBossCheck.shieldedDamage < campaignRuntime.waterBossCheck.openDamage, JSON.stringify({ fire: campaignRuntime.fireBossCheck, water: campaignRuntime.waterBossCheck }));
   check('new elementals have portraits and complete bestiary entries', campaignRuntime.elementalBestiaryCheck, JSON.stringify(campaignRuntime));
   check('every scenario has an automated victory or failure rule', Object.values(campaignRuntime.rules).every(Boolean), JSON.stringify(campaignRuntime.rules));
+  const eventAudit = await page.evaluate(() => {
+    const saved = deepClone(GameState);
+    const failures = [];
+    let choices = 0;
+    const fail = (id, message) => failures.push(`${id}: ${message}`);
+    try {
+      Object.entries(CampaignExpansion.EVENTS).forEach(([region, events]) => events.forEach(event => event[4].forEach((choice, choiceIndex) => {
+        choices++;
+        const id = `${event[0]}:${choiceIndex}`;
+        const effect = choice[2] || {};
+        initHeroesFromTemplate();
+        GameState.gold = 100;
+        GameState.inventory = [];
+        GameState.consumables = { healing: 0, mana: 0 };
+        GameState.campaignEvents = [];
+        GameState.campaignEffects = { nextScenario: null, nextAmbush: false, ambushProtection: false, wardUntilBoss: false, wardArmor: 0, wardBonuses: {}, pactUntilBoss: false, pactAttack: 0, manaCrystal: false, hunterIntel: false, scoutedNodeIds: [] };
+        GameState.mapFogVisited = [];
+        GameState.playerPos = { x: 0, y: 0 };
+        const beforeHeroes = deepClone(GameState.heroes);
+        const beforeInventory = GameState.inventory.length;
+        CampaignExpansion.applyEventEffect(effect, { id: `audit-${id}`, region: Number(region) });
+        if (GameState.gold !== Math.max(0, 100 + (Number(effect.gold) || 0))) fail(id, `gold ${GameState.gold}`);
+        if (effect.heal && !GameState.heroes.every((hero, index) => hero.hp === Math.min(hero.maxHp, beforeHeroes[index].hp + effect.heal))) fail(id, 'healing mismatch');
+        if (effect.hp && !GameState.heroes.every((hero, index) => hero.hp === Math.max(1, beforeHeroes[index].hp + effect.hp))) fail(id, 'party damage mismatch');
+        if (effect.item && GameState.inventory.length !== beforeInventory + 1) fail(id, 'item missing');
+        if (effect.potion && GameState.consumables.healing !== effect.potion) fail(id, 'potions missing');
+        if (effect.reveal && GameState.mapFogVisited.length < 2) fail(id, 'map not revealed');
+        if (effect.intel && !(GameState.campaignEffects.scoutedNodeIds || []).length) fail(id, 'enemy intel missing');
+        if (effect.nextScenario && GameState.campaignEffects.nextScenario !== effect.nextScenario) fail(id, 'scenario not stored');
+        if (effect.ambush && !GameState.campaignEffects.nextAmbush) fail(id, 'ambush not stored');
+        if (effect.clearAmbush && !GameState.campaignEffects.ambushProtection) fail(id, 'ambush protection missing');
+        if (effect.ward) {
+          const bonuses = GameState.campaignEffects.wardBonuses || {};
+          const values = Object.values(bonuses);
+          const expectedRecipients = effect.wardTarget === 'weakestArmor' ? 1 : GameState.heroes.length;
+          if (values.length !== expectedRecipients || values.some(value => value !== Number(effect.ward))) fail(id, `ward ${JSON.stringify(bonuses)}`);
+        }
+        if (effect.pact && GameState.campaignEffects.pactAttack !== 2) fail(id, 'pact attack mismatch');
+        if (effect.mana && !GameState.campaignEffects.manaCrystal) fail(id, 'mana effect missing');
+        if (effect.delayed && !GameState.campaignEvents.some(entry => entry.id === effect.delayed)) fail(id, 'delayed consequence missing');
+        if ((Number(effect.gold) || 0) < 0) {
+          const cost = -Number(effect.gold);
+          GameState.gold = cost - 1;
+          GameState.inventory = [];
+          GameState.consumables = { healing: 0 };
+          const blockedBefore = JSON.stringify({ gold: GameState.gold, inventory: GameState.inventory, consumables: GameState.consumables });
+          const validation = CampaignExpansion.validateEventEffect(effect);
+          CampaignExpansion.applyEventEffect(effect, { id: `blocked-${id}`, region: Number(region) });
+          const blockedAfter = JSON.stringify({ gold: GameState.gold, inventory: GameState.inventory, consumables: GameState.consumables });
+          if (validation.ok || blockedAfter !== blockedBefore) fail(id, 'insufficient gold was not blocked');
+        }
+      })));
+
+      initHeroesFromTemplate();
+      GameState.heroes.filter(hero => hero.maxMana).forEach(hero => { hero.mana = Math.max(0, hero.maxMana - 2); });
+      GameState.campaignEffects = { nextScenario: null, nextAmbush: false, ambushProtection: false, wardUntilBoss: false, wardArmor: 0, wardBonuses: {}, pactUntilBoss: false, pactAttack: 0, manaCrystal: false, hunterIntel: false, scoutedNodeIds: [] };
+      CampaignExpansion.applyEventEffect({ ward: 2, pact: true, mana: true }, { id: 'audit-battle-buffs', region: 2 });
+      const buffUnits = GameState.heroes.map((hero, index) => makeBattleHero(hero, index));
+      const buffBefore = buffUnits.map(unit => ({ armor: unit.armor, attack: unit.attack, mana: unit.mana }));
+      CampaignExpansion.applyStartBattleEffects({ units: buffUnits, scenario: { id: 'eliminate' }, grid: generateBattleGrid(2) });
+      const battleBuffsWork = buffUnits.every((unit, index) => unit.armor === buffBefore[index].armor + 2 && unit.attack === buffBefore[index].attack + 2)
+        && buffUnits.filter(unit => unit.maxMana).every(unit => unit.mana === buffBefore[buffUnits.indexOf(unit)].mana + 1);
+
+      const scoutNode = GameState.mapGrid.find(node => ['mission', 'dungeon'].includes(node.type) && node.id !== getCurrentCell()?.id);
+      GameState.campaignEffects.scoutedNodeIds = scoutNode ? [scoutNode.id] : [];
+      const scoutedIntelWorks = !!scoutNode && mapNodeIntel(scoutNode).composition.startsWith('👁');
+
+      initHeroesFromTemplate();
+      GameState.gold = 100;
+      GameState.turn = 2;
+      GameState.campaignEvents = [
+        { id: 'miners_gratitude', region: 2, at: 2, resolved: false },
+        { id: 'spirit_tide', region: 3, at: 2, resolved: false }
+      ];
+      GameState._campaignNotice = '';
+      CampaignExpansion.resolveDelayedEvents();
+      const queuedNotices = GameState._campaignNotice.split('\n').filter(Boolean).length === 2;
+
+      GameState.campaignEffects = { nextAmbush: true, ambushProtection: true, wardBonuses: {}, scoutedNodeIds: [] };
+      startBattleForCell({ id: 'audit-protected-ambush', region: 1, type: 'mission', ambush: true }, { wave: [ENEMY_IDS.SKELETON], scenario: 'eliminate' });
+      const protectionWorks = !GameState.currentBattle.ambush && !GameState.campaignEffects.ambushProtection && !GameState.campaignEffects.nextAmbush;
+      return { choices, failures, queuedNotices, protectionWorks, battleBuffsWork, scoutedIntelWorks };
+    } finally {
+      Object.keys(GameState).forEach(key => delete GameState[key]);
+      Object.assign(GameState, saved);
+    }
+  });
+  check('all 36 event choices apply every advertised immediate and delayed effect', eventAudit.choices === 36 && eventAudit.failures.length === 0, JSON.stringify(eventAudit));
+  check('paid event choices reject insufficient gold without granting rewards', eventAudit.failures.every(failure => !failure.includes('insufficient gold')), JSON.stringify(eventAudit));
+  check('event ambush protection guarantees the next battle starts normally', eventAudit.protectionWorks, JSON.stringify(eventAudit));
+  check('event armor, attack and mana bonuses reach the actual battle units', eventAudit.battleBuffsWork, JSON.stringify(eventAudit));
+  check('event reconnaissance reveals exact enemy lineups only on scouted cells', eventAudit.scoutedIntelWorks, JSON.stringify(eventAudit));
+  check('simultaneous delayed consequences keep every notification', eventAudit.queuedNotices, JSON.stringify(eventAudit));
   const wardCell = await page.evaluate(() => {
     startBattleForCell({ id: 'e2e-ward-tooltip', region: 2, type: 'mission' }, {
       wave: [ENEMY_IDS.SKELETON], scenario: 'defense'
@@ -323,6 +416,35 @@ try {
   await speed.click();
   check('speed toggle switches to ×2', (await speed.textContent())?.includes('×2'));
   await page.locator('#btn-menu-continue').click();
+
+  await page.evaluate(() => {
+    const b = GameState.currentBattle;
+    const garet = b.units.find(unit => unit.isHero && unit.heroId === 'garet');
+    const hero = GameState.heroes.find(unit => unit.id === 'garet');
+    hero.level = 5;
+    garet.level = 5;
+    b.order = [b.units.indexOf(garet)];
+    b.activeIndex = 0;
+    b.phase = 'combat';
+    b.selected = garet;
+    b.mode = 'attack';
+    b.pendingSkill = null;
+    b.heroActionDone = false;
+    updateBattleUI();
+  });
+  const shieldSkill = page.locator('#sk-shield');
+  await shieldSkill.click();
+  const selectedSkill = await page.evaluate(() => {
+    const b = GameState.currentBattle;
+    return { pending: b.pendingSkill, mode: b.mode, selected: document.querySelector('#sk-shield')?.classList.contains('is-selected') };
+  });
+  await page.locator('#sk-shield').click();
+  const cancelledSkill = await page.evaluate(() => {
+    const b = GameState.currentBattle;
+    return { pending: b.pendingSkill, mode: b.mode, actionDone: b.heroActionDone, cooldown: getActiveUnit().cds.shieldBash, selected: document.querySelector('#sk-shield')?.classList.contains('is-selected') };
+  });
+  check('targeted skill selects on first press', selectedSkill.pending === 'shieldBash' && selectedSkill.mode === 'skill' && selectedSkill.selected, JSON.stringify(selectedSkill));
+  check('second targeted-skill press returns to ordinary attack without cost', cancelledSkill.pending === null && cancelledSkill.mode === 'attack' && !cancelledSkill.actionDone && cancelledSkill.cooldown === 0 && !cancelledSkill.selected, JSON.stringify(cancelledSkill));
 
   await page.setViewportSize({ width: 812, height: 375 });
   await page.waitForTimeout(100);

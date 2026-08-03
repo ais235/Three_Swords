@@ -82,44 +82,44 @@ const CampaignExpansion = (() => {
   const EVENTS = {
     1: [
       ['forest_hunters', '👥', 'positive', { ru: 'Потерявшиеся охотники просят провести их через чащу.', en: 'Lost hunters ask for a path through the thicket.', es: 'Cazadores perdidos piden una ruta.' }, [
-        ['Защитить', '−8 здоровья у отряда, +редкий предмет позже', { hp: -8, flag: 'huntersSaved', delayed: 'hunter_cache' }],
+        ['Защитить', 'Каждый герой теряет 8 здоровья; через 2 перехода — редкий предмет', { hp: -8, delayed: 'hunter_cache' }],
         ['Разведать путь', 'Открыть соседние клетки и узнать врагов', { reveal: 2, intel: true }],
         ['Пройти мимо', 'Без эффекта', {}]
       ]],
       ['forest_roots', '🌿', 'neutral', { ru: 'Корни Лешего перерезали дорогу.', en: 'Leshy roots cut across the road.', es: 'Raíces del Leshy bloquean el camino.' }, [
-        ['Сжечь корни', '−12 золота, следующий бой без засады', { gold: -12, clearAmbush: true }],
+        ['Сжечь корни', '−12 золота, следующий бой гарантированно без засады', { gold: -12, clearAmbush: true }],
         ['Обойти', 'Следующая миссия: прорыв', { nextScenario: 'escape' }],
-        ['Слушать лес', '+1 броня одному герою до босса', { ward: true }]
+        ['Слушать лес', '+1 броня герою с самой слабой защитой до босса', { ward: 1, wardTarget: 'weakestArmor' }]
       ]],
       ['forest_shrine', '🌟', 'positive', { ru: 'Друидский круг ещё хранит слабый свет.', en: 'A druid circle still holds a faint light.', es: 'Un círculo druídico aún guarda luz.' }, [
-        ['Принять благословение', '+2 брони до следующего босса, помощь друидов позже', { ward: true, delayed: 'druid_cache' }],
+        ['Принять благословение', '+2 брони всем героям до босса; через 2 перехода всем +8 здоровья', { ward: 2, delayed: 'druid_cache' }],
         ['Оставить золото', '−15 золота, редкая реликвия', { gold: -15, item: 'rare' }],
         ['Не тревожить', 'Без эффекта', {}]
       ]],
       ['forest_spores', '🍄', 'negative', { ru: 'Споры в роще искажают воздух.', en: 'Spores in the grove distort the air.', es: 'Las esporas distorsionan el aire.' }, [
         ['Взять образец', 'Редкий предмет, но следующий бой: засада', { item: 'rare', ambush: true }],
-        ['Сжечь грибницу', '−10 золота, +12 здоровья', { gold: -10, heal: 12 }],
+        ['Сжечь грибницу', '−10 золота, каждый герой восстанавливает 12 здоровья', { gold: -10, heal: 12 }],
         ['Отступить', 'Следующая миссия: выдержка', { nextScenario: 'holdout' }]
       ]]
     ],
     2: [
       ['miners', '⛏️', 'neutral', { ru: 'Шахтёры просят освободить завал.', en: 'Miners ask you to clear a cave-in.', es: 'Mineros piden limpiar un derrumbe.' }, [
-        ['Работать вместе', '−10 здоровья, +40 золота, благодарность шахтёров позже', { hp: -10, gold: 40, delayed: 'miners_gratitude' }],
+        ['Работать вместе', 'Каждый герой теряет 10 здоровья; +40 золота и ещё +25 через 2 перехода', { hp: -10, gold: 40, delayed: 'miners_gratitude' }],
         ['Подорвать проход', 'Следующая миссия: волны, редкий предмет', { nextScenario: 'waves', item: 'rare' }],
         ['Отказаться', 'Без эффекта', {}]
       ]],
       ['forge', '🔨', 'positive', { ru: 'Кузня ещё дышит жаром.', en: 'The forge still breathes heat.', es: 'La forja aún respira calor.' }, [
-        ['Закалить клинок', '+1 атака одному герою, заказ кузни позже', { attack: 1, delayed: 'forge_delivery' }],
+        ['Закалить клинок', '+1 атака слабейшему герою; через 2 перехода — предмет', { attack: 1, delayed: 'forge_delivery' }],
         ['Купить зелья', '−18 золота, 2 лечебных зелья', { gold: -18, potion: 2 }],
         ['Остыть у горна', '+16 здоровья, следующий бой: ритуал', { heal: 16, nextScenario: 'ritual' }]
       ]],
       ['crystal', '💠', 'curse', { ru: 'Нестабильный кристалл пульсирует под ногами.', en: 'An unstable crystal pulses underfoot.', es: 'Un cristal inestable palpita.' }, [
-        ['Стабилизировать', '+1 мана в начале каждого боя, кристалл откроет тайник позже', { mana: true, delayed: 'crystal_echo' }],
+        ['Стабилизировать', '+1 мана в начале каждого боя; через 2 перехода +18 золота', { mana: true, delayed: 'crystal_echo' }],
         ['Расколоть', 'Редкий предмет, −5 макс. HP герою', { item: 'rare', maxHp: -5 }],
         ['Уйти', 'Без эффекта', {}]
       ]],
       ['cavein', '🪨', 'negative', { ru: 'Обвал отделил вас от привычной дороги.', en: 'A cave-in cuts off the familiar road.', es: 'Un derrumbe corta la ruta.' }, [
-        ['Пробить тоннель', '−20 золота, раскрыть карту', { gold: -20, reveal: 3 }],
+        ['Пробить тоннель', '−20 золота, разведать земли в радиусе 3 клеток', { gold: -20, reveal: 3 }],
         ['Идти по лаве', 'Следующая миссия: прорыв, +25 золота', { nextScenario: 'escape', gold: 25 }],
         ['Переждать', 'Следующая миссия: оборона', { nextScenario: 'defense' }]
       ]]
@@ -127,12 +127,12 @@ const CampaignExpansion = (() => {
     3: [
       ['caravan', '🚢', 'treasure', { ru: 'Под водой мерцают остатки каравана.', en: 'A drowned caravan glimmers below the water.', es: 'Un convoy hundido brilla bajo el agua.' }, [
         ['Нырнуть за грузом', 'Редкий предмет, следующая миссия: засада', { item: 'rare', ambush: true }],
-        ['Освободить духов', '+18 здоровья, раскрыть карту и помощь духов позже', { heal: 18, reveal: 2, delayed: 'spirit_tide' }],
+        ['Освободить духов', 'Каждый герой восстанавливает 18 здоровья, разведка в радиусе 2; через 2 перехода всем +8 здоровья', { heal: 18, reveal: 2, delayed: 'spirit_tide' }],
         ['Не рисковать', 'Без эффекта', {}]
       ]],
       ['sluice', '🚰', 'neutral', { ru: 'Древний шлюз может изменить течение в руинах.', en: 'An ancient sluice can change the ruins’ current.', es: 'Una esclusa antigua puede cambiar la corriente.' }, [
-        ['Открыть шлюз', 'Следующая миссия: прорыв, +30 золота и находка позже', { nextScenario: 'escape', gold: 30, delayed: 'sluice_cache' }],
-        ['Закрыть шлюз', 'Следующая миссия: оборона, +оберег', { nextScenario: 'defense', ward: true }],
+        ['Открыть шлюз', 'Следующая миссия: прорыв, +30 золота; через 2 перехода — предмет', { nextScenario: 'escape', gold: 30, delayed: 'sluice_cache' }],
+        ['Закрыть шлюз', 'Следующая миссия: оборона, +1 броня всем героям до босса', { nextScenario: 'defense', ward: 1 }],
         ['Взять руну', '+1 атака, следующий бой: ритуал', { attack: 1, nextScenario: 'ritual' }]
       ]],
       ['spirits', '👻', 'curse', { ru: 'Духи предлагают силу в обмен на память.', en: 'Spirits offer power in exchange for memory.', es: 'Los espíritus ofrecen poder por memoria.' }, [
@@ -141,8 +141,8 @@ const CampaignExpansion = (() => {
         ['Разорвать круг', 'Следующая миссия: волны, +25 золота', { nextScenario: 'waves', gold: 25 }]
       ]],
       ['archive', '📜', 'positive', { ru: 'Сухой архив хранит карту приливов.', en: 'A dry archive holds a tide map.', es: 'Un archivo seco guarda un mapa de mareas.' }, [
-        ['Изучить карту', 'Открыть карту и узнать роли врагов', { reveal: 3, intel: true }],
-        ['Взять печать', '+2 брони до босса', { ward: true }],
+        ['Изучить карту', 'Разведать земли в радиусе 3 и узнать точный состав врагов на этих клетках', { reveal: 3, intel: true }],
+        ['Взять печать', '+2 брони всем героям до босса', { ward: 2 }],
         ['Продать свитки', '+45 золота', { gold: 45 }]
       ]]
     ]
@@ -158,6 +158,12 @@ const CampaignExpansion = (() => {
     if (!Array.isArray(GameState.campaignEvents)) GameState.campaignEvents = [];
     if (!Array.isArray(GameState.runHistory)) GameState.runHistory = [];
     if (!GameState.campaignEffects || typeof GameState.campaignEffects !== 'object') GameState.campaignEffects = {};
+    const effects = GameState.campaignEffects;
+    if (!Array.isArray(effects.scoutedNodeIds)) effects.scoutedNodeIds = [];
+    if (effects.wardUntilBoss && !Number(effects.wardArmor)) effects.wardArmor = 1;
+    if (!effects.wardBonuses || typeof effects.wardBonuses !== 'object') effects.wardBonuses = {};
+    if (effects.pactUntilBoss && !Number(effects.pactAttack)) effects.pactAttack = 2;
+    if (typeof effects.ambushProtection !== 'boolean') effects.ambushProtection = false;
     if (!GameState.cityFavorClaimed || typeof GameState.cityFavorClaimed !== 'object') GameState.cityFavorClaimed = {};
   }
 
@@ -174,7 +180,7 @@ const CampaignExpansion = (() => {
     ensureState();
     GameState.campaignMutators = selectMutators(seed || GameState.testSeed || Date.now());
     GameState.campaignEvents = [];
-    GameState.campaignEffects = { nextScenario: null, nextAmbush: false, wardUntilBoss: false, pactUntilBoss: false, manaCrystal: false, hunterIntel: GameState.contract === 'hunters' };
+    GameState.campaignEffects = { nextScenario: null, nextAmbush: false, ambushProtection: false, wardUntilBoss: false, wardArmor: 0, wardHeroId: null, wardBonuses: {}, pactUntilBoss: false, pactAttack: 0, manaCrystal: false, hunterIntel: GameState.contract === 'hunters', scoutedNodeIds: [] };
     GameState.cityFavorClaimed = {};
     if (GameState.contract === 'hunters') GameState.gold = Math.max(0, GameState.gold - 5);
     if (GameState.contract === 'mercenaries') {
@@ -182,7 +188,11 @@ const CampaignExpansion = (() => {
       GameState.consumables.healing = (GameState.consumables.healing || 0) + 1;
       GameState.campaignEffects.mercenaryFirstDrop = true;
     }
-    if (GameState.contract === 'guardians') GameState.campaignEffects.wardUntilBoss = true;
+    if (GameState.contract === 'guardians') {
+      GameState.campaignEffects.wardUntilBoss = true;
+      GameState.campaignEffects.wardArmor = 1;
+      GameState.heroes.forEach(hero => { GameState.campaignEffects.wardBonuses[hero.id] = 1; });
+    }
   }
 
   function regionInfo(region) { return REGION[region] || REGION[1]; }
@@ -242,8 +252,13 @@ const CampaignExpansion = (() => {
   function applyStartBattleEffects(b) {
     const effects = GameState.campaignEffects || {};
     const heroes = b.units.filter(unit => unit.isHero);
-    if (effects.wardUntilBoss) heroes.forEach(hero => { hero.armor += 1; hero._campaignWard = true; });
-    if (effects.pactUntilBoss) heroes.forEach(hero => { hero.attack += 2; hero._campaignPact = true; });
+    if (effects.wardUntilBoss) heroes.forEach(hero => {
+      const explicit = Number(effects.wardBonuses?.[hero.heroId]) || 0;
+      const legacy = explicit ? 0 : (!effects.wardHeroId || hero.heroId === effects.wardHeroId ? Math.max(1, Number(effects.wardArmor) || 1) : 0);
+      const bonus = explicit || legacy;
+      if (bonus > 0) { hero.armor += bonus; hero._campaignWard = true; }
+    });
+    if (effects.pactUntilBoss) heroes.forEach(hero => { hero.attack += Math.max(1, Number(effects.pactAttack) || 2); hero._campaignPact = true; });
     if (effects.manaCrystal) heroes.filter(hero => hero.maxMana).forEach(hero => { hero.mana = Math.min(hero.maxMana, hero.mana + 1); });
     if (b.scenario?.id === 'ritual') {
       const target = b.units.filter(unit => !unit.isHero).sort((a, b2) => b2.hp - a.hp)[0];
@@ -472,8 +487,18 @@ const CampaignExpansion = (() => {
     return { id, icon, type, text: loc(text), choices: choices.map(([label, detail, effect], index) => ({ id: `${id}:${index}`, label, detail, effect })) };
   }
 
+  function validateEventEffect(effect) {
+    const cost = Math.max(0, -(Number(effect?.gold) || 0));
+    if (cost > (Number(GameState.gold) || 0)) {
+      return { ok: false, message: loc({ ru: `Нужно ${cost} золота. У отряда только ${GameState.gold || 0}.`, en: `Requires ${cost} gold. The party has only ${GameState.gold || 0}.`, es: `Requiere ${cost} de oro. El grupo solo tiene ${GameState.gold || 0}.` }) };
+    }
+    return { ok: true, message: '' };
+  }
+
   function applyEventEffect(effect, cell) {
     ensureState();
+    const validation = validateEventEffect(effect);
+    if (!validation.ok) return validation.message;
     const result = [];
     const heroes = GameState.heroes.filter(hero => hero.hp > 0);
     if (effect.gold) { GameState.gold = Math.max(0, GameState.gold + effect.gold); result.push(`${effect.gold > 0 ? '+' : ''}${effect.gold} 💰`); }
@@ -484,12 +509,29 @@ const CampaignExpansion = (() => {
     if (effect.item) { const item = randomItem(cell.region, effect.item); GameState.inventory.push(item.id); result.push(`🎁 ${translateText(item.name)}`); }
     if (effect.potion) { GameState.consumables.healing = (GameState.consumables.healing || 0) + effect.potion; result.push(`🧪 x${effect.potion}`); }
     if (effect.reveal) { for (let y = 0; y < MAP_ROWS; y++) for (let x = 0; x < MAP_COLS; x++) if (Math.abs(x - GameState.playerPos.x) + Math.abs(y - GameState.playerPos.y) <= effect.reveal) mapFogVisitedAdd(y, x); result.push('🗺️'); }
-    if (effect.intel) { GameState.campaignEffects.hunterIntel = true; result.push('🔭'); }
+    if (effect.intel) {
+      const radius = Math.max(1, Number(effect.reveal) || 1);
+      const ids = (GameState.mapGrid || [])
+        .filter(node => Math.abs(node.x - GameState.playerPos.x) + Math.abs(node.y - GameState.playerPos.y) <= radius)
+        .map(node => node.id);
+      GameState.campaignEffects.scoutedNodeIds = [...new Set([...(GameState.campaignEffects.scoutedNodeIds || []), ...ids])];
+      result.push('🔭');
+    }
     if (effect.nextScenario) { GameState.campaignEffects.nextScenario = effect.nextScenario; result.push(`→ ${scenarioLabel(effect.nextScenario)}`); }
     if (effect.ambush) { GameState.campaignEffects.nextAmbush = true; result.push('⚠️'); }
-    if (effect.clearAmbush) { GameState.campaignEffects.nextAmbush = false; result.push('✓'); }
-    if (effect.ward) { GameState.campaignEffects.wardUntilBoss = true; result.push('🛡️'); }
-    if (effect.pact) { GameState.campaignEffects.pactUntilBoss = true; result.push('☠️'); }
+    if (effect.clearAmbush) { GameState.campaignEffects.nextAmbush = false; GameState.campaignEffects.ambushProtection = true; result.push('✓'); }
+    if (effect.ward) {
+      const amount = Math.max(1, Number(effect.ward) || 1);
+      const recipients = effect.wardTarget === 'weakestArmor'
+        ? heroes.slice().sort((a, b) => a.armor - b.armor || a.id.localeCompare(b.id)).slice(0, 1)
+        : heroes;
+      recipients.forEach(hero => {
+        GameState.campaignEffects.wardBonuses[hero.id] = (Number(GameState.campaignEffects.wardBonuses[hero.id]) || 0) + amount;
+      });
+      GameState.campaignEffects.wardUntilBoss = true;
+      result.push(`🛡️ +${amount}`);
+    }
+    if (effect.pact) { GameState.campaignEffects.pactUntilBoss = true; GameState.campaignEffects.pactAttack = Math.max(2, Number(effect.pact) || 2); result.push('☠️'); }
     if (effect.mana) { GameState.campaignEffects.manaCrystal = true; result.push('🔮'); }
     if (effect.delayed) GameState.campaignEvents.push({ id: effect.delayed, region: cell.region, at: GameState.turn + 2, resolved: false });
     return result.join(' · ') || loc({ ru: 'Ничего не изменилось.', en: 'Nothing changes.', es: 'Nada cambia.' });
@@ -498,22 +540,27 @@ const CampaignExpansion = (() => {
   function resolveDelayedEvents() {
     ensureState();
     const ready = GameState.campaignEvents.filter(event => !event.resolved && event.at <= GameState.turn);
+    const notices = [];
     ready.forEach(event => {
       event.resolved = true;
       const region = event.region || GameState.region;
       if (event.id === 'hunter_cache' || event.id === 'forge_delivery' || event.id === 'sluice_cache') {
         const item = randomItem(region, event.id === 'hunter_cache' ? 'rare' : 'normal');
         GameState.inventory.push(item.id);
-        GameState._campaignNotice = `${loc({ ru: 'Отложенная находка:', en: 'A delayed find:', es: 'Hallazgo aplazado:' })} ${translateText(item.name)}`;
+        notices.push(`${loc({ ru: 'Отложенная находка:', en: 'A delayed find:', es: 'Hallazgo aplazado:' })} ${translateText(item.name)}`);
       } else if (event.id === 'druid_cache' || event.id === 'spirit_tide') {
         GameState.heroes.filter(hero => hero.hp > 0).forEach(hero => { hero.hp = Math.min(hero.maxHp, hero.hp + 8); });
-        GameState._campaignNotice = loc({ ru: 'Союзники помогают отряду: +8 здоровья всем героям.', en: 'Allies aid the party: +8 health to every hero.', es: 'Aliados ayudan al grupo: +8 de salud.' });
+        notices.push(loc({ ru: 'Союзники помогают отряду: +8 здоровья всем героям.', en: 'Allies aid the party: +8 health to every hero.', es: 'Aliados ayudan al grupo: +8 de salud.' }));
       } else if (event.id === 'miners_gratitude' || event.id === 'crystal_echo') {
         const gold = event.id === 'miners_gratitude' ? 25 : 18;
         GameState.gold += gold;
-        GameState._campaignNotice = `${loc({ ru: 'Последствие решения:', en: 'A consequence arrives:', es: 'Llega una consecuencia:' })} +${gold} 💰`;
+        notices.push(`${loc({ ru: 'Последствие решения:', en: 'A consequence arrives:', es: 'Llega una consecuencia:' })} +${gold} 💰`);
       }
     });
+    if (notices.length) {
+      const previous = GameState._campaignNotice ? [GameState._campaignNotice] : [];
+      GameState._campaignNotice = [...previous, ...notices].join('\n');
+    }
   }
 
   function routeIntel(node) {
@@ -546,5 +593,5 @@ const CampaignExpansion = (() => {
     GameState.runHistory = GameState.runHistory.slice(0, 10);
   }
 
-  return { CONTRACTS, MUTATORS, REGION, SCENARIOS, ensureState, startCampaign, regionInfo, isMutatorActive, scenarioLabel, scenarioShort, createScenario, applyMutatorsToWave, forestRootPlan, applyStartBattleEffects, scenarioStatus, isVictory, isDefeat, onRoundStarted, eventForCell, applyEventEffect, resolveDelayedEvents, routeIntel, scenarioForPreview, recordCompletedRun, loc };
+  return { CONTRACTS, MUTATORS, REGION, SCENARIOS, EVENTS, ensureState, startCampaign, regionInfo, isMutatorActive, scenarioLabel, scenarioShort, createScenario, applyMutatorsToWave, forestRootPlan, applyStartBattleEffects, scenarioStatus, isVictory, isDefeat, onRoundStarted, eventForCell, validateEventEffect, applyEventEffect, resolveDelayedEvents, routeIntel, scenarioForPreview, recordCompletedRun, loc };
 })();

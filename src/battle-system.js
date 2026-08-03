@@ -128,12 +128,14 @@
     GameState.lastSafeSave = safeSave;
     GameState.battleReviveUsed = false;
     const campaignAmbush = !!GameState.campaignEffects?.nextAmbush;
+    const ambushProtection = !!GameState.campaignEffects?.ambushProtection;
     if (campaignAmbush) GameState.campaignEffects.nextAmbush = false;
+    if (ambushProtection) GameState.campaignEffects.ambushProtection = false;
     const scenario = CampaignExpansion.createScenario(node);
     const wave = CampaignExpansion.applyMutatorsToWave(node.enemyWave || [ENEMY_IDS.SKELETON, ENEMY_IDS.SKELETON], node);
     const hasLargeEnemy = wave.some(id => (enemyDef(id).sizeW || 1) > 1 || (enemyDef(id).sizeH || 1) > 1);
     const firstBattle = !!node.firstBattle;
-    const isAmbush = !!node.ambush || campaignAmbush;
+    const isAmbush = !ambushProtection && (!!node.ambush || campaignAmbush);
     const grid = firstBattle ? createFirstBattleGrid() : generateBattleGrid(node.region, { spacious: hasLargeEnemy || node.boss || node.final || isAmbush });
     const units = [];
     const heroes = GameState.heroes.filter(h => h.hp > 0).map((h, i) => makeBattleHero(h, i));
@@ -1263,7 +1265,11 @@
       }
       if (cell.type === 'boss') {
         GameState.campaignEffects.wardUntilBoss = false;
+        GameState.campaignEffects.wardArmor = 0;
+        GameState.campaignEffects.wardHeroId = null;
+        GameState.campaignEffects.wardBonuses = {};
         GameState.campaignEffects.pactUntilBoss = false;
+        GameState.campaignEffects.pactAttack = 0;
       }
       applyBattleRewards(cell);
       if (cell.id === 'c_0_0') {
@@ -4193,10 +4199,12 @@
           </button>`;
         }
         const disabled = cdVal > 0 || (extra && extra.mpFail);
+        const pendingKey = skillKey === 'doubleShot' ? 'double' : skillKey;
+        const selectedCls = b.pendingSkill === pendingKey ? ' is-selected' : '';
         const currentMp = extra && typeof extra.mpCost === 'number' ? `MP ${u.mana}/${extra.mpCost}` : '';
         const meta = cdVal > 0 ? `CD ${cdVal}` : currentMp || metaStr || translateKey('ready');
         const disabledCls = disabled ? ' is-disabled' : '';
-        return `<button class="btn skill-action-btn${disabledCls}" id="${id}" title="${tooltipText.replace(/"/g,'&quot;')}">
+        return `<button class="btn skill-action-btn${disabledCls}${selectedCls}" id="${id}" aria-pressed="${b.pendingSkill === pendingKey}" title="${tooltipText.replace(/"/g,'&quot;')}">
           <span class="skill-action-icon">${icon}</span>
           <span class="skill-action-name">${actionName}</span>
           <span class="skill-action-meta">${meta}</span>
@@ -4217,7 +4225,8 @@
         html += skillMakeBtn('sk-fr',  'freeze',   '🧊','Freeze',   u.cds.freeze,   { mpFail: u.mana < 4, mpCost: 4 });
         html += skillMakeBtn('sk-met', 'meteor',   '☄', 'Meteor',   u.cds.meteor,   { mpFail: u.mana < 8, mpCost: 8 });
         if (u.perks?.includes('teleport') && !b.teleportUsed) {
-          html += `<button class="btn skill-action-btn" id="sk-teleport"><span class="skill-action-icon">✦</span><span class="skill-action-name">Teleport</span><span class="skill-action-meta">1×</span></button>`;
+          const selected = b.pendingSkill === 'teleport';
+          html += `<button class="btn skill-action-btn${selected ? ' is-selected' : ''}" id="sk-teleport" aria-pressed="${selected}"><span class="skill-action-icon">✦</span><span class="skill-action-name">Teleport</span><span class="skill-action-meta">1×</span></button>`;
         }
       }
       const artifact = getEquippedItem(u, 'artifact');
@@ -4226,7 +4235,8 @@
         html += `<button class="btn skill-action-btn${armed ? ' is-disabled' : ''}" id="art-hourglass"><span class="skill-action-icon">⏳</span><span class="skill-action-name">${battleLocale('Дополнительный ход', 'Extra turn', 'Turno extra')}</span><span class="skill-action-meta">${armed ? battleLocale('ГОТОВО', 'ARMED', 'LISTO') : '1×'}</span></button>`;
       }
       if (artifact?.mods?.battleTeleport && !u.flags?.portalStoneUsed) {
-        html += `<button class="btn skill-action-btn" id="art-portal"><span class="skill-action-icon">🌀</span><span class="skill-action-name">${battleLocale('Телепорт', 'Teleport', 'Teletransporte')}</span><span class="skill-action-meta">1×</span></button>`;
+        const selected = b.pendingSkill === 'artifactTeleport';
+        html += `<button class="btn skill-action-btn${selected ? ' is-selected' : ''}" id="art-portal" aria-pressed="${selected}"><span class="skill-action-icon">🌀</span><span class="skill-action-name">${battleLocale('Телепорт', 'Teleport', 'Teletransporte')}</span><span class="skill-action-meta">1×</span></button>`;
       }
       if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn battle-utility-btn" id="btn-skip-move">${translateKey('skipMove')}</button>`;
       html += `<button class="btn battle-utility-btn" id="btn-wait">${translateKey('waitTurn')}</button>`;
@@ -4244,20 +4254,31 @@
     bindFtueCoachSkip();
     const heroLvl2 = (GameState.heroes.find(x => x.id === u.heroId) || u).level || 1;
     const skLocked = (key) => { const s = (HERO_SKILLS[u.heroId] || []).find(x => x.key === key); return s && heroLvl2 < s.unlockLevel; };
+    const toggleTargetedSkill = (skill) => {
+      const cancelled = b.pendingSkill === skill;
+      b.pendingSkill = cancelled ? null : skill;
+      // A second press is an explicit return to the ordinary attack. Clearing
+      // touch confirmation also prevents an old target tap from firing later.
+      b.mode = cancelled ? 'attack' : 'skill';
+      b.touchConfirmKey = null;
+      b.touchPreviewCell = null;
+      BattleView.hoverCell = null;
+      updateBattleUI();
+    };
     bind('btn-undo-move', () => undoHeroMove());
     bind('btn-skip-move', () => { b.heroMoved = true; b.mode = 'attack'; updateBattleUI(); });
     bind('btn-wait', () => { if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.ui_end_turn, 0.75); b.heroActionDone = true; endUnitTurn(); });
     bind('btn-battle-consumables', () => openBattleConsumables());
-    bind('sk-shield', () => { if (skLocked('shieldBash') || u.cds.shieldBash > 0) return; b.pendingSkill = 'shieldBash'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-firecall', () => { if (skLocked('fireCall') || u.cds.fireCall > 0) return; b.pendingSkill = 'fireCall'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-shield', () => { if (skLocked('shieldBash') || u.cds.shieldBash > 0) return; toggleTargetedSkill('shieldBash'); });
+    bind('sk-firecall', () => { if (skLocked('fireCall') || u.cds.fireCall > 0) return; toggleTargetedSkill('fireCall'); });
     bind('sk-berz', () => { if (skLocked('berserk') || u.cds.berserk > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_berserk, 0.9); playBattleAbilityFx(u, 'berserk', { glyph: '💢' }); addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
-    bind('sk-double', () => { if (skLocked('doubleShot') || u.cds.doubleShot > 0) return; b.pendingSkill = 'double'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-slow', () => { if (skLocked('slowArrow') || u.cds.slowArrow > 0) return; b.pendingSkill = 'slowArrow'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-double', () => { if (skLocked('doubleShot') || u.cds.doubleShot > 0) return; toggleTargetedSkill('double'); });
+    bind('sk-slow', () => { if (skLocked('slowArrow') || u.cds.slowArrow > 0) return; toggleTargetedSkill('slowArrow'); });
     bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_arrow_rain, 0.92); playBattleAbilityFx(u, 'arrowRain', { radius: 2, glyph: '🏹', projectile: 'rain' }); const b2 = GameState.currentBattle; let rainShot = 0; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && unitDistanceFromPoint(t, u.x, u.y) <= 1) dealDamage(u, t, u.attack, { animationSkill: 'arrowRain', animationShotIndex: rainShot, animationOffsetMs: 100 + rainShot++ * 90 }); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
-    bind('sk-fb', () => { if (skLocked('fireball') || u.mana < 3 || u.cds.fireball > 0) return; b.pendingSkill = 'fireball'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-fr', () => { if (skLocked('freeze') || u.mana < 4 || u.cds.freeze > 0) return; b.pendingSkill = 'freeze'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-met', () => { if (skLocked('meteor') || u.mana < 8 || u.cds.meteor > 0) return; b.pendingSkill = 'meteor'; b.mode = 'skill'; updateBattleUI(); });
-    bind('sk-teleport', () => { if (b.teleportUsed) return; b.pendingSkill = 'teleport'; b.mode = 'skill'; updateBattleUI(); });
+    bind('sk-fb', () => { if (skLocked('fireball') || u.mana < 3 || u.cds.fireball > 0) return; toggleTargetedSkill('fireball'); });
+    bind('sk-fr', () => { if (skLocked('freeze') || u.mana < 4 || u.cds.freeze > 0) return; toggleTargetedSkill('freeze'); });
+    bind('sk-met', () => { if (skLocked('meteor') || u.mana < 8 || u.cds.meteor > 0) return; toggleTargetedSkill('meteor'); });
+    bind('sk-teleport', () => { if (b.teleportUsed) return; toggleTargetedSkill('teleport'); });
     bind('art-hourglass', () => {
       u.flags = u.flags || {};
       if (u.flags.hourglassUsed || u.flags.hourglassReady) return;
@@ -4268,9 +4289,7 @@
     bind('art-portal', () => {
       u.flags = u.flags || {};
       if (u.flags.portalStoneUsed) return;
-      b.pendingSkill = 'artifactTeleport';
-      b.mode = 'skill';
-      updateBattleUI();
+      toggleTargetedSkill('artifactTeleport');
     });
     // 10: Inventory from battle
     bind('btn-battle-inv', () => {

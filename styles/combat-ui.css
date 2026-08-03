@@ -43,6 +43,14 @@
   animation: ftue-skill-pulse 1.25s ease-in-out infinite;
 }
 
+/* A targeted skill can be cancelled by pressing it again. Keep the selected
+ * state obvious on both desktop and landscape touch controls. */
+.skill-action-btn.is-selected {
+  border-color: var(--accent-gold) !important;
+  background: linear-gradient(180deg, rgba(111, 79, 13, 0.96), rgba(49, 35, 8, 0.98)) !important;
+  box-shadow: 0 0 0 1px rgba(255, 204, 82, 0.28), inset 0 0 16px rgba(255, 191, 49, 0.12);
+}
+
 .skill-action-btn.ftue-recommended::after {
   content: "!";
   position: absolute;

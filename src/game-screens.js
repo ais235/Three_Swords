@@ -1688,11 +1688,16 @@
 
   function triggerEvent(cell) {
     const event = CampaignExpansion.eventForCell(cell);
-    cell.completed = true;
     const choices = event.choices.map(choice => ({
       label: choice.label,
       detail: choice.detail,
       onSelect: () => {
+        const validation = CampaignExpansion.validateEventEffect(choice.effect);
+        if (!validation.ok) {
+          void showGameAlert(validation.message);
+          return;
+        }
+        cell.completed = true;
         const result = CampaignExpansion.applyEventEffect(choice.effect, cell);
         const choiceRoot = document.getElementById('event-choice-list');
         const resultEl = document.getElementById('event-result');
@@ -1705,10 +1710,6 @@
           ok.onclick = () => {
             CampaignExpansion.resolveDelayedEvents();
             saveGame();
-            if (choice.effect.ambush) {
-              startBattleForCell(cell, { skipDeploy: true, ambush: true });
-              return;
-            }
             showScreen('map');
             renderMap();
             if (GameState._campaignNotice) {
@@ -2067,13 +2068,16 @@
     const campaignIntel = CampaignExpansion.routeIntel(node);
     const hasSeerEye = (GameState.heroes || []).some(hero =>
       Object.values(hero.equipment || {}).some(itemId => itemById(itemId)?.mods?.previewEnemies));
+    const hasScoutedIntel = (GameState.campaignEffects?.scoutedNodeIds || []).includes(node.id);
+    const currentNode = getCurrentCell();
+    const hasHunterIntel = !!GameState.campaignEffects?.hunterIntel && !!currentNode && cellNeighbors(currentNode, node);
     const enemyCounts = new Map();
     wave.forEach(enemyId => enemyCounts.set(enemyId, (enemyCounts.get(enemyId) || 0) + 1));
     const exactLineup = [...enemyCounts.entries()]
       .map(([enemyId, count]) => `${translateText(enemyDef(enemyId).name)}${count > 1 ? ` ×${count}` : ''}`)
       .join(' · ');
     const composition = wave.length
-      ? hasSeerEye
+      ? (hasSeerEye || hasScoutedIntel || hasHunterIntel)
         ? `👁 ${exactLineup}`
         : `${translateKey('routeEnemies')}: ${wave.length}${tagKeys.length ? ` · ${tagKeys.slice(0, 2).map(translateKey).join(', ')}` : ''}`
       : '';
