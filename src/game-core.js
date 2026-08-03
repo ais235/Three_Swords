@@ -224,6 +224,7 @@
     armor: { ru: 'Броня', en: 'Armor', es: 'Armadura' },
     inventory: { ru: 'РЮКЗАК', en: 'BAG', es: 'MOCHILA' },
     pickItem: { ru: 'Выберите предмет в рюкзаке.', en: 'Choose an item in the bag.', es: 'Elige un objeto de la mochila.' },
+    dragWrongSlot: { ru: 'Этот предмет предназначен для другого слота.', en: 'This item belongs in a different slot.', es: 'Este objeto pertenece a otra ranura.' },
     close: { ru: '✕ Закрыть', en: '✕ Close', es: '✕ Cerrar' },
     doubleGold: { ru: '📺 ×2 ЗОЛОТО [РЕКЛАМА]', en: '📺 ×2 GOLD [AD]', es: '📺 ×2 ORO [ANUNCIO]' },
     victoryContinue: { ru: '▶ ПРОДОЛЖИТЬ', en: '▶ CONTINUE', es: '▶ CONTINUAR' },

@@ -969,6 +969,60 @@
       if (it) applyItemToHero(hero, it);
     });
   }
+  function finishInventoryEquipmentChange(hero, selectedItemId, selectedItemIdx) {
+    recalcHeroFromEquipment(hero);
+    updateVictoryActionButtons();
+    InvState.selectedItemId = selectedItemId || null;
+    InvState.selectedItemIdx = Number.isInteger(selectedItemIdx) ? selectedItemIdx : -1;
+    InvState.selectedEquippedSlot = null;
+    saveGame();
+    renderInventoryScreen();
+    renderPartyStrip();
+  }
+  function equipInventoryItemAtIndex(hero, inventoryIndex) {
+    const id = GameState.inventory?.[inventoryIndex];
+    const item = itemById(id);
+    if (!hero || !item || !inventoryItemFitsHero(item, hero)) return false;
+    const old = hero.equipment?.[item.slot] || null;
+    GameState.inventory.splice(inventoryIndex, 1);
+    if (old) GameState.inventory.push(old);
+    equipItem(hero, item);
+    if (GameState._returnToVictory) markLastBattleDropHandled(item.id);
+    finishInventoryEquipmentChange(hero, null, -1);
+    return true;
+  }
+  function unequipHeroSlotToInventory(hero, slot) {
+    const id = hero?.equipment?.[slot];
+    if (!id) return false;
+    hero.equipment[slot] = null;
+    GameState.inventory.push(id);
+    finishInventoryEquipmentChange(hero, id, GameState.inventory.length - 1);
+    return true;
+  }
+  function inventoryDesktopDragEnabled() {
+    return !!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+  }
+  function inventoryDragPayload(event) {
+    try {
+      return JSON.parse(event.dataTransfer?.getData('application/x-three-blades-item') || event.dataTransfer?.getData('text/plain') || 'null');
+    } catch (_) {
+      return null;
+    }
+  }
+  function setInventoryDragPayload(event, payload) {
+    const value = JSON.stringify(payload);
+    event.dataTransfer?.setData('application/x-three-blades-item', value);
+    event.dataTransfer?.setData('text/plain', value);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+  function inventoryDropFeedback(message, zone, invalid) {
+    const info = document.getElementById('inv-slot-info');
+    if (info) info.textContent = message;
+    if (!zone) return;
+    zone.classList.remove('eq-drop-valid', 'eq-drop-invalid');
+    zone.classList.add(invalid ? 'eq-drop-invalid' : 'eq-drop-valid');
+    setTimeout(() => zone.classList.remove('eq-drop-valid', 'eq-drop-invalid'), 650);
+  }
   function heroEquipIcons(hero) {
     hero.equipment = hero.equipment || {};
     return ['weapon', 'armor', 'artifact']
@@ -1274,22 +1328,44 @@
         InvState.selectedEquippedSlot = slot;
         renderInventoryScreen();
       };
+      zone.draggable = inventoryDesktopDragEnabled() && !!it;
+      zone.ondragstart = (event) => {
+        if (!it || !inventoryDesktopDragEnabled()) { event.preventDefault(); return; }
+        setInventoryDragPayload(event, { source: 'equipped', heroId: hero.id, slot, itemId: id });
+        zone.classList.add('eq-dragging');
+      };
+      zone.ondragend = () => zone.classList.remove('eq-dragging');
+      zone.ondragover = (event) => {
+        if (!inventoryDesktopDragEnabled()) return;
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+      };
+      zone.ondragenter = () => { if (inventoryDesktopDragEnabled()) zone.classList.add('eq-drop-hover'); };
+      zone.ondragleave = () => zone.classList.remove('eq-drop-hover');
+      zone.ondrop = (event) => {
+        event.preventDefault();
+        zone.classList.remove('eq-drop-hover');
+        const payload = inventoryDragPayload(event);
+        if (!payload || payload.source !== 'bag') return;
+        const dragged = itemById(GameState.inventory?.[payload.inventoryIndex]);
+        if (!dragged || dragged.id !== payload.itemId) return;
+        if (dragged.slot !== slot) {
+          inventoryDropFeedback(translateKey('dragWrongSlot'), zone, true);
+          return;
+        }
+        if (!inventoryItemFitsHero(dragged, hero)) {
+          inventoryDropFeedback(`${translateKey('itemDoesNotFit')} ${hero.name}`, zone, true);
+          return;
+        }
+        equipInventoryItemAtIndex(hero, payload.inventoryIndex);
+      };
       const unequipBtn = zone.querySelector('.eq-zone-unequip');
       if (unequipBtn) {
         unequipBtn.onclick = (event) => {
           event.stopPropagation();
           showGameConfirm(`${translateKey('unequip')} «${translateText(it?.name || id)}»?`).then(ok => {
             if (!ok || hero.equipment?.[slot] !== id) return;
-          hero.equipment[slot] = null;
-          GameState.inventory.push(id);
-          recalcHeroFromEquipment(hero);
-          updateVictoryActionButtons();
-          InvState.selectedItemId = id;
-          InvState.selectedItemIdx = GameState.inventory.length - 1;
-          InvState.selectedEquippedSlot = null;
-          saveGame();
-          renderInventoryScreen();
-          renderPartyStrip();
+            unequipHeroSlotToInventory(hero, slot);
           });
         };
       }
@@ -1297,9 +1373,9 @@
 
     // Backpack grid (index-based selection to avoid duplicate-ID bug)
     const bag = document.getElementById('bag-grid');
-    const invList = (GameState.inventory || []).filter(id => itemById(id));
+    const invEntries = (GameState.inventory || []).map((id, inventoryIndex) => ({ id, inventoryIndex })).filter(entry => itemById(entry.id));
     const bestCandidateIds = bestInventoryCandidateIdsForHero(hero);
-    if (invList.length === 0) {
+    if (invEntries.length === 0) {
       bag.innerHTML = `<div class="empty-bag-state">
         <div class="empty-bag-icon" aria-hidden="true">◇</div>
         <strong>${translateKey('emptyBag')}</strong>
@@ -1310,15 +1386,15 @@
         InvState.selectedItemId = null;
       }
     } else {
-      bag.innerHTML = invList.map((id, idx) => {
+      bag.innerHTML = invEntries.map(({ id, inventoryIndex }) => {
         const it = itemById(id);
-        const active = idx === InvState.selectedItemIdx ? 'selected' : '';
+        const active = inventoryIndex === InvState.selectedItemIdx ? 'selected' : '';
         const mismatch = !inventoryItemFitsHero(it, hero);
         const best = bestCandidateIds.has(id);
         const fx = formatItemMods(it).map(translateText).join(' · ');
         const roleHint = mismatch ? `${translateKey('onlyClass')}: ${itemHeroClassLabel(it)}` : '';
         const tip = [translateText(it.name), fx, roleHint, translateText(it.desc || '')].filter(Boolean).join('\n');
-        return `<div class="inv-item-card ${active}${best ? ' inv-item-best' : ''}${mismatch ? ' inv-item-mismatch' : ''}" data-idx="${idx}" title="${escapeHtmlAttr(tip)}">
+        return `<div class="inv-item-card ${active}${best ? ' inv-item-best' : ''}${mismatch ? ' inv-item-mismatch' : ''}" data-idx="${inventoryIndex}" data-inventory-index="${inventoryIndex}" draggable="${inventoryDesktopDragEnabled()}" title="${escapeHtmlAttr(tip)}">
           <div class="inv-item-thumb">
             ${itemIconMarkup(it, 56)}
             ${best ? `<span class="inv-item-best-badge">${translateKey('bestBadge')}</span>` : ''}
@@ -1328,14 +1404,37 @@
       }).join('');
       bag.querySelectorAll('.inv-item-card').forEach(el => {
         el.onclick = () => {
-          const idx = parseInt(el.getAttribute('data-idx'));
-          InvState.selectedItemIdx = idx;
-          InvState.selectedItemId = invList[idx];
+          const inventoryIndex = parseInt(el.getAttribute('data-inventory-index'));
+          InvState.selectedItemIdx = inventoryIndex;
+          InvState.selectedItemId = GameState.inventory[inventoryIndex];
           InvState.selectedEquippedSlot = null;
           renderInventoryScreen();
         };
+        el.ondragstart = (event) => {
+          if (!inventoryDesktopDragEnabled()) { event.preventDefault(); return; }
+          const inventoryIndex = parseInt(el.getAttribute('data-inventory-index'));
+          setInventoryDragPayload(event, { source: 'bag', inventoryIndex, itemId: GameState.inventory[inventoryIndex] });
+          el.classList.add('inv-item-dragging');
+        };
+        el.ondragend = () => el.classList.remove('inv-item-dragging');
       });
     }
+    bag.ondragover = (event) => {
+      if (!inventoryDesktopDragEnabled()) return;
+      const payload = inventoryDragPayload(event);
+      if (payload?.source !== 'equipped') return;
+      event.preventDefault();
+      bag.classList.add('bag-drop-hover');
+    };
+    bag.ondragleave = () => bag.classList.remove('bag-drop-hover');
+    bag.ondrop = (event) => {
+      event.preventDefault();
+      bag.classList.remove('bag-drop-hover');
+      const payload = inventoryDragPayload(event);
+      if (!payload || payload.source !== 'equipped' || payload.heroId !== hero.id) return;
+      if (hero.equipment?.[payload.slot] !== payload.itemId) return;
+      unequipHeroSlotToInventory(hero, payload.slot);
+    };
 
     // Detail panel
     const detail = document.getElementById('inv-detail');
@@ -1376,21 +1475,12 @@
       }
       const old = hero.equipment[sel.slot];
       const applyEquip = () => {
-        const idx = GameState.inventory.indexOf(sel.id);
-        if (idx >= 0) GameState.inventory.splice(idx, 1);
-        hero.equipment[sel.slot] = sel.id;
-        recalcHeroFromEquipment(hero);
-        if (GameState._returnToVictory) markLastBattleDropHandled(sel.id);
-        updateVictoryActionButtons();
-        InvState.selectedItemId = null; InvState.selectedItemIdx = -1; InvState.selectedEquippedSlot = null;
-        saveGame();
-        renderInventoryScreen();
-        renderPartyStrip();
+        const idx = InvState.selectedItemIdx >= 0 ? InvState.selectedItemIdx : GameState.inventory.indexOf(sel.id);
+        if (idx >= 0) equipInventoryItemAtIndex(hero, idx);
       };
       if (old) {
         showGameConfirm(`${translateKey('replaceItem')} ${translateText(itemById(old)?.name || old)}?`).then(ok => {
           if (!ok) return;
-          GameState.inventory.push(old);
           applyEquip();
         });
         return;

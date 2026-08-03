@@ -87,6 +87,85 @@ try {
   check('Hourglass grants exactly one extra action', result.hourglass.used && !result.hourglass.ready && !result.hourglass.actionDone, JSON.stringify(result));
   check('Portal Stone moves without consuming the attack', result.portal.x === 8 && result.portal.y === 5 && result.portal.used && !result.portal.actionDone, JSON.stringify(result));
   check('Runic Shield reflects hostile statuses', result.reflection.heroStatuses === 0 && result.reflection.enemyStatus === 'curse', JSON.stringify(result));
+
+  const dragResult = await page.evaluate(() => {
+    const nativeMatchMedia = window.matchMedia;
+    window.matchMedia = () => ({ matches: true, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} });
+    initHeroesFromTemplate();
+    GameState.inventory = ['steel_sword', 'poison_blade'];
+    const garet = GameState.heroes.find(hero => hero.id === 'garet');
+    garet.equipment = { weapon: 'steel_sword', armor: null, artifact: null };
+    recalcHeroFromEquipment(garet);
+    showScreen('inventory');
+    renderInventoryScreen();
+    const drag = (source, target) => {
+      const dataTransfer = new DataTransfer();
+      source.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer }));
+      target.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer }));
+      target.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer }));
+      source.dispatchEvent(new DragEvent('dragend', { bubbles: true, dataTransfer }));
+    };
+    drag(document.querySelector('[data-inventory-index="1"]'), document.getElementById('eq-slot-weapon'));
+    const afterReplace = {
+      equipped: garet.equipment.weapon,
+      steelCopies: GameState.inventory.filter(id => id === 'steel_sword').length,
+      poisonCopies: GameState.inventory.filter(id => id === 'poison_blade').length,
+      saved: JSON.parse(localStorage.getItem(SAVE_KEY)).heroes.find(hero => hero.id === 'garet').equipment.weapon
+    };
+    drag(document.getElementById('eq-slot-weapon'), document.getElementById('bag-grid'));
+    const afterUnequip = {
+      equipped: garet.equipment.weapon,
+      poisonCopies: GameState.inventory.filter(id => id === 'poison_blade').length
+    };
+    renderInventoryScreen();
+    drag(document.querySelector('[data-inventory-index="0"]'), document.getElementById('eq-slot-armor'));
+    const wrongSlot = {
+      armor: garet.equipment.armor,
+      inventorySize: GameState.inventory.length,
+      feedback: document.getElementById('inv-slot-info').textContent
+    };
+    document.querySelector('[data-hero-tab="alira"]')?.click();
+    const alira = GameState.heroes.find(hero => hero.id === 'alira');
+    renderInventoryScreen();
+    drag(document.querySelector('[data-inventory-index="0"]'), document.getElementById('eq-slot-weapon'));
+    const wrongClass = { equipped: alira.equipment?.weapon || null, inventorySize: GameState.inventory.length };
+    window.matchMedia = () => ({ matches: false, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} });
+    renderInventoryScreen();
+    document.querySelector('#bag-grid .inv-item-card')?.click();
+    const mobileFallback = {
+      draggableCards: document.querySelectorAll('#bag-grid .inv-item-card[draggable="true"]').length,
+      equipButton: !!document.getElementById('inv-equip-btn')
+    };
+    window.matchMedia = nativeMatchMedia;
+    return { afterReplace, afterUnequip, wrongSlot, wrongClass, mobileFallback };
+  });
+  check('dragging a duplicate replaces gear without losing either copy', dragResult.afterReplace.equipped === 'poison_blade' && dragResult.afterReplace.steelCopies === 2 && dragResult.afterReplace.poisonCopies === 0, JSON.stringify(dragResult));
+  check('drag equip is persisted immediately', dragResult.afterReplace.saved === 'poison_blade', JSON.stringify(dragResult));
+  check('dragging equipped gear back to the bag unequips it', dragResult.afterUnequip.equipped === null && dragResult.afterUnequip.poisonCopies === 1, JSON.stringify(dragResult));
+  check('wrong equipment slot rejects the drop with feedback', dragResult.wrongSlot.armor === null && dragResult.wrongSlot.inventorySize === 3 && dragResult.wrongSlot.feedback.length > 0, JSON.stringify(dragResult));
+  check('wrong hero class rejects the drop', dragResult.wrongClass.equipped === null && dragResult.wrongClass.inventorySize === 3, JSON.stringify(dragResult));
+  check('coarse pointer keeps click-to-equip and disables dragging', dragResult.mobileFallback.draggableCards === 0 && dragResult.mobileFallback.equipButton, JSON.stringify(dragResult));
+  await page.evaluate(() => {
+    const nativeMatchMedia = window.matchMedia;
+    window.matchMedia = () => ({ matches: true, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} });
+    initHeroesFromTemplate();
+    GameState.inventory = ['poison_blade'];
+    const garet = GameState.heroes.find(hero => hero.id === 'garet');
+    garet.equipment = { weapon: 'steel_sword', armor: null, artifact: null };
+    recalcHeroFromEquipment(garet);
+    showScreen('inventory');
+    renderInventoryScreen();
+    document.querySelector('[data-hero-tab="garet"]')?.click();
+    const dataTransfer = new DataTransfer();
+    const source = document.querySelector('[data-inventory-index="0"]');
+    const target = document.getElementById('eq-slot-weapon');
+    source.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer }));
+    target.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer }));
+    window.matchMedia = nativeMatchMedia;
+  });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  const persistedAfterReload = await page.evaluate(() => GameState.heroes.find(hero => hero.id === 'garet')?.equipment?.weapon);
+  check('dragged equipment survives F5 reload', persistedAfterReload === 'poison_blade', String(persistedAfterReload));
 } finally {
   if (browser) await browser.close();
   await new Promise(resolveClose => server.close(resolveClose));
