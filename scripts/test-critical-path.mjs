@@ -72,12 +72,21 @@ try {
     };
     battle.round = 2;
     const heatWarningOutcome = CampaignExpansion.onRoundStarted(battle);
-    const heatWarning = battle.heatCollapseWarning ? { ...battle.heatCollapseWarning } : null;
+    const collapseWarning = battle.heatWarnings?.find(warning => warning.type === 'collapse');
+    const lavaWarning = battle.heatWarnings?.find(warning => warning.type === 'lava');
+    const collapseTarget = battle.units.find(unit => unit.isHero);
+    const lavaTarget = battle.units.find(unit => unit.isHero && unit !== collapseTarget);
+    const collapseHpBefore = collapseTarget?.hp;
+    const lavaHpBefore = lavaTarget?.hp;
+    if (collapseWarning && collapseTarget) { collapseTarget.x = collapseWarning.x; collapseTarget.y = collapseWarning.y; }
+    if (lavaWarning && lavaTarget) { lavaTarget.x = lavaWarning.x; lavaTarget.y = lavaWarning.y; }
     battle.round = 3;
     const heatCollapseOutcome = CampaignExpansion.onRoundStarted(battle);
-    battleCheck.heatWarningVisible = !!heatWarning && heatWarningOutcome.log.includes('⚠');
-    battleCheck.collapseCreated = !!heatWarning && battle.grid[heatWarning.y][heatWarning.x] === TILE.MOUNTAIN;
+    battleCheck.heatWarningVisible = !!collapseWarning && !!lavaWarning && heatWarningOutcome.log.includes('⚠');
+    battleCheck.collapseCreated = !!collapseWarning && battle.grid[collapseWarning.y][collapseWarning.x] === TILE.MOUNTAIN;
     battleCheck.collapseLogged = heatCollapseOutcome.log.length > 0;
+    battleCheck.collapsePushedWithDamage = !!collapseTarget && collapseTarget.hp < collapseHpBefore && (collapseTarget.hp <= 0 || collapseTarget.x !== collapseWarning.x || collapseTarget.y !== collapseWarning.y);
+    battleCheck.lavaTriggeredWithDamage = !!lavaTarget && lavaTarget.hp < lavaHpBefore && battle.grid[lavaWarning.y][lavaWarning.x] === TILE.FIRE;
     startBattleForCell({ id: 'e2e-holdout', region: 1, type: 'mission' }, {
       wave: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER], scenario: 'holdout'
     });
@@ -133,7 +142,8 @@ try {
   check('regional terrain assets are registered', campaignRuntime.assets.every(asset => asset.startsWith('assets/tiles/region-')), JSON.stringify(campaignRuntime));
   check('volcanic scenario carries regional rule and objective state', campaignRuntime.battleCheck.scenario === 'defense' && campaignRuntime.battleCheck.regionalRule === 'heat' && campaignRuntime.battleCheck.ward > 0 && campaignRuntime.battleCheck.texture, JSON.stringify(campaignRuntime));
   check('region 2 battles begin with visible fire tiles', campaignRuntime.battleCheck.initialFire >= 2, JSON.stringify(campaignRuntime.battleCheck));
-  check('region 2 collapse warns one round before blocking a tile', campaignRuntime.battleCheck.heatWarningVisible && campaignRuntime.battleCheck.collapseCreated && campaignRuntime.battleCheck.collapseLogged, JSON.stringify(campaignRuntime.battleCheck));
+  check('region 2 collapse and lava warn one round before triggering', campaignRuntime.battleCheck.heatWarningVisible && campaignRuntime.battleCheck.collapseCreated && campaignRuntime.battleCheck.collapseLogged, JSON.stringify(campaignRuntime.battleCheck));
+  check('collapse damages and pushes exposed units while lava burns them', campaignRuntime.battleCheck.collapsePushedWithDamage && campaignRuntime.battleCheck.lavaTriggeredWithDamage, JSON.stringify(campaignRuntime.battleCheck));
   check('holdout starts under pressure and schedules reinforcements', campaignRuntime.holdoutCheck.enemies >= 4 && campaignRuntime.holdoutCheck.nearbyVanguard && campaignRuntime.holdoutCheck.reinforcementRounds?.join(',') === '2,3', JSON.stringify(campaignRuntime.holdoutCheck));
   check('scenario reinforcements only enter from the battlefield edge', campaignRuntime.holdoutCheck.reinforcementsSpawned === 2 && campaignRuntime.holdoutCheck.reinforcementsOnEdge, JSON.stringify(campaignRuntime.holdoutCheck));
   check('normal enemies use the battlefield height', Math.max(...campaignRuntime.spreadRows) - Math.min(...campaignRuntime.spreadRows) >= 4, JSON.stringify(campaignRuntime.spreadRows));
@@ -155,7 +165,7 @@ try {
   }
   const wardTooltipText = await page.locator('#tooltip').textContent();
   check('the defense shield explains itself on hover', /ОБЕРЕГ|WARD/i.test(wardTooltipText || '') && /24\/24/.test(wardTooltipText || ''), wardTooltipText || '');
-  check('all special battlefield markers have localized explanations', await page.evaluate(() => ['wardMarker', 'wardTooltip', 'exitMarker', 'exitTooltip', 'trapMarker', 'trapTooltip', 'huntTargetTooltip', 'ritualTargetTooltip', 'collapseWarning'].every(key => translateKey(key) !== key)));
+  check('all special battlefield markers have localized explanations', await page.evaluate(() => ['wardMarker', 'wardTooltip', 'exitMarker', 'exitTooltip', 'trapMarker', 'trapTooltip', 'huntTargetTooltip', 'ritualTargetTooltip', 'collapseWarning', 'lavaWarning'].every(key => translateKey(key) !== key)));
   await page.evaluate(() => setCampaignContract('mercenaries'));
   check('contract selection updates its explanatory text', (await page.locator('#menu-contract-copy').textContent())?.length > 20);
   await page.evaluate(() => { showScreen('menu'); initMenuScreen(); });

@@ -257,6 +257,7 @@ const CampaignExpansion = (() => {
       b.regionalRule = 'roots';
     } else if (b.region === 2) {
       b.regionalRule = 'heat';
+      b.heatWarnings = [];
       const candidates = [];
       for (let y = 1; y < GRID_H - 1; y++) for (let x = 3; x < GRID_W - 3; x++) {
         if (!cellOccupied(x, y) && b.grid[y][x] === TILE.GROUND && !(b.scenario?.ward?.x === x && b.scenario?.ward?.y === y)) {
@@ -331,37 +332,76 @@ const CampaignExpansion = (() => {
         out.log = `${loc({ ru: 'Оберег получает', en: 'The ward takes', es: 'El amuleto recibe' })} ${damage} ${loc({ ru: 'урона', en: 'damage', es: 'daño' })}.`;
       }
     }
-    const cellOccupied = (x, y) => b.units.some(unit => unit.hp > 0 &&
+    const unitsOnCell = (x, y) => b.units.filter(unit => unit.hp > 0 &&
       x >= unit.x && x < unit.x + (unit.sizeW || 1) &&
       y >= unit.y && y < unit.y + (unit.sizeH || 1));
+    const cellOccupied = (x, y) => unitsOnCell(x, y).length > 0;
     const appendLog = text => { out.log = out.log ? `${out.log} ${text}` : text; };
-    if (b.regionalRule === 'heat' && b.heatCollapseWarning && b.heatCollapseWarning.collapseRound <= b.round) {
-      const warning = b.heatCollapseWarning;
-      if (!cellOccupied(warning.x, warning.y) && b.grid[warning.y]?.[warning.x] === TILE.GROUND) {
+    if (b.regionalRule === 'heat' && b.heatCollapseWarning && !b.heatWarnings?.length) {
+      b.heatWarnings = [{ type: 'collapse', x: b.heatCollapseWarning.x, y: b.heatCollapseWarning.y, triggerRound: b.heatCollapseWarning.collapseRound }];
+      b.heatCollapseWarning = null;
+    }
+    if (b.regionalRule === 'heat') {
+      b.heatWarnings = b.heatWarnings || [];
+      const triggered = b.heatWarnings.filter(warning => warning.triggerRound <= b.round);
+      triggered.forEach(warning => {
+        const targets = unitsOnCell(warning.x, warning.y);
+        if (warning.type === 'lava') {
+          b.grid[warning.y][warning.x] = TILE.FIRE;
+          targets.forEach(unit => {
+            const damage = 5;
+            unit.hp = Math.max(0, unit.hp - damage);
+            if (typeof spawnBattleTextFx === 'function') spawnBattleTextFx(unit.x, unit.y, `LAVA -${damage}`, '#ff713c');
+            if (unit.hp <= 0 && typeof onUnitDeath === 'function') onUnitDeath(unit);
+          });
+          appendLog(loc({ ru: 'Лава прорывается сквозь отмеченную клетку и обжигает тех, кто не успел уйти.', en: 'Lava bursts through the marked tile and burns anyone who failed to move.', es: 'La lava brota de la casilla marcada y quema a quien no se apartó.' }));
+          return;
+        }
         b.grid[warning.y][warning.x] = TILE.MOUNTAIN;
         b.heatLastCollapse = { x: warning.x, y: warning.y, round: b.round };
-        appendLog(loc({ ru: 'Свод рушится: отмеченная клетка становится непроходимым завалом.', en: 'The ceiling collapses: the marked tile becomes impassable rubble.', es: 'El techo se derrumba: la casilla marcada queda bloqueada.' }));
-      } else {
-        appendLog(loc({ ru: 'Обвал минует занятую позицию.', en: 'The collapse misses the occupied position.', es: 'El derrumbe evita la posición ocupada.' }));
-      }
-      b.heatCollapseWarning = null;
+        targets.forEach(unit => {
+          const damage = 10;
+          unit.hp = Math.max(0, unit.hp - damage);
+          if (typeof spawnBattleTextFx === 'function') spawnBattleTextFx(unit.x, unit.y, `COLLAPSE -${damage}`, '#ffb15c');
+          if (unit.hp <= 0) {
+            if (typeof onUnitDeath === 'function') onUnitDeath(unit);
+            return;
+          }
+          const fromX = unit.x, fromY = unit.y;
+          const pushCells = [
+            { x: fromX - 1, y: fromY }, { x: fromX + 1, y: fromY },
+            { x: fromX, y: fromY - 1 }, { x: fromX, y: fromY + 1 }
+          ];
+          const destination = pushCells.find(cell => inBounds(cell.x, cell.y) && canUnitOccupy(b, unit, cell.x, cell.y, { end: true }));
+          if (!destination) {
+            unit.hp = 0;
+            if (typeof onUnitDeath === 'function') onUnitDeath(unit);
+            return;
+          }
+          unit.x = destination.x;
+          unit.y = destination.y;
+          if (typeof startUnitMoveAnimation === 'function') startUnitMoveAnimation(unit, fromX, fromY, unit.x, unit.y);
+        });
+        appendLog(loc({ ru: 'Обвал превращает отмеченную клетку в завал: оставшиеся под ним получают 10 урона и отбрасываются, а без пути отхода погибают.', en: 'The collapse turns the marked tile into rubble: units beneath it take 10 damage and are pushed away, dying if there is no escape.', es: 'El derrumbe bloquea la casilla: las unidades reciben 10 de daño y son empujadas; sin salida, mueren.' }));
+      });
+      b.heatWarnings = b.heatWarnings.filter(warning => warning.triggerRound > b.round);
     }
     const emptyGround = [];
     for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
       const protectedScenarioTile = (b.scenario?.ward?.x === x && b.scenario?.ward?.y === y) || (b.scenario?.exit?.x === x && b.scenario?.exit?.y === y);
       if (!cellOccupied(x, y) && !protectedScenarioTile && b.grid[y][x] === TILE.GROUND) emptyGround.push({ x, y });
     }
-    if (b.regionalRule === 'heat' && b.round >= 3 && b.round % 2 === 1 && emptyGround.length) {
-      const tile = pick(emptyGround, b.round * 7);
-      b.grid[tile.y][tile.x] = TILE.FIRE;
-      appendLog(loc({ ru: 'Жар разжигает новую огненную клетку.', en: 'The heat ignites a new fire tile.', es: 'El calor enciende una casilla de fuego.' }));
-    }
-    if (b.regionalRule === 'heat' && b.round >= 2 && b.round % 3 === 2 && !b.heatCollapseWarning) {
-      const collapseCandidates = emptyGround.filter(tile => tile.x >= 3 && tile.x < GRID_W - 3 && b.grid[tile.y][tile.x] === TILE.GROUND);
-      if (collapseCandidates.length) {
-        const tile = pick(collapseCandidates, b.round * 13);
-        b.heatCollapseWarning = { x: tile.x, y: tile.y, collapseRound: b.round + 1 };
-        appendLog(loc({ ru: '⚠ Камни сыплются с потолка: отмеченная клетка обрушится в следующем раунде.', en: '⚠ Stones fall from above: the marked tile will collapse next round.', es: '⚠ Caen piedras: la casilla marcada se derrumbará en la próxima ronda.' }));
+    if (b.regionalRule === 'heat' && b.round >= 2 && b.round % 3 === 2 && !(b.heatWarnings || []).length) {
+      const hazardCandidates = emptyGround.filter(tile => tile.x >= 3 && tile.x < GRID_W - 3 && b.grid[tile.y][tile.x] === TILE.GROUND);
+      const collapse = hazardCandidates.length ? pick(hazardCandidates, b.round * 13) : null;
+      const lavaCandidates = hazardCandidates.filter(tile => !collapse || Math.abs(tile.x - collapse.x) + Math.abs(tile.y - collapse.y) >= 3);
+      const lava = lavaCandidates.length ? pick(lavaCandidates, b.round * 17) : null;
+      b.heatWarnings = [
+        collapse && { type: 'collapse', x: collapse.x, y: collapse.y, triggerRound: b.round + 1 },
+        lava && { type: 'lava', x: lava.x, y: lava.y, triggerRound: b.round + 1 }
+      ].filter(Boolean);
+      if (b.heatWarnings.length) {
+        appendLog(loc({ ru: '⚠ На поле отмечены обвал и прорыв лавы. Они сработают в следующем раунде.', en: '⚠ A collapse and a lava burst are marked on the field. They will trigger next round.', es: '⚠ Se marcan un derrumbe y una erupción de lava. Se activarán en la próxima ronda.' }));
       }
     }
     if (b.regionalRule === 'tide' && b.round >= 3 && b.round % 2 === 0 && emptyGround.length) {
