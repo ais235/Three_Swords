@@ -10,7 +10,8 @@
     VOID_STALKER: 'void_stalker', BLOOD_KNIGHT: 'blood_knight', BANSHEE: 'banshee', PLAGUE_DOCTOR: 'plague_doctor', ARCANE_SENTINEL: 'arcane_sentinel',
     ORC_GUARD: 'orc_guard', SUICIDE: 'suicide', SPIDER: 'spider', WATCHER: 'watcher', ICE_ELEM: 'ice_elem',
     DARK_KNIGHT: 'dark_knight', NECRO: 'necro', CHAOS: 'chaos', ASSASSIN: 'assassin', HYDRA: 'hydra', GHOST: 'ghost',
-    FIRE_TITAN: 'fire_titan', DARK_LORD: 'dark_lord'
+    FIRE_TITAN: 'fire_titan', DARK_LORD: 'dark_lord', ROOT_SENTINEL: 'root_sentinel',
+    FIRE_ELEMENTAL: 'fire_elemental', WATER_ELEMENTAL: 'water_elemental'
   };
 
   function inferAttackSfxKind(attacker, opts) {
@@ -20,7 +21,7 @@
     if (attacker.isHero && attacker.heroId === 'seris') return 'magic';
     if (!attacker.isHero) {
       const mid = attacker.enemyId;
-      if (mid === ENEMY_IDS.SHAMAN || mid === ENEMY_IDS.LESHY || mid === ENEMY_IDS.NECRO || mid === ENEMY_IDS.ICE_ELEM || mid === ENEMY_IDS.CHAOS) return 'magic';
+      if (mid === ENEMY_IDS.SHAMAN || mid === ENEMY_IDS.LESHY || mid === ENEMY_IDS.NECRO || mid === ENEMY_IDS.ICE_ELEM || mid === ENEMY_IDS.FIRE_ELEMENTAL || mid === ENEMY_IDS.WATER_ELEMENTAL || mid === ENEMY_IDS.CHAOS) return 'magic';
       if (attacker.range > 1) return 'bow';
     }
     return 'melee';
@@ -1007,6 +1008,7 @@
       [D.ZOMBIE]: { name: 'Zombie', emoji: '🧟', hp: 12, armor: 1, attack: 6, move: 1, range: 1, speed: 5, gold: [8,12] },
       [D.SHAMAN]: { name: 'Forest Shaman', emoji: '🧙', hp: 25, armor: 1, attack: 5, move: 2, range: 2, speed: 7, gold: [40,60], miniBoss: true },
       [D.LESHY]: { name: 'Ancient Leshy', emoji: '🌳', hp: 90, armor: 3, attack: 8, move: 0, range: 3, speed: 6, gold: [140,160], boss: true, sizeW: 2 },
+      [D.ROOT_SENTINEL]: { name: 'Thorned Roots', emoji: '🌿', hp: 18, armor: 1, attack: 6, move: 0, range: 1, speed: 5, gold: [4,7] },
       [D.BANDIT]: { name: 'Bandit', emoji: '🗡️', hp: 16, armor: 1, attack: 8, move: 2, range: 1, speed: 10, gold: [10,16] },
       [D.WOLF]: { name: 'Wolf', emoji: '🐺', hp: 12, armor: 0, attack: 7, move: 3, range: 1, speed: 12, gold: [8,12] },
       [D.BANDIT_THROWER]: { name: 'Thrower', emoji: '🪓', hp: 12, armor: 0, attack: 7, move: 2, range: 2, speed: 11, gold: [10,14] },
@@ -1029,6 +1031,8 @@
       [D.SPIDER]: { name: 'Spider', emoji: '🕷️', hp: 18, armor: 1, attack: 7, move: 3, range: 1, speed: 10, gold: [15,22] },
       [D.WATCHER]: { name: 'Watcher', emoji: '👁️', hp: 15, armor: 0, attack: 4, move: 1, range: 0, speed: 4, gold: [20,30] },
       [D.ICE_ELEM]: { name: 'Ice Elemental', emoji: '🧊', hp: 22, armor: 3, attack: 8, move: 2, range: 2, speed: 8, gold: [20,28] },
+      [D.FIRE_ELEMENTAL]: { name: 'Fire Elemental', emoji: '🔥', hp: 24, armor: 2, attack: 9, move: 3, range: 1, speed: 11, gold: [8,12] },
+      [D.WATER_ELEMENTAL]: { name: 'Water Elemental', emoji: '🌊', hp: 26, armor: 1, attack: 8, move: 3, range: 1, speed: 10, gold: [8,12] },
       [D.DARK_KNIGHT]: { name: 'Dark Knight', emoji: '⚔️', hp: 45, armor: 5, attack: 12, move: 2, range: 1, speed: 7, gold: [80,100], miniBoss: true },
       [D.NECRO]: { name: 'Necromancer', emoji: '🔮', hp: 28, armor: 1, attack: 8, move: 2, range: 3, speed: 8, gold: [30,40] },
       [D.CHAOS]: { name: 'Chaos Demon', emoji: '🌀', hp: 25, armor: 2, attack: 11, move: 0, range: 2, speed: 12, gold: [28,38] },
@@ -1047,7 +1051,10 @@
     suicide: 'bomber.png',
     necro: 'necromancer.png',
     chaos: 'chaos_beast.png',
-    leshy: 'leshy.png'
+    leshy: 'leshy.png',
+    root_sentinel: 'root-sentinel.png'
+    ,fire_elemental: 'fire-elemental.png'
+    ,water_elemental: 'water-elemental.png'
   };
   function enemyIconUrl(enemyId) {
     const file = ENEMY_ICON_FILE[enemyId] || (enemyId + '.png');
@@ -1089,6 +1096,9 @@
     [ENEMY_IDS.ZOMBIE]:       { region: 1, tactic: 'Slow, but explodes on death for 5 damage to nearby units.', weakness: 'Keep distance. Archer and Mage are ideal.' },
     [ENEMY_IDS.SHAMAN]:       { region: 1, tactic: 'Mini-boss. Heals allies every turn. Kill first.', weakness: 'Immediate focus fire. Meteor or Arrow Rain.' },
     [ENEMY_IDS.LESHY]:        { region: 1, tactic: 'Rooted boss. On its first turn it summons two forest creatures, then one every other turn (maximum 4). At 50% HP it summons up to two more and gives all its summons +2 attack.', weakness: 'Remove dangerous summons, but do not prolong the fight: the Leshy cannot move and attacks with roots from range 3.' },
+    [ENEMY_IDS.ROOT_SENTINEL]:{ region: 1, tactic: 'An immobile knot of roots. It lashes a hero on an adjacent tile and slows the target.', weakness: 'Stay out of adjacent cells, destroy it from range, or clear it with area damage.' },
+    [ENEMY_IDS.FIRE_ELEMENTAL]:{ region: 2, tactic: 'Rises from warned lava. Fire heals it, and its strike ignites the ground beneath the target. Up to two may exist at once.', weakness: 'Lure it away from fire and use Freeze. Destroy the Titan guards to break its elemental shield.' },
+    [ENEMY_IDS.WATER_ELEMENTAL]:{ region: 3, tactic: 'Rises with the warned tide. It moves freely through water, gains armor there, and pushes heroes with its attack.', weakness: 'Fight it on dry ground or force it out of water. Destroy the Hydra guards to break its tidal shield.' },
     [ENEMY_IDS.BANDIT]:       { region: 1, tactic: 'Fast melee fighter. Tries to close in and trade damage.', weakness: 'Control with Freeze or stun, then focus fire.' },
     [ENEMY_IDS.WOLF]:         { region: 1, tactic: 'Very mobile. Flanks and punishes poor positioning quickly.', weakness: 'Slow it and keep a tight line.' },
     [ENEMY_IDS.BANDIT_THROWER]:{ region: 1, tactic: 'Range 2. Tries to finish wounded heroes while the front line holds distance.', weakness: 'Close in, focus it, and use Garet shield pressure.' },

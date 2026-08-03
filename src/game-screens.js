@@ -3109,6 +3109,9 @@
       [ENEMY_IDS.ZOMBIE]: 'Explodes on death.',
       [ENEMY_IDS.SHAMAN]: 'Heals allies.',
       [ENEMY_IDS.LESHY]: 'Does not move. Summons 2 creatures on the first turn, then 1 every other turn (max 4). At 50% HP it summons up to 2 more and gives summons +2 attack.',
+      [ENEMY_IDS.ROOT_SENTINEL]: 'Immobile roots strike a hero on an adjacent tile and slow the target for 1 turn.',
+      [ENEMY_IDS.FIRE_ELEMENTAL]: 'Fire heals it. Its attack ignites the target tile, and it explodes on death.',
+      [ENEMY_IDS.WATER_ELEMENTAL]: 'Moves freely through water, gains +2 armor there, and pushes its target on hit.',
       [ENEMY_IDS.BANDIT]: 'Fast melee fighter.',
       [ENEMY_IDS.WOLF]: 'Hunts the weakest hero.',
       [ENEMY_IDS.SPEARMAN]: 'Empowered melee strike.',
@@ -3146,8 +3149,8 @@
     if ([D.SHAMAN, D.PLAGUE_DOCTOR].includes(enemyId)) add('threatHealer', 'threat-healer');
     if ([D.LESHY, D.NECRO, D.DARK_LORD].includes(enemyId)) add('threatSummoner', 'threat-summoner');
     if ([D.ASSASSIN, D.VOID_STALKER, D.WOLF].includes(enemyId)) add('threatAssassin', 'threat-assassin');
-    if ([D.ZOMBIE, D.SUICIDE, D.CHAOS, D.FIRE_TITAN, D.HYDRA].includes(enemyId)) add('threatExplosive', 'threat-explosive');
-    if ([D.SPIDER, D.ICE_ELEM, D.HEXER, D.BANSHEE, D.CULTIST, D.ARCANE_SENTINEL, D.BOG_LURKER, D.THORN_DRYAD, D.STONE_GOLEM].includes(enemyId)) add('threatController', 'threat-controller');
+    if ([D.ZOMBIE, D.SUICIDE, D.CHAOS, D.FIRE_TITAN, D.FIRE_ELEMENTAL, D.HYDRA].includes(enemyId)) add('threatExplosive', 'threat-explosive');
+    if ([D.SPIDER, D.ICE_ELEM, D.WATER_ELEMENTAL, D.HEXER, D.BANSHEE, D.CULTIST, D.ARCANE_SENTINEL, D.BOG_LURKER, D.THORN_DRYAD, D.STONE_GOLEM, D.ROOT_SENTINEL].includes(enemyId)) add('threatController', 'threat-controller');
     if (d && (d.boss || d.miniBoss)) add('threatBoss', 'threat-boss');
     if ([D.LESHY, D.ORC_GUARD, D.SHIELDBEARER, D.STONE_GOLEM, D.DARK_KNIGHT, D.BLOOD_KNIGHT, D.BOAR].includes(enemyId)) add('threatTank', 'threat-tank');
     if (d && d.range > 1) add('threatRanged', 'threat-ranged');
@@ -3230,11 +3233,17 @@
       const ward = b.scenario?.id === 'defense' && b.scenario.ward?.x === gx && b.scenario.ward?.y === gy
         ? b.scenario.ward : null;
       const trap = (b.traps || []).find(item => item.x === gx && item.y === gy);
+      const heatWarning = (b.heatWarnings || []).find(item => item.x === gx && item.y === gy);
+      const tideWarning = (b.tideWarnings || []).find(item => item.x === gx && item.y === gy);
       const exit = ['escape', 'hunt'].includes(b.scenario?.id) && gx === GRID_W - 1;
       tip.style.display = 'block';
       const effects = terrain.effects.length ? terrain.effects.join('<br/>') : translateKey('terrainNoBonus');
       tip.innerHTML = ward
         ? `<b>🛡️ ${translateKey('wardMarker')} · ${ward.hp}/${ward.maxHp}</b><br/><span class="stats-line">${translateKey('wardTooltip')}</span>`
+        : heatWarning
+          ? `<b>${translateKey(heatWarning.type === 'lava' ? 'lavaWarning' : 'collapseWarning')}</b><br/><span class="stats-line">${translateKey(heatWarning.type === 'lava' ? 'lavaWarningTooltip' : 'collapseWarningTooltip')}</span>`
+          : tideWarning
+            ? `<b>${translateKey('tideWarning')}</b><br/><span class="stats-line">${translateKey('tideWarningTooltip')}</span>`
         : trap
           ? `<b>${translateKey('trapMarker')}</b><br/><span class="stats-line">${translateKey('trapTooltip')}</span>`
           : exit

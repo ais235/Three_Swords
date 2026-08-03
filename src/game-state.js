@@ -449,7 +449,7 @@
   function tileMoveCost(t, unit) {
     if (t === TILE.FOREST) return 3;
     if (t === TILE.WATER) {
-      if (unit && unit.heroId === 'seris') return 1;
+      if (unit && (unit.heroId === 'seris' || unit.enemyId === ENEMY_IDS.WATER_ELEMENTAL)) return 1;
       return 3;
     }
     return 1;
@@ -593,6 +593,7 @@
     if (type === ENEMY_IDS.LESHY) { u.bossVar = { turn: 0, summonCooldown: 0, summonSerial: 0, phase2: false }; }
     if (type === ENEMY_IDS.DARK_LORD) { u.phase = 1; u.turnCount = 0; u.teleportCd = 0; u.aoeCd = 0; u.summonCd = 0; u.aiVar = {}; }
     if (type === ENEMY_IDS.FIRE_TITAN) { u.bossVar = { aoeCounter: 0 }; }
+    if (type === ENEMY_IDS.FIRE_ELEMENTAL || type === ENEMY_IDS.WATER_ELEMENTAL) { u.summonedElemental = false; }
     if (type === ENEMY_IDS.CHAOS) { u.bossVar = { aoeTurn: 0 }; }
     u.aiVar = u.aiVar || {};
     markBestiarySeen(type);

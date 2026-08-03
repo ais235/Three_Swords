@@ -59,6 +59,7 @@
     zombie: 'melee',
     shaman: 'magic',
     leshy: 'root',
+    root_sentinel: 'root',
     bandit: 'melee',
     wolf: 'bite',
     bandit_thrower: 'thrown',
@@ -87,6 +88,8 @@
     assassin: 'shadow',
     hydra: 'bite',
     ghost: 'shadow',
+    fire_elemental: 'fire',
+    water_elemental: 'magic',
     fire_titan: 'fire',
     dark_lord: 'shadow'
   });

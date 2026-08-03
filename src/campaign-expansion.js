@@ -226,6 +226,19 @@ const CampaignExpansion = (() => {
     return out;
   }
 
+  function forestRootPlan(node) {
+    if (!node || node.region !== 1 || node.firstBattle) return { count: 0, bossRing: false };
+    if (node.boss) return { count: 4, bossRing: true };
+    const current = typeof getCellById === 'function' ? getCellById(node.id) : null;
+    const boss = GameState.mapGrid?.find(cell => cell.region === 1 && cell.type === 'boss');
+    const distance = current && boss && typeof WorldMapTopology !== 'undefined'
+      ? WorldMapTopology.shortestDistance(current, boss) : 8;
+    const count = distance <= 3 ? 3 : distance <= 6 ? 2 : 1;
+    const chance = distance <= 3 ? 1 : distance <= 6 ? 0.72 : 0.42;
+    const roll = (Math.abs(hash(`${GameState.testSeed || 'run'}:${node.id}:roots`)) % 100) / 100;
+    return { count: roll <= chance ? count : 0, bossRing: false, distance };
+  }
+
   function applyStartBattleEffects(b) {
     const effects = GameState.campaignEffects || {};
     const heroes = b.units.filter(unit => unit.isHero);
@@ -251,9 +264,6 @@ const CampaignExpansion = (() => {
       return false;
     };
     if (b.region === 1 && !b.firstBattle) {
-      // Thick roots form two visible, impassable obstacles away from the initial formation.
-      setTerrain(6, 1, TILE.MOUNTAIN);
-      setTerrain(8, 6, TILE.MOUNTAIN);
       b.regionalRule = 'roots';
     } else if (b.region === 2) {
       b.regionalRule = 'heat';
@@ -273,6 +283,7 @@ const CampaignExpansion = (() => {
       }
     } else if (b.region === 3) {
       b.regionalRule = 'tide';
+      b.tideWarnings = [];
     }
   }
 
@@ -337,6 +348,12 @@ const CampaignExpansion = (() => {
       y >= unit.y && y < unit.y + (unit.sizeH || 1));
     const cellOccupied = (x, y) => unitsOnCell(x, y).length > 0;
     const appendLog = text => { out.log = out.log ? `${out.log} ${text}` : text; };
+    if (b.temporaryFire?.length) {
+      b.temporaryFire.filter(tile => tile.expiresRound <= b.round).forEach(tile => {
+        if (b.grid[tile.y]?.[tile.x] === TILE.FIRE && !b.heatInitialTiles?.some(initial => initial.x === tile.x && initial.y === tile.y)) b.grid[tile.y][tile.x] = TILE.GROUND;
+      });
+      b.temporaryFire = b.temporaryFire.filter(tile => tile.expiresRound > b.round);
+    }
     if (b.regionalRule === 'heat' && b.heatCollapseWarning && !b.heatWarnings?.length) {
       b.heatWarnings = [{ type: 'collapse', x: b.heatCollapseWarning.x, y: b.heatCollapseWarning.y, triggerRound: b.heatCollapseWarning.collapseRound }];
       b.heatCollapseWarning = null;
@@ -354,6 +371,17 @@ const CampaignExpansion = (() => {
             if (typeof spawnBattleTextFx === 'function') spawnBattleTextFx(unit.x, unit.y, `LAVA -${damage}`, '#ff713c');
             if (unit.hp <= 0 && typeof onUnitDeath === 'function') onUnitDeath(unit);
           });
+          if (!cellOccupied(warning.x, warning.y)) {
+            const living = b.units.filter(unit => unit.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && unit.hp > 0).length;
+            const proto = { isHero: false, enemyId: ENEMY_IDS.FIRE_ELEMENTAL, sizeW: 1, sizeH: 1 };
+            if (living < 2 && canUnitOccupy(b, proto, warning.x, warning.y, { end: true })) {
+              const elemental = spawnEnemy(ENEMY_IDS.FIRE_ELEMENTAL, warning.x, warning.y);
+              elemental.summonedElemental = true;
+              b.units.push(elemental);
+              out.initiativeDirty = true;
+              appendLog(loc({ ru: 'Из свежей лавы поднимается огненный элементаль.', en: 'A fire elemental rises from the fresh lava.', es: 'Un elemental de fuego surge de la lava.' }));
+            }
+          }
           appendLog(loc({ ru: 'Лава прорывается сквозь отмеченную клетку и обжигает тех, кто не успел уйти.', en: 'Lava bursts through the marked tile and burns anyone who failed to move.', es: 'La lava brota de la casilla marcada y quema a quien no se apartó.' }));
           return;
         }
@@ -404,10 +432,36 @@ const CampaignExpansion = (() => {
         appendLog(loc({ ru: '⚠ На поле отмечены обвал и прорыв лавы. Они сработают в следующем раунде.', en: '⚠ A collapse and a lava burst are marked on the field. They will trigger next round.', es: '⚠ Se marcan un derrumbe y una erupción de lava. Se activarán en la próxima ronda.' }));
       }
     }
-    if (b.regionalRule === 'tide' && b.round >= 3 && b.round % 2 === 0 && emptyGround.length) {
-      const tile = pick(emptyGround, b.round * 11);
-      b.grid[tile.y][tile.x] = TILE.WATER;
-      out.log = out.log || loc({ ru: 'Прилив затапливает часть поля.', en: 'The tide floods part of the field.', es: 'La marea inunda parte del campo.' });
+    if (b.regionalRule === 'tide') {
+      b.tideWarnings = b.tideWarnings || [];
+      const triggered = b.tideWarnings.filter(warning => warning.triggerRound <= b.round);
+      let spawned = false;
+      triggered.forEach(warning => {
+        b.grid[warning.y][warning.x] = TILE.WATER;
+        if (!spawned && !cellOccupied(warning.x, warning.y)) {
+          const living = b.units.filter(unit => unit.enemyId === ENEMY_IDS.WATER_ELEMENTAL && unit.hp > 0).length;
+          const proto = { isHero: false, enemyId: ENEMY_IDS.WATER_ELEMENTAL, sizeW: 1, sizeH: 1 };
+          if (living < 2 && canUnitOccupy(b, proto, warning.x, warning.y, { end: true })) {
+            const elemental = spawnEnemy(ENEMY_IDS.WATER_ELEMENTAL, warning.x, warning.y);
+            elemental.summonedElemental = true;
+            b.units.push(elemental);
+            spawned = true;
+            out.initiativeDirty = true;
+          }
+        }
+      });
+      if (triggered.length) appendLog(spawned
+        ? loc({ ru: 'Прилив затапливает отмеченные клетки, и из воды поднимается элементаль.', en: 'The tide floods the marked tiles and a water elemental rises.', es: 'La marea inunda las casillas marcadas y surge un elemental de agua.' })
+        : loc({ ru: 'Прилив затапливает отмеченные клетки.', en: 'The tide floods the marked tiles.', es: 'La marea inunda las casillas marcadas.' }));
+      b.tideWarnings = b.tideWarnings.filter(warning => warning.triggerRound > b.round);
+      if (b.round >= 2 && b.round % 2 === 0 && !b.tideWarnings.length && emptyGround.length) {
+        const seed = pick(emptyGround.filter(tile => tile.x >= 2 && tile.x < GRID_W - 2), b.round * 11) || pick(emptyGround, b.round * 11);
+        const connected = emptyGround
+          .filter(tile => Math.abs(tile.x - seed.x) + Math.abs(tile.y - seed.y) <= 1)
+          .slice(0, 3);
+        b.tideWarnings = connected.map(tile => ({ type: 'tide', x: tile.x, y: tile.y, triggerRound: b.round + 1 }));
+        if (b.tideWarnings.length) appendLog(loc({ ru: '⚠ Контуры прилива отмечают клетки, которые затопит в следующем раунде. Из воды может подняться элементаль.', en: '⚠ Tide outlines mark tiles that will flood next round. A water elemental may rise.', es: '⚠ Los contornos marcan casillas que se inundarán la próxima ronda. Puede surgir un elemental.' }));
+      }
     }
     return out;
   }
@@ -492,5 +546,5 @@ const CampaignExpansion = (() => {
     GameState.runHistory = GameState.runHistory.slice(0, 10);
   }
 
-  return { CONTRACTS, MUTATORS, REGION, SCENARIOS, ensureState, startCampaign, regionInfo, isMutatorActive, scenarioLabel, scenarioShort, createScenario, applyMutatorsToWave, applyStartBattleEffects, scenarioStatus, isVictory, isDefeat, onRoundStarted, eventForCell, applyEventEffect, resolveDelayedEvents, routeIntel, scenarioForPreview, recordCompletedRun, loc };
+  return { CONTRACTS, MUTATORS, REGION, SCENARIOS, ensureState, startCampaign, regionInfo, isMutatorActive, scenarioLabel, scenarioShort, createScenario, applyMutatorsToWave, forestRootPlan, applyStartBattleEffects, scenarioStatus, isVictory, isDefeat, onRoundStarted, eventForCell, applyEventEffect, resolveDelayedEvents, routeIntel, scenarioForPreview, recordCompletedRun, loc };
 })();

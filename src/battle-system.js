@@ -27,6 +27,93 @@
     ];
   }
 
+  function forestRootCandidateCells(b, node, bossRing) {
+    const isFreeGrass = point => inBounds(point.x, point.y) && b.grid[point.y][point.x] === TILE.GROUND &&
+      canUnitOccupy(b, { isHero: false, enemyId: ENEMY_IDS.ROOT_SENTINEL, sizeW: 1, sizeH: 1 }, point.x, point.y, { end: true });
+    if (bossRing) {
+      const leshy = b.units.find(unit => unit.enemyId === ENEMY_IDS.LESHY && unit.hp > 0);
+      if (!leshy) return [];
+      const ring = [];
+      for (let x = leshy.x - 1; x <= leshy.x + unitWidth(leshy); x++) {
+        ring.push({ x, y: leshy.y - 1 }, { x, y: leshy.y + unitHeight(leshy) });
+      }
+      for (let y = leshy.y; y < leshy.y + unitHeight(leshy); y++) {
+        ring.push({ x: leshy.x - 1, y }, { x: leshy.x + unitWidth(leshy), y });
+      }
+      // The guard ring is part of the boss arena: clear its footprint to grass
+      // before testing occupancy so all four sentinels can visibly protect Leshy.
+      ring.forEach(point => {
+        if (inBounds(point.x, point.y) && !unitAt(b, point.x, point.y)) b.grid[point.y][point.x] = TILE.GROUND;
+      });
+      return ring.filter(isFreeGrass)
+        .sort((a, z) => unitDistanceFromPoint(leshy, a.x, a.y) - unitDistanceFromPoint(leshy, z.x, z.y));
+    }
+    const cells = [];
+    for (let y = 0; y < GRID_H; y++) {
+      for (let x = 3; x < GRID_W - 1; x++) {
+        const point = { x, y };
+        if (isFreeGrass(point)) cells.push(point);
+      }
+    }
+    return cells.sort((a, z) => hashSeed(`${GameState.testSeed || 'run'}:${node.id}:root:${a.x},${a.y}`) - hashSeed(`${GameState.testSeed || 'run'}:${node.id}:root:${z.x},${z.y}`));
+  }
+
+  function spawnForestRoots(b, node) {
+    const plan = CampaignExpansion.forestRootPlan(node);
+    if (!plan.count) return 0;
+    const candidates = forestRootCandidateCells(b, node, plan.bossRing);
+    let spawned = 0;
+    for (const point of candidates) {
+      if (spawned >= plan.count) break;
+      if (!canUnitOccupy(b, { isHero: false, enemyId: ENEMY_IDS.ROOT_SENTINEL, sizeW: 1, sizeH: 1 }, point.x, point.y, { end: true })) continue;
+      b.units.push(spawnEnemy(ENEMY_IDS.ROOT_SENTINEL, point.x, point.y));
+      spawned++;
+    }
+    if (spawned) {
+      b.rootSentinelCount = spawned;
+      b.battleLog.push({
+        text: plan.bossRing ? '🌿 Колючие корни окружают Лешего.' : `🌿 Из травы поднимаются колючие корни: ${spawned}.`,
+        t: 'enemy'
+      });
+    }
+    return spawned;
+  }
+
+  function spawnRegionalBossElementals(b, node) {
+    if (!node?.boss || !b) return 0;
+    const config = node.region === 2
+      ? { boss: ENEMY_IDS.FIRE_TITAN, guardian: ENEMY_IDS.FIRE_ELEMENTAL, tile: TILE.FIRE, label: '🔥 Огненные элементали питают щит Титана.' }
+      : node.region === 3
+        ? { boss: ENEMY_IDS.HYDRA, guardian: ENEMY_IDS.WATER_ELEMENTAL, tile: TILE.WATER, label: '🌊 Водные элементали поддерживают приливный щит Гидры.' }
+        : null;
+    if (!config) return 0;
+    const boss = b.units.find(unit => unit.enemyId === config.boss && unit.hp > 0);
+    if (!boss) return 0;
+    const candidates = [];
+    for (let radius = 1; radius <= 3; radius++) {
+      for (let y = boss.y - radius; y <= boss.y + unitHeight(boss) - 1 + radius; y++) {
+        for (let x = boss.x - radius; x <= boss.x + unitWidth(boss) - 1 + radius; x++) {
+          if (!inBounds(x, y) || unitDistanceFromPoint(boss, x, y) !== radius) continue;
+          candidates.push({ x, y });
+        }
+      }
+    }
+    let spawned = 0;
+    for (const point of candidates) {
+      if (spawned >= 2) break;
+      if (unitAt(b, point.x, point.y)) continue;
+      b.grid[point.y][point.x] = config.tile;
+      const proto = { isHero: false, enemyId: config.guardian, sizeW: 1, sizeH: 1 };
+      if (!canUnitOccupy(b, proto, point.x, point.y, { end: true })) continue;
+      const guardian = spawnEnemy(config.guardian, point.x, point.y);
+      guardian.bossGuardian = true;
+      b.units.push(guardian);
+      spawned++;
+    }
+    if (spawned) b.battleLog.push({ text: config.label, t: 'enemy' });
+    return spawned;
+  }
+
   function enemySpawnRows(index, total, unit) {
     const maxY = Math.max(0, GRID_H - unitHeight(unit));
     const target = Math.round(((index + 1) * maxY) / (total + 1));
@@ -175,6 +262,8 @@
       objectiveHeroLost: false,
       scenario
     };
+    spawnForestRoots(GameState.currentBattle, node);
+    spawnRegionalBossElementals(GameState.currentBattle, node);
     CampaignExpansion.applyStartBattleEffects(GameState.currentBattle);
     GameState.screen = 'battle';
     GameState.mapNodeId = node.id;
@@ -805,6 +894,7 @@
     if (attacker.isHero && attacker.heroId === 'seris' && attacker.perks?.includes('spellCharge') && opts.magic) dmg += 3;
     if (attacker.activeStatuses && attacker.activeStatuses.find(s => s.type === STATUS.BERSERK)) dmg = Math.floor(dmg * 2);
     let armor = target.armor + (b && b.grid ? tileDefenseBonus(b.grid[target.y][target.x]) : 0);
+    if (target.enemyId === ENEMY_IDS.WATER_ELEMENTAL && b?.grid?.[target.y]?.[target.x] === TILE.WATER) armor += 2;
     // Perk: auraArmor (Garet): adjacent allies gain +1 armor.
     if (target.isHero && b) {
       const garetAura = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
@@ -842,7 +932,22 @@
       if (attacker.isHero && attacker.heroId !== 'seris' && !opts.magic && !opts.artifact) dmg = 0;
     }
     if (target.enemyId === ENEMY_IDS.ICE_ELEM && opts.fire) dmg = Math.floor(dmg * 1.5);
+    if (target.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && opts.fire) dmg = 0;
+    if (target.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && attacker.isHero && attacker.heroId === 'seris' && target.activeStatuses?.some(status => status.type === STATUS.FREEZE)) dmg = Math.floor(dmg * 1.5);
     if (target.enemyId === ENEMY_IDS.SHIELDBEARER) dmg = Math.floor(dmg * 0.75);
+    if (b && attacker.isHero) {
+      let shield = 0;
+      if (target.enemyId === ENEMY_IDS.LESHY && b.units.some(unit => unit.enemyId === ENEMY_IDS.ROOT_SENTINEL && unit.hp > 0)) shield = .25;
+      if (target.enemyId === ENEMY_IDS.FIRE_TITAN && b.units.some(unit => unit.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && unit.hp > 0 && unit.bossGuardian)) shield = .25;
+      if (target.enemyId === ENEMY_IDS.HYDRA) {
+        const guardians = b.units.filter(unit => unit.enemyId === ENEMY_IDS.WATER_ELEMENTAL && unit.hp > 0 && unit.bossGuardian && b.grid?.[unit.y]?.[unit.x] === TILE.WATER).length;
+        shield = Math.min(.30, guardians * .15);
+      }
+      if (shield > 0) {
+        dmg = Math.floor(dmg * (1 - shield));
+        spawnBattleTextFx(target.x, target.y, `WARD -${Math.round(shield * 100)}%`, '#74d9ff');
+      }
+    }
     if (Math.random() < 0.25 && target.isHero && target.heroId === 'garet' && !opts.blockIgnore && !opts.magic) {
       pushBattleLog(`[${target.emoji} ${target.name}] Shield block!`, 'status');
       spawnBattleTextFx(target.x, target.y, 'BLOCK', '#8bd3ff');
@@ -1048,6 +1153,12 @@
         if (!t.isHero || t.hp <= 0) continue;
         if (unitDistance(u, t) <= 1) dealDamage(u, t, 5, { blockIgnore: true, magic: true, noWeaponBonus: true });
       }
+    }
+    if (!u.isHero && u.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && b) {
+      playBattleAbilityFx(u, 'zombieExplosion', { radius: 1, glyph: '🔥', noPose: true });
+      b.units.filter(target => target.isHero && target.hp > 0 && unitDistance(u, target) <= 1)
+        .forEach(target => dealDamage(u, target, 5, { blockIgnore: true, fire: true, magic: true, noWeaponBonus: true }));
+      pushBattleLog(`🔥 ${translateText(u.name)} взрывается при гибели.`, 'enemy');
     }
     if (!u.isHero && u.enemyId === ENEMY_IDS.WATCHER && b) b.globalBuffs.watcherDeadMove = 2;
     resolveBattleIfOver();
@@ -1489,6 +1600,7 @@
     zombie: 'assets/enemies/zombie.png',
     shaman: 'assets/enemies/shaman.png',
     leshy: 'assets/enemies/leshy.png',
+    root_sentinel: 'assets/enemies/root-sentinel.png',
     bandit: 'assets/enemies/bandit.png',
     wolf: 'assets/enemies/wolf.png',
     bandit_thrower: 'assets/enemies/bandit_thrower.png',
@@ -1518,6 +1630,8 @@
     hydra: 'assets/enemies/hydra.png',
     ghost: 'assets/enemies/ghost.png',
     fire_titan: 'assets/enemies/fire_titan.png',
+    fire_elemental: 'assets/enemies/fire-elemental.png',
+    water_elemental: 'assets/enemies/water-elemental.png',
     dark_lord: 'assets/enemies/dark_lord.png'
   };
   const EnemyTextures = {};
@@ -2330,6 +2444,25 @@
       ctx.fillText(translateKey(lava ? 'lavaWarning' : 'collapseWarning'), px + CELL / 2, py + CELL - 10);
       ctx.restore();
     });
+    (b.tideWarnings || []).forEach(warning => {
+      const px = warning.x * CELL, py = warning.y * CELL;
+      ctx.save();
+      ctx.fillStyle = 'rgba(40, 155, 255, .25)';
+      ctx.fillRect(px + 4, py + 4, CELL - 8, CELL - 8);
+      ctx.strokeStyle = '#72dcff';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeRect(px + 5, py + 5, CELL - 10, CELL - 10);
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#d9f8ff';
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('≋', px + CELL / 2, py + CELL / 2 - 7);
+      ctx.font = 'bold 8px Arial';
+      ctx.fillText(translateKey('tideWarning'), px + CELL / 2, py + CELL - 10);
+      ctx.restore();
+    });
 
     (b.traps || []).forEach(trap => {
       const cx = trap.x * CELL + CELL / 2;
@@ -2822,6 +2955,15 @@
     if (!b) return;
     const t = b.grid[u.y][u.x];
     if (t === TILE.FIRE) {
+      if (u.enemyId === ENEMY_IDS.FIRE_ELEMENTAL) {
+        const heal = Math.min(3, u.maxHp - u.hp);
+        if (heal > 0) {
+          u.hp += heal;
+          spawnBattleTextFx(u.x, u.y, `+${heal}`, '#ff9b42');
+          pushBattleLog(`🔥 ${translateText(u.name)} восстанавливается в огне (+${heal}).`, 'status');
+        }
+        return;
+      }
       const hpBeforeFire = u.hp;
       u.hp -= 3;
       startBattleAttackAnimation(u, u, { animationProfile: 'fire', animationImpactOnly: true }, 3, hpBeforeFire);
@@ -2863,6 +3005,7 @@
       spawnScenarioWave(b, outcome.spawn, outcome.spawnMode);
       buildInitiative();
     }
+    if (outcome.initiativeDirty) buildInitiative();
     if (outcome.log) pushBattleLog(outcome.log, 'status');
     if (CampaignExpansion.isDefeat(b)) {
       spawnBattleTextFx(4, 3, 'OBJECTIVE LOST', '#ff6b6b');
@@ -3275,6 +3418,28 @@
       }
     }
 
+    if (u.enemyId === ENEMY_IDS.HYDRA) {
+      u.bossVar = u.bossVar || {};
+      u.bossVar.tideTurn = (u.bossVar.tideTurn || 0) + 1;
+      if (u.bossVar.tideTurn % 3 === 0 && (u.bossVar.elementalSummons || 0) < 2) {
+        const living = b.units.filter(unit => unit.enemyId === ENEMY_IDS.WATER_ELEMENTAL && unit.hp > 0).length;
+        if (living < 2) {
+          const candidates = [];
+          for (let y = 0; y < GRID_H; y++) for (let x = 2; x < GRID_W; x++) {
+            if (b.grid[y][x] === TILE.WATER && canUnitOccupy(b, { isHero: false, enemyId: ENEMY_IDS.WATER_ELEMENTAL, sizeW: 1, sizeH: 1 }, x, y, { end: true })) candidates.push({ x, y });
+          }
+          if (candidates.length) {
+            const cell = candidates[randInt(0, candidates.length - 1)];
+            const elemental = spawnEnemy(ENEMY_IDS.WATER_ELEMENTAL, cell.x, cell.y);
+            elemental.bossGuardian = true;
+            b.units.push(elemental);
+            u.bossVar.elementalSummons = (u.bossVar.elementalSummons || 0) + 1;
+            pushBattleLog('🌊 Гидра призывает нового стража из прилива.', 'enemy');
+            buildInitiative();
+          }
+        }
+      }
+    }
     if (u.enemyId === ENEMY_IDS.HYDRA && u.hp < u.maxHp) {
       const heal = Math.min(4, u.maxHp - u.hp);
       u.hp += heal;
@@ -3429,6 +3594,21 @@
     u.bossVar = u.bossVar || { turn: 0, summonCooldown: 0, summonSerial: 0, phase2: false };
     const v = u.bossVar;
     v.turn = (v.turn || 0) + 1;
+    if (v.turn % 2 === 0 && (v.rootRespawns || 0) < 2) {
+      const livingRoots = b.units.filter(unit => unit.enemyId === ENEMY_IDS.ROOT_SENTINEL && unit.hp > 0).length;
+      if (livingRoots < 4) {
+        const ring = forestRootCandidateCells(b, { id: b.nodeId }, true);
+        const cell = ring.find(point => canUnitOccupy(b, { isHero: false, enemyId: ENEMY_IDS.ROOT_SENTINEL, sizeW: 1, sizeH: 1 }, point.x, point.y, { end: true }));
+        if (cell) {
+          const root = spawnEnemy(ENEMY_IDS.ROOT_SENTINEL, cell.x, cell.y);
+          root.bossGuardian = true;
+          b.units.push(root);
+          v.rootRespawns = (v.rootRespawns || 0) + 1;
+          pushBattleLog('🌿 Леший вновь поднимает защитный корень.', 'enemy');
+          buildInitiative();
+        }
+      }
+    }
     const livingSummons = b.units.filter(unit => !unit.isHero && unit.hp > 0 && unit.summonedByLeshy);
     const plan = LeshyBoss.planTurn({
       turn: v.turn,
@@ -3528,6 +3708,8 @@
   }
 
   function aiAttack(attacker, target) {
+    const b = GameState.currentBattle;
+    const targetStart = { x: target.x, y: target.y };
     let dmg = attacker.attack;
     if (attacker.enemyId === ENEMY_IDS.SPEARMAN) {
       const d = unitDistance(attacker, target);
@@ -3564,6 +3746,7 @@
       if (attacker.enemyId === ENEMY_IDS.ICE_ELEM && target.hp > 0) addStatus(target, STATUS.FREEZE, 1, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.HYDRA && target.hp > 0) addStatus(target, STATUS.POISON, 2, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.THORN_DRYAD && target.hp > 0) addStatus(target, STATUS.SLOW, 1, { source: attacker });
+      if (attacker.enemyId === ENEMY_IDS.ROOT_SENTINEL && target.hp > 0) addStatus(target, STATUS.SLOW, 1, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.BOG_LURKER && target.hp > 0 && Math.random() < 0.35) addStatus(target, STATUS.SLOW, 1, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.RAT_SWARM && target.hp > 0 && Math.random() < 0.45) addStatus(target, STATUS.POISON, 1, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.CULTIST && target.hp > 0 && Math.random() < 0.30) addStatus(target, STATUS.CURSE, 1, { source: attacker });
@@ -3573,6 +3756,30 @@
       if (attacker.enemyId === ENEMY_IDS.VOID_STALKER && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.CURSE, 1, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.STONE_GOLEM && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.STUN, 1, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.ARCANE_SENTINEL && target.hp > 0 && Math.random() < 0.25) addStatus(target, STATUS.FREEZE, 1, { source: attacker });
+    }
+    if (attacker.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && target.hp > 0 && b && b.grid[targetStart.y]?.[targetStart.x] !== TILE.WATER) {
+      b.grid[targetStart.y][targetStart.x] = TILE.FIRE;
+      b.temporaryFire = (b.temporaryFire || []).filter(tile => tile.x !== targetStart.x || tile.y !== targetStart.y);
+      b.temporaryFire.push({ x: targetStart.x, y: targetStart.y, expiresRound: b.round + 1 });
+      spawnBattleTextFx(targetStart.x, targetStart.y, 'IGNITE', '#ff8a35');
+    }
+    if (attacker.enemyId === ENEMY_IDS.WATER_ELEMENTAL && target.hp > 0 && b) {
+      const dx = Math.sign(target.x - attacker.x), dy = Math.sign(target.y - attacker.y);
+      const cells = [
+        { x: target.x + dx, y: target.y + dy },
+        { x: target.x + dx, y: target.y },
+        { x: target.x, y: target.y + dy },
+        { x: target.x - dy, y: target.y + dx },
+        { x: target.x + dy, y: target.y - dx }
+      ];
+      const destination = cells.find(cell => inBounds(cell.x, cell.y) && canUnitOccupy(b, target, cell.x, cell.y, { end: true }));
+      if (destination) {
+        const fromX = target.x, fromY = target.y;
+        target.x = destination.x;
+        target.y = destination.y;
+        startUnitMoveAnimation(target, fromX, fromY, target.x, target.y);
+        spawnBattleTextFx(target.x, target.y, 'PUSH', '#74d9ff');
+      }
     }
     pushBattleLog(`[${attacker.emoji}] hits [${target.emoji}]`, 'enemy');
   }
@@ -3645,6 +3852,24 @@
       b.grid[y][x] = TILE.FIRE;
     }
     u.bossVar.aoeCounter = (u.bossVar.aoeCounter || 0) + 1;
+    if (u.bossVar.aoeCounter % 3 === 0 && (u.bossVar.elementalSummons || 0) < 2) {
+      const living = b.units.filter(unit => unit.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && unit.hp > 0).length;
+      if (living < 2) {
+        const candidates = [];
+        for (let y = 0; y < GRID_H; y++) for (let x = 2; x < GRID_W; x++) {
+          if (b.grid[y][x] === TILE.FIRE && canUnitOccupy(b, { isHero: false, enemyId: ENEMY_IDS.FIRE_ELEMENTAL, sizeW: 1, sizeH: 1 }, x, y, { end: true })) candidates.push({ x, y });
+        }
+        if (candidates.length) {
+          const cell = candidates[randInt(0, candidates.length - 1)];
+          const elemental = spawnEnemy(ENEMY_IDS.FIRE_ELEMENTAL, cell.x, cell.y);
+          elemental.bossGuardian = true;
+          b.units.push(elemental);
+          u.bossVar.elementalSummons = (u.bossVar.elementalSummons || 0) + 1;
+          pushBattleLog('🔥 Титан поднимает нового стража из лавы.', 'enemy');
+          buildInitiative();
+        }
+      }
+    }
     if (u.bossVar.aoeCounter % 3 === 0) {
       if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_fire_titan_aoe, 0.88);
       playBattleAbilityFx(u, 'fireTitanAoe', { radius: 2, glyph: '🔥' });

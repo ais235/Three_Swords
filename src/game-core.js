@@ -329,6 +329,10 @@
     terrainFire: { ru: 'Огонь', en: 'Fire', es: 'Fuego' },
     collapseWarning: { ru: 'ОБВАЛ', en: 'COLLAPSE', es: 'DERRUMBE' },
     lavaWarning: { ru: 'ЛАВА', en: 'LAVA', es: 'LAVA' },
+    tideWarning: { ru: 'ПРИЛИВ', en: 'TIDE', es: 'MAREA' },
+    collapseWarningTooltip: { ru: 'Сработает в следующем раунде: 10 урона, отталкивание и завал. Без свободной клетки юнит погибнет.', en: 'Triggers next round: 10 damage, push and rubble. A unit with no escape dies.', es: 'Se activa la próxima ronda: 10 de daño, empuje y escombros. Sin salida, la unidad muere.' },
+    lavaWarningTooltip: { ru: 'Сработает в следующем раунде: 5 урона, огненная клетка и возможное появление элементаля.', en: 'Triggers next round: 5 damage, a fire tile and a possible elemental.', es: 'Se activa la próxima ronda: 5 de daño, fuego y posible elemental.' },
+    tideWarningTooltip: { ru: 'В следующем раунде клетку затопит. На одной из отмеченных клеток может появиться водный элементаль.', en: 'This tile floods next round. A water elemental may rise on one marked tile.', es: 'Esta casilla se inundará la próxima ronda. Puede surgir un elemental de agua.' },
     terrainCover: { ru: 'укрытие', en: 'cover', es: 'cobertura' },
     terrainBlocksSight: { ru: 'блокирует выстрелы', en: 'blocks shots', es: 'bloquea disparos' },
     terrainBlocksMove: { ru: 'непроходимо', en: 'blocks movement', es: 'bloquea movimiento' },
@@ -618,6 +622,9 @@
         'Призрак': 'Ghost',
         'Огненный титан': 'Fire Titan',
         'Леший — хозяин чащи': 'Ancient Leshy',
+        'Колючие корни': 'Thorned Roots',
+        'Неподвижный клубок корней. Бьёт героя на соседней клетке и замедляет его на 1 ход.': 'Immobile roots strike a hero on an adjacent tile and slow the target for 1 turn.',
+        'Не подходите вплотную: уничтожайте издалека или уроном по области.': 'Stay out of adjacent cells, destroy it from range, or clear it with area damage.',
         'Неподвижный босс. В первый ход призывает двух лесных существ, затем по одному через ход (не больше 4). На 50% HP призывает ещё до двух и даёт всем своим призванным +2 атаки.': 'Rooted boss. On its first turn it summons two forest creatures, then one every other turn (maximum 4). At 50% HP it summons up to two more and gives all its summons +2 attack.',
         'Уничтожайте опасных призванных, но не затягивайте бой: сам Леший не двигается и атакует корнями с дистанции 3.': 'Remove dangerous summons, but do not prolong the fight: the Leshy cannot move and attacks with roots from range 3.',
         'Стоит на месте. Призывает 2 существа в первый ход, затем 1 через ход (макс. 4). На 50% HP призывает ещё до 2 и усиливает призванных на +2 атаки.': 'Does not move. Summons 2 creatures on the first turn, then 1 every other turn (max 4). At 50% HP it summons up to 2 more and gives summons +2 attack.',
@@ -938,6 +945,9 @@
         'Призрак': 'Fantasma',
         'Огненный титан': 'Titán de fuego',
         'Леший — хозяин чащи': 'Leshy ancestral',
+        'Колючие корни': 'Raíces espinosas',
+        'Неподвижный клубок корней. Бьёт героя на соседней клетке и замедляет его на 1 ход.': 'Raíces inmóviles golpean a un héroe en una casilla adyacente y lo ralentizan durante 1 turno.',
+        'Не подходите вплотную: уничтожайте издалека или уроном по области.': 'No te acerques: destrúyelas a distancia o con daño de área.',
         'Неподвижный босс. В первый ход призывает двух лесных существ, затем по одному через ход (не больше 4). На 50% HP призывает ещё до двух и даёт всем своим призванным +2 атаки.': 'Jefe enraizado. En su primer turno invoca dos criaturas del bosque y luego una cada dos turnos (máximo 4). Al 50% de HP invoca hasta dos más y da +2 de ataque a todas sus invocaciones.',
         'Уничтожайте опасных призванных, но не затягивайте бой: сам Леший не двигается и атакует корнями с дистанции 3.': 'Elimina las invocaciones peligrosas, pero no alargues el combate: el Leshy no se mueve y ataca con raíces desde alcance 3.',
         'Стоит на месте. Призывает 2 существа в первый ход, затем 1 через ход (макс. 4). На 50% HP призывает ещё до 2 и усиливает призванных на +2 атаки.': 'No se mueve. Invoca 2 criaturas en el primer turno y luego 1 cada dos turnos (máx. 4). Al 50% de HP invoca hasta 2 más y da +2 de ataque a sus invocaciones.',
@@ -1184,6 +1194,16 @@
     });
     return out;
   })();
+  [
+    { ru: 'Огненный элементаль', en: 'Fire Elemental', es: 'Elemental de fuego' },
+    { ru: 'Водный элементаль', en: 'Water Elemental', es: 'Elemental de agua' },
+    { ru: 'Возникает из предупреждённой лавы. Огонь лечит его, а удар поджигает клетку цели. Одновременно может существовать не более двух.', en: 'Rises from warned lava. Fire heals it, and its strike ignites the ground beneath the target. Up to two may exist at once.', es: 'Surge de la lava anunciada. El fuego lo cura y su golpe incendia la casilla del objetivo. Puede haber hasta dos.' },
+    { ru: 'Выманите его из огня и применяйте заморозку. Уничтожьте стражей Титана, чтобы снять стихийный щит.', en: 'Lure it away from fire and use Freeze. Destroy the Titan guards to break its elemental shield.', es: 'Sácalo del fuego y congélalo. Destruye a los guardianes del Titán para romper su escudo.' },
+    { ru: 'Возникает во время предупреждённого прилива. Свободно ходит по воде, получает там броню и отталкивает героев ударом.', en: 'Rises with the warned tide. It moves freely through water, gains armor there, and pushes heroes with its attack.', es: 'Surge con la marea anunciada. Se mueve libremente por el agua, gana armadura y empuja al atacar.' },
+    { ru: 'Сражайтесь с ним на суше или вытолкните его из воды. Уничтожьте стражей Гидры, чтобы снять приливный щит.', en: 'Fight it on dry ground or force it out of water. Destroy the Hydra guards to break its tidal shield.', es: 'Combate en tierra seca o sácalo del agua. Destruye a los guardianes de la Hidra para romper su escudo.' },
+    { ru: 'Огонь лечит его. Атака поджигает клетку цели, а смерть вызывает небольшой взрыв.', en: 'Fire heals it. Its attack ignites the target tile, and it explodes on death.', es: 'El fuego lo cura. Su ataque incendia la casilla y explota al morir.' },
+    { ru: 'Свободно ходит по воде, получает там +2 брони и отталкивает цель при попадании.', en: 'Moves freely through water, gains +2 armor there, and pushes its target on hit.', es: 'Se mueve libremente por el agua, gana +2 de armadura y empuja al golpear.' }
+  ].forEach(entry => Object.values(entry).forEach(value => { I18N_EXACT[normalizeI18nText(value).toLowerCase()] = entry; }));
 
   function currentLanguage() { return SUPPORTED_LANGUAGES.includes(GameLanguage) ? GameLanguage : 'ru'; }
   function translateKey(key) { return (I18N[key] && I18N[key][currentLanguage()]) || (I18N[key] && I18N[key].ru) || key; }

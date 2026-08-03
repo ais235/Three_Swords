@@ -112,6 +112,107 @@ try {
     const spreadRows = GameState.currentBattle.units
       .filter(unit => !unit.isHero)
       .map(unit => unit.y);
+    const rootBoss = GameState.mapGrid.find(cell => cell.region === 1 && cell.type === 'boss');
+    const regionOneCells = GameState.mapGrid
+      .filter(cell => cell.region === 1 && cell.id !== rootBoss?.id)
+      .map(cell => ({ cell, distance: WorldMapTopology.shortestDistance(cell, rootBoss) }))
+      .sort((a, z) => a.distance - z.distance);
+    const nearRootCell = regionOneCells[0]?.cell;
+    const farRootCell = regionOneCells[regionOneCells.length - 1]?.cell;
+    const nearPlan = CampaignExpansion.forestRootPlan(nearRootCell);
+    const farPlan = CampaignExpansion.forestRootPlan(farRootCell);
+    startBattleForCell(nearRootCell, { wave: [ENEMY_IDS.SKELETON], scenario: 'eliminate' });
+    const rootBattle = GameState.currentBattle;
+    const roots = rootBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.ROOT_SENTINEL);
+    startBattleForCell(rootBoss, { wave: [ENEMY_IDS.LESHY], scenario: 'eliminate' });
+    const bossBattle = GameState.currentBattle;
+    const leshy = bossBattle.units.find(unit => unit.enemyId === ENEMY_IDS.LESHY);
+    const bossRoots = bossBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.ROOT_SENTINEL);
+    const rootCheck = {
+      nearPlan, farPlan,
+      normalRoots: roots.length,
+      rootStats: roots[0] ? { hp: roots[0].maxHp, move: roots[0].move, range: roots[0].range, attack: roots[0].attack } : null,
+      bossRoots: bossRoots.length,
+      bossRootPositions: bossRoots.map(root => ({ x: root.x, y: root.y, distance: unitDistance(root, leshy) })),
+      bossRing: bossRoots.every(root => unitDistance(root, leshy) <= 1),
+      rootTexture: !!EnemyTextures[ENEMY_IDS.ROOT_SENTINEL]
+    };
+    startBattleForCell({ id: 'e2e-fire-rise', region: 2, type: 'mission' }, { wave: [ENEMY_IDS.SKELETON], scenario: 'eliminate' });
+    const fireRiseBattle = GameState.currentBattle;
+    fireRiseBattle.round = 2;
+    CampaignExpansion.onRoundStarted(fireRiseBattle);
+    fireRiseBattle.round = 3;
+    CampaignExpansion.onRoundStarted(fireRiseBattle);
+    const risenFire = fireRiseBattle.units.find(unit => unit.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && unit.hp > 0);
+    const fireHpBeforeHeal = risenFire?.hp;
+    if (risenFire) {
+      risenFire.hp -= 5;
+      applyGroundEffects(risenFire);
+    }
+    const fireRiseCheck = {
+      count: fireRiseBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && unit.hp > 0).length,
+      onFire: fireRiseBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && unit.hp > 0)
+        .every(unit => fireRiseBattle.grid[unit.y][unit.x] === TILE.FIRE),
+      fireHealing: !!risenFire && risenFire.hp === fireHpBeforeHeal - 2
+    };
+    startBattleForCell({ id: 'e2e-tide-rise', region: 3, type: 'mission' }, { wave: [ENEMY_IDS.GHOST], scenario: 'eliminate' });
+    const tideBattle = GameState.currentBattle;
+    tideBattle.round = 2;
+    const tideWarningOutcome = CampaignExpansion.onRoundStarted(tideBattle);
+    const warnedTide = [...(tideBattle.tideWarnings || [])];
+    tideBattle.round = 3;
+    CampaignExpansion.onRoundStarted(tideBattle);
+    const waterElementals = tideBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.WATER_ELEMENTAL && unit.hp > 0);
+    const risenWater = waterElementals[0];
+    const pushedHero = tideBattle.units.find(unit => unit.isHero);
+    let pushed = false;
+    if (risenWater && pushedHero) {
+      tideBattle.units.filter(unit => unit !== risenWater && unit !== pushedHero).forEach(unit => { unit.hp = 0; });
+      risenWater.x = 4; risenWater.y = 3;
+      pushedHero.x = 5; pushedHero.y = 3;
+      tideBattle.grid[3][4] = TILE.WATER;
+      tideBattle.grid[3][5] = TILE.GROUND;
+      tideBattle.grid[3][6] = TILE.GROUND;
+      aiAttack(risenWater, pushedHero);
+      pushed = pushedHero.x !== 5 || pushedHero.y !== 3;
+    }
+    const tideCheck = {
+      warned: warnedTide.length >= 2 && tideWarningOutcome.log.includes('⚠'),
+      flooded: warnedTide.every(tile => tideBattle.grid[tile.y][tile.x] === TILE.WATER),
+      elementals: waterElementals.length,
+      onWater: waterElementals.every(unit => unit === risenWater || tideBattle.grid[unit.y][unit.x] === TILE.WATER),
+      pushed
+    };
+    const fireBoss = GameState.mapGrid.find(cell => cell.region === 2 && cell.type === 'boss');
+    startBattleForCell(fireBoss, { wave: [ENEMY_IDS.FIRE_TITAN], scenario: 'eliminate' });
+    const fireBossBattle = GameState.currentBattle;
+    const titan = fireBossBattle.units.find(unit => unit.enemyId === ENEMY_IDS.FIRE_TITAN);
+    const fireGuards = fireBossBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && unit.bossGuardian);
+    const fireHero = fireBossBattle.units.find(unit => unit.isHero);
+    const titanHp = titan.hp;
+    dealDamage(fireHero, titan, 30, { magic: true, blockIgnore: true, noWeaponBonus: true });
+    const titanShieldedDamage = titanHp - titan.hp;
+    titan.hp = titanHp;
+    fireGuards.forEach(unit => { unit.hp = 0; });
+    dealDamage(fireHero, titan, 30, { magic: true, blockIgnore: true, noWeaponBonus: true });
+    const titanOpenDamage = titanHp - titan.hp;
+    const fireBossCheck = { guards: fireGuards.length, elementalTiles: fireGuards.every(unit => fireBossBattle.grid[unit.y][unit.x] === TILE.FIRE), shieldedDamage: titanShieldedDamage, openDamage: titanOpenDamage };
+    const waterBoss = GameState.mapGrid.find(cell => cell.region === 3 && cell.type === 'boss');
+    startBattleForCell(waterBoss, { wave: [ENEMY_IDS.HYDRA], scenario: 'eliminate' });
+    const waterBossBattle = GameState.currentBattle;
+    const hydra = waterBossBattle.units.find(unit => unit.enemyId === ENEMY_IDS.HYDRA);
+    const waterGuards = waterBossBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.WATER_ELEMENTAL && unit.bossGuardian);
+    const waterHero = waterBossBattle.units.find(unit => unit.isHero);
+    const hydraHp = hydra.hp;
+    dealDamage(waterHero, hydra, 30, { magic: true, blockIgnore: true, noWeaponBonus: true });
+    const hydraShieldedDamage = hydraHp - hydra.hp;
+    hydra.hp = hydraHp;
+    waterGuards.forEach(unit => { unit.hp = 0; });
+    dealDamage(waterHero, hydra, 30, { magic: true, blockIgnore: true, noWeaponBonus: true });
+    const hydraOpenDamage = hydraHp - hydra.hp;
+    const waterBossCheck = { guards: waterGuards.length, elementalTiles: waterGuards.every(unit => waterBossBattle.grid[unit.y][unit.x] === TILE.WATER), hydra: !!hydra, titan: !!titan, shieldedDamage: hydraShieldedDamage, openDamage: hydraOpenDamage };
+    const elementalBestiaryCheck = [ENEMY_IDS.FIRE_ELEMENTAL, ENEMY_IDS.WATER_ELEMENTAL].every(id =>
+      ENEMY_BESTIARY_DATA[id]?.tactic && ENEMY_BESTIARY_DATA[id]?.weakness && EnemyTextures[id]);
     const heroAtExit = { isHero: true, hp: 10, x: GRID_W - 1, sizeW: 1 };
     const liveRitualist = { isHero: false, hp: 10, scenarioTarget: 'ritualist' };
     const deadPrey = { isHero: false, hp: 0, scenarioTarget: 'prey' };
@@ -132,7 +233,7 @@ try {
       eventChoices: event.choices.length,
       delayed: GameState.campaignEvents.some(entry => entry.id === 'druid_cache'),
       assets: Object.values(CampaignExpansion.REGION).map(region => region.asset),
-      battleCheck, holdoutCheck, spreadRows, rules
+      battleCheck, holdoutCheck, spreadRows, rootCheck, fireRiseCheck, tideCheck, fireBossCheck, waterBossCheck, elementalBestiaryCheck, rules
     };
   });
   check('campaign offers three distinct starting contracts', campaignRuntime.contracts === 3, JSON.stringify(campaignRuntime));
@@ -147,6 +248,13 @@ try {
   check('holdout starts under pressure and schedules reinforcements', campaignRuntime.holdoutCheck.enemies >= 4 && campaignRuntime.holdoutCheck.nearbyVanguard && campaignRuntime.holdoutCheck.reinforcementRounds?.join(',') === '2,3', JSON.stringify(campaignRuntime.holdoutCheck));
   check('scenario reinforcements only enter from the battlefield edge', campaignRuntime.holdoutCheck.reinforcementsSpawned === 2 && campaignRuntime.holdoutCheck.reinforcementsOnEdge, JSON.stringify(campaignRuntime.holdoutCheck));
   check('normal enemies use the battlefield height', Math.max(...campaignRuntime.spreadRows) - Math.min(...campaignRuntime.spreadRows) >= 4, JSON.stringify(campaignRuntime.spreadRows));
+  check('forest roots scale up near Leshy and behave as static adjacent attackers', campaignRuntime.rootCheck.nearPlan.count >= campaignRuntime.rootCheck.farPlan.count && campaignRuntime.rootCheck.normalRoots === campaignRuntime.rootCheck.nearPlan.count && campaignRuntime.rootCheck.rootStats?.hp > 0 && campaignRuntime.rootCheck.rootStats?.move === 0 && campaignRuntime.rootCheck.rootStats?.range === 1 && campaignRuntime.rootCheck.rootTexture, JSON.stringify(campaignRuntime.rootCheck));
+  check('Leshy starts protected by a four-root ring', campaignRuntime.rootCheck.bossRoots === 4 && campaignRuntime.rootCheck.bossRing, JSON.stringify(campaignRuntime.rootCheck));
+  check('warned lava can raise a fire elemental that heals on fire', campaignRuntime.fireRiseCheck.count === 1 && campaignRuntime.fireRiseCheck.onFire && campaignRuntime.fireRiseCheck.fireHealing, JSON.stringify(campaignRuntime.fireRiseCheck));
+  check('the tide warns, floods connected cells and raises a pushing water elemental', campaignRuntime.tideCheck.warned && campaignRuntime.tideCheck.flooded && campaignRuntime.tideCheck.elementals === 1 && campaignRuntime.tideCheck.onWater && campaignRuntime.tideCheck.pushed, JSON.stringify(campaignRuntime.tideCheck));
+  check('regional bosses start with two elemental guards on matching terrain', campaignRuntime.fireBossCheck.guards === 2 && campaignRuntime.fireBossCheck.elementalTiles && campaignRuntime.waterBossCheck.guards === 2 && campaignRuntime.waterBossCheck.elementalTiles && campaignRuntime.waterBossCheck.hydra && campaignRuntime.waterBossCheck.titan, JSON.stringify({ fire: campaignRuntime.fireBossCheck, water: campaignRuntime.waterBossCheck }));
+  check('elemental guards reduce boss damage until destroyed', campaignRuntime.fireBossCheck.shieldedDamage < campaignRuntime.fireBossCheck.openDamage && campaignRuntime.waterBossCheck.shieldedDamage < campaignRuntime.waterBossCheck.openDamage, JSON.stringify({ fire: campaignRuntime.fireBossCheck, water: campaignRuntime.waterBossCheck }));
+  check('new elementals have portraits and complete bestiary entries', campaignRuntime.elementalBestiaryCheck, JSON.stringify(campaignRuntime));
   check('every scenario has an automated victory or failure rule', Object.values(campaignRuntime.rules).every(Boolean), JSON.stringify(campaignRuntime.rules));
   const wardCell = await page.evaluate(() => {
     startBattleForCell({ id: 'e2e-ward-tooltip', region: 2, type: 'mission' }, {
@@ -165,7 +273,7 @@ try {
   }
   const wardTooltipText = await page.locator('#tooltip').textContent();
   check('the defense shield explains itself on hover', /ОБЕРЕГ|WARD/i.test(wardTooltipText || '') && /24\/24/.test(wardTooltipText || ''), wardTooltipText || '');
-  check('all special battlefield markers have localized explanations', await page.evaluate(() => ['wardMarker', 'wardTooltip', 'exitMarker', 'exitTooltip', 'trapMarker', 'trapTooltip', 'huntTargetTooltip', 'ritualTargetTooltip', 'collapseWarning', 'lavaWarning'].every(key => translateKey(key) !== key)));
+  check('all special battlefield markers have localized explanations', await page.evaluate(() => ['wardMarker', 'wardTooltip', 'exitMarker', 'exitTooltip', 'trapMarker', 'trapTooltip', 'huntTargetTooltip', 'ritualTargetTooltip', 'collapseWarning', 'lavaWarning', 'tideWarning', 'collapseWarningTooltip', 'lavaWarningTooltip', 'tideWarningTooltip'].every(key => translateKey(key) !== key)));
   await page.evaluate(() => setCampaignContract('mercenaries'));
   check('contract selection updates its explanatory text', (await page.locator('#menu-contract-copy').textContent())?.length > 20);
   await page.evaluate(() => { showScreen('menu'); initMenuScreen(); });
