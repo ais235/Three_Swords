@@ -25,6 +25,7 @@
     regionUnlocked: 1,
     shopStock: [],
     cityState: { adUpgradeUsed: false, secretRevealed: false, secretItemId: null },
+    cityShopStocks: {},
     difficulty: 'normal',
     stats: { battles: 0, kills: 0, goldEarned: 0, objectivesCompleted: 0, damageTaken: 0, skillfulBattles: 0 },
     pendingNegativeEvent: null,
@@ -64,10 +65,44 @@
   };
 
   function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+  const EQUIPMENT_STAT_KEYS = ['attack', 'armor', 'range', 'move', 'maxHp', 'maxMana'];
+  function equippedStatTotals(hero) {
+    const totals = Object.fromEntries(EQUIPMENT_STAT_KEYS.map(key => [key, 0]));
+    Object.values(hero?.equipment || {}).forEach(id => {
+      const item = typeof itemById === 'function' ? itemById(id) : null;
+      if (!item?.mods) return;
+      EQUIPMENT_STAT_KEYS.forEach(key => {
+        const modKey = key === 'maxMana' ? 'mana' : key;
+        totals[key] += Number(item.mods[modKey]) || 0;
+      });
+    });
+    return totals;
+  }
+  function ensureHeroBaseStats(hero) {
+    if (!hero) return null;
+    if (!hero.baseStats) {
+      const equipment = equippedStatTotals(hero);
+      hero.baseStats = {};
+      EQUIPMENT_STAT_KEYS.forEach(key => {
+        const fallback = baseHeroTemplate().find(base => base.id === hero.id)?.[key] || 0;
+        hero.baseStats[key] = (Number(hero[key]) || fallback) - equipment[key];
+      });
+    }
+    return hero.baseStats;
+  }
+  function applyPermanentHeroStat(hero, key, delta) {
+    if (!hero || !EQUIPMENT_STAT_KEYS.includes(key) || !Number(delta)) return;
+    const baseStats = ensureHeroBaseStats(hero);
+    baseStats[key] = (Number(baseStats[key]) || 0) + Number(delta);
+    hero[key] = (Number(hero[key]) || 0) + Number(delta);
+    if (key === 'maxHp') hero.hp = Math.min(hero.maxHp, Math.max(1, hero.hp + Number(delta)));
+    if (key === 'maxMana') hero.mana = Math.min(hero.maxMana, Math.max(0, (hero.mana || 0) + Number(delta)));
+  }
   function initHeroesFromTemplate() {
     GameState.heroes = baseHeroTemplate().map(h => {
       const x = deepClone(h);
       x.activeStatuses = [];
+      x.baseStats = Object.fromEntries(EQUIPMENT_STAT_KEYS.map(key => [key, Number(x[key]) || 0]));
       return x;
     });
   }
@@ -133,6 +168,12 @@
 
   function createSaveSnapshot() {
     const snap = deepClone(GameState);
+    // Keep a single recovery point. Older builds recursively embedded every
+    // previous recovery point and eventually exceeded the browser quota.
+    if (snap.lastSafeSave) {
+      snap.lastSafeSave.lastSafeSave = null;
+      snap.lastSafeSave.currentBattle = null;
+    }
     snap.adPaused = false;
     snap.pendingEnemyTurnAfterAd = false;
     snap.savedAt = Date.now();
@@ -164,6 +205,7 @@
     GameState.battleSpeed = Number(GameState.battleSpeed) === 2 ? 2 : 1;
     GameState.runStartedAt = Number(GameState.runStartedAt) || Date.now();
     if (!GameState.consumables || typeof GameState.consumables !== 'object') GameState.consumables = {};
+    if (!GameState.cityShopStocks || typeof GameState.cityShopStocks !== 'object') GameState.cityShopStocks = {};
     // Old saves can be loaded before the campaign module has initialised.
     if (typeof CampaignExpansion !== 'undefined') CampaignExpansion.ensureState();
     if (!GameState.stats || typeof GameState.stats !== 'object') GameState.stats = { battles: 0, kills: 0, goldEarned: 0 };
@@ -263,12 +305,14 @@
     });
   }
 
-  function saveGame() {
+  function saveGame(flush = false) {
     const snap = createSaveSnapshot();
     if (persistLocalSave(snap)) {
       updateRecordsFromState();
-      queueCloudSave(snap);
+      queueCloudSave(snap, flush);
+      return true;
     }
+    return false;
   }
   function loadGame() {
     try {
@@ -480,6 +524,9 @@
       doubleShot: u.cds?.doubleShot || 0, slowArrow: u.cds?.slowArrow || 0, arrowRain: u.cds?.arrowRain || 0,
       fireball: u.cds?.fireball || 0, freeze: u.cds?.freeze || 0, meteor: u.cds?.meteor || 0 };
     u.flags = { firstAttackTurn: true, mysticShield: src.flags?.mysticShield ?? 3, ...(u.flags || {}) };
+    u.flags.hourglassUsed = false;
+    u.flags.hourglassReady = false;
+    u.flags.portalStoneUsed = false;
     u.activeStatuses = [];
     u.sprite = u.emoji;
     return u;

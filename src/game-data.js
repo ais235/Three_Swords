@@ -681,7 +681,7 @@
     garet: {
       defense: [
         { level: 1, id: 'd1', name: 'Guardian Cover', apply: h => { h.perks.push('guardianCover'); } },
-        { level: 2, id: 'd2', name: '+1 armor', apply: h => { h.armor += 1; } },
+        { level: 2, id: 'd2', name: '+1 armor', apply: h => { applyPermanentHeroStat(h, 'armor', 1); } },
         { level: 3, id: 'd3', name: 'Reflected 1 damage', apply: h => { h.perks.push('reflect1'); } }
       ],
       attack: [
@@ -697,12 +697,12 @@
     },
     alira: {
       accuracy: [
-        { level: 1, id: 'm1', name: '+1 range', apply: h => { h.range += 1; } },
-        { level: 2, id: 'm2', name: '+3 damage', apply: h => { h.attack += 3; } },
+        { level: 1, id: 'm1', name: '+1 range', apply: h => { applyPermanentHeroStat(h, 'range', 1); } },
+        { level: 2, id: 'm2', name: '+3 damage', apply: h => { applyPermanentHeroStat(h, 'attack', 3); } },
         { level: 3, id: 'm3', name: 'Ignore cover', apply: h => { h.perks.push('ignoreCover'); } }
       ],
       speed: [
-        { level: 1, id: 's1', name: '+1 movement', apply: h => { h.move += 1; } },
+        { level: 1, id: 's1', name: '+1 movement', apply: h => { applyPermanentHeroStat(h, 'move', 1); } },
         { level: 2, id: 's2', name: 'Shot after moving', apply: h => { h.perks.push('moveAttack'); } },
         { level: 3, id: 's3', name: '+2 speed', apply: h => { h.speed += 2; } }
       ],
@@ -721,10 +721,10 @@
       control: [
         { level: 1, id: 'c1', name: 'Freeze 2 turns', apply: h => { h.perks.push('freeze2'); } },
         { level: 2, id: 'c2', name: 'Fear 1 turn', apply: h => { h.perks.push('fear'); } },
-        { level: 3, id: 'c3', name: 'Control master', apply: h => { h.maxMana += 2; h.mana += 2; } }
+        { level: 3, id: 'c3', name: 'Control master', apply: h => { applyPermanentHeroStat(h, 'maxMana', 2); } }
       ],
       mystic: [
-        { level: 1, id: 'y1', name: '+3 max mana', apply: h => { h.maxMana += 3; h.mana += 3; } },
+        { level: 1, id: 'y1', name: '+3 max mana', apply: h => { applyPermanentHeroStat(h, 'maxMana', 3); } },
         { level: 2, id: 'y2', name: 'HP for a kill', apply: h => { h.perks.push('killHeal'); } },
         { level: 3, id: 'y3', name: 'Teleport', apply: h => { h.perks.push('teleport'); } }
       ]
@@ -1156,10 +1156,10 @@
     // Artifacts: all heroes
     { id: 'luck_amulet',    slot: 'artifact', heroClass: 'all',   rarity: 'common', minRegion: 1, emoji: '🧿', name: 'Lucky Amulet',            price: 25,  sellPrice: 12,  mods: { goldBonus: 0.15 },                   desc: '+15% gold from each battle.' },
     { id: 'mana_crystal',   slot: 'artifact', heroClass: 'mage',  rarity: 'rare',   minRegion: 1, emoji: '💠', name: 'Mana Crystal',           price: 80,  sellPrice: 40,  mods: { manaRegen: 3 },                      desc: 'The mage restores +3 mana at the start of each turn.' },
-    { id: 'seer_eye',       slot: 'artifact', heroClass: 'all',   rarity: 'rare',   minRegion: 1, emoji: '👁️', name: 'Scout Eye',           price: 85,  sellPrice: 42,  mods: { previewEnemies: true },              desc: 'Preview enemy lineup and abilities before battle.' },
-    { id: 'hourglass',      slot: 'artifact', heroClass: 'all',   rarity: 'rare',   minRegion: 2, emoji: '⏳', name: 'Hourglass',           price: 95,  sellPrice: 47,  mods: { extraAction: true },                 desc: 'Once per battle: repeat the last action.' },
+    { id: 'seer_eye',       slot: 'artifact', heroClass: 'all',   rarity: 'rare',   minRegion: 1, emoji: '👁️', name: 'Scout Eye',           price: 85,  sellPrice: 42,  mods: { previewEnemies: true },              desc: 'Reveals the exact enemy lineup on the map.' },
+    { id: 'hourglass',      slot: 'artifact', heroClass: 'all',   rarity: 'rare',   minRegion: 2, emoji: '⏳', name: 'Hourglass',           price: 95,  sellPrice: 47,  mods: { extraAction: true },                 desc: 'Once per battle: gain one extra turn after your action.' },
     { id: 'death_ring',     slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 2, emoji: '💀', name: 'Death Ring',           price: 175, sellPrice: 87,  mods: { deathExplode: 15 },                  desc: 'When a hero dies: 3×3 explosion, 15 damage to enemies.' },
-    { id: 'portal_stone',   slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 2, emoji: '🌀', name: 'Portal Stone',       price: 185, sellPrice: 92,  mods: { battleTeleport: true },              desc: 'Once per battle: move a hero to any tile.' },
+    { id: 'portal_stone',   slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 2, emoji: '🌀', name: 'Portal Stone',       price: 185, sellPrice: 92,  mods: { battleTeleport: true },              desc: 'Once per battle: teleport the owner to any free tile.' },
     { id: 'crown',          slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 3, emoji: '👑', name: 'Crown of Power',           price: 195, sellPrice: 97,  mods: { allyAttack: 2, allyArmor: 1 },       desc: 'All allies gain +2 attack and +1 armor (aura).' }
   ];
 
@@ -1234,4 +1234,3 @@
     const finalPool = freshPool.length ? freshPool : pool;
     return deepClone(finalPool[Math.floor(Math.random() * finalPool.length)]);
   }
-

@@ -103,7 +103,7 @@ const checks = [
   ['battle terrain hints present', () => index.includes('function terrainInfo') && index.includes('function shouldDrawTerrainMarkers') && index.includes('terrainBlocksSight') && index.includes('terrain.defense')],
   ['phone landscape rescue css present', () => index.includes('Phone landscape rescue pass') && index.includes('"heroes actions"') && index.includes('"field actions"')],
   ['touch map hides hover-only cell info', () => existsSync(resolve(root, 'styles/responsive-landscape.css')) && readFileSync(resolve(root, 'styles/responsive-landscape.css'), 'utf8').includes('#map-screen #map-cell-info')],
-  ['touch route cards stack localized text', () => readFileSync(resolve(root, 'styles/responsive-landscape.css'), 'utf8').includes('grid-template-columns: minmax(0, 1fr)') && readFileSync(resolve(root, 'styles/responsive-landscape.css'), 'utf8').includes('overflow-wrap: anywhere')],
+  ['touch map uses the selected cell information panel', () => index.includes('selectedCellInfoHtml') && index.includes('map-cell-info')],
   ['portrait orientation gate present', () => index.includes('id="orientation-gate"') && index.includes('@media (orientation: portrait)') && index.includes('orientationTitle')],
   ['battle speed control persists', () => index.includes('battle-speed-toggle') && index.includes('function battleDelay') && index.includes('GameState.battleSpeed')],
   ['touch target confirmation present', () => index.includes('touchConfirmKey') && index.includes('tapToConfirm') && index.includes('function heroDamagePreview')],
@@ -116,7 +116,7 @@ const checks = [
   ['perk menu uses readable horizontal cards', () => existsSync(resolve(root, 'styles/perk-menu.css')) && readFileSync(resolve(root, 'styles/perk-menu.css'), 'utf8').includes('grid-template-columns: 32px minmax(0, 1fr) auto')],
   ['perk detail separates trigger and effect', () => index.includes('perk-detail-rule') && index.includes("trigger:'") && index.includes("effect:'")],
   ['damage preview has a dedicated card', () => index.includes('function damagePreviewCardHtml') && index.includes('damage-preview-card')],
-  ['route choice cards present', () => index.includes('map-route-choices') && index.includes('function mapNodeIntel') && index.includes('bossDistance')],
+  ['contextual map cell intelligence is present', () => index.includes('selectedCellInfoHtml') && index.includes('function mapNodeIntel') && index.includes('bossDistance')],
   ['unlocked region boss has a grey silhouette', () => index.includes('function mapBossSilhouetteHtml') && index.includes('map-boss-silhouette') && index.includes('background: linear-gradient(180deg, #aeb4bd, #656b76)')],
   ['boss silhouette uses the real regional boss asset', () => index.includes('function regionBossEnemyId') && index.includes('if (region === 1) return ENEMY_IDS.LESHY') && index.includes('ENEMY_IDS.FIRE_TITAN') && index.includes('ENEMY_IDS.HYDRA') && index.includes('enemyIconUrl(enemyId)')],
   ['unlocked boss cell is revealed across map fog', () => index.includes("const revealedBoss = node.type === 'boss' && node.region <= GameState.regionUnlocked") && index.includes('dist <= 2 || revealedBoss')],
@@ -151,8 +151,8 @@ const checks = [
   ['initiative HUD is event-driven rather than rebuilt every frame', () => !/function loop\(\) \{[\s\S]{0,500}renderInitiative\(\)/.test(index) && index.includes('Initiative is DOM-heavy')],
   ['deployment zone exposes valid cells on the battlefield', () => index.includes('function isDeployCellAvailable') && index.includes("translateKey('deployZone')") && index.includes('ctx.setLineDash([7, 4])')],
   ['turn focus is explicit on field, cards and initiative', () => index.includes('turn-focus-banner') && index.includes('hero-turn-chip') && index.includes('initiativeCycleUnits') && index.includes("translateKey('turnNow').toUpperCase()")],
-  ['map routes and cells have bidirectional hover linking', () => index.includes('route-linked-highlight') && index.includes('showLinkedRoute') && index.includes("event.pointerType !== 'touch'")],
-  ['route cards expose cached enemy intel', () => index.includes('enemyWavePreview') && index.includes('map-route-intel')],
+  ['map hover updates contextual cell information', () => index.includes('el.onmouseenter') && index.includes('showInfo(node)')],
+  ['selected map cell exposes cached enemy intel', () => index.includes('enemyWavePreview') && index.includes('selectedCellInfoHtml')],
   ['ending summary tracks mastery', () => index.includes('objectivesCompleted') && index.includes('damageTaken') && index.includes('resultCode')],
   ['perk rules are exact in all languages', () => index.includes('const PERK_RULES_EXACT') && index.includes('TEAM SYNERGY') && index.includes('SINERGIA DE EQUIPO')]
   ,['campaign expansion runtime is present', () => existsSync(resolve(root, 'src/campaign-expansion.js')) && index.includes('src/campaign-expansion.js')]

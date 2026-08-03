@@ -71,7 +71,7 @@ const CampaignExpansion = (() => {
 
   const SCENARIOS = {
     eliminate: { icon: '⚔️', label: { ru: 'Разгром', en: 'Elimination', es: 'Eliminación' }, short: { ru: 'Победите всех врагов.', en: 'Defeat all enemies.', es: 'Derrota a todos.' } },
-    holdout: { icon: '⏳', label: { ru: 'Выдержка', en: 'Holdout', es: 'Resistencia' }, short: { ru: 'Сдержите натиск 4 раунда: враги уже близко, подкрепления прибывают.', en: 'Hold for 4 rounds: foes begin close and reinforcements arrive.', es: 'Resiste 4 rondas: los enemigos empiezan cerca y llegan refuerzos.' } },
+    holdout: { icon: '⏳', label: { ru: 'Выдержка', en: 'Holdout', es: 'Resistencia' }, short: { ru: 'Продержитесь 4 раунда.', en: 'Hold for 4 rounds.', es: 'Resiste 4 rondas.' } },
     escape: { icon: '🚩', label: { ru: 'Прорыв', en: 'Breakthrough', es: 'Avance' }, short: { ru: 'Выведите любого героя к правому краю.', en: 'Get any hero to the right edge.', es: 'Lleva a un héroe al borde derecho.' } },
     defense: { icon: '🛡️', label: { ru: 'Оборона', en: 'Defense', es: 'Defensa' }, short: { ru: 'Сохраните древний оберег до 4-го раунда.', en: 'Protect the ancient ward through round 4.', es: 'Protege el amuleto hasta la ronda 4.' } },
     ritual: { icon: '🔮', label: { ru: 'Срыв ритуала', en: 'Ritual break', es: 'Ritual roto' }, short: { ru: 'Уничтожьте отмеченного ритуалиста до 6-го раунда.', en: 'Defeat the marked ritualist before round 6.', es: 'Derrota al ritualista antes de la ronda 6.' } },
@@ -343,8 +343,8 @@ const CampaignExpansion = (() => {
     if (effect.gold) { GameState.gold = Math.max(0, GameState.gold + effect.gold); result.push(`${effect.gold > 0 ? '+' : ''}${effect.gold} 💰`); }
     if (effect.heal) { const amount = isMutatorActive('scarce_supplies') ? Math.ceil(effect.heal * 0.65) : effect.heal; heroes.forEach(hero => { hero.hp = Math.min(hero.maxHp, hero.hp + amount); }); result.push(`+${amount} HP`); }
     if (effect.hp) { heroes.forEach(hero => { hero.hp = Math.max(1, hero.hp + effect.hp); }); result.push(`${effect.hp} HP`); }
-    if (effect.maxHp) { const hero = heroes[0]; if (hero) { hero.maxHp = Math.max(8, hero.maxHp + effect.maxHp); hero.hp = Math.min(hero.hp, hero.maxHp); result.push(`${effect.maxHp} max HP`); } }
-    if (effect.attack) { const hero = heroes.sort((a, b) => a.attack - b.attack)[0]; if (hero) { hero.attack += effect.attack; result.push(`${hero.name} +${effect.attack} ⚔`); } }
+    if (effect.maxHp) { const hero = heroes[0]; if (hero) { applyPermanentHeroStat(hero, 'maxHp', effect.maxHp); result.push(`${effect.maxHp} max HP`); } }
+    if (effect.attack) { const hero = heroes.sort((a, b) => a.attack - b.attack)[0]; if (hero) { applyPermanentHeroStat(hero, 'attack', effect.attack); result.push(`${hero.name} +${effect.attack} ⚔`); } }
     if (effect.item) { const item = randomItem(cell.region, effect.item); GameState.inventory.push(item.id); result.push(`🎁 ${translateText(item.name)}`); }
     if (effect.potion) { GameState.consumables.healing = (GameState.consumables.healing || 0) + effect.potion; result.push(`🧪 x${effect.potion}`); }
     if (effect.reveal) { for (let y = 0; y < MAP_ROWS; y++) for (let x = 0; x < MAP_COLS; x++) if (Math.abs(x - GameState.playerPos.x) + Math.abs(y - GameState.playerPos.y) <= effect.reveal) mapFogVisitedAdd(y, x); result.push('🗺️'); }

@@ -12,13 +12,6 @@
     const p = GameState.playerPos;
     if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) mapFogVisitedAdd(p.y, p.x);
   }
-  function revealFullMapFogVisited() {
-    const set = new Set(GameState.mapFogVisited);
-    for (let row = 0; row < MAP_ROWS; row++) {
-      for (let col = 0; col < MAP_COLS; col++) set.add(`${row},${col}`);
-    }
-    GameState.mapFogVisited = [...set];
-  }
   /** In-game message shown instead of browser alert. */
   function showGameAlert(message) {
     return new Promise(resolve => {
@@ -731,7 +724,7 @@
       hero.flags = hero.flags || {};
       if (hero.flags.magStoneUsed) return false;
       hero.flags.magStoneUsed = true;
-      if (hero.role === 'mage') hero.attack += 1;
+      if (hero.role === 'mage') applyPermanentHeroStat(hero, 'attack', 1);
     } else {
       item.use(hero);
     }
@@ -924,14 +917,14 @@
     if (m.freeze2) out.push('Freeze: 2 turns instead of 1');
     if (m.revive5) out.push('1× revive with 5 HP');
     if (m.extraAction) out.push('1× repeat action per battle');
-    if (m.previewEnemies) out.push('Enemy preview before battle');
+    if (m.previewEnemies) out.push('Exact enemy lineup on the map');
     if (m.battleTeleport) out.push('1× hero teleport per battle');
     if (typeof m.allyAttack === 'number' && m.allyAttack !== 0) out.push(`Aura: +${m.allyAttack} attack to allies`);
     if (typeof m.allyArmor === 'number' && m.allyArmor !== 0) out.push(`Aura: +${m.allyArmor} armor to allies`);
     return out;
   }
 
-  let InvState = { activeHeroId: 'garet', selectedItemId: null, selectedItemIdx: -1 };
+  let InvState = { activeHeroId: 'garet', selectedItemId: null, selectedItemIdx: -1, selectedEquippedSlot: null };
   function randomItem(region, minRarity) {
     return selectLootItem(region, minRarity || null);
   }
@@ -952,17 +945,18 @@
       hero.maxHp += item.mods.maxHp;
       hero.hp = Math.min(hero.maxHp, hero.hp + item.mods.maxHp);
     }
-    equipItem(hero, item);
   }
   function resetHeroBaseStats(hero) {
-    const base = baseHeroTemplate().find(h => h.id === hero.id);
+    const base = ensureHeroBaseStats(hero);
     if (!base) return;
-    hero.maxHp = base.maxHp + ((hero.maxHp || base.maxHp) - (hero.baseMaxHp || base.maxHp));
+    const previousMaxHp = hero.maxHp || base.maxHp;
+    hero.maxHp = base.maxHp;
     hero.attack = base.attack;
     hero.armor = base.armor;
     hero.range = base.range;
     hero.move = base.move;
     hero.maxMana = base.maxMana;
+    hero.hp = Math.min(hero.maxHp, Math.max(1, (hero.hp || hero.maxHp) + hero.maxHp - previousMaxHp));
     hero.mana = Math.min(hero.mana || hero.maxMana, hero.maxMana);
   }
   function recalcHeroFromEquipment(hero) {
@@ -1259,7 +1253,8 @@
       if (!zone) return;
       const id = hero.equipment[slot];
       const it = itemById(id);
-      zone.className = 'eq-zone' + (it ? ' eq-filled eq-rarity-' + it.rarity : '');
+      const selectedEquipped = InvState.selectedEquippedSlot === slot && InvState.selectedItemId === id;
+      zone.className = 'eq-zone' + (it ? ' eq-filled eq-rarity-' + it.rarity : '') + (selectedEquipped ? ' eq-selected' : '');
       if (nameEl) nameEl.textContent = it ? translateText(it.name) : '';
       if (it) {
         const fx = formatItemMods(it).map(translateText).join(' · ');
@@ -1274,23 +1269,30 @@
       }
       zone.onclick = () => {
         if (!id) return;
-        // Show slot info
-        const sinfo = document.getElementById('inv-slot-info');
-        if (sinfo) sinfo.textContent = `${translateKey('unequip')} «${translateText(it?.name || id)}»? ${translateKey('clickAgain')}`;
-        if (zone.dataset.confirmUnequip === '1') {
+        InvState.selectedItemId = id;
+        InvState.selectedItemIdx = -1;
+        InvState.selectedEquippedSlot = slot;
+        renderInventoryScreen();
+      };
+      const unequipBtn = zone.querySelector('.eq-zone-unequip');
+      if (unequipBtn) {
+        unequipBtn.onclick = (event) => {
+          event.stopPropagation();
+          showGameConfirm(`${translateKey('unequip')} «${translateText(it?.name || id)}»?`).then(ok => {
+            if (!ok || hero.equipment?.[slot] !== id) return;
           hero.equipment[slot] = null;
           GameState.inventory.push(id);
           recalcHeroFromEquipment(hero);
           updateVictoryActionButtons();
+          InvState.selectedItemId = id;
+          InvState.selectedItemIdx = GameState.inventory.length - 1;
+          InvState.selectedEquippedSlot = null;
           saveGame();
           renderInventoryScreen();
           renderPartyStrip();
-          zone.dataset.confirmUnequip = '0';
-        } else {
-          zone.dataset.confirmUnequip = '1';
-          setTimeout(() => { zone.dataset.confirmUnequip = '0'; const s = document.getElementById('inv-slot-info'); if(s) s.textContent = ''; }, 2500);
-        }
-      };
+          });
+        };
+      }
     });
 
     // Backpack grid (index-based selection to avoid duplicate-ID bug)
@@ -1303,8 +1305,10 @@
         <strong>${translateKey('emptyBag')}</strong>
         <span>${translateKey('emptyBagHint')}</span>
       </div>`;
-      InvState.selectedItemIdx = -1;
-      InvState.selectedItemId = null;
+      if (!InvState.selectedEquippedSlot) {
+        InvState.selectedItemIdx = -1;
+        InvState.selectedItemId = null;
+      }
     } else {
       bag.innerHTML = invList.map((id, idx) => {
         const it = itemById(id);
@@ -1327,6 +1331,7 @@
           const idx = parseInt(el.getAttribute('data-idx'));
           InvState.selectedItemIdx = idx;
           InvState.selectedItemId = invList[idx];
+          InvState.selectedEquippedSlot = null;
           renderInventoryScreen();
         };
       });
@@ -1344,6 +1349,7 @@
     const forRole = itemHeroClassLabel(sel);
     const fitsHero = inventoryItemFitsHero(sel, hero);
     const itemName = translateText(sel.name);
+    const viewingEquipped = !!InvState.selectedEquippedSlot && hero.equipment?.[InvState.selectedEquippedSlot] === sel.id;
     detail.innerHTML = `
     <div class="item-detail-scroll">
       <div class="item-detail-headline">
@@ -1357,10 +1363,11 @@
       <div class="item-detail-stats">${statLinesHtml}</div>
       ${descHtml}
     </div>
-    <div class="item-detail-btns">
+    ${viewingEquipped ? '' : `<div class="item-detail-btns">
       <button class="btn btn-green" id="inv-equip-btn" style="width:100%;margin:0"${fitsHero ? '' : ' disabled'}>${translateKey('equip')}</button>
       <button class="btn btn-red" id="inv-drop-btn" style="width:100%;margin:0">${translateKey('drop')}</button>
-    </div>`;
+    </div>`}`;
+    if (viewingEquipped) return;
     const equipBtn = document.getElementById('inv-equip-btn');
     equipBtn.onclick = () => {
       if (!inventoryItemFitsHero(sel, hero)) {
@@ -1375,7 +1382,7 @@
         recalcHeroFromEquipment(hero);
         if (GameState._returnToVictory) markLastBattleDropHandled(sel.id);
         updateVictoryActionButtons();
-        InvState.selectedItemId = null; InvState.selectedItemIdx = -1;
+        InvState.selectedItemId = null; InvState.selectedItemIdx = -1; InvState.selectedEquippedSlot = null;
         saveGame();
         renderInventoryScreen();
         renderPartyStrip();
@@ -1397,7 +1404,7 @@
         if (dropIdx >= 0) GameState.inventory.splice(dropIdx, 1);
         if (GameState._returnToVictory) markLastBattleDropHandled(sel.id);
         updateVictoryActionButtons();
-        InvState.selectedItemId = null; InvState.selectedItemIdx = -1;
+        InvState.selectedItemId = null; InvState.selectedItemIdx = -1; InvState.selectedEquippedSlot = null;
         saveGame();
         renderInventoryScreen();
       });
@@ -1630,6 +1637,7 @@
   // 13: showScreen with fade transition
   function showScreen(name) {
     ActiveScreen = name;
+    if (name !== 'menu') GameState.screen = name;
     const screenMap = {
       map: 'map-screen', city: 'city-screen', battle: 'battle-screen',
       inventory: 'inventory-screen', victory: 'victory-screen',
@@ -1829,10 +1837,37 @@
       void showGameAlert('Save not found.');
       return;
     }
-    loadGame();
+    if (!loadGame()) {
+      void showGameAlert(CampaignExpansion.loc({
+        ru: 'Не удалось прочитать сохранение. Новая игра не была запущена, чтобы не перезаписать данные.',
+        en: 'The save could not be read. A new game was not started, so your data was not overwritten.',
+        es: 'No se pudo leer la partida. No se inició una nueva para no sobrescribir los datos.'
+      }));
+      return;
+    }
     const firstCell = getCurrentCell();
     if (!GameState.firstBattleCompleted && firstCell?.id === 'c_0_0') {
       startBattleForCell(firstCell, { skipDeploy: false });
+      updateMenuMeta();
+      return;
+    }
+    if (GameState.screen === 'city') {
+      const city = getActiveCityNode();
+      if (city) {
+        enterCity(city, GameState._cityStrangerOnly);
+        updateMenuMeta();
+        return;
+      }
+    }
+    if (GameState.screen === 'inventory') {
+      renderInventoryScreen();
+      showScreen('inventory');
+      updateMenuMeta();
+      return;
+    }
+    if (GameState.screen === 'battle' && GameState.currentBattle) {
+      showScreen('battle');
+      updateBattleUI();
       updateMenuMeta();
       return;
     }
@@ -1896,6 +1931,29 @@
     return `<div class="cell-info-icon">${em}</div>`;
   }
 
+  function mapLocationName(node) {
+    const names = {
+      1: {
+        mission: ['Лешачий тракт', 'Мшистый перелесок', 'Волчья просека'],
+        dungeon: ['Забытая чаща'], event: ['Перекрёсток судеб'], city: ['Лесной приют'],
+        boss: ['Сердце чащи'], wanderer: ['Стоянка странника'], arena: ['Круг старых дубов']
+      },
+      2: {
+        mission: ['Обугленный тракт', 'Багровая расщелина', 'Пепельный мост'],
+        dungeon: ['Остывшая кузня'], event: ['Пепельный перекрёсток'], city: ['Кузня у разлома'],
+        boss: ['Врата пламени'], wanderer: ['Лагерь пилигрима'], arena: ['Огненный круг']
+      },
+      3: {
+        mission: ['Утонувший тракт', 'Мёртвая гавань', 'Зал приливов'],
+        dungeon: ['Затопленный склеп'], event: ['Берег шёпота'], city: ['Пристань изгнанников'],
+        boss: ['Чертог глубин'], wanderer: ['Плот торговца'], arena: ['Арена прилива'], final: ['Последний престол']
+      }
+    };
+    const fallback = campaignRegionName(node.region);
+    const pool = names[node.region]?.[node.type];
+    return pool?.[(node.x * 3 + node.y) % pool.length] || fallback;
+  }
+
   function mapNodeIntel(node) {
     const threatKey = ['dungeon', 'arena', 'boss', 'final'].includes(node.type)
       ? 'threatHigh'
@@ -1918,8 +1976,17 @@
     }));
     tagKeys.sort((a, b) => priority.indexOf(a) - priority.indexOf(b));
     const campaignIntel = CampaignExpansion.routeIntel(node);
-    const composition = wave.length && (GameState.campaignEffects?.hunterIntel || node.type !== 'mission')
-      ? `${translateKey('routeEnemies')}: ${wave.length}${tagKeys.length ? ` ? ${tagKeys.slice(0, 2).map(translateKey).join(', ')}` : ''}`
+    const hasSeerEye = (GameState.heroes || []).some(hero =>
+      Object.values(hero.equipment || {}).some(itemId => itemById(itemId)?.mods?.previewEnemies));
+    const enemyCounts = new Map();
+    wave.forEach(enemyId => enemyCounts.set(enemyId, (enemyCounts.get(enemyId) || 0) + 1));
+    const exactLineup = [...enemyCounts.entries()]
+      .map(([enemyId, count]) => `${translateText(enemyDef(enemyId).name)}${count > 1 ? ` ×${count}` : ''}`)
+      .join(' · ');
+    const composition = wave.length
+      ? hasSeerEye
+        ? `👁 ${exactLineup}`
+        : `${translateKey('routeEnemies')}: ${wave.length}${tagKeys.length ? ` · ${tagKeys.slice(0, 2).map(translateKey).join(', ')}` : ''}`
       : '';
     return {
       threat: `${translateKey(threatKey)}${node.routeTension ? ' +' : ''}`,
@@ -1947,7 +2014,30 @@
     root.innerHTML = '';
     renderPartyStrip();
     let selectedNode = getCurrentCell();
+    let explicitlySelectedNodeId = null;
     const currentCell = selectedNode;
+    const mapTypeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
+    const selectedCellInfoHtml = (node) => {
+      const intel = mapNodeIntel(node);
+      const combatNode = ['mission', 'dungeon', 'arena', 'boss', 'final'].includes(node.type);
+      const title = intel.scenario
+        ? CampaignExpansion.scenarioLabel(intel.scenario)
+        : (mapTypeNames[node.type] || node.type);
+      const detail = intel.scenario
+        ? CampaignExpansion.scenarioShort(intel.scenario)
+        : intel.reward;
+      return `<div class="cell-info-heading">
+          <strong>${escapeHtml(title)}</strong>
+          <span>${escapeHtml(intel.threat)}</span>
+        </div>
+        ${detail ? `<div class="cell-info-objective"><small>${escapeHtml(CampaignExpansion.loc({ ru: 'ЦЕЛЬ', en: 'OBJECTIVE', es: 'OBJETIVO' }))}</small><span>${escapeHtml(detail)}</span></div>` : ''}
+        ${combatNode && intel.composition ? `<div class="cell-info-enemies">${intel.composition}</div>` : ''}`;
+    };
+    const panelTitle = document.getElementById('map-panel-title');
+    const showInfo = (node) => {
+      info.innerHTML = selectedCellInfoHtml(node);
+      if (panelTitle) panelTitle.textContent = mapLocationName(node);
+    };
     const px = GameState.playerPos.x;
     const py = GameState.playerPos.y;
     const nodeElements = new Map();
@@ -1990,14 +2080,16 @@
         el.innerHTML = partyMarker;
       }
       const setInfo = (n) => {
-        const t = typeNames[n.type] || n.type;
-        const intel = mapNodeIntel(n);
-        info.innerHTML = `${mapCellInfoIconHtml(n)}
-          <div class="cell-info-name">${escapeHtml(campaignRegionName(n.region))} · ${t}</div>
-          <div>${n.completed ? translateKey('mapCleared') : translateKey('mapActive')}</div>
-          ${intel.scenario ? `<div class="route-intel-line">${CampaignExpansion.scenarioLabel(intel.scenario)}</div>` : ''}
-          ${intel.risk ? `<div class="route-intel-line">${escapeHtml(intel.risk)}</div>` : ''}`;
+        showInfo(n);
         selectedNode = n;
+        explicitlySelectedNodeId = n.id;
+        nodeElements.forEach(element => {
+          element.classList.remove('map-selected');
+          element.removeAttribute('aria-selected');
+        });
+        const selectedElement = nodeElements.get(n.id);
+        selectedElement?.classList.add('map-selected');
+        selectedElement?.setAttribute('aria-selected', 'true');
       };
       el.onmouseenter = () => {
         if (!showCellFace) {
@@ -2008,7 +2100,10 @@
           info.innerHTML = `<div class="cell-info-icon">🔒</div><div class="cell-info-name">${escapeHtml(campaignRegionName(node.region))}</div><div>${translateKey('regionLocked')}</div>`;
           return;
         }
-        setInfo(node);
+        showInfo(node);
+      };
+      el.onmouseleave = () => {
+        if (selectedNode) showInfo(selectedNode);
       };
       el.onclick = () => {
         if (!showCellFace) return;
@@ -2016,41 +2111,17 @@
           void showGameAlert(translateKey('regionStillLocked'));
           return;
         }
-        setInfo(node);
-        const cur = getCurrentCell();
-        if (!GameState.firstBattleCompleted && cur?.id === 'c_0_0' && node.id !== cur.id) {
-          startBattleForCell(cur, { skipDeploy: false });
+        if (explicitlySelectedNodeId === node.id) {
+          document.getElementById('btn-map-enter')?.click();
           return;
         }
-        if (!cellNeighbors(cur, node) && !(node.x === cur.x && node.y === cur.y)) return;
-        applyRouteDecision(cur, node);
-        GameState.playerPos = { x: node.x, y: node.y };
-        mapFogVisitedAdd(node.y, node.x);
-        node.visited = true;
-        GameState.turn += 1;
-        GameState.region = node.region;
-        CampaignExpansion.resolveDelayedEvents();
-        enterMapNode(node);
-        renderMap();
+        setInfo(node);
       };
       root.appendChild(el);
       nodeElements.set(node.id, el);
     });
     if (selectedNode) {
-      const intel = mapNodeIntel(selectedNode);
-      const mutators = (GameState.campaignMutators || []).map(id => {
-        const rule = CampaignExpansion.MUTATORS[id];
-        return rule ? `${rule.icon} ${CampaignExpansion.loc(rule.name)}` : id;
-      }).join(' · ');
-      const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
-      info.innerHTML = `${mapCellInfoIconHtml(selectedNode)}
-        <div class="cell-info-name">${escapeHtml(campaignRegionName(selectedNode.region))} · ${typeNames[selectedNode.type] || selectedNode.type}</div>
-        <div>${translateKey('currentPartyPosition')}</div>
-        <div>${intel.threat} ? ${intel.reward}${intel.boss ? ` ? ${intel.boss}` : ''}</div>
-        ${intel.scenario ? `<div class="route-intel-line">${CampaignExpansion.scenarioLabel(intel.scenario)}: ${CampaignExpansion.scenarioShort(intel.scenario)}</div>` : ''}
-        ${intel.risk ? `<div class="route-intel-line">? ${intel.risk}</div>` : ''}
-        ${intel.composition ? `<div class="route-intel-line">${intel.composition}</div>` : ''}
-        ${mutators ? `<div class="route-intel-line">⚙ ${escapeHtml(mutators)}</div>` : ''}`;
+      showInfo(selectedNode);
     }
     const routeChoices = document.getElementById('map-route-choices');
     if (routeChoices) {
@@ -2199,16 +2270,6 @@
       renderInventoryScreen();
       showScreen('inventory');
     };
-    const revealMapBtn = document.getElementById('btn-map-reveal-ad');
-    if (revealMapBtn) {
-      revealMapBtn.onclick = () => {
-        showRewardedAd(() => {
-          revealFullMapFogVisited();
-          saveGame();
-          renderMap();
-        });
-      };
-    }
   }
   function cityItemRarBadge(r) {
     return r === 'epic' ? `<span class="badge badge-epic">${translateKey('epic')}</span>` : r === 'rare' ? `<span class="badge badge-rare">${translateKey('rare')}</span>` : `<span class="badge badge-common">${translateKey('common')}</span>`;
@@ -2219,20 +2280,28 @@
     return typeof it.sellPrice === 'number' ? it.sellPrice : Math.floor((it.price || 0) * 0.5);
   }
 
-  function isItemEquippedAnywhere(itemId) {
-    return (GameState.heroes || []).some(h => {
-      const eq = h.equipment || {};
-      return eq.weapon === itemId || eq.armor === itemId || eq.artifact === itemId;
-    });
+  function getEquippedItemOwners() {
+    const ownersByItemId = new Map();
+    for (const hero of (GameState.heroes || [])) {
+      const eq = hero.equipment || {};
+      for (const slot of ['weapon', 'armor', 'artifact']) {
+        const itemId = eq[slot];
+        if (!itemId) continue;
+        if (!ownersByItemId.has(itemId)) ownersByItemId.set(itemId, []);
+        ownersByItemId.get(itemId).push({ hero, slot });
+      }
+    }
+    return ownersByItemId;
   }
 
   function getSellableInventoryEntries() {
-    const out = [];
-    (GameState.inventory || []).forEach((id, idx) => {
-      const it = itemById(id);
-      if (it && !isItemEquippedAnywhere(id)) out.push({ id, idx, item: it });
-    });
-    return out;
+    const ownersByItemId = getEquippedItemOwners();
+    return (GameState.inventory || []).map((id, idx) => {
+      const item = itemById(id);
+      const owners = ownersByItemId.get(id);
+      const equipped = owners?.length ? owners.shift() : null;
+      return item ? { id, idx, item, equipped } : null;
+    }).filter(entry => entry && !entry.equipped);
   }
 
   function buildCitySellItemCard(entry) {
@@ -2271,8 +2340,8 @@
         const id = inv[idx];
         const it = itemById(id);
         if (!it) return;
-        if (isItemEquippedAnywhere(id)) {
-          void showGameAlert(translateKey('removeEquippedFirst'));
+        const sellableEntry = getSellableInventoryEntries().find(entry => entry.idx === idx);
+        if (!sellableEntry) {
           renderCityUI(node, strangerOnly);
           return;
         }
@@ -2405,8 +2474,10 @@
           if (GameState.gold < price) { void showGameAlert(translateKey('notEnoughGold')); return; }
           GameState.gold -= price;
           GameState.inventory.push(item.id);
+          GameState.cityState.secretItemId = null;
+          GameState.cityState.secretRevealed = false;
           saveGame();
-          enterCity(node, strangerOnly);
+          renderCityUI(node, strangerOnly);
         };
         return;
       }
@@ -2416,8 +2487,11 @@
         if (!it || GameState.gold < it.price) { if (it) void showGameAlert(translateKey('notEnoughGold')); return; }
         GameState.gold -= it.price;
         GameState.inventory.push(it.id);
+        const stock = GameState.shopStock?.stock || GameState.shopStock || [];
+        const stockIndex = stock.findIndex(item => item.id === it.id);
+        if (stockIndex >= 0) stock.splice(stockIndex, 1);
         saveGame();
-        enterCity(node, strangerOnly);
+        renderCityUI(node, strangerOnly);
       };
     });
     const secretBtn = document.getElementById('btn-secret');
@@ -2615,9 +2689,18 @@
     if (rer) rer.onclick = () => {
       if (GameState.gold >= 20) {
         GameState.gold -= 20;
-        GameState.shopStock = generateShopStock(n.region);
+        const stockResult = generateShopStock(n.region);
+        const cityState = {
+          adUpgradeUsed: !!GameState.cityState?.adUpgradeUsed,
+          secretRevealed: false,
+          secretItemId: stockResult.secretItem ? stockResult.secretItem.id : selectLootItem(n.region, 'epic').id
+        };
+        GameState.shopStock = stockResult;
+        GameState.cityState = cityState;
+        GameState.cityShopStocks = GameState.cityShopStocks || {};
+        GameState.cityShopStocks[n.id] = { shopStock: stockResult, cityState };
         saveGame();
-        enterCity(n, sn);
+        renderCityUI(n, sn);
       } else {
         void showGameAlert(`${translateKey('needGold')} 20💰`);
       }
@@ -2634,18 +2717,32 @@
   }
 
   function enterCity(node, strangerOnly) {
+    const previousActiveCityNode = GameState.activeCityNode;
     GameState.screen = 'city';
     GameState.activeCityNode = node.id;
     GameState._cityStrangerOnly = !!strangerOnly;
     if (!GameState.cityNpcTab) GameState.cityNpcTab = 'trader';
     if (!GameState.cityTraderTab) GameState.cityTraderTab = 'buy';
     if (!strangerOnly) {
-      const stockResult = generateShopStock(node.region);
-      GameState.shopStock = stockResult;
-      GameState.cityState = GameState.cityState || {};
-      GameState.cityState.adUpgradeUsed = GameState.cityState.adUpgradeUsed || false;
-      GameState.cityState.secretRevealed = false;
-      GameState.cityState.secretItemId = stockResult.secretItem ? stockResult.secretItem.id : selectLootItem(node.region, 'epic').id;
+      GameState.cityShopStocks = GameState.cityShopStocks || {};
+      let shopState = GameState.cityShopStocks[node.id];
+      if (!shopState && previousActiveCityNode === node.id && (GameState.shopStock?.stock || GameState.shopStock || []).length) {
+        shopState = { shopStock: GameState.shopStock, cityState: GameState.cityState || {} };
+      }
+      if (!shopState) {
+        const stockResult = generateShopStock(node.region);
+        shopState = {
+          shopStock: stockResult,
+          cityState: {
+            adUpgradeUsed: false,
+            secretRevealed: false,
+            secretItemId: stockResult.secretItem ? stockResult.secretItem.id : selectLootItem(node.region, 'epic').id
+          }
+        };
+      }
+      GameState.cityShopStocks[node.id] = shopState;
+      GameState.shopStock = shopState.shopStock;
+      GameState.cityState = shopState.cityState;
     } else {
       GameState.cityState = GameState.cityState || {};
     }
@@ -3029,6 +3126,7 @@
       ${damagePreviewCardHtml(b, getActiveUnit(), u)}
       ${translateKey('battleAttack').replace(/^.\s*/, '')}: ${u.attack} | ${translateKey('armor')}: ${u.armor}<br/>
       ${translateKey('statuses')}: ${sts || translateKey('none')}<br/>
+      ${u.scenarioTarget ? `<span class="stats-line">${translateKey(u.scenarioTarget === 'ritualist' ? 'ritualTargetTooltip' : 'huntTargetTooltip')}</span><br/>` : ''}
       <span class="stats-line">${battleHoverPreviewText(b, u)}</span><br/>
       <span class="stats-line">${enemyAbilityText(u.enemyId)}</span>`;
       const vw = window.innerWidth, vh = window.innerHeight;
@@ -3040,9 +3138,19 @@
       tip.style.top = ly + 'px';
     } else if (BattleView.hoverCell && inBounds(gx, gy)) {
       const terrain = terrainInfo(b.grid[gy][gx], getActiveUnit() || undefined);
+      const ward = b.scenario?.id === 'defense' && b.scenario.ward?.x === gx && b.scenario.ward?.y === gy
+        ? b.scenario.ward : null;
+      const trap = (b.traps || []).find(item => item.x === gx && item.y === gy);
+      const exit = ['escape', 'hunt'].includes(b.scenario?.id) && gx === GRID_W - 1;
       tip.style.display = 'block';
       const effects = terrain.effects.length ? terrain.effects.join('<br/>') : translateKey('terrainNoBonus');
-      tip.innerHTML = `<b>${translateKey('terrain')}: ${terrain.name}</b><br/><span class="stats-line">${effects}</span>`;
+      tip.innerHTML = ward
+        ? `<b>🛡️ ${translateKey('wardMarker')} · ${ward.hp}/${ward.maxHp}</b><br/><span class="stats-line">${translateKey('wardTooltip')}</span>`
+        : trap
+          ? `<b>${translateKey('trapMarker')}</b><br/><span class="stats-line">${translateKey('trapTooltip')}</span>`
+          : exit
+            ? `<b>🚩 ${translateKey('exitMarker')}</b><br/><span class="stats-line">${translateKey('exitTooltip')}</span>`
+            : `<b>${translateKey('terrain')}: ${terrain.name}</b><br/><span class="stats-line">${effects}</span>`;
       const vw = window.innerWidth, vh = window.innerHeight;
       const tw = 220, th = 72;
       let lx = e.clientX + 12, ly = e.clientY + 12;
@@ -3203,8 +3311,10 @@
   function init() {
     GameBGM.init();
     BattleSfx.init();
+    let storedSaveExists = false;
+    try { storedSaveExists = !!(localStorage.getItem(SAVE_KEY) || localStorage.getItem(LEGACY_SAVE_KEY)); } catch (_) {}
     const hasSave = loadGame();
-    if (!hasSave) {
+    if (!hasSave && !storedSaveExists) {
       initHeroesFromTemplate();
       buildWorldMap();
       GameState.gold = 20;
@@ -3212,6 +3322,8 @@
       // Starter inventory from the balance notes.
       GameState.inventory = ['steel_sword', 'hunter_bow', 'magic_wand', 'leather', 'luck_amulet'];
       saveGame();
+    } else if (!hasSave) {
+      console.warn('Stored save exists but could not be loaded; preserving it without overwrite.');
     }
     GameState.inventory = GameState.inventory || [];
     showScreen('menu');
@@ -3344,6 +3456,9 @@
     document.querySelectorAll('[data-hero-tab]').forEach(btn => {
       btn.onclick = () => {
         InvState.activeHeroId = btn.getAttribute('data-hero-tab');
+        InvState.selectedItemId = null;
+        InvState.selectedItemIdx = -1;
+        InvState.selectedEquippedSlot = null;
         renderInventoryScreen();
       };
     });
@@ -3435,7 +3550,15 @@
       };
     }
     document.getElementById('btn-menu-save-exit').onclick = () => {
-      saveGame();
+      GameState.screen = ActiveScreen;
+      if (!saveGame(true)) {
+        void showGameAlert(CampaignExpansion.loc({
+          ru: 'Сохранение не записано. Освободите место в браузере и повторите попытку — игра останется открыта.',
+          en: 'The game was not saved. Free browser storage and try again; the game will remain open.',
+          es: 'No se guardó la partida. Libera espacio del navegador e inténtalo de nuevo.'
+        }));
+        return;
+      }
       closeGameMenu();
       showInterstitialAdAtBreak('menu', () => {
         showScreen('menu');

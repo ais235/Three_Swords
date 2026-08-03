@@ -101,7 +101,36 @@ try {
     return true;
   });
   check('city test fixture is available', cityRendered);
-  if (cityRendered) await auditScreen('city and shop', '#city-screen', 12);
+  if (cityRendered) {
+    await auditScreen('city and shop', '#city-screen', 12);
+    const duplicateSale = await page.evaluate(() => {
+      const city = GameState.mapGrid.find(node => node.type === 'city');
+      const alira = GameState.heroes.find(hero => hero.id === 'alira');
+      GameState.inventory = ['hunter_bow', 'hunter_bow'];
+      alira.equipment = { ...(alira.equipment || {}), weapon: 'hunter_bow' };
+      GameState.cityTraderTab = 'sell';
+      recalcHeroFromEquipment(alira);
+      renderCityUI(city, false);
+      renderCityTraderSellPanel(city, false);
+      return {
+        cards: document.querySelectorAll('#shop-sell-list .item-card').length,
+        equipped: document.querySelectorAll('#shop-sell-list .city-sell-equipped').length
+      };
+    });
+    check('duplicate gear exposes only the unequipped spare for sale', duplicateSale.cards === 1 && duplicateSale.equipped === 0, JSON.stringify(duplicateSale));
+    await page.locator('#shop-sell-list .btn-sell').evaluate(button => button.click());
+    await page.locator('#confirm-yes').click();
+    await page.waitForTimeout(50);
+    const duplicateSaleResult = await page.evaluate(() => {
+      const alira = GameState.heroes.find(hero => hero.id === 'alira');
+      return {
+        copiesLeft: GameState.inventory.filter(id => id === 'hunter_bow').length,
+        stillEquipped: alira.equipment?.weapon === 'hunter_bow',
+        sellCardsLeft: document.querySelectorAll('#shop-sell-list .item-card').length
+      };
+    });
+    check('selling one duplicate removes exactly one spare and keeps equipped gear', duplicateSaleResult.copiesLeft === 1 && duplicateSaleResult.stillEquipped && duplicateSaleResult.sellCardsLeft === 0, JSON.stringify(duplicateSaleResult));
+  }
   await page.evaluate(() => {
     showScreen('map');
     renderMap();
@@ -139,6 +168,7 @@ try {
   });
 
   const adjacent = page.locator('.map-node.map-option').first();
+  await adjacent.click();
   await adjacent.click();
   await page.locator('#btn-start-battle').waitFor({ state: 'visible' });
   await auditScreen('desktop battle deployment', '#battle-screen', 12);

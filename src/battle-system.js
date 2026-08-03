@@ -27,8 +27,18 @@
     ];
   }
 
+  function enemySpawnRows(index, total, unit) {
+    const maxY = Math.max(0, GRID_H - unitHeight(unit));
+    const target = Math.round(((index + 1) * maxY) / (total + 1));
+    return Array.from({ length: maxY + 1 }, (_, y) => y)
+      .sort((a, b) => Math.abs(a - target) - Math.abs(b - target) || a - b);
+  }
+
   function startBattle(node) {
-    GameState.lastSafeSave = deepClone(GameState);
+    const safeSave = deepClone(GameState);
+    safeSave.lastSafeSave = null;
+    safeSave.currentBattle = null;
+    GameState.lastSafeSave = safeSave;
     GameState.battleReviveUsed = false;
     const campaignAmbush = !!GameState.campaignEffects?.nextAmbush;
     if (campaignAmbush) GameState.campaignEffects.nextAmbush = false;
@@ -112,8 +122,10 @@
           placed = true;
         }
       }
+      const spawnRows = enemySpawnRows(ei, wave.length, proto);
       for (const rx of rightXs) {
-        for (let y = 0; y < GRID_H && !placed; y++) {
+        for (const y of spawnRows) {
+          if (placed) break;
           if (canUnitOccupy({ grid, units }, proto, rx, y, { end: true })) {
             units.push(spawnEnemy(t, rx, y));
             placed = true;
@@ -623,8 +635,8 @@
       const hpBeforeTrap = u.hp;
       u.hp -= trap.damage;
       startBattleAttackAnimation(u, u, { animationProfile: 'explosion', animationImpactOnly: true }, trap.damage, hpBeforeTrap);
-      pushBattleLog(`${u.name}: trap −${trap.damage}`, 'status');
-      spawnBattleTextFx(u.x, u.y, `TRAP -${trap.damage}`, '#ffb36b');
+      pushBattleLog(`${u.name}: ${translateKey('trapTriggered')} −${trap.damage}`, 'status');
+      spawnBattleTextFx(u.x, u.y, `${translateKey('trapMarker')} -${trap.damage}`, '#ffb36b');
       if (trap.slow && u.hp > 0) addStatus(u, STATUS.SLOW, 2);
       if (u.hp <= 0) onUnitDeath(u);
     }
@@ -640,7 +652,7 @@
     };
     add(fromX, fromY);
     if (u.perks.includes('trapDouble')) add(Math.max(0, fromX - 1), fromY);
-    spawnBattleTextFx(fromX, fromY, 'TRAP', '#ffb36b');
+    spawnBattleTextFx(fromX, fromY, translateKey('trapPlaced'), '#ffb36b');
   }
 
   function addStatus(u, type, turns, meta) {
@@ -738,15 +750,34 @@
     }
   }
 
+  function heroIgnoresCover(unit) {
+    if (!unit?.isHero) return false;
+    const weapon = getEquippedItem(unit, 'weapon');
+    return !!(unit.perks?.includes('ignoreCover') || weapon?.mods?.ignoreCover);
+  }
+
+  function battleLocale(ru, en, es) {
+    const language = currentLanguage();
+    return language === 'en' ? en : language === 'es' ? es : ru;
+  }
+
+  function crownAuraBonus(unit, stat) {
+    const b = GameState.currentBattle;
+    if (!unit?.isHero || !b) return 0;
+    const modKey = stat === 'attack' ? 'allyAttack' : 'allyArmor';
+    return b.units
+      .filter(ally => ally.isHero && ally.hp > 0 && ally.heroId !== unit.heroId)
+      .reduce((sum, ally) => sum + (Number(getEquippedItem(ally, 'artifact')?.mods?.[modKey]) || 0), 0);
+  }
+
   function dealDamage(attacker, target, rawDmg, opts) {
     const b = GameState.currentBattle;
     opts = opts || {};
     let dmg = rawDmg;
     let sfxCrit = false;
-    // Item mod: weapon attack bonus applied to rawDmg (if not already factored by caller)
+    // Numeric equipment stats are already included in the persistent hero stats.
     if (attacker.isHero && !opts.noWeaponBonus) {
       const wep = getEquippedItem(attacker, 'weapon');
-      if (wep && wep.mods.attack) dmg += wep.mods.attack;
       // firstShotBonus (moon_bow) — only if first attack this round
       if (wep && wep.mods.firstShotBonus && attacker.flags && attacker.flags.firstAttackTurn) {
         dmg = Math.floor(dmg * (1 + wep.mods.firstShotBonus));
@@ -754,6 +785,7 @@
         spawnBattleTextFx(attacker.x, attacker.y, 'FIRST x' + (1 + wep.mods.firstShotBonus).toFixed(1), '#9ff0ff');
       }
     }
+    if (attacker.isHero) dmg += crownAuraBonus(attacker, 'attack');
     if (target.isHero && target.heroId === 'garet' && target.flags && target.flags.fireCallMitigateActive) {
       dmg = Math.floor(dmg * 0.5);
       pushBattleLog(`${target.name}: fire guard halves damage`, 'status');
@@ -783,13 +815,7 @@
         spawnBattleTextFx(target.x, target.y, 'AURA +1 ARM', '#9ff0ff');
       }
     }
-    // Item armor bonus from equipped armor slot
-    if (target.isHero) {
-      const eqArm = getEquippedItem(target, 'armor');
-      if (eqArm && eqArm.mods.armor) armor += eqArm.mods.armor;
-      const eqWep = getEquippedItem(target, 'weapon');
-      if (eqWep && eqWep.mods.armor) armor += eqWep.mods.armor;
-    }
+    if (target.isHero) armor += crownAuraBonus(target, 'armor');
     if (attacker.isHero && attacker.heroId === 'garet' && attacker.perks && attacker.perks.includes('armorPierce')) {
       const beforeArmor = armor;
       armor = Math.max(0, armor - 2);
@@ -1618,7 +1644,7 @@
       return { blocked: translateKey('outOfRange') };
     }
     const requiresClearLine = !b.pendingSkill || ['double', 'slowArrow'].includes(b.pendingSkill);
-    if (requiresClearLine && attacker.range > 1 && rangedBlocked(attacker.x, attacker.y, target.x, target.y, b.grid, !!attacker.perks?.includes('ignoreCover'))) {
+    if (requiresClearLine && attacker.range > 1 && rangedBlocked(attacker.x, attacker.y, target.x, target.y, b.grid, heroIgnoresCover(attacker))) {
       return { blocked: translateKey('blockedLine') };
     }
     const isFireball = b.pendingSkill === 'fireball';
@@ -2266,6 +2292,8 @@
       ctx.strokeRect(px + 5, 5, CELL - 10, CANVAS_H - 10); ctx.setLineDash([]);
       ctx.fillStyle = '#d9fff0'; ctx.font = '19px serif'; ctx.textAlign = 'center';
       ctx.fillText('🚩', px + CELL / 2, CELL / 2);
+      ctx.fillStyle = '#d9fff0'; ctx.font = 'bold 8px Arial';
+      ctx.fillText(translateKey('exitMarker'), px + CELL / 2, CELL - 8);
       ctx.restore();
     }
     if (b.scenario?.id === 'defense' && b.scenario.ward) {
@@ -2275,7 +2303,11 @@
       ctx.fillStyle = 'rgba(110,180,255,.2)'; ctx.fillRect(px + 5, py + 5, CELL - 10, CELL - 10);
       ctx.strokeStyle = '#8bd3ff'; ctx.lineWidth = 3; ctx.strokeRect(px + 6, py + 6, CELL - 12, CELL - 12);
       ctx.fillStyle = '#e8fbff'; ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('🛡️', px + CELL / 2, py + CELL / 2);
+      ctx.fillText('🛡️', px + CELL / 2, py + CELL / 2 - 6);
+      ctx.fillStyle = '#e8fbff'; ctx.font = 'bold 8px Arial';
+      ctx.fillText(translateKey('wardMarker'), px + CELL / 2, py + CELL - 11);
+      ctx.font = '7px Arial';
+      ctx.fillText(`${ward.hp}/${ward.maxHp}`, px + CELL / 2, py + 10);
       ctx.restore();
     }
 
@@ -2287,14 +2319,14 @@
       ctx.strokeStyle = '#ff9b42';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.roundRect(cx - 28, cy - 12, 56, 24, 8);
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = '#ffd06b';
-      ctx.font = 'bold 12px Arial';
+      ctx.font = 'bold 9px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('TRAP', cx, cy);
+      ctx.fillText(translateKey('trapMarker'), cx, cy);
       ctx.restore();
     });
 
@@ -2304,7 +2336,7 @@
         if (dist <= sel.range && sel.range > 0) {
           const tgt = unitAt(b, x, y);
           if (tgt && !tgt.isHero) {
-            if (sel.range > 1 && rangedBlocked(sel.x, sel.y, x, y, b.grid, false)) continue;
+            if (sel.range > 1 && rangedBlocked(sel.x, sel.y, x, y, b.grid, heroIgnoresCover(sel))) continue;
             ctx.fillStyle = 'rgba(255,60,60,0.35)';
             ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
           }
@@ -2781,17 +2813,25 @@
   function spawnScenarioWave(b, enemyIds, mode = 'edge') {
     (enemyIds || []).forEach((enemyId, index) => {
       const proto = { isHero: false, enemyId, sizeW: enemyDef(enemyId).sizeW || 1, sizeH: enemyDef(enemyId).sizeH || 1 };
-      const edgeSlots = [
-        { x: GRID_W - unitWidth(proto), y: index % GRID_H },
-        { x: GRID_W - unitWidth(proto), y: GRID_H - 1 - (index % GRID_H) },
-        { x: Math.max(0, GRID_W - unitWidth(proto) - 1), y: Math.floor(GRID_H / 2) }
-      ];
-      const pressureSlots = [
-        { x: 5, y: 1 + (index * 3) % 6 },
-        { x: 4, y: 2 + (index * 2) % 4 },
-        { x: 6, y: index % GRID_H }
-      ];
-      const slots = mode === 'pressure' ? pressureSlots.concat(edgeSlots) : edgeSlots;
+      const width = unitWidth(proto);
+      const height = unitHeight(proto);
+      const vertical = Array.from({ length: Math.max(0, GRID_H - height + 1) }, (_, y) => y);
+      const horizontal = Array.from({ length: Math.max(0, GRID_W - width + 1) }, (_, x) => x);
+      const rotate = (values, offset) => values.length
+        ? values.slice(offset % values.length).concat(values.slice(0, offset % values.length))
+        : values;
+      const rowOrder = rotate(vertical, index * 3);
+      const columnOrder = rotate(horizontal, index * 4);
+      const sides = mode === 'pressure'
+        ? (index % 2 === 0 ? ['right', 'left', 'top', 'bottom'] : ['left', 'right', 'bottom', 'top'])
+        : ['right', 'top', 'bottom', 'left'];
+      const slots = [];
+      sides.forEach(side => {
+        if (side === 'right') rowOrder.forEach(y => slots.push({ x: GRID_W - width, y }));
+        if (side === 'left') rowOrder.forEach(y => slots.push({ x: 0, y }));
+        if (side === 'top') columnOrder.forEach(x => slots.push({ x, y: 0 }));
+        if (side === 'bottom') columnOrder.forEach(x => slots.push({ x, y: GRID_H - height }));
+      });
       const slot = slots.find(point => canUnitOccupy(b, proto, point.x, point.y, { end: true }));
       if (slot) b.units.push(spawnEnemy(enemyId, slot.x, slot.y));
     });
@@ -2856,6 +2896,21 @@
     b.visualLockUntil = 0;
     b.turnTransitionLocked = false;
     const prev = getActiveUnit();
+    if (prev?.isHero && prev.flags?.hourglassReady && !prev.flags.hourglassUsed) {
+      prev.flags.hourglassReady = false;
+      prev.flags.hourglassUsed = true;
+      syncHeroFromUnit(prev);
+      b.heroMoved = false;
+      b.heroActionDone = false;
+      b.heroMoveUndo = null;
+      b.selected = prev;
+      b.pendingSkill = null;
+      prepareHeroTurnMode(b, prev);
+      pushBattleLog(`${prev.name}: ${battleLocale('Песочные часы возвращают ход', 'the Hourglass returns the turn', 'el Reloj de arena devuelve el turno')}`, 'status');
+      spawnBattleTextFx(prev.x, prev.y, 'EXTRA TURN', '#f5d76e');
+      updateBattleUI();
+      return;
+    }
     if (prev) {
       tickStatusesEndTurn(prev);
       if (prev.isHero) syncHeroFromUnit(prev);
@@ -3235,7 +3290,7 @@
         playBattleAbilityFx(u, 'chaosAoe', { radius: 1, glyph: '🌀' });
         nearby.forEach(h => {
           dealDamage(u, h, 7, { magic: true, sfxImpactOnly: true, animationProfile: 'aoe', animationImpactOnly: true, animationOffsetMs: 190 });
-          if (h.hp > 0 && u.bossVar.aoeTurn % 2 === 0) addStatus(h, STATUS.CURSE, 1);
+          if (h.hp > 0 && u.bossVar.aoeTurn % 2 === 0) addStatus(h, STATUS.CURSE, 1, { source: u });
         });
         pushBattleLog(`🌀 ${u.name} warps space around itself`, 'enemy');
       }
@@ -3534,7 +3589,7 @@
         b.units.forEach(t => {
           if (t.isHero && t.hp > 0 && unitDistance(u, t) === 1) {
             dealDamage(u, t, 12, { magic: true, sfxImpactOnly: true, animationProfile: 'shadow', animationImpactOnly: true, animationOffsetMs: 180 });
-            addStatus(t, STATUS.BLIND, 1);
+            addStatus(t, STATUS.BLIND, 1, { source: u });
           }
         });
       }
@@ -3558,7 +3613,7 @@
       const tgt = priorityTarget(b);
       if (tgt) aiAttack(u, tgt);
       const heroes = b.units.filter(h => h.isHero && h.hp > 0);
-      if (heroes.length) addStatus(heroes[randInt(0, heroes.length - 1)], STATUS.CURSE, 2);
+      if (heroes.length) addStatus(heroes[randInt(0, heroes.length - 1)], STATUS.CURSE, 2, { source: u });
     }
   }
 
@@ -3594,7 +3649,7 @@
   //══════════ Hero UI & actions ══════════
   function heroAttackSummary(b, u) {
     const enemies = b.units.filter(t => !t.isHero && t.hp > 0);
-    const ignoreCover = !!(u.perks && u.perks.includes('ignoreCover'));
+    const ignoreCover = heroIgnoresCover(u);
     let inRange = 0;
     let blocked = 0;
     let nearest = null;
@@ -3920,6 +3975,14 @@
           html += `<button class="btn skill-action-btn" id="sk-teleport"><span class="skill-action-icon">✦</span><span class="skill-action-name">Teleport</span><span class="skill-action-meta">1×</span></button>`;
         }
       }
+      const artifact = getEquippedItem(u, 'artifact');
+      if (artifact?.mods?.extraAction && !u.flags?.hourglassUsed) {
+        const armed = !!u.flags?.hourglassReady;
+        html += `<button class="btn skill-action-btn${armed ? ' is-disabled' : ''}" id="art-hourglass"><span class="skill-action-icon">⏳</span><span class="skill-action-name">${battleLocale('Дополнительный ход', 'Extra turn', 'Turno extra')}</span><span class="skill-action-meta">${armed ? battleLocale('ГОТОВО', 'ARMED', 'LISTO') : '1×'}</span></button>`;
+      }
+      if (artifact?.mods?.battleTeleport && !u.flags?.portalStoneUsed) {
+        html += `<button class="btn skill-action-btn" id="art-portal"><span class="skill-action-icon">🌀</span><span class="skill-action-name">${battleLocale('Телепорт', 'Teleport', 'Teletransporte')}</span><span class="skill-action-meta">1×</span></button>`;
+      }
       if (heroHasMoveOptions(b, u) && !b.heroMoved) html += `<button class="btn battle-utility-btn" id="btn-skip-move">${translateKey('skipMove')}</button>`;
       html += `<button class="btn battle-utility-btn" id="btn-wait">${translateKey('waitTurn')}</button>`;
       const usableConsumables = combatConsumableItems().filter(item => canUseConsumableOnHero(item, u));
@@ -3950,6 +4013,20 @@
     bind('sk-fr', () => { if (skLocked('freeze') || u.mana < 4 || u.cds.freeze > 0) return; b.pendingSkill = 'freeze'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-met', () => { if (skLocked('meteor') || u.mana < 8 || u.cds.meteor > 0) return; b.pendingSkill = 'meteor'; b.mode = 'skill'; updateBattleUI(); });
     bind('sk-teleport', () => { if (b.teleportUsed) return; b.pendingSkill = 'teleport'; b.mode = 'skill'; updateBattleUI(); });
+    bind('art-hourglass', () => {
+      u.flags = u.flags || {};
+      if (u.flags.hourglassUsed || u.flags.hourglassReady) return;
+      u.flags.hourglassReady = true;
+      pushBattleLog(`${u.name}: ${battleLocale('следующее действие повторится', 'the next action will be repeated', 'la siguiente acción se repetirá')}`, 'status');
+      updateBattleUI();
+    });
+    bind('art-portal', () => {
+      u.flags = u.flags || {};
+      if (u.flags.portalStoneUsed) return;
+      b.pendingSkill = 'artifactTeleport';
+      b.mode = 'skill';
+      updateBattleUI();
+    });
     // 10: Inventory from battle
     bind('btn-battle-inv', () => {
       GameState._returnToVictory = false;
@@ -3967,7 +4044,7 @@
     const targetCell = closestUnitCellToPoint(target, u.x, u.y);
     const dist = unitDistanceFromPoint(target, u.x, u.y);
     if (dist > u.range) return;
-    if (u.range > 1 && rangedBlocked(u.x, u.y, targetCell.x, targetCell.y, b.grid, u.perks && u.perks.includes('ignoreCover'))) return;
+    if (u.range > 1 && rangedBlocked(u.x, u.y, targetCell.x, targetCell.y, b.grid, heroIgnoresCover(u))) return;
     let base = u.attack;
     if (u.heroId === 'alira' && u.flags && u.flags.firstAttackTurn && typeof BattleSfx !== 'undefined') {
       BattleSfx.playSampledUrl(BSX.heroes_alira_bow_draw, 0.62);
@@ -4032,6 +4109,23 @@
     const u = active;
     const blind = u.activeStatuses && u.activeStatuses.find(s => s.type === STATUS.BLIND);
 
+    if (b.pendingSkill === 'artifactTeleport') {
+      if (unitAt(b, gx, gy) || !canEndOnTile(b, gx, gy, u)) return;
+      const fromX = u.x, fromY = u.y;
+      u.x = gx; u.y = gy;
+      u.flags = u.flags || {};
+      u.flags.portalStoneUsed = true;
+      b.pendingSkill = null;
+      b.heroMoved = true;
+      b.mode = 'attack';
+      startUnitMoveAnimation(u, fromX, fromY, gx, gy);
+      playBattleAbilityFx(u, 'teleport', { x: gx, y: gy, glyph: '🌀', noPose: true });
+      spawnBattleTextFx(gx, gy, 'PORTAL', '#c9a8ff');
+      syncHeroFromUnit(u);
+      updateBattleUI();
+      return;
+    }
+
     // 1: Smart contextual click — no need to manually switch modes
     if (!b.heroActionDone && b.mode !== 'skill') {
       const clickedUnit = unitAt(b, gx, gy);
@@ -4041,7 +4135,7 @@
       // Click on enemy in range => attack (unless blind)
       if (isEnemy && !blind) {
         const dist = Math.abs(u.x - gx) + Math.abs(u.y - gy);
-        const inRange = dist <= u.range && (u.range === 1 || !rangedBlocked(u.x, u.y, gx, gy, b.grid, false));
+        const inRange = dist <= u.range && (u.range === 1 || !rangedBlocked(u.x, u.y, gx, gy, b.grid, heroIgnoresCover(u)));
         if (inRange) {
           b.mode = 'attack';
           b.pendingSkill = null;
@@ -4184,7 +4278,7 @@
         return;
       }
       if (b.pendingSkill === 'slowArrow') {
-        if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range || rangedBlocked(u.x, u.y, gx, gy, b.grid, false)) return;
+        if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range || rangedBlocked(u.x, u.y, gx, gy, b.grid, heroIgnoresCover(u))) return;
         b.objectiveUsedSkill = true;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_slow_arrow, 0.85);
         dealDamage(u, tgt, u.attack, { sfxImpactOnly: true, animationSkill: 'slowArrow' });

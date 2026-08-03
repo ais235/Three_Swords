@@ -334,21 +334,19 @@
   }
 }
 
-/*
- * Touch map panel: hover-only cell details do not earn their space here.
- * Route intelligence is stacked so longer localized labels never run outside
- * the narrow right column.
- */
+/* Touch uses the same selected-cell summary as mouse input; it never scrolls. */
 @media (orientation: landscape) and (max-height: 700px) and (pointer: coarse),
        (orientation: landscape) and (max-height: 700px) and (any-pointer: coarse),
        (orientation: landscape) and (max-width: 900px) {
   #map-screen #map-cell-info {
-    display: none !important;
+    display: block !important;
+    flex: 0 0 auto;
+    max-height: none;
+    overflow: hidden !important;
   }
 
   #map-screen .map-panel {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden !important;
   }
 
   #map-screen .map-route-choices {
@@ -439,7 +437,6 @@
   }
   #map-screen .map-panel-title,
   #map-screen .map-fog-counter,
-  #map-screen #btn-map-reveal-ad,
   #map-screen #map-help { display: none !important; }
   #map-screen .map-route-choices {
     display: flex;

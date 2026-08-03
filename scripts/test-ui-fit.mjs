@@ -92,10 +92,13 @@ try {
 
     await page.locator('#btn-map-bag').click();
     await page.evaluate(() => {
+      const garet = GameState.heroes.find(hero => hero.id === 'garet');
+      garet.equipment = { ...(garet.equipment || {}), weapon: 'steel_sword' };
+      recalcHeroFromEquipment(garet);
       if (!GameState.inventory.length) {
         GameState.inventory.push('luck_amulet');
-        renderInventoryScreen();
       }
+      renderInventoryScreen();
     });
     await audit('inventory', '#inventory-screen');
     const inventoryItems = page.locator('#bag-grid .inv-item-card');
@@ -111,6 +114,9 @@ try {
       check(`${viewport.name} inventory comparison is hidden`, await page.locator('#inv-detail .item-compare').count() === 0);
       check(`${viewport.name} inventory detail does not duplicate item art`, await page.locator('#inv-detail .item-icon-wrap').count() === 0);
     }
+    await page.locator('#eq-slot-weapon').click();
+    check(`${viewport.name} equipped weapon opens its details`, await page.locator('#inv-detail .item-detail-title').count() === 1);
+    check(`${viewport.name} viewing equipped gear does not show backpack actions`, await page.locator('#inv-detail .item-detail-btns').count() === 0);
     await page.locator('#btn-inv-perks').click();
     await audit('perk modal', '#perk-modal');
     await page.locator('#perk-tree-ui .perk-skill').first().click();

@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "audit": "node scripts/audit-layout.mjs",
-    "test": "npm run audit && npm run test:preview && npm run test:map && npm run test:leshy && npm run test:animations && npm run test:e2e && npm run test:campaign && npm run test:readability && npm run test:ui-fit && npm run balance:check",
+    "test": "npm run audit && npm run test:preview && npm run test:items && npm run test:map && npm run test:leshy && npm run test:animations && npm run test:e2e && npm run test:campaign && npm run test:readability && npm run test:ui-fit && npm run balance:check",
     "dev": "node scripts/dev-server.mjs",
     "test:preview": "node scripts/test-combat-preview.mjs",
+    "test:items": "node scripts/test-item-effects.mjs",
     "test:map": "node scripts/test-map-topology.mjs",
     "test:leshy": "node scripts/test-leshy-boss.mjs",
     "test:animations": "node scripts/test-battle-animations.mjs",

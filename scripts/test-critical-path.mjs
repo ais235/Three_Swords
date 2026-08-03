@@ -73,11 +73,27 @@ try {
       wave: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER], scenario: 'holdout'
     });
     const holdout = GameState.currentBattle;
+    const unitsBeforeReinforcements = holdout.units.length;
+    holdout.round = holdout.scenario.waveRounds[0];
+    const reinforcementOutcome = CampaignExpansion.onRoundStarted(holdout);
+    spawnScenarioWave(holdout, reinforcementOutcome.spawn, reinforcementOutcome.spawnMode);
+    const reinforcements = holdout.units.slice(unitsBeforeReinforcements);
     const holdoutCheck = {
       enemies: holdout.units.filter(unit => !unit.isHero).length,
       nearbyVanguard: holdout.units.some(unit => !unit.isHero && unit.x <= 5),
-      reinforcements: holdout.scenario?.waveRounds
+      reinforcementRounds: holdout.scenario?.waveRounds,
+      reinforcementsSpawned: reinforcements.length,
+      reinforcementsOnEdge: reinforcements.every(unit => unit.x === 0 || unit.y === 0
+        || unit.x + (unit.sizeW || 1) === GRID_W
+        || unit.y + (unit.sizeH || 1) === GRID_H)
     };
+    startBattleForCell({ id: 'e2e-spread', region: 1, type: 'mission' }, {
+      wave: [ENEMY_IDS.SKELETON, ENEMY_IDS.GOBLIN_ARCHER, ENEMY_IDS.BOAR, ENEMY_IDS.BANDIT],
+      scenario: 'eliminate'
+    });
+    const spreadRows = GameState.currentBattle.units
+      .filter(unit => !unit.isHero)
+      .map(unit => unit.y);
     const heroAtExit = { isHero: true, hp: 10, x: GRID_W - 1, sizeW: 1 };
     const liveRitualist = { isHero: false, hp: 10, scenarioTarget: 'ritualist' };
     const deadPrey = { isHero: false, hp: 0, scenarioTarget: 'prey' };
@@ -98,7 +114,7 @@ try {
       eventChoices: event.choices.length,
       delayed: GameState.campaignEvents.some(entry => entry.id === 'druid_cache'),
       assets: Object.values(CampaignExpansion.REGION).map(region => region.asset),
-      battleCheck, holdoutCheck, rules
+      battleCheck, holdoutCheck, spreadRows, rules
     };
   });
   check('campaign offers three distinct starting contracts', campaignRuntime.contracts === 3, JSON.stringify(campaignRuntime));
@@ -107,8 +123,28 @@ try {
   check('events contain meaningful three-way choices and delayed consequences', campaignRuntime.eventChoices === 3 && campaignRuntime.delayed, JSON.stringify(campaignRuntime));
   check('regional terrain assets are registered', campaignRuntime.assets.every(asset => asset.startsWith('assets/tiles/region-')), JSON.stringify(campaignRuntime));
   check('volcanic scenario carries regional rule and objective state', campaignRuntime.battleCheck.scenario === 'defense' && campaignRuntime.battleCheck.regionalRule === 'heat' && campaignRuntime.battleCheck.ward > 0 && campaignRuntime.battleCheck.texture, JSON.stringify(campaignRuntime));
-  check('holdout starts under pressure and schedules reinforcements', campaignRuntime.holdoutCheck.enemies >= 4 && campaignRuntime.holdoutCheck.nearbyVanguard && campaignRuntime.holdoutCheck.reinforcements?.join(',') === '2,3', JSON.stringify(campaignRuntime.holdoutCheck));
+  check('holdout starts under pressure and schedules reinforcements', campaignRuntime.holdoutCheck.enemies >= 4 && campaignRuntime.holdoutCheck.nearbyVanguard && campaignRuntime.holdoutCheck.reinforcementRounds?.join(',') === '2,3', JSON.stringify(campaignRuntime.holdoutCheck));
+  check('scenario reinforcements only enter from the battlefield edge', campaignRuntime.holdoutCheck.reinforcementsSpawned === 2 && campaignRuntime.holdoutCheck.reinforcementsOnEdge, JSON.stringify(campaignRuntime.holdoutCheck));
+  check('normal enemies use the battlefield height', Math.max(...campaignRuntime.spreadRows) - Math.min(...campaignRuntime.spreadRows) >= 4, JSON.stringify(campaignRuntime.spreadRows));
   check('every scenario has an automated victory or failure rule', Object.values(campaignRuntime.rules).every(Boolean), JSON.stringify(campaignRuntime.rules));
+  const wardCell = await page.evaluate(() => {
+    startBattleForCell({ id: 'e2e-ward-tooltip', region: 2, type: 'mission' }, {
+      wave: [ENEMY_IDS.SKELETON], scenario: 'defense'
+    });
+    GameState.currentBattle.phase = 'combat';
+    updateBattleUI();
+    return { ...GameState.currentBattle.scenario.ward };
+  });
+  const wardCanvasBox = await page.locator('#battle-canvas').boundingBox();
+  if (wardCanvasBox) {
+    await page.mouse.move(
+      wardCanvasBox.x + ((wardCell.x + 0.5) / 12) * wardCanvasBox.width,
+      wardCanvasBox.y + ((wardCell.y + 0.5) / 8) * wardCanvasBox.height
+    );
+  }
+  const wardTooltipText = await page.locator('#tooltip').textContent();
+  check('the defense shield explains itself on hover', /ОБЕРЕГ|WARD/i.test(wardTooltipText || '') && /24\/24/.test(wardTooltipText || ''), wardTooltipText || '');
+  check('all special battlefield markers have localized explanations', await page.evaluate(() => ['wardMarker', 'wardTooltip', 'exitMarker', 'exitTooltip', 'trapMarker', 'trapTooltip', 'huntTargetTooltip', 'ritualTargetTooltip'].every(key => translateKey(key) !== key)));
   await page.evaluate(() => setCampaignContract('mercenaries'));
   check('contract selection updates its explanatory text', (await page.locator('#menu-contract-copy').textContent())?.length > 20);
   await page.evaluate(() => { showScreen('menu'); initMenuScreen(); });
@@ -136,8 +172,10 @@ try {
         if (isDeployCellAvailable(b, x, y)) available.push({ x, y });
       }
     }
-    return { positions, available };
+    const enemyIds = b.units.filter(unit => !unit.isHero).map(unit => unit.enemyId);
+    return { positions, available, enemyIds };
   });
+  check('opening battle still includes the bandit thrower', deploymentRuntime.enemyIds.includes('bandit_thrower'), JSON.stringify(deploymentRuntime.enemyIds));
   check('opening heroes start two rows lower', deploymentRuntime.positions.seris?.y === 2 && deploymentRuntime.positions.garet?.y === 3 && deploymentRuntime.positions.alira?.y === 4, JSON.stringify(deploymentRuntime));
   check('deployment highlights only valid cells in two left columns', deploymentRuntime.available.length >= 8 && deploymentRuntime.available.every(cell => cell.x <= 1), JSON.stringify(deploymentRuntime));
 
@@ -257,18 +295,84 @@ try {
   check('map introduction names all three lands', ['Лес Лешего', 'Огненные глубины', 'Затонувшие руины'].every(name => landsText?.includes(name)), landsText || '');
   await page.locator('#onboarding-next').click();
   check('map introduction is stored as shown', await page.evaluate(() => GameState.mapIntroShown === true));
-  const linkedRouteCards = page.locator('.map-route-card[data-route-id]:not(.first-battle-route)');
-  const linkedRouteCount = await linkedRouteCards.count();
-  check('map exposes route cards for hover linking', linkedRouteCount > 0, `count=${linkedRouteCount}`);
-  if (linkedRouteCount > 0) {
-    const linkedRouteCard = linkedRouteCards.first();
-    const linkedRouteId = await linkedRouteCard.getAttribute('data-route-id');
-    const linkedMapNode = page.locator(`.map-node[data-node-id="${linkedRouteId}"]`);
-    await linkedRouteCard.hover();
-    check('route card hover highlights its map cell', await linkedMapNode.evaluate(el => el.classList.contains('route-linked-highlight')), linkedRouteId || '');
-    await linkedMapNode.hover();
-    check('map cell hover highlights its route card', await linkedRouteCard.evaluate(el => el.classList.contains('route-linked-highlight')), linkedRouteId || '');
-  }
+  const infoBeforeHover = await page.locator('#map-cell-info').textContent();
+  await page.locator('.map-node.map-option').first().hover();
+  const infoAfterHover = await page.locator('#map-cell-info').textContent();
+  check('map hover shows only the hovered cell details', infoAfterHover?.trim() && infoAfterHover !== infoBeforeHover, infoAfterHover || '');
+  const seerEyePreview = await page.evaluate(() => {
+    const optionElement = document.querySelector('.map-node.map-option[data-node-type="mission"], .map-node.map-option[data-node-type="dungeon"], .map-node.map-option[data-node-type="boss"]');
+    const nodeId = optionElement?.dataset.nodeId;
+    const node = GameState.mapGrid.find(cell => cell.id === nodeId);
+    const savedArtifacts = GameState.heroes.map(hero => hero.equipment?.artifact || null);
+    GameState.heroes.forEach(hero => {
+      hero.equipment = hero.equipment || {};
+      if (hero.equipment.artifact === 'seer_eye') hero.equipment.artifact = null;
+    });
+    renderMap();
+    document.querySelector(`.map-node[data-node-id="${nodeId}"]`)?.dispatchEvent(new MouseEvent('mouseenter'));
+    const genericText = document.getElementById('map-cell-info').textContent;
+    GameState.heroes[0].equipment.artifact = 'seer_eye';
+    renderMap();
+    document.querySelector(`.map-node[data-node-id="${nodeId}"]`)?.dispatchEvent(new MouseEvent('mouseenter'));
+    const exactText = document.getElementById('map-cell-info').textContent;
+    const exactNames = [...new Set((node.enemyWavePreview || []).map(enemyId => translateText(enemyDef(enemyId).name)))];
+    const info = document.getElementById('map-cell-info');
+    const fits = info.scrollHeight <= info.clientHeight + 1;
+    GameState.heroes.forEach((hero, index) => { hero.equipment.artifact = savedArtifacts[index]; });
+    renderMap();
+    return { genericText, exactText, exactNames, fits };
+  });
+  check('Scout Eye replaces generic threat intel with the exact enemy lineup', seerEyePreview.exactNames.length > 0 && seerEyePreview.exactNames.every(name => seerEyePreview.exactText.includes(name)) && seerEyePreview.exactNames.some(name => !seerEyePreview.genericText.includes(name)), JSON.stringify(seerEyePreview));
+  check('Scout Eye exact lineup still fits without scrolling', seerEyePreview.fits, JSON.stringify(seerEyePreview));
+  check('map cell summary omits redundant campaign data', !['Локация активна', 'До босса', 'Корни:', 'Благосклонность городов', 'Дикие стаи'].some(text => infoAfterHover?.includes(text)), infoAfterHover || '');
+  const mapInfoFit = await page.locator('#map-cell-info').evaluate(el => ({
+    visible: getComputedStyle(el).display !== 'none',
+    scrollHeight: el.scrollHeight,
+    clientHeight: el.clientHeight,
+    overflowY: getComputedStyle(el).overflowY
+  }));
+  check('selected map cell summary is visible without scrolling', mapInfoFit.visible && mapInfoFit.scrollHeight <= mapInfoFit.clientHeight + 1 && mapInfoFit.overflowY !== 'auto' && mapInfoFit.overflowY !== 'scroll', JSON.stringify(mapInfoFit));
+  const locationTitle = (await page.locator('#map-panel-title').textContent())?.trim();
+  check('selected map cell shows a proper place name', !!locationTitle && !/^LOCATION|^ЛОКАЦИЯ$/i.test(locationTitle), locationTitle || '');
+  check('map objective is separated into a labelled row', await page.locator('#map-cell-info .cell-info-objective small').count() === 1, infoAfterHover || '');
+  check('map no longer renders the three route cards', await page.locator('.map-route-card').count() === 0);
+  const routeToEnter = page.locator('.map-node.map-option').first();
+  const routePosition = await routeToEnter.evaluate(el => ({ x: Number(el.dataset.x), y: Number(el.dataset.y) }));
+  const partyBeforeRouteClick = await page.evaluate(() => ({ ...GameState.playerPos }));
+  await routeToEnter.click();
+  const partyAfterFirstRouteClick = await page.evaluate(() => ({ ...GameState.playerPos }));
+  check('first map-cell click only selects the destination', JSON.stringify(partyAfterFirstRouteClick) === JSON.stringify(partyBeforeRouteClick), JSON.stringify({ partyBeforeRouteClick, partyAfterFirstRouteClick }));
+  check('first map-cell click visibly highlights the destination', await routeToEnter.evaluate(el => el.classList.contains('map-selected') && el.getAttribute('aria-selected') === 'true'));
+  await routeToEnter.click();
+  const partyAfterSecondRouteClick = await page.evaluate(() => ({ ...GameState.playerPos }));
+  check('second map-cell click enters the selected destination', partyAfterSecondRouteClick.x === routePosition.x && partyAfterSecondRouteClick.y === routePosition.y, JSON.stringify({ routePosition, partyAfterSecondRouteClick }));
+
+  const cityShopPersistence = await page.evaluate(() => {
+    const city = GameState.mapGrid.find(node => node.type === 'city' && node.region === 1);
+    GameState.cityShopStocks = {};
+    GameState.shopStock = [];
+    GameState.cityState = { adUpgradeUsed: false, secretRevealed: false, secretItemId: null };
+    GameState.activeCityNode = null;
+    GameState.gold = 100;
+    enterCity(city);
+    const firstStock = (GameState.shopStock.stock || GameState.shopStock).map(item => item.id).join(',');
+    const firstSecret = GameState.cityState.secretItemId;
+    const goldBeforeReturn = GameState.gold;
+    showScreen('map');
+    enterCity(city);
+    const secondStock = (GameState.shopStock.stock || GameState.shopStock).map(item => item.id).join(',');
+    const secondSecret = GameState.cityState.secretItemId;
+    const goldAfterReturn = GameState.gold;
+    const stateBeforePaidReroll = GameState.cityShopStocks[city.id];
+    document.getElementById('btn-reroll-shop').click();
+    return {
+      firstStock, secondStock, firstSecret, secondSecret, goldBeforeReturn, goldAfterReturn,
+      paidRerollCost: goldAfterReturn - GameState.gold,
+      paidRerollReplacedState: stateBeforePaidReroll !== GameState.cityShopStocks[city.id]
+    };
+  });
+  check('leaving and re-entering a city preserves its shop without charging gold', cityShopPersistence.firstStock === cityShopPersistence.secondStock && cityShopPersistence.firstSecret === cityShopPersistence.secondSecret && cityShopPersistence.goldBeforeReturn === cityShopPersistence.goldAfterReturn, JSON.stringify(cityShopPersistence));
+  check('shop stock changes only through the paid reroll', cityShopPersistence.paidRerollCost === 20 && cityShopPersistence.paidRerollReplacedState, JSON.stringify(cityShopPersistence));
 
   const rewardedGoldGuard = await page.evaluate(() => {
     const originalGold = GameState.gold;
@@ -288,6 +392,29 @@ try {
   check('victory rewarded gold can only be claimed once',
     rewardedGoldGuard.first === 40 && rewardedGoldGuard.second === null && rewardedGoldGuard.gold === 140 && rewardedGoldGuard.claimed,
     JSON.stringify(rewardedGoldGuard));
+
+  const savedExitState = await page.evaluate(() => {
+    GameState.currentBattle = null;
+    GameState.gold = 437;
+    GameState.turn = 19;
+    GameState.firstBattleCompleted = true;
+    GameState.lastSafeSave = { gold: 111, currentBattle: { oversized: true }, lastSafeSave: { nested: true } };
+    showScreen('map');
+    document.getElementById('btn-menu-save-exit').click();
+    const stored = JSON.parse(localStorage.getItem(SAVE_KEY));
+    return {
+      gold: stored.gold,
+      turn: stored.turn,
+      nestedSafeSaveRemoved: stored.lastSafeSave?.lastSafeSave === null,
+      safeBattleRemoved: stored.lastSafeSave?.currentBattle === null,
+      bytes: localStorage.getItem(SAVE_KEY).length
+    };
+  });
+  check('save and exit writes a compact non-recursive campaign snapshot', savedExitState.gold === 437 && savedExitState.turn === 19 && savedExitState.nestedSafeSaveRemoved && savedExitState.safeBattleRemoved && savedExitState.bytes < 1000000, JSON.stringify(savedExitState));
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.locator('#btn-continue').click();
+  const stateAfterReload = await page.evaluate(() => ({ gold: GameState.gold, turn: GameState.turn, screen: GameState.screen }));
+  check('F5 followed by Continue restores the saved campaign', stateAfterReload.gold === 437 && stateAfterReload.turn === 19 && stateAfterReload.screen === 'map', JSON.stringify(stateAfterReload));
 
   check('runtime has no page errors', pageErrors.length === 0, pageErrors.join(' | '));
   check('runtime has no console errors', consoleErrors.length === 0, consoleErrors.join(' | '));
