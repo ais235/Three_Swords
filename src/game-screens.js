@@ -1421,9 +1421,8 @@
     }
     bag.ondragover = (event) => {
       if (!inventoryDesktopDragEnabled()) return;
-      const payload = inventoryDragPayload(event);
-      if (payload?.source !== 'equipped') return;
       event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
       bag.classList.add('bag-drop-hover');
     };
     bag.ondragleave = () => bag.classList.remove('bag-drop-hover');

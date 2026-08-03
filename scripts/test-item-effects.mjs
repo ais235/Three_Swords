@@ -166,6 +166,26 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   const persistedAfterReload = await page.evaluate(() => GameState.heroes.find(hero => hero.id === 'garet')?.equipment?.weapon);
   check('dragged equipment survives F5 reload', persistedAfterReload === 'poison_blade', String(persistedAfterReload));
+  const nativeDragReady = await page.evaluate(() => {
+    initHeroesFromTemplate();
+    GameState.inventory = ['steel_sword'];
+    const garet = GameState.heroes.find(hero => hero.id === 'garet');
+    garet.equipment = { weapon: 'poison_blade', armor: null, artifact: null };
+    recalcHeroFromEquipment(garet);
+    showScreen('inventory');
+    renderInventoryScreen();
+    document.querySelector('[data-hero-tab="garet"]')?.click();
+    return matchMedia('(hover: hover) and (pointer: fine)').matches && document.getElementById('eq-slot-weapon')?.draggable;
+  });
+  check('desktop browser exposes equipped gear as draggable', nativeDragReady === true, String(nativeDragReady));
+  if (nativeDragReady) {
+    await page.locator('#eq-slot-weapon').dragTo(page.locator('#bag-grid'));
+    const nativeUnequip = await page.evaluate(() => {
+      const garet = GameState.heroes.find(hero => hero.id === 'garet');
+      return { equipped: garet.equipment.weapon, poisonCopies: GameState.inventory.filter(id => id === 'poison_blade').length };
+    });
+    check('native mouse drag unequips gear into the bag', nativeUnequip.equipped === null && nativeUnequip.poisonCopies === 1, JSON.stringify(nativeUnequip));
+  }
 } finally {
   if (browser) await browser.close();
   await new Promise(resolveClose => server.close(resolveClose));
