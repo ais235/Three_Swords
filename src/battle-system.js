@@ -2310,6 +2310,26 @@
       ctx.fillText(`${ward.hp}/${ward.maxHp}`, px + CELL / 2, py + 10);
       ctx.restore();
     }
+    if (b.heatCollapseWarning) {
+      const warning = b.heatCollapseWarning;
+      const px = warning.x * CELL, py = warning.y * CELL;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255, 128, 32, .28)';
+      ctx.fillRect(px + 4, py + 4, CELL - 8, CELL - 8);
+      ctx.strokeStyle = '#ff9b42';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeRect(px + 5, py + 5, CELL - 10, CELL - 10);
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#fff0c2';
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚠', px + CELL / 2, py + CELL / 2 - 7);
+      ctx.font = 'bold 8px Arial';
+      ctx.fillText(translateKey('collapseWarning'), px + CELL / 2, py + CELL - 10);
+      ctx.restore();
+    }
 
     (b.traps || []).forEach(trap => {
       const cx = trap.x * CELL + CELL / 2;

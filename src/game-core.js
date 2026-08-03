@@ -327,6 +327,7 @@
     terrainWater: { ru: 'Вода', en: 'Water', es: 'Agua' },
     terrainFort: { ru: 'Форт', en: 'Fort', es: 'Fuerte' },
     terrainFire: { ru: 'Огонь', en: 'Fire', es: 'Fuego' },
+    collapseWarning: { ru: 'ОБВАЛ', en: 'COLLAPSE', es: 'DERRUMBE' },
     terrainCover: { ru: 'укрытие', en: 'cover', es: 'cobertura' },
     terrainBlocksSight: { ru: 'блокирует выстрелы', en: 'blocks shots', es: 'bloquea disparos' },
     terrainBlocksMove: { ru: 'непроходимо', en: 'blocks movement', es: 'bloquea movimiento' },
