@@ -10,7 +10,11 @@
   }
   function ensureCurrentCellFogVisited() {
     const p = GameState.playerPos;
-    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) mapFogVisitedAdd(p.y, p.x);
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+      mapFogVisitedAdd(p.y, p.x);
+      const node = getCurrentCell();
+      if (node) node.visited = true;
+    }
   }
   /** In-game message shown instead of browser alert. */
   function showGameAlert(message) {
@@ -558,6 +562,73 @@
     localizeUI(document.getElementById('bestiary-screen'));
   }
 
+  let ArsenalState = { slot: 'weapon', selectedId: null };
+  function localizeArsenalStat(line) {
+    const lang = currentLanguage();
+    if (lang === 'ru') return String(line)
+      .replace(/Max HP/g, 'Макс. HP').replace(/Max Mana/g, 'Макс. мана')
+      .replace(/Attack/g, 'Атака').replace(/Armor/g, 'Броня')
+      .replace(/Range/g, 'Дальность').replace(/Move/g, 'Ход')
+      .replace(/Stun on hit \(1 turn\)/g, 'Оглушение при попадании: 1 ход')
+      .replace(/Crit chance/g, 'Шанс крита').replace(/Crit damage/g, 'Урон крита')
+      .replace(/Gold earned/g, 'Получаемое золото').replace(/Healing received/g, 'Получаемое лечение');
+    if (lang === 'es') return String(line)
+      .replace(/Max HP/g, 'PV máx.').replace(/Max Mana/g, 'Maná máx.')
+      .replace(/Attack/g, 'Ataque').replace(/Armor/g, 'Armadura')
+      .replace(/Range/g, 'Alcance').replace(/Move/g, 'Movimiento');
+    return line;
+  }
+  function localizeArsenalItem(item, field) {
+    const names = {
+      steel_sword: ['Стальной меч', 'Espada de acero'], poison_blade: ['Клинок яда', 'Hoja venenosa'], thunder_hammer: ['Громовой молот', 'Martillo de trueno'], blade_dark: ['Тёмный клинок', 'Hoja oscura'],
+      hunter_bow: ['Охотничий лук', 'Arco de cazador'], shadow_bow: ['Лук теней', 'Arco de sombras'], moon_bow: ['Лунный лук', 'Arco lunar'], crossbow_war: ['Боевой арбалет', 'Ballesta de guerra'],
+      magic_wand: ['Волшебная палочка', 'Varita mágica'], fire_staff: ['Огненный посох', 'Bastón de fuego'], chaos_staff: ['Посох хаоса', 'Bastón del caos'], staff_ice: ['Посох ледяного демона', 'Bastón del demonio de hielo'],
+      leather: ['Кожаный доспех', 'Armadura de cuero'], shadow_cloak: ['Плащ теней', 'Capa de sombras'], runic_shield: ['Рунический щит', 'Escudo rúnico'], mirror_robe: ['Зеркальная мантия', 'Túnica espejo'], guardian_plate: ['Латы стража', 'Placa de guardián'], phoenix: ['Одеяние феникса', 'Túnica del fénix'], dark_mantle: ['Тёмная мантия', 'Manto oscuro'],
+      luck_amulet: ['Амулет удачи', 'Amuleto de la suerte'], mana_crystal: ['Кристалл маны', 'Cristal de maná'], seer_eye: ['Око разведчика', 'Ojo del explorador'], hourglass: ['Песочные часы', 'Reloj de arena'], death_ring: ['Кольцо смерти', 'Anillo de la muerte'], portal_stone: ['Камень портала', 'Piedra portal'], crown: ['Корона силы', 'Corona de poder'],
+      ash_sword: ['Клинок пепла', 'Espada de ceniza'], forge_hammer: ['Молот кузни', 'Martillo de forja'], coal_bow: ['Угольный лук', 'Arco de carbón'], siege_crossbow: ['Осадный арбалет', 'Ballesta de asedio'], magma_wand: ['Жезл магмы', 'Varita de magma'], volcano_staff: ['Посох вулкана', 'Bastón del volcán'],
+      tide_blade: ['Клинок прилива', 'Hoja de marea'], abyss_staff: ['Посох бездны', 'Bastón del abismo'], vent_shield: ['Щит жерла', 'Escudo de la chimenea'], spark_cloak: ['Плащ искр', 'Capa de chispas'], phoenix_robe_2: ['Одеяние феникса', 'Túnica del fénix'], forge_hourglass: ['Кузнечные часы', 'Reloj de arena de forja'],
+      tide_trident: ['Трезубец стража', 'Tridente del guardián'], deep_shell: ['Панцирь глубин', 'Caparazón de las profundidades'], current_bow: ['Лук течений', 'Arco de corrientes'], harpoon_crossbow: ['Гарпунный арбалет', 'Ballesta arpón'], sea_cloak: ['Плащ морского призрака', 'Capa del fantasma marino'], tide_staff: ['Посох прилива', 'Bastón de marea'], deep_robe: ['Мантия глубин', 'Túnica de las profundidades'], tide_heart: ['Сердце прилива', 'Corazón de marea']
+    };
+    const languageIndex = currentLanguage() === 'ru' ? 0 : currentLanguage() === 'es' ? 1 : -1;
+    if (field === 'name' && names[item.id] && languageIndex >= 0) return names[item.id][languageIndex];
+    if (field === 'name') return translateText(item.name);
+    const desc = localizeContent(item.desc);
+    if (currentLanguage() === 'ru') return desc
+      .replace(/attack/g, 'атаки').replace(/armor/g, 'брони').replace(/range/g, 'дальности')
+      .replace(/mana/g, 'маны').replace(/move/g, 'хода').replace(/Stuns on hit\./g, 'Оглушает при попадании.')
+      .replace(/Spells gain \+1 AoE radius\./g, 'Заклинания получают +1 к радиусу области.')
+      .replace(/Attackers take 1 damage\./g, 'Атакующие получают 1 урон.')
+      .replace(/Revive once with 5 HP\./g, 'Один раз воскрешает с 5 HP.')
+      .replace(/Freeze lasts 2 turns\./g, 'Заморозка длится 2 хода.');
+    return desc;
+  }
+  function renderArsenal() {
+    const list = document.getElementById('arsenal-list'); const detail = document.getElementById('arsenal-detail');
+    if (!list || !detail) return;
+    const items = ITEM_POOL.filter(item => item.slot === ArsenalState.slot);
+    const owned = ownedItemIds();
+    const labels = { weapon: translateKey('arsenalWeapons'), armor: translateKey('arsenalArmor'), artifact: translateKey('arsenalArtifacts') };
+    document.querySelectorAll('[data-arsenal-slot]').forEach(btn => {
+      const slot = btn.dataset.arsenalSlot;
+      btn.textContent = `${slot === 'weapon' ? '⚔' : slot === 'armor' ? '🛡' : '✨'} ${labels[slot]}`;
+      btn.classList.toggle('active', slot === ArsenalState.slot);
+    });
+    const title = document.querySelector('#arsenal-screen .bestiary-bar-title');
+    if (title) title.textContent = `⚔ ${translateKey('arsenal')}`;
+    const back = document.getElementById('btn-arsenal-back');
+    if (back) back.textContent = `← ${translateKey('back')}`;
+    document.getElementById('arsenal-count').textContent = `${items.filter(item => owned.has(item.id)).length} / ${items.length}`;
+    list.innerHTML = items.map(item => {
+      const known = owned.has(item.id); const region = campaignRegionName(item.minRegion);
+      return `<button class="bestiary-card${known ? '' : ' locked'}" data-arsenal-id="${item.id}"><span class="bestiary-card-icon">${known ? itemIconMarkup(item, 34) : '❓'}</span><span class="bestiary-card-copy"><strong>${known ? localizeArsenalItem(item, 'name') : translateKey('unknownCaps')}</strong><small>${known ? formatItemMods(item).map(localizeArsenalStat).join(' · ') : region}</small></span></button>`;
+    }).join('');
+    const show = id => { const item = ITEM_POOL.find(entry => entry.id === id); if (!item) return; const known = owned.has(item.id); ArsenalState.selectedId = id;
+      detail.innerHTML = known ? `<div class="bestiary-detail-icon">${itemIconMarkup(item, 72)}</div><div class="bestiary-detail-name">${localizeArsenalItem(item, 'name')}</div><div class="bestiary-text">${formatItemMods(item).map(localizeArsenalStat).join('<br>')}</div><div class="bestiary-region-badge">${campaignRegionName(item.minRegion)} · ${translateKey(item.rarity === 'epic' ? 'rarityEpic' : item.rarity === 'rare' ? 'rarityRare' : 'rarityCommon')}</div><div class="bestiary-weakness">${localizeArsenalItem(item, 'desc')}</div>` : `<div class="bestiary-detail-icon bs-unknown">❓</div><div class="bestiary-detail-name">${translateKey('unknownCaps')}</div><div class="bestiary-text bestiary-locked">${campaignRegionName(item.minRegion)}</div>`;
+    };
+    list.querySelectorAll('[data-arsenal-id]').forEach(btn => btn.onclick = () => show(btn.dataset.arsenalId));
+    show(ArsenalState.selectedId && items.some(item => item.id === ArsenalState.selectedId) ? ArsenalState.selectedId : items[0]?.id);
+  }
+
   // Skill unlock popup
   function showSkillUnlockPopup(heroId, skillDef) {
     return new Promise(resolve => {
@@ -927,6 +998,26 @@
   let InvState = { activeHeroId: 'garet', selectedItemId: null, selectedItemIdx: -1, selectedEquippedSlot: null };
   function randomItem(region, minRarity) {
     return selectLootItem(region, minRarity || null);
+  }
+  function bossRewardChoices(region) {
+    const owned = ownedItemIds();
+    const pool = ITEM_POOL.filter(item => item.minRegion === region && (item.rarity === 'rare' || item.rarity === 'epic'));
+    const fresh = pool.filter(item => !owned.has(item.id));
+    const source = fresh.length >= 3 ? fresh : pool;
+    return [...source].sort(() => Math.random() - 0.5).slice(0, 3).map(deepClone);
+  }
+  function showPendingBossReward() {
+    const reward = GameState.pendingBossReward;
+    if (!reward?.choices?.length) return;
+    const choices = reward.choices.map(item => ({ value: item.id, label: `${translateText(item.name)} — ${formatItemMods(item).map(translateText).join(', ')}` }));
+    showGamePickOne(`🏆 ${currentLanguage() === 'ru' ? 'Выберите награду следующего региона' : 'Choose a reward for the next region'}`, choices).then(id => {
+      const item = reward.choices.find(choice => choice.id === id) || reward.choices[0];
+      GameState.inventory.push(item.id);
+      GameState._lastBossReward = item;
+      GameState.pendingBossReward = null;
+      saveGame(true);
+      void showGameAlert(`${translateKey('victoryLoot')}: ${translateText(item.name)}`);
+    });
   }
   function equipItem(hero, item) {
     hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
@@ -1501,22 +1592,25 @@
     updateInventoryCloseButton();
   }
   function generateShopStock(region) {
-    const byRegion = ITEM_POOL.filter(i => i.minRegion <= region);
+    const currentTier = ITEM_POOL.filter(i => i.minRegion === region);
+    const olderTier = ITEM_POOL.filter(i => i.minRegion < region);
+    const byRegion = currentTier.length ? [...currentTier, ...olderTier] : ITEM_POOL.filter(i => i.minRegion <= region);
     const commons = byRegion.filter(i => i.rarity === 'common');
     const rares   = byRegion.filter(i => i.rarity === 'rare');
     const epics   = byRegion.filter(i => i.rarity === 'epic');
     const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
     const stock = [];
     // Two different common items.
-    const sc = shuffle(commons);
+    const sc = shuffle(commons.filter(i => i.minRegion === region).length ? commons.filter(i => i.minRegion === region) : commons);
     if (sc[0]) stock.push(deepClone(sc[0]));
     if (sc[1]) stock.push(deepClone(sc[1]));
     // At least one rare item, sometimes two.
-    const sr = shuffle(rares);
+    const sr = shuffle(rares.filter(i => i.minRegion === region).length ? rares.filter(i => i.minRegion === region) : rares);
     if (sr[0]) stock.push(deepClone(sr[0]));
     if (sr[1] && Math.random() < 0.3 + (region - 1) * 0.15) stock.push(deepClone(sr[1]));
     // Secret epic slot.
-    const se = shuffle(epics.length ? epics : byRegion);
+    const currentEpics = epics.filter(i => i.minRegion === region);
+    const se = shuffle(currentEpics.length ? currentEpics : (epics.length ? epics : byRegion));
     const secretItem = deepClone(se[0]);
     return { stock: stock.slice(0, 4), secretItem };
   }
@@ -1732,7 +1826,7 @@
       map: 'map-screen', city: 'city-screen', battle: 'battle-screen',
       inventory: 'inventory-screen', victory: 'victory-screen',
       gameover: 'gameover-screen', ending: 'ending-screen', event: 'event-screen',
-      bestiary: 'bestiary-screen'
+      bestiary: 'bestiary-screen', arsenal: 'arsenal-screen'
     };
     const mainMenu = document.getElementById('main-menu');
 
@@ -1997,6 +2091,9 @@
   }
 
   function mapNodeFaceHtml(node) {
+    if (node?.completed && ['boss', 'final'].includes(node.type)) {
+      return `<div class="map-node-face map-node-face-defeated-boss" aria-label="${translateKey('bossDefeated')}">☠</div>`;
+    }
     if (node?.type === 'boss' && node.region <= GameState.regionUnlocked) {
       return mapBossSilhouetteHtml(node);
     }
@@ -2102,6 +2199,8 @@
   function renderMap() {
     const root = document.getElementById('map-nodes');
     document.getElementById('map-screen')?.setAttribute('data-region', String(GameState.region || 1));
+    const mapArsenalButton = document.getElementById('btn-map-arsenal');
+    if (mapArsenalButton) mapArsenalButton.textContent = `⚔ ${translateKey('arsenal')}`;
     const info = document.getElementById('map-cell-info');
     const fogCounterEl = document.getElementById('map-fog-counter');
     root.innerHTML = '';
@@ -2119,11 +2218,15 @@
       const detail = intel.scenario
         ? CampaignExpansion.scenarioShort(intel.scenario)
         : intel.reward;
+      const completion = node.completed
+        ? `<div class="cell-info-completion ${['boss', 'final'].includes(node.type) ? 'boss-defeated' : ''}">${['boss', 'final'].includes(node.type) ? '☠ ' + translateKey('bossDefeated') : '✓ ' + translateKey('mapCleared')}</div>`
+        : (node.visited ? `<div class="cell-info-completion">✓ ${translateKey('mapVisited')}</div>` : '');
       return `<div class="cell-info-heading">
           <strong>${escapeHtml(title)}</strong>
           <span>${escapeHtml(intel.threat)}</span>
         </div>
         ${detail ? `<div class="cell-info-objective"><small>${escapeHtml(CampaignExpansion.loc({ ru: 'ЦЕЛЬ', en: 'OBJECTIVE', es: 'OBJETIVO' }))}</small><span>${escapeHtml(detail)}</span></div>` : ''}
+        ${completion}
         ${combatNode && intel.composition ? `<div class="cell-info-enemies">${intel.composition}</div>` : ''}`;
     };
     const panelTitle = document.getElementById('map-panel-title');
@@ -2151,7 +2254,8 @@
       const dist = Math.abs(node.x - px) + Math.abs(node.y - py);
       const adjacent = currentCell ? cellNeighbors(currentCell, node) : false;
       const revealedBoss = node.type === 'boss' && node.region <= GameState.regionUnlocked;
-      if (dist <= 2 || revealedBoss) el.classList.add('visible');
+      const explored = !!(node.visited || node.completed);
+      if (dist <= 2 || revealedBoss || explored) el.classList.add('visible');
       else el.classList.add('hidden');
       if (adjacent) el.classList.add('map-option');
       else if (dist <= 2 && dist > 0) el.classList.add('map-secondary');
@@ -2159,13 +2263,18 @@
       const unlocked = node.region <= GameState.regionUnlocked && (node.type !== 'final' || GameState.defeatedBosses >= 3);
       if (!unlocked) el.classList.add('locked');
       if (node.completed) el.classList.add('done');
+      if (explored) el.classList.add('explored');
+      if (node.completed && ['boss', 'final'].includes(node.type)) el.classList.add('boss-defeated');
       if (node.routeTension) el.classList.add('route-tension');
       if (node.x === px && node.y === py) el.classList.add('current');
       if (node.type === 'city') el.classList.add('type-city');
       if (revealedBoss) el.classList.add('type-boss-revealed');
       const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
-      const typeLbl = unlocked ? (typeNames[node.type] || '') : '';
-      const showCellFace = dist <= 2 || revealedBoss;
+      const typeLbl = unlocked ? (node.completed && ['boss', 'final'].includes(node.type)
+        ? translateKey('bossDefeated')
+        : node.visited && !node.completed ? translateKey('mapVisited')
+        : (typeNames[node.type] || '')) : '';
+      const showCellFace = dist <= 2 || revealedBoss || explored;
       const partyMarker = node.x === px && node.y === py ? mapPartyMarkerHtml() : '';
       if (showCellFace) {
         el.innerHTML = `${mapNodeFaceHtml(node)}${typeLbl ? `<small class="map-node-lbl">${typeLbl}</small>` : ''}${partyMarker}`;
@@ -2353,6 +2462,9 @@
       GameState.turn += 1;
       GameState.region = node.region;
       CampaignExpansion.resolveDelayedEvents();
+      // Movement is a durable campaign checkpoint. This prevents a long map
+      // route from falling back to the opening battle after an exit.
+      saveGame();
       enterMapNode(node);
       renderMap();
     };
@@ -3204,7 +3316,7 @@
       return;
     }
     const b = GameState.currentBattle;
-    if (!b || b.phase !== 'combat') { BattleView.hoverCell = null; hideTip(); return; }
+    if (!b || !['deploy', 'combat'].includes(b.phase)) { BattleView.hoverCell = null; hideTip(); return; }
     const { gx, gy } = eventToGrid(e.clientX, e.clientY);
     BattleView.hoverCell = inBounds(gx, gy) ? { gx, gy } : null;
     const u = unitAt(b, gx, gy);
@@ -3438,6 +3550,21 @@
       renderInventoryScreen();
       showScreen('inventory');
     };
+    const openInventoryFromBattle = () => {
+      GameState._returnToVictory = false;
+      GameState._returnToCity = false;
+      GameState._returnToBattle = true;
+      renderInventoryScreen();
+      showScreen('inventory');
+    };
+    const battleInventoryBtn = document.getElementById('btn-battle-inventory');
+    if (battleInventoryBtn) battleInventoryBtn.onclick = openInventoryFromBattle;
+    const battleBestiaryBtn = document.getElementById('btn-battle-bestiary');
+    if (battleBestiaryBtn) battleBestiaryBtn.onclick = () => {
+      GameState._bestiaryReturn = 'battle';
+      showScreen('bestiary');
+      renderBestiaryScreen();
+    };
     const legacyInvBtn = document.getElementById('btn-inventory-map');
     if (legacyInvBtn) legacyInvBtn.onclick = openInventory;
     const mapInvBtn = document.getElementById('btn-map-bag');
@@ -3448,6 +3575,10 @@
       showScreen('bestiary');
       renderBestiaryScreen();
     };
+    const mapArsenalBtn = document.getElementById('btn-map-arsenal');
+    if (mapArsenalBtn) mapArsenalBtn.onclick = () => { GameState._arsenalReturn = 'map'; showScreen('arsenal'); renderArsenal(); };
+    document.querySelectorAll('[data-arsenal-slot]').forEach(btn => btn.onclick = () => { ArsenalState.slot = btn.dataset.arsenalSlot; ArsenalState.selectedId = null; renderArsenal(); });
+    document.getElementById('btn-arsenal-back').onclick = () => { showScreen('map'); renderMap(); GameState._arsenalReturn = null; };
     document.getElementById('btn-close-inv').onclick = () => {
       if (GameState._returnToVictory) {
         GameState._returnToVictory = false;
@@ -3490,6 +3621,7 @@
     };
     document.getElementById('btn-bestiary-back').onclick = () => {
       if (GameState._bestiaryReturn === 'city') showScreen('city');
+      else if (GameState._bestiaryReturn === 'battle') { showScreen('battle'); updateBattleUI(); }
       else { showScreen('map'); renderMap(); }
       GameState._bestiaryReturn = null;
     };
@@ -3668,6 +3800,7 @@
       });
     };
     document.getElementById('btn-menu-exit').onclick = () => {
+      discardUnsavedProgress();
       closeGameMenu();
       showInterstitialAdAtBreak('menu', () => {
         showScreen('menu');
