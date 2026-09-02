@@ -23,7 +23,7 @@
 #mode-badge.m-enemy { border-color: var(--text-hint); color: var(--text-hint); background: transparent; }
 /* 7: Log toggle */
 #battle-log-toggle { font-size: 9px; padding: 1px 5px; margin-bottom: 2px; border-radius: 3px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-family: inherit; width: 100%; text-align: left; }
-#battle-log.log-collapsed { max-height: 40px !important; min-height: 0 !important; }
+#battle-log.log-collapsed { max-height: 40px; min-height: 0 !important; }
 /* 12: Death effect */
 .fx-skull { position: absolute; pointer-events: none; font-size: 22px; animation: skullPop 0.7s ease-out forwards; z-index: 600; }
 @keyframes skullPop {
@@ -573,9 +573,9 @@
 .game-menu-danger {
   grid-column: 1 / -1;
   margin-top: 2px !important;
-  border-color: var(--accent-red) !important;
-  color: var(--accent-red) !important;
-  background: rgba(231,76,60,0.05) !important;
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+  background: rgba(231,76,60,0.05);
 }
 .modal-box { background: var(--bg-panel); border: 2px solid var(--border); border-radius: 10px; padding: 20px; max-width: 520px; max-height: 90vh; overflow: auto; }
 #game-menu-overlay .game-menu-box {
@@ -586,7 +586,7 @@
 }
 #game-menu-overlay .game-menu-actions .btn {
   margin: 0;
-  font-size: 13px !important;
+  font-size: 13px;
   line-height: 1.35;
 }
 .perk-tree { display: flex; flex-direction: column; gap: 12px; }
@@ -643,7 +643,7 @@
   margin: 0;
   min-height: 38px;
   padding: 8px 10px;
-  font-size: 12px !important;
+  font-size: 12px;
   white-space: normal;
   text-align: center;
   box-sizing: border-box;

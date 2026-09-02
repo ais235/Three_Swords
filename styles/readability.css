@@ -250,7 +250,7 @@ body,
   #main-menu .menu-settings-hint { min-height: 34px; padding-bottom: 3px; }
   #main-menu #btn-menu-settings-back { min-height: 40px !important; }
   #main-menu #btn-menu-settings-back .menu-btn-label { display: block; padding: 2px 0; }
-  #perk-modal #perk-detail-panel .btn { min-height: 38px !important; padding-block: 5px !important; }
+  #perk-modal #perk-detail-panel .btn { min-height: 38px !important; padding-block: 5px; }
 }
 
 /* Bestiary. */

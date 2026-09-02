@@ -39,7 +39,7 @@
   .init-slot { width: 20px; height: 20px; font-size: 10px; }
   #battle-log { min-height: 28px; max-height: 56px; font-size: 8px; line-height: 1.25; padding: 2px; }
   #unit-panel { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
-  #unit-stats { font-size: 7px !important; margin-bottom: 1px !important; }
+  #unit-stats { font-size: 7px; margin-bottom: 1px !important; }
   .battle-actions { display: flex; flex-direction: column; gap: 2px; }
   .battle-actions .btn { min-height: 22px; padding: 1px 3px; font-size: 7px; width: 100%; box-sizing: border-box; margin: 0; }
   .battle-actions .skill-action-btn {
@@ -86,8 +86,8 @@
   .heroes-bar-title { display: none; }
   .hero-heal-btn { font-size: 7px; padding: 1px 3px; }
   .heal-all-row { flex-direction: column; gap: 4px; }
-  .btn-heal-all { font-size: 8px !important; padding: 5px 4px; min-height: 26px; }
-  .btn-heal-ad { font-size: 8px !important; padding: 5px 4px; min-height: 26px; }
+  .btn-heal-all { font-size: 8px; padding: 5px 4px; min-height: 26px; }
+  .btn-heal-ad { font-size: 8px; padding: 5px 4px; min-height: 26px; }
   .items-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
@@ -111,8 +111,8 @@
   #shop-list .card-price, #shop-sell-list .card-price { font-size: 8px; }
   #shop-list .card-footer .badge { font-size: 5px; }
   #shop-sell-list .card-body { padding: 5px 5px 4px; gap: 4px; }
-  #shop-list:not(.items-grid-scroll) .item-card.secret { grid-column: auto !important; height: 100%; }
-  #shop-list.items-grid-scroll .item-card.secret { grid-column: 1 / -1 !important; height: auto; }
+  #shop-list:not(.items-grid-scroll) .item-card.secret { grid-column: auto; height: 100%; }
+  #shop-list.items-grid-scroll .item-card.secret { grid-column: 1 / -1; height: auto; }
   #shop-list .btn-buy-ad { font-size: 5px; padding: 4px 2px; }
   .sc-desc { display: none; }
   .city-shortcuts .sc-btn { font-size: 7px; padding: 1px 3px; min-height: 22px; }
@@ -186,7 +186,7 @@
   .game-menu-title { font-size: 11px; }
   .game-menu-sub { font-size: 8px; margin-top: 3px; }
   .game-menu-actions { gap: 6px; padding: 10px 12px 12px; }
-  #game-menu-overlay .game-menu-actions .btn { min-height: 30px; font-size: 9px !important; padding: 5px 6px; }
+  #game-menu-overlay .game-menu-actions .btn { min-height: 30px; font-size: 9px; padding: 5px 6px; }
   .modal-box.game-dialog-box {
     max-width: min(300px, calc(100vw - 16px));
     padding: 10px 12px;
@@ -203,7 +203,7 @@
   .gameover-stat-val { font-size: 11px; }
   .gameover-stat-label { font-size: 6px; letter-spacing: 0.5px; }
   .gameover-actions { gap: 6px; }
-  .gameover-actions .btn { min-height: 30px; font-size: 9px !important; padding: 5px 6px; }
+  .gameover-actions .btn { min-height: 30px; font-size: 9px; padding: 5px 6px; }
   #confirm-text { font-size: 7px; }
   .game-dialog-btns .btn { min-height: 28px; }
 }
@@ -276,5 +276,5 @@
   #onboarding-modal,
   #perk-modal,
   #skill-unlock-modal,
-  #sfx-auditor-modal { visibility: hidden !important; }
+  #sfx-auditor-modal { visibility: hidden; }
 }

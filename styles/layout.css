@@ -866,7 +866,7 @@ button, input, select, textarea {
 #shop-sell-list .item-card.cant:hover { border-color: #e74c3c; }
 #shop-list .item-card.selected,
 #shop-sell-list .item-card.selected { border-color: var(--accent-gold); background: #150f00; }
-#shop-list .item-card.secret { border-color: #9b59b6; background: #0f0a1a; grid-column: auto !important; }
+#shop-list .item-card.secret { border-color: #9b59b6; background: #0f0a1a; grid-column: auto; }
 #shop-list .item-card.secret.secret-reveal-play { animation: secretRevealFlash 0.65s ease forwards; }
 #shop-list .card-body,
 #shop-sell-list .card-body {

@@ -135,7 +135,7 @@
 
 #perk-modal .perk-detail-name {
   margin: 0;
-  font-size: 15px !important;
+  font-size: 15px;
   line-height: 1.25 !important;
   word-break: normal;
   overflow-wrap: normal;
@@ -144,7 +144,7 @@
 #perk-modal .perk-detail-branch {
   margin: 3px 0 0;
   color: #9096b3;
-  font-size: 9px !important;
+  font-size: 9px;
   line-height: 1.25 !important;
 }
 
