@@ -228,41 +228,16 @@
 }
 
 @media (orientation: landscape) and (max-height: 560px) {
-  #perk-modal .perk-modal-box {
-    width: min(1040px, 99vw);
-    max-height: 98vh;
-  }
 
   #perk-modal .perk-modal-topbar {
     padding: 6px 10px;
   }
 
-  #perk-modal .perk-modal-body {
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
-    min-height: 0;
-  }
 
-  #perk-modal .perk-branches {
-    padding: 8px;
-    gap: 6px;
-  }
 
-  #perk-modal .perk-skill {
-    min-height: 50px;
-    grid-template-columns: 26px minmax(0, 1fr) auto;
-    column-gap: 6px;
-    padding: 5px 6px;
-  }
 
-  #perk-modal .perk-skill-icon {
-    width: 25px;
-    height: 25px;
-    font-size: 14px;
-  }
 
-  #perk-modal .perk-skill-name { font-size: 8px !important; }
   #perk-modal .perk-skill-summary { font-size: 7px; }
-  #perk-modal .perk-detail-panel { padding: 9px; gap: 5px; }
   #perk-modal .perk-detail-scroll { gap: 5px; }
   #perk-modal .perk-detail-action { padding-top: 5px; }
   #perk-modal .perk-detail-rules { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }

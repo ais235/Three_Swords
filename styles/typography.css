@@ -353,9 +353,6 @@ textarea {
   font-size: 17px !important;
   line-height: 1.35 !important;
 }
-#map-screen .map-node {
-  font-size: clamp(11px, 1.55vmin, 15px) !important;
-}
 #map-screen .map-node small {
   font-size: 10px !important;
 }

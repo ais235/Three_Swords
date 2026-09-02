@@ -46,7 +46,6 @@
 
 @media (orientation: landscape) and (max-width: 900px) and (max-height: 520px) {
   button, .btn { touch-action: manipulation; }
-  #battle-speed-toggle { min-width: 40px; min-height: 32px; }
 
   #battle-screen #battle-coach-overlay {
     left: 6px;
@@ -93,9 +92,6 @@
     font-size: 9px !important;
   }
 
-  #battle-screen .battle-left .hero-card-name {
-    font-size: 10px !important;
-  }
 }
 
 /* Final phone-landscape composition. Keep this block last: older compact
@@ -184,31 +180,10 @@
   }
 
   /* Map: restore a game-like side panel, but keep every action in view. */
-  #map-screen .map-screen-layout {
-    grid-template-columns: minmax(0, 1fr) 210px !important;
-    grid-template-rows: minmax(0, 1fr) !important;
-  }
-  #map-screen .map-panel {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-    max-height: none;
-    padding: 7px !important;
-    overflow: hidden !important;
-    border-top: 0;
-    border-left: 1px solid var(--border);
-  }
   
   
   
   
-  #map-screen .map-panel-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5px;
-    margin-top: auto;
-  }
   #map-screen .map-panel-actions .btn {
     width: 100%;
     min-height: 42px;
@@ -218,7 +193,6 @@
     white-space: normal;
     overflow: visible;
   }
-  #map-screen .map-panel-actions .btn-enter-full { grid-column: 1 / -1; }
   #map-screen #btn-map-bag,
   #map-screen #btn-map-bestiary { width: 100%; font-size: 0 !important; }
   #map-screen #btn-map-bag::before { content: '🎒'; font-size: 16px; }
