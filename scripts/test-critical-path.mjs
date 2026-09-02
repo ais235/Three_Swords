@@ -1,7 +1,10 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { chromium } from 'playwright-core';
 import { createStaticServer } from './static-server.mjs';
+
+const topology = createRequire(import.meta.url)('../src/map-topology.js');
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const chromePath = process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
@@ -124,6 +127,7 @@ try {
     startBattleForCell(nearRootCell, { wave: [ENEMY_IDS.SKELETON], scenario: 'eliminate' });
     const rootBattle = GameState.currentBattle;
     const roots = rootBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.ROOT_SENTINEL);
+    const rootGroundUsesRegionalTile = roots.length > 0 && regionalBattleTextureForCell(rootBattle, roots[0].x, roots[0].y) === RegionBattleTextures[1];
     startBattleForCell(rootBoss, { wave: [ENEMY_IDS.LESHY], scenario: 'eliminate' });
     const bossBattle = GameState.currentBattle;
     const leshy = bossBattle.units.find(unit => unit.enemyId === ENEMY_IDS.LESHY);
@@ -135,7 +139,8 @@ try {
       bossRoots: bossRoots.length,
       bossRootPositions: bossRoots.map(root => ({ x: root.x, y: root.y, distance: unitDistance(root, leshy) })),
       bossRing: bossRoots.every(root => unitDistance(root, leshy) <= 1),
-      rootTexture: !!EnemyTextures[ENEMY_IDS.ROOT_SENTINEL]
+      rootTexture: !!EnemyTextures[ENEMY_IDS.ROOT_SENTINEL],
+      rootGroundUsesRegionalTile
     };
     startBattleForCell({ id: 'e2e-fire-rise', region: 2, type: 'mission' }, { wave: [ENEMY_IDS.SKELETON], scenario: 'eliminate' });
     const fireRiseBattle = GameState.currentBattle;
@@ -153,7 +158,8 @@ try {
       count: fireRiseBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && unit.hp > 0).length,
       onFire: fireRiseBattle.units.filter(unit => unit.enemyId === ENEMY_IDS.FIRE_ELEMENTAL && unit.hp > 0)
         .every(unit => fireRiseBattle.grid[unit.y][unit.x] === TILE.FIRE),
-      fireHealing: !!risenFire && risenFire.hp === fireHpBeforeHeal - 2
+      fireHealing: !!risenFire && risenFire.hp === fireHpBeforeHeal - 2,
+      regionalTile: !!risenFire && regionalBattleTextureForCell(fireRiseBattle, risenFire.x, risenFire.y) === RegionBattleTextures[2]
     };
     startBattleForCell({ id: 'e2e-tide-rise', region: 3, type: 'mission' }, { wave: [ENEMY_IDS.GHOST], scenario: 'eliminate' });
     const tideBattle = GameState.currentBattle;
@@ -181,8 +187,10 @@ try {
       flooded: warnedTide.every(tile => tideBattle.grid[tile.y][tile.x] === TILE.WATER),
       elementals: waterElementals.length,
       onWater: waterElementals.every(unit => unit === risenWater || tideBattle.grid[unit.y][unit.x] === TILE.WATER),
-      pushed
+      pushed,
+      regionalTile: warnedTide.length > 0 && regionalBattleTextureForCell(tideBattle, warnedTide[0].x, warnedTide[0].y) === RegionBattleTextures[3]
     };
+    const regionalTextureSizes = Object.values(RegionBattleTextures).map(texture => [texture.naturalWidth, texture.naturalHeight]);
     const fireBoss = GameState.mapGrid.find(cell => cell.region === 2 && cell.type === 'boss');
     startBattleForCell(fireBoss, { wave: [ENEMY_IDS.FIRE_TITAN], scenario: 'eliminate' });
     const fireBossBattle = GameState.currentBattle;
@@ -233,7 +241,7 @@ try {
       eventChoices: event.choices.length,
       delayed: GameState.campaignEvents.some(entry => entry.id === 'druid_cache'),
       assets: Object.values(CampaignExpansion.REGION).map(region => region.asset),
-      battleCheck, holdoutCheck, spreadRows, rootCheck, fireRiseCheck, tideCheck, fireBossCheck, waterBossCheck, elementalBestiaryCheck, rules
+      battleCheck, holdoutCheck, spreadRows, rootCheck, fireRiseCheck, tideCheck, regionalTextureSizes, fireBossCheck, waterBossCheck, elementalBestiaryCheck, rules
     };
   });
   check('campaign offers three distinct starting contracts', campaignRuntime.contracts === 3, JSON.stringify(campaignRuntime));
@@ -249,9 +257,13 @@ try {
   check('scenario reinforcements only enter from the battlefield edge', campaignRuntime.holdoutCheck.reinforcementsSpawned === 2 && campaignRuntime.holdoutCheck.reinforcementsOnEdge, JSON.stringify(campaignRuntime.holdoutCheck));
   check('normal enemies use the battlefield height', Math.max(...campaignRuntime.spreadRows) - Math.min(...campaignRuntime.spreadRows) >= 4, JSON.stringify(campaignRuntime.spreadRows));
   check('forest roots scale up near Leshy and behave as static adjacent attackers', campaignRuntime.rootCheck.nearPlan.count >= campaignRuntime.rootCheck.farPlan.count && campaignRuntime.rootCheck.normalRoots === campaignRuntime.rootCheck.nearPlan.count && campaignRuntime.rootCheck.rootStats?.hp > 0 && campaignRuntime.rootCheck.rootStats?.move === 0 && campaignRuntime.rootCheck.rootStats?.range === 1 && campaignRuntime.rootCheck.rootTexture, JSON.stringify(campaignRuntime.rootCheck));
+  check('forest roots replace their ground with the forest regional tile', campaignRuntime.rootCheck.rootGroundUsesRegionalTile, JSON.stringify(campaignRuntime.rootCheck));
   check('Leshy starts protected by a four-root ring', campaignRuntime.rootCheck.bossRoots === 4 && campaignRuntime.rootCheck.bossRing, JSON.stringify(campaignRuntime.rootCheck));
   check('warned lava can raise a fire elemental that heals on fire', campaignRuntime.fireRiseCheck.count === 1 && campaignRuntime.fireRiseCheck.onFire && campaignRuntime.fireRiseCheck.fireHealing, JSON.stringify(campaignRuntime.fireRiseCheck));
+  check('lava cells use the volcanic regional tile', campaignRuntime.fireRiseCheck.regionalTile, JSON.stringify(campaignRuntime.fireRiseCheck));
   check('the tide warns, floods connected cells and raises a pushing water elemental', campaignRuntime.tideCheck.warned && campaignRuntime.tideCheck.flooded && campaignRuntime.tideCheck.elementals === 1 && campaignRuntime.tideCheck.onWater && campaignRuntime.tideCheck.pushed, JSON.stringify(campaignRuntime.tideCheck));
+  check('tide cells use the sunken ruins regional tile', campaignRuntime.tideCheck.regionalTile, JSON.stringify(campaignRuntime.tideCheck));
+  check('regional battle tiles are optimized to 128x128', campaignRuntime.regionalTextureSizes.every(size => size[0] === 128 && size[1] === 128), JSON.stringify(campaignRuntime.regionalTextureSizes));
   check('regional bosses start with two elemental guards on matching terrain', campaignRuntime.fireBossCheck.guards === 2 && campaignRuntime.fireBossCheck.elementalTiles && campaignRuntime.waterBossCheck.guards === 2 && campaignRuntime.waterBossCheck.elementalTiles && campaignRuntime.waterBossCheck.hydra && campaignRuntime.waterBossCheck.titan, JSON.stringify({ fire: campaignRuntime.fireBossCheck, water: campaignRuntime.waterBossCheck }));
   check('elemental guards reduce boss damage until destroyed', campaignRuntime.fireBossCheck.shieldedDamage < campaignRuntime.fireBossCheck.openDamage && campaignRuntime.waterBossCheck.shieldedDamage < campaignRuntime.waterBossCheck.openDamage, JSON.stringify({ fire: campaignRuntime.fireBossCheck, water: campaignRuntime.waterBossCheck }));
   check('new elementals have portraits and complete bestiary entries', campaignRuntime.elementalBestiaryCheck, JSON.stringify(campaignRuntime));
@@ -377,6 +389,7 @@ try {
   const play = page.getByRole('button', { name: /Играть|Play/i });
   if (await play.count()) await play.click();
 
+  await page.locator('#battle-screen:not(.hidden)').waitFor({ state: 'visible' });
   check('new campaign opens directly in the first battle', await page.locator('#battle-screen:not(.hidden)').count() === 1);
   check('world map stays hidden before the first victory', await page.locator('#map-screen.hidden').count() === 1);
   await page.locator('#btn-start-battle').waitFor({ state: 'visible' });
@@ -395,11 +408,57 @@ try {
       }
     }
     const enemyIds = b.units.filter(unit => !unit.isHero).map(unit => unit.enemyId);
-    return { positions, available, enemyIds };
+    const firstEnemy = b.units.find(unit => !unit.isHero && unit.hp > 0);
+    return { positions, available, enemyIds, firstEnemy: firstEnemy ? { x: firstEnemy.x, y: firstEnemy.y, name: firstEnemy.name } : null };
   });
   check('opening battle still includes the bandit thrower', deploymentRuntime.enemyIds.includes('bandit_thrower'), JSON.stringify(deploymentRuntime.enemyIds));
   check('opening heroes start two rows lower', deploymentRuntime.positions.seris?.y === 2 && deploymentRuntime.positions.garet?.y === 3 && deploymentRuntime.positions.alira?.y === 4, JSON.stringify(deploymentRuntime));
   check('deployment highlights only valid cells in two left columns', deploymentRuntime.available.length >= 8 && deploymentRuntime.available.every(cell => cell.x <= 1), JSON.stringify(deploymentRuntime));
+  check('mission objective stays visible in the battle top bar', await page.locator('#battle-objective-top:not(.hidden)').count() === 1 && ((await page.locator('#battle-objective-top').textContent()) || '').trim().length > 8);
+  check('inventory and bestiary are available beside the battle menu', await page.locator('#btn-battle-inventory:not(.hidden)').count() === 1 && await page.locator('#btn-battle-bestiary:not(.hidden)').count() === 1);
+  check('battle has only the top inventory command', await page.locator('#btn-battle-inv').count() === 0 && /Инвентарь|Inventory/i.test((await page.locator('#btn-battle-inventory').textContent()) || ''));
+  const bestiaryTopText = (await page.locator('#btn-battle-bestiary').textContent()) || '';
+  check('battle bestiary button has one book icon', (bestiaryTopText.match(/📖/g) || []).length === 1, bestiaryTopText);
+  const desktopTopButtonFit = await page.evaluate(() => {
+    const hud = document.getElementById('hud-top').getBoundingClientRect();
+    return ['btn-battle-inventory', 'btn-battle-bestiary', 'btn-open-menu'].map(id => {
+      const rect = document.getElementById(id).getBoundingClientRect();
+      return { id, top: rect.top - hud.top, bottom: hud.bottom - rect.bottom, height: rect.height };
+    });
+  });
+  check('desktop top button borders stay inside the HUD', desktopTopButtonFit.every(item => item.top >= 2 && item.bottom >= 2), JSON.stringify(desktopTopButtonFit));
+  const enemyClientPoint = deploymentRuntime.firstEnemy ? await page.evaluate(({ x, y }) => {
+    const rect = canvasContentRect();
+    const canvasX = BattleView.offsetX + (x + 0.5) * CELL * BattleView.zoom;
+    const canvasY = BattleView.offsetY + (y + 0.5) * CELL * BattleView.zoom;
+    return {
+      x: rect.left + canvasX * (rect.width / CANVAS_W),
+      y: rect.top + canvasY * (rect.height / CANVAS_H)
+    };
+  }, deploymentRuntime.firstEnemy) : null;
+  const enemyHoverDebug = enemyClientPoint ? await page.evaluate(point => {
+      document.getElementById('battle-canvas').dispatchEvent(new MouseEvent('mousemove', {
+        clientX: point.x, clientY: point.y, bubbles: true
+      }));
+      const grid = eventToGrid(point.x, point.y);
+      const unit = unitAt(GameState.currentBattle, grid.gx, grid.gy);
+      const tooltip = document.getElementById('tooltip');
+      return { grid, unit: unit?.name || '', display: tooltip.style.display, text: tooltip.textContent || '' };
+    }, enemyClientPoint) : null;
+  const deployEnemyTooltip = (await page.locator('#tooltip').textContent()) || '';
+  check('enemy stats and ability are inspectable before combat starts', await page.locator('#tooltip').isVisible() && /HP:\s*\d+\/\d+/.test(deployEnemyTooltip) && /Атака|Attack/i.test(deployEnemyTooltip) && deployEnemyTooltip.trim().split('\n').filter(Boolean).length >= 5, JSON.stringify(enemyHoverDebug));
+
+  await page.locator('#btn-battle-bestiary').click();
+  await page.locator('#bestiary-screen:not(.hidden)').waitFor({ state: 'visible' });
+  check('battle top bar opens the bestiary', await page.locator('#bestiary-screen:not(.hidden)').count() === 1);
+  await page.locator('#btn-bestiary-back').click();
+  await page.locator('#battle-screen:not(.hidden)').waitFor({ state: 'visible' });
+  await page.locator('#btn-battle-inventory').click();
+  await page.locator('#inventory-screen:not(.hidden)').waitFor({ state: 'visible' });
+  check('battle top bar opens the inventory', await page.locator('#inventory-screen:not(.hidden)').count() === 1);
+  await page.locator('#btn-close-inv').click();
+  await page.locator('#battle-screen:not(.hidden)').waitFor({ state: 'visible' });
+  check('inventory returns to the same deployment', await page.locator('#battle-screen:not(.hidden)').count() === 1 && await page.locator('#btn-start-battle').count() === 1);
 
   await page.locator('#btn-start-battle').click();
   check('combat starts from deployment', await page.locator('#action-buttons .skill-action-btn').count() >= 1);
@@ -465,6 +524,36 @@ try {
   check('mobile coach stays compact', layout.coachWidth > 0 && layout.coachWidth <= 310, JSON.stringify(layout));
   check('mobile action text is at least 10px', layout.actionFontSize >= 10, JSON.stringify(layout));
   check('mobile keeps the turn banner visible and contained', layout.turnBannerVisible && layout.turnBannerWidth > 0 && layout.turnBannerWidth < 224, JSON.stringify(layout));
+  const mobileTopButtonFit = await page.evaluate(() => {
+    const hud = document.getElementById('hud-top').getBoundingClientRect();
+    return ['btn-battle-inventory', 'btn-battle-bestiary', 'btn-open-menu'].map(id => {
+      const rect = document.getElementById(id).getBoundingClientRect();
+      return { id, top: rect.top - hud.top, bottom: hud.bottom - rect.bottom, height: rect.height };
+    });
+  });
+  check('mobile top button borders stay inside the HUD', mobileTopButtonFit.every(item => item.top >= 2 && item.bottom >= 2), JSON.stringify(mobileTopButtonFit));
+  const objectiveFitByMode = await page.evaluate(() => {
+    const b = GameState.currentBattle;
+    const original = { scenario: b.scenario, round: b.round };
+    const scenarios = {
+      eliminate: { id: 'eliminate', icon: '⚔' },
+      holdout: { id: 'holdout', icon: '🛡', roundTarget: 4 },
+      waves: { id: 'waves', icon: '🌊', roundTarget: 5 },
+      escape: { id: 'escape', icon: '🚩' },
+      defense: { id: 'defense', icon: '🏰', roundTarget: 4, ward: { hp: 24, maxHp: 24 } },
+      ritual: { id: 'ritual', icon: '🕯', roundLimit: 6 },
+      hunt: { id: 'hunt', icon: '🎯' }
+    };
+    const result = {};
+    Object.entries(scenarios).forEach(([id, scenario]) => {
+      b.scenario = scenario; b.round = 3; updateHud();
+      const el = document.getElementById('battle-objective-top');
+      result[id] = { text: el.textContent, width: el.clientWidth, scroll: el.scrollWidth, visible: !el.classList.contains('hidden') };
+    });
+    b.scenario = original.scenario; b.round = original.round; updateHud();
+    return result;
+  });
+  check('all seven battle objectives fit the mobile top bar', Object.values(objectiveFitByMode).every(item => item.visible && item.text.length > 5 && item.scroll <= item.width + 1), JSON.stringify(objectiveFitByMode));
 
   const ambushRuntime = await page.evaluate(() => {
     const ambushCell = { id: 'e2e_ambush', region: 1, type: 'mission' };
@@ -528,14 +617,58 @@ try {
     showScreen('map');
     renderMap();
   });
+  check('map exposes the Arsenal entry point', await page.locator('#btn-map-arsenal').count() === 1);
+  await page.locator('#btn-map-arsenal').click();
+  await page.locator('#arsenal-screen:not(.hidden)').waitFor({ state: 'visible' });
+  const arsenalLayout = await page.evaluate(() => {
+    const screen = document.getElementById('arsenal-screen');
+    const back = document.getElementById('btn-arsenal-back');
+    const tabTexts = [...document.querySelectorAll('[data-arsenal-slot]')].map(el => el.textContent.trim());
+    const rect = back.getBoundingClientRect();
+    return { backVisible: !!(rect.width && rect.height) && rect.bottom <= window.innerHeight, tabTexts, title: screen.querySelector('.bestiary-bar-title')?.textContent.trim() };
+  });
+  check('Arsenal back button fits inside the viewport', arsenalLayout.backVisible, JSON.stringify(arsenalLayout));
+  check('Arsenal Russian navigation is localized', arsenalLayout.title === '⚔ Арсенал' && arsenalLayout.tabTexts.join('|') === '⚔ Оружие|🛡 Броня|✨ Артефакты', JSON.stringify(arsenalLayout));
+  await page.locator('#btn-arsenal-back').click();
+  await page.locator('#map-screen:not(.hidden)').waitFor({ state: 'visible' });
   check('regional boss silhouette is visible', await page.locator('.map-boss-silhouette').count() >= 1);
   check('region 1 boss guards the right edge', await page.locator('.map-node[data-node-type="boss"][data-region="1"][data-x="11"]').count() === 1);
   check('region 2 boss guards the left edge', await page.locator('.map-node[data-node-type="boss"][data-region="2"][data-x="0"]').count() === 1);
   check('region 3 boss guards the right edge', await page.locator('.map-node[data-node-type="boss"][data-region="3"][data-x="11"]').count() === 1);
   check('final boss waits in the lower-right corner', await page.locator('.map-node[data-node-type="final"][data-x="11"][data-y="7"]').count() === 1);
-  check('regional walls render all segments', await page.locator('.map-wall-bottom').count() === 22 && await page.locator('.map-wall-top').count() === 22);
-  check('regional walls expose two marked gateways', await page.locator('.map-gateway-down').count() === 2 && await page.locator('.map-gateway-up').count() === 2);
+  // Segment count follows the wall table rather than a constant: regions now
+  // carry internal walls, so hardcoding 22 would only encode the old layout.
+  const expectedWallSegments = topology.WALL_ROWS.reduce((sum, wall) => sum + (topology.COLS - wall.open.length), 0);
+  check('every wall renders a segment on both of its sides',
+    await page.locator('.map-wall-seg-bottom').count() === expectedWallSegments &&
+    await page.locator('.map-wall-seg-top').count() === expectedWallSegments,
+    `${await page.locator('.map-wall-seg-bottom').count()}/${await page.locator('.map-wall-seg-top').count()} vs ${expectedWallSegments}`);
+  check('regional walls expose two marked gateways', await page.locator('.map-gateway-mark-down').count() === 2 && await page.locator('.map-gateway-mark-up').count() === 2);
+  check('internal walls make the party commit to a corridor', expectedWallSegments > 22, String(expectedWallSegments));
   check('an adjacent route exists after the first victory', await page.locator('.map-node.map-option').count() > 0);
+  const explorationMarks = await page.evaluate(() => {
+    const distant = GameState.mapGrid.find(node => node.id === 'c_7_0');
+    const boss = GameState.mapGrid.find(node => node.type === 'boss' && node.region === 1);
+    const saved = { distantVisited: distant.visited, bossCompleted: boss.completed };
+    distant.visited = true;
+    boss.completed = true;
+    renderMap();
+    const distantEl = document.querySelector(`[data-node-id="${distant.id}"]`);
+    const bossEl = document.querySelector(`[data-node-id="${boss.id}"]`);
+    const result = {
+      distantVisible: distantEl?.classList.contains('visible'),
+      distantExplored: distantEl?.classList.contains('explored'),
+      distantStamp: getComputedStyle(distantEl, '::after').content.includes('✓'),
+      bossMarked: bossEl?.classList.contains('boss-defeated'),
+      bossSkull: bossEl?.textContent.includes('☠')
+    };
+    distant.visited = saved.distantVisited;
+    boss.completed = saved.bossCompleted;
+    renderMap();
+    return result;
+  });
+  check('visited map cells remain visible with a progress mark', explorationMarks.distantVisible && explorationMarks.distantExplored && explorationMarks.distantStamp, JSON.stringify(explorationMarks));
+  check('defeated bosses are marked with a skull', explorationMarks.bossMarked && explorationMarks.bossSkull, JSON.stringify(explorationMarks));
   const hudText = await page.locator('#topbar-center').textContent();
   check('fantasy land name replaces the numeric region in HUD', hudText?.includes("Leshy's Forest") || hudText?.includes('Лес Лешего'), hudText || '');
   await page.evaluate(() => { GameState.mapIntroShown = false; void showMapIntroduction(); });
@@ -662,6 +795,13 @@ try {
     };
   });
   check('save and exit writes a compact non-recursive campaign snapshot', savedExitState.gold === 437 && savedExitState.turn === 19 && savedExitState.nestedSafeSaveRemoved && savedExitState.safeBattleRemoved && savedExitState.bytes < 1000000, JSON.stringify(savedExitState));
+  const noSaveExitState = await page.evaluate(() => {
+    GameState.gold = 3;
+    GameState.turn = 2;
+    document.getElementById('btn-menu-exit').click();
+    return { gold: GameState.gold, turn: GameState.turn, stored: JSON.parse(localStorage.getItem(SAVE_KEY)).gold };
+  });
+  check('exit without saving restores the last durable checkpoint', noSaveExitState.gold === 437 && noSaveExitState.turn === 19 && noSaveExitState.stored === 437, JSON.stringify(noSaveExitState));
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('#btn-continue').click();
   const stateAfterReload = await page.evaluate(() => ({ gold: GameState.gold, turn: GameState.turn, screen: GameState.screen }));

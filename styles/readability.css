@@ -35,6 +35,7 @@ body,
 #map-screen .map-fog-counter,
 #map-screen .cell-info,
 #map-screen .cell-info-name,
+#map-screen .cell-info-completion,
 #map-screen .map-route-title,
 #map-screen .map-route-card strong,
 #map-screen .map-route-card small,
@@ -55,36 +56,40 @@ body,
   line-height: 1.25 !important;
 }
 
-#map-screen .map-node.map-wall-bottom::after,
-#map-screen .map-node.map-wall-top::after {
-  content: '';
+/* Walls and gateway arrows are real child elements: a node between two internal
+   walls carries two segments, and its own ::before/::after already belong to the
+   fog cover, the explored stamp and the selection ring. */
+#map-screen .map-node .map-wall-seg {
   position: absolute;
   left: 0;
   right: 0;
-  height: 6px;
+  height: 5px;
   z-index: 7;
   pointer-events: none;
+  background: linear-gradient(180deg, rgba(198, 206, 226, .92), rgba(92, 99, 122, .96) 55%, rgba(28, 30, 42, .96));
+  border-top: 1px solid rgba(226, 233, 250, .8);
+  box-shadow: 0 0 5px rgba(150, 166, 200, .5);
+}
+
+#map-screen .map-node .map-wall-seg.is-regional {
+  height: 6px;
   background:
     linear-gradient(180deg, rgba(255, 117, 84, .95), rgba(139, 34, 40, .98) 45%, rgba(47, 10, 18, .98));
   box-shadow: 0 0 7px rgba(231, 76, 60, .55);
-}
-
-#map-screen .map-node.map-wall-bottom::after {
-  bottom: 0;
   border-top: 1px solid rgba(255, 196, 112, .8);
 }
 
-#map-screen .map-node.map-wall-top::after {
+#map-screen .map-node .map-wall-seg-bottom { bottom: 0; }
+
+#map-screen .map-node .map-wall-seg-top {
   top: 0;
   transform: rotate(180deg);
-  border-top: 1px solid rgba(255, 196, 112, .8);
 }
 
-#map-screen .map-node.map-gateway-down::after,
-#map-screen .map-node.map-gateway-up::after {
+#map-screen .map-node .map-gateway-mark {
   position: absolute;
   right: 3px;
-  z-index: 7;
+  z-index: 8;
   display: grid;
   place-items: center;
   width: 18px;
@@ -99,14 +104,14 @@ body,
   box-shadow: 0 0 8px rgba(240, 165, 0, .45);
 }
 
-#map-screen .map-node.map-gateway-down::after {
-  content: '▼';
-  bottom: 3px;
-}
+#map-screen .map-node .map-gateway-mark-down { bottom: 3px; }
+#map-screen .map-node .map-gateway-mark-up { top: 3px; }
 
-#map-screen .map-node.map-gateway-up::after {
-  content: '▲';
-  top: 3px;
+#map-screen .map-legend,
+#map-screen .map-legend-title,
+#map-screen .map-legend-row {
+  font-size: var(--readable-compact) !important;
+  line-height: 1.35 !important;
 }
 
 #map-screen .map-node.map-boss-gateway-zone {

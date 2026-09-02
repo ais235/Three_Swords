@@ -15,7 +15,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 ITEMS = ROOT / "assets" / "items"
-SUBDIRS = ("weapons", "armor", "accessories", "consumables", "materials", "misc")
+SUBDIRS = ("weapons", "armor", "accessories", "consumables", "materials", "misc", "progression")
 
 CANVAS = 256
 PADDING = 8

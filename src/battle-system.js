@@ -186,7 +186,14 @@
     units.push(...heroes);
     const rightXs = [GRID_W - 2, GRID_W - 1, GRID_W - 3, GRID_W - 4, GRID_W - 5];
     const firstEnemySlots = [{ x: 4, y: 3 }, { x: 4, y: 2 }, { x: 5, y: 4 }];
+    // Elite affixes are rolled from the cell id, so the wave the map promised is
+    // the wave that spawns. Mutators may append enemies past the rolled list;
+    // those simply spawn plain.
+    const waveAffixes = Array.isArray(node.enemyAffixes)
+      ? node.enemyAffixes
+      : eliteAffixesForWave({ id: node.id, region: node.region, type: node.type }, wave);
     let ei = 0;
+    const spawnWaveEnemy = (type, x, y) => applyEliteAffix(spawnEnemy(type, x, y), waveAffixes[ei] || null);
     for (const t of wave) {
       let placed = false;
       const proto = { isHero: false, enemyId: t, sizeW: enemyDef(t).sizeW || 1, sizeH: enemyDef(t).sizeH || 1 };
@@ -198,7 +205,7 @@
           if (placed) break;
           clearBattleSpawnFootprint(grid, slot.x, slot.y, unitWidth(proto), unitHeight(proto));
           if (canUnitOccupy({ grid, units }, proto, slot.x, slot.y, { end: true })) {
-            const enemy = spawnEnemy(t, slot.x, slot.y);
+            const enemy = spawnWaveEnemy(t, slot.x, slot.y);
             enemy.ambushEdge = slot.edge;
             units.push(enemy);
             placed = true;
@@ -207,7 +214,7 @@
       } else if (firstBattle && firstEnemySlots[ei]) {
         const slot = firstEnemySlots[ei];
         if (canUnitOccupy({ grid, units }, proto, slot.x, slot.y, { end: true })) {
-          units.push(spawnEnemy(t, slot.x, slot.y));
+          units.push(spawnWaveEnemy(t, slot.x, slot.y));
           placed = true;
         }
       }
@@ -216,7 +223,7 @@
         for (const y of spawnRows) {
           if (placed) break;
           if (canUnitOccupy({ grid, units }, proto, rx, y, { end: true })) {
-            units.push(spawnEnemy(t, rx, y));
+            units.push(spawnWaveEnemy(t, rx, y));
             placed = true;
           }
         }
@@ -225,7 +232,7 @@
         for (let y = 0; y < GRID_H && !placed; y++) {
           for (let x = Math.max(0, GRID_W - unitWidth(proto)); x >= 2 && !placed; x--) {
             if (canUnitOccupy({ grid, units }, proto, x, y, { end: true })) {
-              units.push(spawnEnemy(t, x, y));
+              units.push(spawnWaveEnemy(t, x, y));
               placed = true;
             }
           }
@@ -729,6 +736,7 @@
       pushBattleLog(`${u.name}: ${translateKey('trapTriggered')} −${trap.damage}`, 'status');
       spawnBattleTextFx(u.x, u.y, `${translateKey('trapMarker')} -${trap.damage}`, '#ffb36b');
       if (trap.slow && u.hp > 0) addStatus(u, STATUS.SLOW, 2);
+      if (trap.poison && u.hp > 0) addStatus(u, STATUS.POISON, 2);
       if (u.hp <= 0) onUnitDeath(u);
     }
     return true;
@@ -738,13 +746,25 @@
     if (!b || u?.heroId !== 'alira' || !u.perks?.includes('trapDmg')) return;
     b.traps = b.traps || [];
     const add = (x, y) => {
-      if (!inBounds(x, y) || b.traps.some(t => t.x === x && t.y === y)) return;
-      b.traps.push({ x, y, damage: 4, slow: u.perks.includes('trapSlow') });
+      if (!inBounds(x, y) || tileBlocksMove(b.grid[y][x], u) || unitAt(b, x, y) || b.traps.some(t => t.x === x && t.y === y)) return false;
+      // Perk: minefield (Alira capstone).
+      const deadly = u.perks.includes('minefield');
+      b.traps.push({ x, y, damage: deadly ? 8 : 4, slow: u.perks.includes('trapSlow'), poison: deadly });
+      return true;
     };
     add(fromX, fromY);
-    if (u.perks.includes('trapDouble')) add(Math.max(0, fromX - 1), fromY);
+    if (u.perks.includes('trapDouble')) {
+      [
+        { x: fromX - 1, y: fromY }, { x: fromX + 1, y: fromY },
+        { x: fromX, y: fromY - 1 }, { x: fromX, y: fromY + 1 }
+      ].some(cell => add(cell.x, cell.y));
+    }
     spawnBattleTextFx(fromX, fromY, translateKey('trapPlaced'), '#ffb36b');
   }
+
+  /** Statuses a cleanse effect may strip. Berserk is excluded: it is a buff. */
+  const CLEANSABLE_STATUSES = [STATUS.STUN, STATUS.FREEZE, STATUS.WEB, STATUS.FEAR,
+    STATUS.SLOW, STATUS.BLIND, STATUS.CURSE, STATUS.POISON, STATUS.BURN];
 
   function addStatus(u, type, turns, meta) {
     meta = meta || {};
@@ -861,6 +881,34 @@
       .reduce((sum, ally) => sum + (Number(getEquippedItem(ally, 'artifact')?.mods?.[modKey]) || 0), 0);
   }
 
+  /** Item mod: pullOnHit. Drags a living, single-tile enemy one step toward the
+   *  attacker when the vacated line is free. Large units and bosses stay put so
+   *  the harpoon cannot drag a two-tile body into a wall. */
+  function pullTargetTowards(attacker, target) {
+    const b = GameState.currentBattle;
+    if (!b || !target || target.hp <= 0 || target.isHero) return false;
+    if (unitWidth(target) > 1 || unitHeight(target) > 1) return false;
+    if (BOSS_PROFILES && BOSS_PROFILES[target.enemyId]) return false;
+    const dx = Math.sign(attacker.x - target.x);
+    const dy = Math.sign(attacker.y - target.y);
+    if (!dx && !dy) return false;
+    const steps = Math.abs(attacker.x - target.x) >= Math.abs(attacker.y - target.y)
+      ? [{ x: target.x + dx, y: target.y }, { x: target.x, y: target.y + dy }]
+      : [{ x: target.x, y: target.y + dy }, { x: target.x + dx, y: target.y }];
+    for (const step of steps) {
+      if (step.x === target.x && step.y === target.y) continue;
+      if (!canUnitOccupy(b, target, step.x, step.y, { end: true })) continue;
+      const fromX = target.x, fromY = target.y;
+      target.x = step.x;
+      target.y = step.y;
+      startUnitMoveAnimation(target, fromX, fromY, target.x, target.y);
+      pushBattleLog(`${attacker.name}: harpoon drags ${target.name}`, 'status');
+      spawnBattleTextFx(target.x, target.y, 'PULL', '#9ff0ff');
+      return true;
+    }
+    return false;
+  }
+
   function dealDamage(attacker, target, rawDmg, opts) {
     const b = GameState.currentBattle;
     opts = opts || {};
@@ -877,6 +925,15 @@
       }
     }
     if (attacker.isHero) dmg += crownAuraBonus(attacker, 'attack');
+    // Perk: banner (Garet capstone): allies fighting beside him hit harder.
+    if (attacker.isHero && b) {
+      const bannerSource = b.units.find(u => u.isHero && u.hp > 0 && u !== attacker &&
+        u.perks?.includes('banner') && unitDistance(u, attacker) <= 2);
+      if (bannerSource) {
+        dmg += 2;
+        spawnBattleTextFx(attacker.x, attacker.y, 'BANNER +2', '#ffd06b');
+      }
+    }
     if (target.isHero && target.heroId === 'garet' && target.flags && target.flags.fireCallMitigateActive) {
       dmg = Math.floor(dmg * 0.5);
       pushBattleLog(`${target.name}: fire guard halves damage`, 'status');
@@ -892,7 +949,10 @@
     }
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags && attacker.flags.firstAttackTurn) dmg = Math.floor(dmg * 1.5);
     if (attacker.isHero && attacker.perks?.includes('finisher') && target.hp <= target.maxHp * .4) dmg = Math.floor(dmg * 1.3);
-    if (attacker.isHero && attacker.heroId === 'alira' && attacker.perks?.includes('moveAttack') && b?.heroMoved) dmg = Math.floor(dmg * 1.2);
+    if (attacker.isHero && attacker.heroId === 'alira' && b?.heroMoved &&
+      (attacker.perks?.includes('moveAttack') || attacker.perks?.includes('windrunner'))) {
+      dmg = Math.floor(dmg * (attacker.perks?.includes('windrunner') ? 1.45 : 1.2));
+    }
     if (attacker.isHero && attacker.heroId === 'seris' && attacker.perks?.includes('spellCharge') && opts.magic) dmg += 3;
     if (attacker.activeStatuses && attacker.activeStatuses.find(s => s.type === STATUS.BERSERK)) dmg = Math.floor(dmg * 2);
     let armor = target.armor + (b && b.grid ? tileDefenseBonus(b.grid[target.y][target.x]) : 0);
@@ -914,6 +974,28 @@
       if (beforeArmor > armor) {
         pushBattleLog(`${attacker.name}: armor pierce -${beforeArmor - armor}`, 'status');
         spawnBattleTextFx(target.x, target.y, 'PIERCE -' + (beforeArmor - armor), '#f5d76e');
+      }
+    }
+    // Item mod: pierce (weapon): ignore a flat amount of target armor.
+    if (attacker.isHero && !opts.noWeaponBonus) {
+      const pierceWeapon = getEquippedItem(attacker, 'weapon');
+      // Perk: deadeye (Alira capstone) stacks with weapon pierce.
+      const pierceValue = (pierceWeapon && pierceWeapon.mods ? Number(pierceWeapon.mods.pierce) || 0 : 0) +
+        (attacker.perks?.includes('deadeye') ? 3 : 0);
+      if (pierceValue > 0 && armor > 0) {
+        const pierced = Math.min(armor, pierceValue);
+        armor -= pierced;
+        pushBattleLog(`${attacker.name}: pierce -${pierced} armor`, 'status');
+        spawnBattleTextFx(target.x, target.y, 'PIERCE -' + pierced, '#f5d76e');
+      }
+    }
+    // Elite affix: warlord. Nearby enemies fight under its banner.
+    if (!attacker.isHero && b) {
+      const warlord = b.units.find(u => !u.isHero && u.hp > 0 && u !== attacker &&
+        u.affix === 'warlord' && unitDistance(u, attacker) <= 2);
+      if (warlord) {
+        dmg += 2;
+        spawnBattleTextFx(attacker.x, attacker.y, 'WARLORD +2', '#ff9b42');
       }
     }
     if (attacker.enemyId === ENEMY_IDS.ORC_GUARD && !opts.ignoreOrc) armor = Math.max(0, armor - 2);
@@ -950,7 +1032,26 @@
         spawnBattleTextFx(target.x, target.y, `WARD -${Math.round(shield * 100)}%`, '#74d9ff');
       }
     }
-    if (Math.random() < 0.25 && target.isHero && target.heroId === 'garet' && !opts.blockIgnore && !opts.magic) {
+    // Item mod: firstHitWard (armor): the first hit each round is fully absorbed.
+    if (target.isHero && dmg > 0) {
+      const wardItem = getEquippedItem(target, 'armor');
+      if (wardItem && wardItem.mods && wardItem.mods.firstHitWard) {
+        const roundKey = b ? b.round : 0;
+        target.flags = target.flags || {};
+        if (target.flags.firstHitWardRound !== roundKey) {
+          target.flags.firstHitWardRound = roundKey;
+          pushBattleLog(`${target.name}: deep shell absorbs the first hit`, 'status');
+          spawnBattleTextFx(target.x, target.y, 'WARD', '#8bd3ff');
+          startBattleAttackAnimation(attacker, target, opts, 0, target.hp);
+          return 0;
+        }
+      }
+    }
+
+    // Perk: unbreakable (Garet capstone): a stronger block that magic cannot slip past.
+    const garetUnbreakable = target.isHero && target.heroId === 'garet' && target.perks?.includes('unbreakable');
+    const garetBlocks = target.isHero && target.heroId === 'garet' && !opts.blockIgnore && (garetUnbreakable || !opts.magic);
+    if (garetBlocks && Math.random() < (garetUnbreakable ? GARET_UNBREAKABLE_BLOCK_CHANCE : GARET_BLOCK_CHANCE)) {
       pushBattleLog(`[${target.emoji} ${target.name}] Shield block!`, 'status');
       spawnBattleTextFx(target.x, target.y, 'BLOCK', '#8bd3ff');
       startBattleAttackAnimation(attacker, target, opts, 0, target.hp);
@@ -1000,6 +1101,8 @@
     if (target.isHero && dmg > 0) {
       GameState.stats.damageTaken = (GameState.stats.damageTaken || 0) + dmg;
     }
+    // Earned aggro feeds heroThreatScore: hurting the enemy line draws attention.
+    if (attacker.isHero && dmg > 0) attacker.threatDealt = (attacker.threatDealt || 0) + dmg;
     if (dmg > 0) {
       const showDamageNumber = () => spawnDamageFx(target.x, target.y, dmg);
       if (attackVisual.impactDelay > 24) setTimeout(showDamageNumber, attackVisual.impactDelay);
@@ -1008,6 +1111,18 @@
         if (sfxCrit) opts.sfxCrit = true;
         BattleSfx.damageEvent(attacker, target, opts, dmg);
         if (opts) delete opts.sfxCrit;
+      }
+    }
+
+    // Item mod: manaOnHit (armor): the wearer converts pain into mana.
+    if (target.isHero && dmg > 0 && target.maxMana > 0) {
+      const manaArmor = getEquippedItem(target, 'armor');
+      const manaGain = manaArmor && manaArmor.mods ? Number(manaArmor.mods.manaOnHit) || 0 : 0;
+      if (manaGain > 0 && target.mana < target.maxMana) {
+        target.mana = Math.min(target.maxMana, (target.mana || 0) + manaGain);
+        syncHeroFromUnit(target);
+        pushBattleLog(`${target.name}: deep robe +${manaGain} mana`, 'status');
+        spawnBattleTextFx(target.x, target.y, 'MANA +' + manaGain, '#8bd3ff');
       }
     }
 
@@ -1052,18 +1167,57 @@
 
     // ── Item mod: burnSpell perk + burnSpell weapon ──
     if (attacker.isHero && opts.magic && target.hp > 0) {
-      if (attacker.perks && attacker.perks.includes('burnSpell')) {
-        addStatus(target, STATUS.BURN, 2);
+      // Perk: incinerate (Seris capstone) burns longer and needs no burnSpell.
+      const incinerate = attacker.perks?.includes('incinerate');
+      if (incinerate || attacker.perks?.includes('burnSpell')) {
+        addStatus(target, STATUS.BURN, incinerate ? 3 : 2);
         pushBattleLog(`${attacker.name}: burn spell`, 'status');
-        spawnBattleTextFx(target.x, target.y, 'BURN', '#ff9b42');
+        spawnBattleTextFx(target.x, target.y, incinerate ? 'INCINERATE' : 'BURN', '#ff9b42');
       }
+    }
+
+    // Item mods: cleave and pullOnHit (weapon). Both are guarded by noCleave so
+    // the splash cannot re-enter dealDamage through its own hits.
+    if (attacker.isHero && b && dmg > 0 && !opts.noCleave && !opts.noWeaponBonus) {
+      const meleeWeapon = getEquippedItem(attacker, 'weapon');
+      const cleaveDamage = meleeWeapon && meleeWeapon.mods ? Number(meleeWeapon.mods.cleave) || 0 : 0;
+      if (cleaveDamage > 0 && !opts.magic) {
+        const splashCells = [];
+        for (const cell of unitCells(target)) {
+          splashCells.push({ x: cell.x - 1, y: cell.y }, { x: cell.x + 1, y: cell.y },
+            { x: cell.x, y: cell.y - 1 }, { x: cell.x, y: cell.y + 1 });
+        }
+        const splashed = damageEnemiesAtCells(b, attacker, splashCells, cleaveDamage,
+          { noCleave: true, noWeaponBonus: true, blockIgnore: true, sfxImpactOnly: true, excludeUnits: [target] });
+        if (splashed) {
+          pushBattleLog(`${attacker.name}: trident splash hits ${splashed}`, 'status');
+          spawnBattleTextFx(target.x, target.y, 'SPLASH ' + cleaveDamage, '#74d9ff');
+        }
+      }
+      if (meleeWeapon && meleeWeapon.mods && meleeWeapon.mods.pullOnHit) pullTargetTowards(attacker, target);
     }
 
     if (attacker.isHero && attacker.heroId === 'alira' && attacker.flags) attacker.flags.firstAttackTurn = false;
     if (attacker.hp <= 0) onUnitDeath(attacker);
-    if (target.hp <= 0) onUnitDeath(target);
+    if (target.hp <= 0) {
+      onUnitDeath(target);
+      grantExecutionAction(attacker, b);
+    }
     if (b) resolveBattleIfOver();
     return dmg;
+  }
+
+  /** Perk: execution (Garet capstone). A kill hands the turn straight back, at
+   *  most once per round, reusing the same resume path as the Hourglass. */
+  function grantExecutionAction(attacker, b) {
+    if (!b || !attacker?.isHero || !attacker.perks?.includes('execution')) return;
+    if (getActiveUnit() !== attacker) return;
+    attacker.flags = attacker.flags || {};
+    if (attacker.flags.executionRound === b.round) return;
+    attacker.flags.executionRound = b.round;
+    attacker.flags.executionReady = true;
+    pushBattleLog(`${attacker.name}: ${battleLocale('казнь возвращает ход', 'execution returns the turn', 'la ejecución devuelve el turno')}`, 'status');
+    spawnBattleTextFx(attacker.x, attacker.y, 'EXECUTION', '#ffd06b');
   }
 
   function onUnitDeath(u) {
@@ -1163,13 +1317,25 @@
       pushBattleLog(`🔥 ${translateText(u.name)} взрывается при гибели.`, 'enemy');
     }
     if (!u.isHero && u.enemyId === ENEMY_IDS.WATCHER && b) b.globalBuffs.watcherDeadMove = 2;
+    // Elite affix: unstable. A parting blast that punishes crowding the kill.
+    if (!u.isHero && u.affix === 'unstable' && b) {
+      playBattleAbilityFx(u, 'zombieExplosion', { radius: 1, glyph: '💥', noPose: true });
+      b.units.filter(target => target.isHero && target.hp > 0 && unitDistance(u, target) <= 1)
+        .forEach(target => dealDamage(u, target, 8, { blockIgnore: true, magic: true, noWeaponBonus: true }));
+      pushBattleLog(`💥 ${translateText(u.name)}: ${battleLocale('взрывается при гибели', 'detonates on death', 'detona al morir')}`, 'enemy');
+    }
+    if (!u.isHero && u.affix && b) b.eliteKills = (b.eliteKills || 0) + 1;
     resolveBattleIfOver();
   }
 
+  /** Experience per battle, by region. Region 1 pays more per fight than region 2
+   *  because it is the short act: it holds 12 battles against region 2's 18, and
+   *  the party still has to reach level 5 — its ultimates — before the Leshy. */
+  const REGION_XP_BASE = { 1: 42, 2: 40, 3: 50 };
   function getXpForBattle(cell) {
     if (cell && cell.id === 'c_0_0' && !GameState.firstBattleCompleted) return 50;
     const region = (cell && cell.region) || GameState.region || 1;
-    const base = 30 + (region - 1) * 10;
+    const base = REGION_XP_BASE[region] || REGION_XP_BASE[1];
     const typeBonus = {
       mission:  0,
       dungeon:  20,
@@ -1180,14 +1346,31 @@
     return base + typeBonus;
   }
 
+  /** Gold now follows the region, not just the node type. A region 3 mission used
+   *  to pay exactly what a region 1 mission paid, so most of a run's money was
+   *  earned in the opening act where nothing worth buying exists, and the region 3
+   *  gear tier stayed out of reach. Bosses are authored per region for the same
+   *  reason. */
+  const REGION_GOLD_MULTIPLIER = { 1: 1, 2: 1.4, 3: 1.8 };
+  const REGION_BOSS_GOLD = { 1: [120, 160], 2: [170, 220], 3: [220, 290] };
+  const FINAL_BOSS_GOLD = 380;
+  function battleGoldReward(cell) {
+    const region = (cell && cell.region) || GameState.region || 1;
+    if (cell?.type === 'final') return FINAL_BOSS_GOLD;
+    if (cell?.type === 'boss') {
+      const [low, high] = REGION_BOSS_GOLD[region] || REGION_BOSS_GOLD[1];
+      return randInt(low, high);
+    }
+    const raw = cell?.type === 'dungeon' ? randInt(45, 80) : randInt(20, 35);
+    return Math.round(raw * (REGION_GOLD_MULTIPLIER[region] || 1));
+  }
+
   function endBattleVictory() {
     const b = GameState.currentBattle;
     if (!b || b._victoryHandled) return;
     b._victoryHandled = true;
     const cell = getCellById(b.nodeId);
-    let gold = cell?.type === 'dungeon' ? randInt(45, 80) : randInt(20, 35);
-    if (cell?.type === 'boss') gold = randInt(120, 160);
-    if (cell?.type === 'final') gold = 300;
+    let gold = battleGoldReward(cell) + (b.eliteKills || 0) * ELITE_KILL_GOLD;
     if (isHardcoreMode()) gold = Math.max(1, Math.round(gold * 0.85));
     if (GameState.contract === 'guardians' && b.routeCommitment) gold = Math.max(1, Math.round(gold * 0.8));
     const objectiveComplete = b.objective === 'skillful' ? b.objectiveUsedSkill : !b.objectiveHeroLost;
@@ -1226,7 +1409,7 @@
     GameState.heroes.forEach(h => {
       if (h.hp > 0) {
         h.xp = (h.xp || 0) + xpEach;
-        while (h.xp >= h.level * 50 && h.level < 8) {
+        while (h.xp >= h.level * 50 && h.level < HERO_LEVEL_CAP) {
           h.xp -= h.level * 50;
           h.level++;
           GameState.pendingPerks.push(h.id);
@@ -1258,9 +1441,13 @@
 
     if (cell) {
       cell.completed = true;
+      cell.visited = true;
       if (cell.type === 'boss') {
         GameState.defeatedBosses += 1;
         GameState.regionUnlocked = Math.max(GameState.regionUnlocked, Math.min(3, cell.region + 1));
+        if (cell.region < 3 && typeof bossRewardChoices === 'function') {
+          GameState.pendingBossReward = { region: cell.region + 1, choices: bossRewardChoices(cell.region + 1) };
+        }
         if (typeof queueRegionalStory === 'function') queueRegionalStory(cell.region);
       }
       if (cell.type === 'boss') {
@@ -1279,11 +1466,14 @@
     }
     // Store rounds for victory screen
     GameState._lastBattleRounds = b ? b.round : 1;
-    saveGame();
     GameState.currentBattle = null;
     GameState.screen = 'victory';
+    // The checkpoint must describe the resolved map state, not the battle
+    // that has just ended. Otherwise Continue can reopen a completed fight.
+    saveGame(true);
     try {
       showVictoryUI(gold, xpEach);
+      if (GameState.pendingBossReward?.choices?.length) setTimeout(() => showPendingBossReward?.(), 180);
     } catch (e) {
       console.error('showVictoryUI failed', e);
       showScreen('victory');
@@ -1488,11 +1678,24 @@
 
     localizeUI(document.getElementById('victory-screen'));
 
-    if (GameState.pendingPerks.length) {
-      setTimeout(() => openPerkModal(GameState.pendingPerks.shift()), 400);
-    } else if (GameState.pendingSkillUnlocks && GameState.pendingSkillUnlocks.length) {
-      setTimeout(processSkillUnlockQueue, 400);
-    }
+    // The boss reward prompt and the perk modal used to run on two independent
+    // timers, so after a boss they could open on top of each other and deadlock
+    // the player behind an unreachable button. Progression popups now wait.
+    afterBossRewardPrompt(() => {
+      if (GameState.pendingPerks.length) openPerkModal(GameState.pendingPerks.shift());
+      else if (GameState.pendingSkillUnlocks && GameState.pendingSkillUnlocks.length) processSkillUnlockQueue();
+    }, 400);
+  }
+
+  /** Defer fn until no boss-reward prompt is on screen. */
+  function afterBossRewardPrompt(fn, delay) {
+    let guard = 0;
+    const attempt = () => {
+      const blocked = typeof bossRewardPromptActive === 'function' && bossRewardPromptActive();
+      if (blocked && guard++ < 200) { setTimeout(attempt, 120); return; }
+      fn();
+    };
+    setTimeout(attempt, delay || 0);
   }
 
   //══════════ RENDER ══════════
@@ -1694,6 +1897,12 @@
     const skill = b.pendingSkill;
     const cells = [];
     const add = (x, y) => { if (inBounds(x, y)) cells.push({ x, y }); };
+    if (skill === 'arrowRain' && sel.heroId === 'alira') {
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (Math.abs(dx) + Math.abs(dy) <= 1) add(gx + dx, gy + dy);
+      }
+      return cells;
+    }
     if (skill === 'fireCall' && sel.heroId === 'garet') {
       for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
         if (Math.abs(sel.x - x) + Math.abs(sel.y - y) <= 2) add(x, y);
@@ -1738,11 +1947,69 @@
     return cells;
   }
 
+  /** Chance that a plain physical hit on this hero is fully negated.
+   *  Garet's shield block and armour dodge stack multiplicatively, exactly as
+   *  dealDamage rolls them. */
+  function heroBlockChance(hero) {
+    if (!hero || hero.heroId !== 'garet') return 0;
+    return hero.perks?.includes('unbreakable') ? GARET_UNBREAKABLE_BLOCK_CHANCE : GARET_BLOCK_CHANCE;
+  }
+  function heroDodgeChance(hero) {
+    const armorItem = hero ? getEquippedItem(hero, 'armor') : null;
+    return armorItem && armorItem.mods ? Number(armorItem.mods.dodge) || 0 : 0;
+  }
+  function heroAvoidChance(hero) {
+    return 1 - (1 - heroBlockChance(hero)) * (1 - heroDodgeChance(hero));
+  }
+
+  /** Incoming-damage preview for an enemy attack on a hero. Mirrors the
+   *  reduction order in dealDamage so the number the player reads is the number
+   *  the roll produces, avoidance included. */
+  function enemyDamagePreview(b, enemy, hero) {
+    if (!b || !enemy || !hero || enemy.isHero || !hero.isHero) return null;
+    const magic = false;
+    let raw = enemy.attack;
+    const guardian = b.units.find(unit => unit.isHero && unit.heroId === 'garet' && unit.hp > 0 &&
+      unit !== hero && unit.perks?.includes('guardianCover') && unitDistance(unit, hero) <= 1);
+    let armor = hero.armor + tileDefenseBonus(b.grid[hero.y][hero.x]);
+    const garetAura = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
+      u.heroId !== hero.heroId && u.perks?.includes('auraArmor') && unitDistance(u, hero) <= 1);
+    if (garetAura) armor += 1;
+    armor += crownAuraBonus(hero, 'armor');
+    if (enemy.enemyId === ENEMY_IDS.ORC_GUARD) armor = Math.max(0, armor - 2);
+    if (guardian) raw = Math.max(0, raw - 2);
+    const tags = [];
+    if (guardian) tags.push(translateKey('damageGuardianCover'));
+    const shield = hero.heroId === 'seris' ? Math.max(0, Math.min(3, hero.flags?.mysticShield || 0)) : 0;
+    return ThreeBladesCombatPreview.calculate({
+      rawDamage: raw,
+      armor: armor + shield,
+      hitCount: enemy.enemyId === ENEMY_IDS.HYDRA ? Math.max(1, enemy.heads || 1) : 1,
+      critChance: 0,
+      blockChance: magic ? 0 : heroBlockChance(hero),
+      dodgeChance: magic ? 0 : heroDodgeChance(hero),
+      targetHp: hero.hp,
+      tags
+    });
+  }
+
   function battleHoverPreviewText(b, u) {
     if (!b || !BattleView.hoverCell) return '';
     const active = getActiveUnit();
     if (u && !u.isHero) {
       const parts = [`${translateKey('enemyReach')}: ${u.range}`];
+      // Who this enemy is actually going for, and how hard it lands. This is the
+      // only place the threat model is legible to the player.
+      const mark = aiChooseTarget(b, u);
+      const incoming = mark ? enemyDamagePreview(b, u, mark) : null;
+      if (mark && incoming) {
+        const span = incoming.minimum === incoming.maximum
+          ? `${incoming.maximum}`
+          : `${incoming.minimum}–${incoming.maximum}`;
+        let line = `${translateKey('aiTargetLabel')}: ${translateText(mark.name)} — ${span}`;
+        if (incoming.avoidChance > 0) line += ` (${translateKey('avoidShort')} ${Math.round(incoming.avoidChance * 100)}%)`;
+        parts.push(line);
+      }
       if (active && active.isHero && b.mode === 'attack' && isHeroFlankAttack(active, u, b)) {
         parts.push(`${translateKey('flankBonus')}: +25%`);
       }
@@ -1758,7 +2025,7 @@
   function heroDamagePreview(b, attacker, target) {
     if (!b || !attacker || !target || !attacker.isHero || target.isHero) return null;
     const distance = unitDistance(attacker, target);
-    const rangeLimitedSkills = ['shieldBash', 'double', 'slowArrow', 'fireball', 'freeze'];
+    const rangeLimitedSkills = ['shieldBash', 'double', 'slowArrow', 'arrowRain', 'fireball', 'freeze'];
     const rangeLimit = b.pendingSkill === 'shieldBash' ? 1 : attacker.range;
     if ((!b.pendingSkill || rangeLimitedSkills.includes(b.pendingSkill)) && distance > rangeLimit) {
       return { blocked: translateKey('outOfRange') };
@@ -1773,21 +2040,37 @@
     const tags = [];
     if (b.pendingSkill === 'shieldBash') tags.push(translateKey('damageStunOne'));
     if (b.pendingSkill === 'slowArrow') tags.push(translateKey('damageSlowTwo'));
+    if (b.pendingSkill === 'arrowRain') tags.push(translateKey('damageSplash'));
     if (isFireball) tags.push(translateKey('damageSplash'));
-    let raw = isFireball ? 15 : attacker.attack;
+    // Weapon attack is already baked into the persistent hero stats by
+    // recalcHeroFromEquipment, and dealDamage deliberately does not add it again.
+    // The preview used to, so every equipped weapon inflated the shown number by
+    // its own attack mod. Fireball is a flat 15 and never took the bonus at all.
+    const raw = isFireball ? 15 : attacker.attack;
     const weapon = getEquippedItem(attacker, 'weapon');
-    if (weapon?.mods?.attack) raw += weapon.mods.attack;
     const firstShotMultiplier = attacker.heroId === 'alira' && attacker.flags?.firstAttackTurn ? 1.5 : 1;
     if (firstShotMultiplier > 1) tags.push(translateKey('damageFirstShot'));
     const finisherMultiplier = attacker.perks?.includes('finisher') && target.hp <= target.maxHp * .4 ? 1.3 : 1;
     if (finisherMultiplier > 1) tags.push(translateKey('damageFinisherBonus'));
-    const moveMultiplier = attacker.heroId === 'alira' && attacker.perks?.includes('moveAttack') && b.heroMoved ? 1.2 : 1;
+    const moveMultiplier = attacker.heroId === 'alira' && b.heroMoved &&
+      (attacker.perks?.includes('moveAttack') || attacker.perks?.includes('windrunner'))
+      ? (attacker.perks?.includes('windrunner') ? 1.45 : 1.2) : 1;
     if (moveMultiplier > 1) tags.push(translateKey('damageMoveBonus'));
     const spellCharge = attacker.heroId === 'seris' && attacker.perks?.includes('spellCharge') && isMagic ? 3 : 0;
     if (spellCharge) tags.push(translateKey('damageSpellCharge'));
     const berserkMultiplier = attacker.activeStatuses?.some(s => s.type === STATUS.BERSERK) ? 2 : 1;
     let armor = target.armor + tileDefenseBonus(b.grid[target.y][target.x]);
     if (attacker.heroId === 'garet' && attacker.perks?.includes('armorPierce')) armor = Math.max(0, armor - 2);
+    // Item mod: pierce. dealDamage subtracts it from armour, so the preview must
+    // too, or the readable number drifts from the roll.
+    const pierceValue = (Number(weapon?.mods?.pierce) || 0) + (attacker.perks?.includes('deadeye') ? 3 : 0);
+    if (pierceValue > 0 && armor > 0) {
+      armor = Math.max(0, armor - pierceValue);
+      tags.push(translateKey('damagePierce'));
+    }
+    const bannerSource = b.units.find(u => u.isHero && u.hp > 0 && u !== attacker &&
+      u.perks?.includes('banner') && unitDistance(u, attacker) <= 2);
+    if (bannerSource) tags.push(translateKey('damageBanner'));
     const auraSource = b.units.find(u => u.isHero && u.heroId === 'garet' && u.hp > 0 &&
       u.heroId !== attacker.heroId && u.perks?.includes('auraDmg') && unitDistance(attacker, u) <= 2);
     const auraMultiplier = auraSource ? 1.1 : 1;
@@ -1800,7 +2083,7 @@
       attacker.heroId !== 'seris' && !isMagic;
     const burnDamage = isMagic && attacker.perks?.includes('burnSpell') ? 6 : 0;
     const previewContext = {
-      rawDamage: raw,
+      rawDamage: raw + (bannerSource ? 2 : 0),
       armor,
       hitCount: 1,
       firstShotMultiplier,
@@ -2314,6 +2597,16 @@
     };
   }
 
+  function regionalBattleTextureForCell(b, x, y) {
+    if (!b) return null;
+    if (b.units.some(unit => unit.hp > 0 && unit.enemyId === ENEMY_IDS.ROOT_SENTINEL && pointInUnit(unit, x, y))) {
+      return RegionBattleTextures[1] || null;
+    }
+    if (b.grid[y]?.[x] === TILE.FIRE) return RegionBattleTextures[2] || null;
+    if ((b.tideFloodedTiles || []).some(tile => tile.x === x && tile.y === y)) return RegionBattleTextures[3] || null;
+    return null;
+  }
+
   function drawBattle() {
     const b = GameState.currentBattle;
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -2332,7 +2625,8 @@
     for (let y = 0; y < GRID_H; y++) for (let x = 0; x < GRID_W; x++) {
       const px = x * CELL, py = y * CELL;
       const t = b.grid[y][x];
-      const tex = TileTextures[t];
+      const regionalTex = regionalBattleTextureForCell(b, x, y);
+      const tex = regionalTex || TileTextures[t];
       if (tex && tex.complete && tex.naturalWidth > 0) {
         ctx.drawImage(tex, px, py, CELL, CELL);
       } else {
@@ -2395,14 +2689,6 @@
       }
     }
 
-    const regionalTexture = RegionBattleTextures[b.region];
-    if (regionalTexture?.complete && regionalTexture.naturalWidth > 0) {
-      ctx.save();
-      ctx.globalAlpha = 0.12;
-      ctx.globalCompositeOperation = 'soft-light';
-      ctx.drawImage(regionalTexture, 0, 0, CANVAS_W, CANVAS_H);
-      ctx.restore();
-    }
     if (['escape', 'hunt'].includes(b.scenario?.id)) {
       const px = (GRID_W - 1) * CELL;
       ctx.save();
@@ -2695,6 +2981,26 @@
         ctx.fillStyle = '#ffffff';
         ctx.fillText(hpText, tx, ty);
 
+        // Elite affix badge: the one glance that tells the player this body is not
+        // the one the bestiary described.
+        if (!u.isHero && u.affix) {
+          const affixDef = eliteAffixDef(u.affix);
+          if (affixDef) {
+            ctx.save();
+            ctx.font = '13px serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = 'rgba(8,8,19,.82)';
+            ctx.fillRect(px + footprintW - 17, py + 1, 16, 15);
+            ctx.strokeStyle = 'rgba(255,190,90,.9)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px + footprintW - 17.5, py + 0.5, 16, 15);
+            ctx.fillStyle = '#ffd166';
+            ctx.fillText(affixDef.icon, px + footprintW - 2, py + 2);
+            ctx.restore();
+          }
+        }
+
         // 15: Compact status icons — up to 3 in bottom-left corner
         if (u.activeStatuses && u.activeStatuses.length) {
           const icons = { stun:'⚡', freeze:'❄', fear:'!', web:'🕸', poison:'☠', burn:'🔥', slow:'🐢', blind:'👁', curse:'💀', berserk:'💢', stealth:'🌑' };
@@ -2761,7 +3067,7 @@
         d.textContent = u.isHero ? u.sprite : u.emoji;
       }
       const tipLines = [
-        u.name,
+        u.affix ? `${eliteAffixLabel(u.affix)} ${translateText(u.name)}` : u.name,
         `HP: ${u.hp}/${u.maxHp}`,
         `⚔ Attack: ${u.attack}`,
         u.armor ? `🛡 Armor: ${u.armor}` : '',
@@ -3025,7 +3331,13 @@
     if (b.activeIndex >= b.order.length) {
       b.activeIndex = 0;
       b.round++;
-      b.units.forEach(u => { if (u.isHero) { u.flags = u.flags || {}; u.flags.firstAttackTurn = true; } });
+      b.units.forEach(u => {
+        if (!u.isHero) return;
+        u.flags = u.flags || {};
+        u.flags.firstAttackTurn = true;
+        // Aggro fades instead of accumulating for the whole battle.
+        if (u.threatDealt) u.threatDealt = Math.floor(u.threatDealt * 0.5);
+      });
       if (b.globalBuffs.watcherDeadMove > 0) b.globalBuffs.watcherDeadMove--;
       buildInitiative();
       applyScenarioRoundStart(b);
@@ -3065,6 +3377,18 @@
     b.visualLockUntil = 0;
     b.turnTransitionLocked = false;
     const prev = getActiveUnit();
+    if (prev?.isHero && prev.flags?.executionReady && prev.hp > 0) {
+      prev.flags.executionReady = false;
+      syncHeroFromUnit(prev);
+      b.heroMoved = false;
+      b.heroActionDone = false;
+      b.heroMoveUndo = null;
+      b.selected = prev;
+      b.pendingSkill = null;
+      prepareHeroTurnMode(b, prev);
+      updateBattleUI();
+      return;
+    }
     if (prev?.isHero && prev.flags?.hourglassReady && !prev.flags.hourglassUsed) {
       prev.flags.hourglassReady = false;
       prev.flags.hourglassUsed = true;
@@ -3119,6 +3443,8 @@
         // Item: manaRegen from crystal artifact
         const manaArt = getEquippedItem(nu, 'artifact');
         if (manaArt && manaArt.mods.manaRegen) manaGain += manaArt.mods.manaRegen;
+        // Perk: wellspring (Seris capstone).
+        if (nu.perks?.includes('wellspring')) manaGain += 4;
         nu.mana = Math.min(nu.maxMana, (nu.mana || 0) + manaGain);
         if (manaArt && manaArt.mods.manaRegen) {
           pushBattleLog(`${nu.name}: Mana Crystal +${manaArt.mods.manaRegen} mana`, 'status');
@@ -3127,6 +3453,17 @@
         Object.keys(nu.cds || {}).forEach(k => { if (nu.cds[k] > 0) nu.cds[k]--; });
         const hh = GameState.heroes.find(x => x.id === nu.heroId);
         if (hh) hh.cds = { ...nu.cds };
+        // Item mod: cleanseStart (artifact). Runs before the stun/freeze skip
+        // below, so the cleanse can actually hand the turn back to the player.
+        const cleanseArt = getEquippedItem(nu, 'artifact');
+        if (cleanseArt && cleanseArt.mods && cleanseArt.mods.cleanseStart && nu.activeStatuses?.length) {
+          const removable = nu.activeStatuses.find(s => CLEANSABLE_STATUSES.includes(s.type));
+          if (removable) {
+            nu.activeStatuses = nu.activeStatuses.filter(s => s !== removable);
+            pushBattleLog(`${nu.name}: tide heart clears ${removable.type}`, 'status');
+            spawnBattleTextFx(nu.x, nu.y, 'CLEANSE', '#7dffbf');
+          }
+        }
       }
       if (nu.activeStatuses && nu.activeStatuses.find(s => s.type === STATUS.STUN || s.type === STATUS.FREEZE || s.type === STATUS.FEAR)) {
         pushBattleLog(`${nu.emoji} skips a turn (stun/freeze)`, 'status');
@@ -3275,6 +3612,7 @@
     const keys = {
       mission: 'nodeMission',
       city: 'nodeCity',
+      camp: 'nodeCamp',
       dungeon: 'nodeDungeon',
       event: 'nodeEvent',
       boss: 'nodeBoss',
@@ -3291,33 +3629,60 @@
   }
 
   //══════════ AI ══════════
-  function priorityTarget(b) {
-    const heroes = b.units.filter(u => u.isHero && u.hp > 0);
-    const mage = heroes.find(h => h.heroId === 'seris');
-    if (mage) return mage;
-    const arch = heroes.find(h => h.heroId === 'alira');
-    if (arch) return arch;
-    return heroes[0];
-  }
+  /** How far Garet's Challenge reaches. Slightly above his move so stepping in
+   *  front of the party actually covers it. */
+  const TAUNT_RADIUS = 3;
+  /** Enemy archetypes that hunt the weakest body rather than the nearest one. */
+  const HUNTER_ENEMY_IDS = [ENEMY_IDS.ASSASSIN, ENEMY_IDS.VOID_STALKER, ENEMY_IDS.WOLF];
+
   function findWatcher(b) {
     return b.units.find(u => !u.isHero && u.enemyId === ENEMY_IDS.WATCHER && u.hp > 0);
   }
+
+  /** The hero currently forcing attacks onto himself, if this enemy is in range. */
+  function tauntingHero(b, self) {
+    if (!b) return null;
+    return b.units.find(u => u.isHero && u.hp > 0 && u.flags && u.flags.tauntRound === b.round &&
+      (!self || unitDistance(self, u) <= TAUNT_RADIUS)) || null;
+  }
+
+  /** Enemy target desirability. Replaces the old fixed Seris → Alira → Garet
+   *  order, which made every enemy walk past a reachable tank and made Garet's
+   *  whole role decorative. Distance carries the most weight, so position is
+   *  what the player controls; fragility, wounds and earned aggro break ties. */
+  function heroThreatScore(b, self, hero) {
+    const distance = self ? unitDistance(self, hero) : 0;
+    let score = 100 - distance * 9;
+    score += Math.max(0, 12 - (hero.armor || 0) * 2);
+    score += Math.max(0, 40 - (hero.maxHp || 0)) * 0.4;
+    const hpPct = hero.maxHp > 0 ? hero.hp / hero.maxHp : 1;
+    score += (1 - hpPct) * 30;
+    // Whoever hurt this side recently has earned the attention.
+    score += Math.min(30, (hero.threatDealt || 0) * 0.6);
+    if (self) {
+      const reach = (self.range || 1);
+      if (distance <= reach) score += 25;
+      else if (distance <= reach + getMovePoints(self, b)) score += 12;
+      if (HUNTER_ENEMY_IDS.includes(self.enemyId)) score += (1 - hpPct) * 25 + Math.max(0, 30 - hero.hp);
+    }
+    // The Watcher pulls the pack toward whoever it is illuminating.
+    const watcher = findWatcher(b);
+    if (watcher) score -= (Math.abs(hero.x - watcher.x) + Math.abs(hero.y - watcher.y)) * 3;
+    return score;
+  }
+
   function aiChooseTarget(b, self) {
     const heroes = b.units.filter(u => u.isHero && u.hp > 0);
     if (!heroes.length) return null;
-    if (self && [ENEMY_IDS.ASSASSIN, ENEMY_IDS.VOID_STALKER, ENEMY_IDS.WOLF].includes(self.enemyId)) {
-      return heroes.reduce((a, h) => (a.hp < h.hp ? a : h));
-    }
-    const w = findWatcher(b);
-    if (w) {
-      let best = null, bd = 999;
-      for (const h of heroes) {
-        const d = Math.abs(h.x - w.x) + Math.abs(h.y - w.y);
-        if (d < bd) { bd = d; best = h; }
-      }
-      if (best) return best;
-    }
-    return priorityTarget(b);
+    const taunted = tauntingHero(b, self);
+    if (taunted) return taunted;
+    return heroes.reduce((best, hero) =>
+      heroThreatScore(b, self, hero) > heroThreatScore(b, self, best) ? hero : best);
+  }
+
+  /** Bosses share the same scoring; passing self keeps proximity meaningful. */
+  function priorityTarget(b, self) {
+    return aiChooseTarget(b, self || null);
   }
   function enemyPassable(b, x, y, self) {
     return canUnitOccupy(b, self, x, y, { pass: true });
@@ -3749,6 +4114,7 @@
         if (attacker.enemyId === ENEMY_IDS.BLOOD_KNIGHT) attacker.hp = Math.min(attacker.maxHp, attacker.hp + 3);
       }
       if (attacker.enemyId === ENEMY_IDS.SPIDER && target.hp > 0) addStatus(target, STATUS.WEB, 2, { source: attacker });
+      if (attacker.affix === 'venomous' && target.hp > 0) addStatus(target, STATUS.POISON, 2, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.ICE_ELEM && target.hp > 0) addStatus(target, STATUS.FREEZE, 1, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.HYDRA && target.hp > 0) addStatus(target, STATUS.POISON, 2, { source: attacker });
       if (attacker.enemyId === ENEMY_IDS.THORN_DRYAD && target.hp > 0) addStatus(target, STATUS.SLOW, 1, { source: attacker });
@@ -3813,7 +4179,7 @@
           if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.enemies_dark_lord_teleport, 0.85);
         }
       }
-      const tgt = priorityTarget(b);
+      const tgt = priorityTarget(b, u);
       if (tgt && unitDistance(u, tgt) <= 1) aiAttack(u, tgt);
       u.aoeCd = (u.aoeCd || 0) + 1;
       if (u.aoeCd % 3 === 0) {
@@ -3843,7 +4209,7 @@
       if (u.hp <= 80) u.phase = 3;
     }
     else if (u.phase === 3) {
-      const tgt = priorityTarget(b);
+      const tgt = priorityTarget(b, u);
       if (tgt) aiAttack(u, tgt);
       const heroes = b.units.filter(h => h.isHero && h.hp > 0);
       if (heroes.length) addStatus(heroes[randInt(0, heroes.length - 1)], STATUS.CURSE, 2, { source: u });
@@ -3885,7 +4251,7 @@
         }
       });
     }
-    const tgt = priorityTarget(b);
+    const tgt = priorityTarget(b, u);
     if (tgt) {
       if (unitDistance(u, tgt) <= u.range) {
         aiAttack(u, tgt);
@@ -3926,6 +4292,18 @@
     GameState.ftueSkillsUsed = { ...b.ftueSkillsUsed };
   }
 
+  /** The counter used to read "0/3" beside a Hide-tips link, which looks exactly
+   *  like a page indicator waiting for a Next button. There is no Next: the card
+   *  follows the turn order on its own. Showing the three heroes as a checklist
+   *  makes it a task list instead of a pager. */
+  function ftueChecklistHtml(used) {
+    return ['garet', 'alira', 'seris'].map(id => {
+      const hero = GameState.heroes.find(h => h.id === id);
+      const done = !!used[id];
+      return `<span class="ftue-coach-tick${done ? ' is-done' : ''}" title="${escapeHtml(hero ? translateText(hero.name) : id)}">${done ? '✓' : '·'}${hero ? hero.emoji : ''}</span>`;
+    }).join('');
+  }
+
   function ftueCoachHtml(b, u) {
     if (!b || !b.firstBattle || !GameState.ftueHintsEnabled) return '';
     const used = b.ftueSkillsUsed || {};
@@ -3954,7 +4332,7 @@
       <div class="ftue-coach-title">${translateKey(titleKey)}</div>
       <div class="ftue-coach-text">${translateKey(textKey)}</div>
       <div class="ftue-coach-foot">
-        <span class="ftue-coach-progress">${translateKey('ftueProgress')}: ${completed}/3</span>
+        <span class="ftue-coach-progress">${translateKey('ftueProgress')}: ${ftueChecklistHtml(used)}</span>
         <button type="button" class="ftue-coach-skip" id="btn-ftue-skip">${translateKey('ftueSkip')}</button>
       </div>
     </div>`;
@@ -4075,6 +4453,7 @@
     const stats = document.getElementById('unit-stats');
     const actions = document.getElementById('action-buttons');
     if (!b) return;
+    updateHud();
     // Initiative is DOM-heavy and only changes together with the battle UI.
     // Canvas effects keep animating in loop(); the HUD does not need to be
     // reconstructed 60 times per second on desktop or mobile.
@@ -4108,7 +4487,10 @@
           return `<div class="skill-btn ${cls}" title="${tip}" style="${locked ? 'opacity:0.3' : ''}">${locked ? '🔒' : skDef.icon}</div>`;
         }).join('');
         const moveLeft = getMovePoints(h, b);
-        const statsLine = `<div class="hero-mini-stats">🛡${h.armor} ⚔${h.attack} 👟${moveLeft}/${h.move}${h.maxMana ? ` 🔮${h.mana}/${h.maxMana}` : ''}</div>`;
+        // Avoidance was invisible: Garet's block and item dodge silently ate hits.
+        const avoidPct = Math.round(heroAvoidChance(h) * 100);
+        const avoidChip = avoidPct > 0 ? ` <span title="${translateKey('avoidChanceTitle')}">🎯${avoidPct}%</span>` : '';
+        const statsLine = `<div class="hero-mini-stats">🛡${h.armor} ⚔${h.attack} 👟${moveLeft}/${h.move}${h.maxMana ? ` 🔮${h.mana}/${h.maxMana}` : ''}${avoidChip}</div>`;
         const deadStyle = alive ? '' : 'opacity:0.4;';
         return `<div class="hero-card ${active} ${upcoming}" style="${deadStyle}">
           ${turnChip}
@@ -4211,8 +4593,9 @@
         </button>`;
       };
       if (u.heroId === 'garet') {
-        html += skillMakeBtn('sk-shield',  'shieldBash', '🛡', 'Shield Bash',  u.cds.shieldBash, null);
-        html += skillMakeBtn('sk-firecall','fireCall',   '🔥', 'Call Fire',  u.cds.fireCall,   null);
+        html += skillMakeBtn('sk-shield',  'shieldBash', '🛡', 'Shield Bash', u.cds.shieldBash, null);
+        html += skillMakeBtn('sk-taunt',   'taunt',      '📢', 'Challenge',   u.cds.taunt || 0, null);
+        html += skillMakeBtn('sk-firecall','fireCall',   '🔥', 'Call Fire',   u.cds.fireCall,   null);
         html += skillMakeBtn('sk-berz',    'berserk',    '💪', 'Berserk',     u.cds.berserk,    null);
       }
       if (u.heroId === 'alira') {
@@ -4246,8 +4629,6 @@
         html += `<div class="battle-consumable-section"><div class="battle-consumable-label">${translateKey('battleConsumables')}</div><button class="btn battle-utility-btn" id="btn-battle-consumables">${translateKey('battleConsumables')} · ${consumableCount}</button></div>`;
       }
     }
-    // 10: Inventory button always visible in battle
-    html += `<button class="btn battle-utility-btn" id="btn-battle-inv" style="margin-top:4px">${translateKey('battleInventory')}</button>`;
     actions.innerHTML = html;
     highlightFtueRecommendedSkill(b, u);
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
@@ -4271,10 +4652,25 @@
     bind('btn-battle-consumables', () => openBattleConsumables());
     bind('sk-shield', () => { if (skLocked('shieldBash') || u.cds.shieldBash > 0) return; toggleTargetedSkill('shieldBash'); });
     bind('sk-firecall', () => { if (skLocked('fireCall') || u.cds.fireCall > 0) return; toggleTargetedSkill('fireCall'); });
+    bind('sk-taunt', () => {
+      if (skLocked('taunt') || (u.cds.taunt || 0) > 0) return;
+      b.objectiveUsedSkill = true;
+      u.flags = u.flags || {};
+      u.flags.tauntRound = b.round;
+      u.cds.taunt = 4;
+      syncHeroFromUnit(u);
+      playBattleAbilityFx(u, 'taunt', { radius: TAUNT_RADIUS, glyph: '📢' });
+      if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_shield_bash, 0.8);
+      pushBattleLog(`📢 ${u.name}: ${battleLocale('вызов принят — враги идут на него', 'challenge accepted — enemies turn on him', 'desafío aceptado: los enemigos van hacia él')}`, 'status');
+      spawnBattleTextFx(u.x, u.y, 'TAUNT', '#ffd06b');
+      markFtueSkillUsed(u.heroId, 'taunt');
+      b.heroActionDone = true;
+      endUnitTurn();
+    });
     bind('sk-berz', () => { if (skLocked('berserk') || u.cds.berserk > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_garet_berserk, 0.9); playBattleAbilityFx(u, 'berserk', { glyph: '💢' }); addStatus(u, STATUS.BERSERK, 3); u.armor = Math.max(0, Math.floor(u.armor * 0.5)); u.cds.berserk = 6; b.heroActionDone = true; endUnitTurn(); });
     bind('sk-double', () => { if (skLocked('doubleShot') || u.cds.doubleShot > 0) return; toggleTargetedSkill('double'); });
     bind('sk-slow', () => { if (skLocked('slowArrow') || u.cds.slowArrow > 0) return; toggleTargetedSkill('slowArrow'); });
-    bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; b.objectiveUsedSkill = true; if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_arrow_rain, 0.92); playBattleAbilityFx(u, 'arrowRain', { radius: 2, glyph: '🏹', projectile: 'rain' }); const b2 = GameState.currentBattle; let rainShot = 0; b2.units.forEach(t => { if (!t.isHero && t.hp > 0 && unitDistanceFromPoint(t, u.x, u.y) <= 1) dealDamage(u, t, u.attack, { animationSkill: 'arrowRain', animationShotIndex: rainShot, animationOffsetMs: 100 + rainShot++ * 90 }); }); u.cds.arrowRain = 5; b.heroActionDone = true; endUnitTurn(); });
+    bind('sk-rain', () => { if (skLocked('arrowRain') || u.cds.arrowRain > 0) return; toggleTargetedSkill('arrowRain'); });
     bind('sk-fb', () => { if (skLocked('fireball') || u.mana < 3 || u.cds.fireball > 0) return; toggleTargetedSkill('fireball'); });
     bind('sk-fr', () => { if (skLocked('freeze') || u.mana < 4 || u.cds.freeze > 0) return; toggleTargetedSkill('freeze'); });
     bind('sk-met', () => { if (skLocked('meteor') || u.mana < 8 || u.cds.meteor > 0) return; toggleTargetedSkill('meteor'); });
@@ -4290,14 +4686,6 @@
       u.flags = u.flags || {};
       if (u.flags.portalStoneUsed) return;
       toggleTargetedSkill('artifactTeleport');
-    });
-    // 10: Inventory from battle
-    bind('btn-battle-inv', () => {
-      GameState._returnToVictory = false;
-      GameState._returnToBattle = true;
-      GameState._returnToCity = false;
-      showScreen('inventory');
-      renderInventoryScreen();
     });
   }
 
@@ -4485,6 +4873,26 @@
         pushBattleLog(`[${u.sprite}] Call Fire!`, 'hero');
         b.heroActionDone = true; endUnitTurn(); return;
       }
+      if (b.pendingSkill === 'arrowRain' && u.heroId === 'alira') {
+        if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range) return;
+        const cells = [];
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          if (Math.abs(dx) + Math.abs(dy) <= 1) cells.push({ x: gx + dx, y: gy + dy });
+        }
+        const targets = b.units.filter(enemy => !enemy.isHero && enemy.hp > 0 && cells.some(cell => pointInUnit(enemy, cell.x, cell.y)));
+        if (!targets.length) return;
+        b.objectiveUsedSkill = true;
+        if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_alira_arrow_rain, 0.92);
+        playBattleAbilityFx(u, 'arrowRain', { x: gx, y: gy, radius: 1, glyph: '🏹', projectile: 'rain' });
+        targets.forEach((target, index) => dealDamage(u, target, u.attack, {
+          animationSkill: 'arrowRain', animationShotIndex: index, animationOffsetMs: 100 + index * 90
+        }));
+        u.cds.arrowRain = 5;
+        b.pendingSkill = null;
+        b.heroActionDone = true;
+        endUnitTurn();
+        return;
+      }
       const tgt = unitAt(b, gx, gy);
       if (!tgt || tgt.isHero) return;
       if (b.pendingSkill === 'fireball' && u.heroId === 'seris') {
@@ -4515,6 +4923,18 @@
         const freezeWeapon = getEquippedItem(u, 'weapon');
         const freezeTurns = (u.perks && u.perks.includes('freeze2')) || (freezeWeapon && freezeWeapon.mods && freezeWeapon.mods.freeze2) ? 2 : 1;
         addStatus(tgt, STATUS.FREEZE, freezeTurns);
+        // Item mod: chainFreeze (weapon): the frost jumps to one nearby enemy.
+        if ((freezeWeapon && freezeWeapon.mods && freezeWeapon.mods.chainFreeze) || u.perks?.includes('deepFreeze')) {
+          const chained = b.units
+            .filter(enemy => !enemy.isHero && enemy.hp > 0 && enemy !== tgt && unitDistance(enemy, tgt) <= 1)
+            .filter(enemy => !enemy.activeStatuses?.some(status => status.type === STATUS.FREEZE))
+            .sort((a, z) => unitDistance(a, tgt) - unitDistance(z, tgt))[0];
+          if (chained) {
+            addStatus(chained, STATUS.FREEZE, freezeTurns);
+            pushBattleLog(`🧊 ${u.name}: frost spreads to ${chained.name}`, 'status');
+            spawnBattleTextFx(chained.x, chained.y, 'CHAIN FREEZE', '#8bd3ff');
+          }
+        }
         if (u.perks?.includes('fear')) {
           b.units.filter(enemy => !enemy.isHero && enemy.hp > 0 && enemy !== tgt && unitDistance(enemy, tgt) <= 1)
             .forEach(enemy => addStatus(enemy, STATUS.FEAR, 1));

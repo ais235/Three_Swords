@@ -7,9 +7,12 @@ const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const index = loadGameRuntimeSource(root);
 const require = createRequire(import.meta.url);
 const LeshyBoss = require('../src/leshy-boss.js');
+// Row-to-region mapping and board size come from the shipped topology module so
+// this report cannot drift from the map the player actually walks.
+const topology = require('../src/map-topology.js');
 
-const MAP_COLS = 12;
-const MAP_ROWS = 8;
+const MAP_COLS = topology.COLS;
+const MAP_ROWS = topology.ROWS;
 const QUICK_SEEDS = ['12345', 'phase4-a', 'phase4-b', 'phase4-c', 'phase4-d'];
 const STANDARD_SEEDS = [
   ...QUICK_SEEDS,
@@ -103,11 +106,7 @@ function randInt(rng, a, b) {
   return a + Math.floor(rng() * (b - a + 1));
 }
 
-function regionFromMapRow(y) {
-  if (y <= 2) return 1;
-  if (y <= 5) return 2;
-  return 3;
-}
+const regionFromMapRow = topology.regionForRow;
 
 function buildWorldMap(rng) {
   const grid = [];
@@ -116,12 +115,17 @@ function buildWorldMap(rng) {
       grid.push({ id: `c_${x}_${y}`, x, y, region: regionFromMapRow(y), type: 'locked' });
     }
   }
+  // Mirrors the node budget in buildWorldMap (src/game-state.js).
   const byRegion = {
-    1: { rows: [0, 1, 2], mission: 20, city: 4, dungeon: 4, event: 6, boss: 0, bossPlaced: 1, bossMinDistance: 6 },
-    2: { rows: [3, 4, 5], mission: 16, city: 3, dungeon: 4, event: 5, boss: 0, bossPlaced: 1, bossMinDistance: 7, wanderer: 3, arena: 3 },
-    3: { rows: [6, 7], mission: 8, city: 2, dungeon: 3, event: 3, boss: 0, bossPlaced: 1, bossMinDistance: 6, wanderer: 2, final: 1, arena: 3 }
+    1: { rows: topology.REGION_ROWS[1], mission: 9, city: 3, camp: 3, dungeon: 2, event: 6, boss: 0, bossPlaced: 1, bossMinDistance: 6 },
+    2: { rows: topology.REGION_ROWS[2], mission: 13, city: 4, camp: 4, dungeon: 3, event: 7, boss: 0, bossPlaced: 1, bossMinDistance: 7, wanderer: 2, arena: 2 },
+    3: { rows: topology.REGION_ROWS[3], mission: 12, city: 3, camp: 4, dungeon: 4, event: 7, boss: 0, bossPlaced: 1, bossMinDistance: 6, wanderer: 2, final: 1, arena: 2 }
   };
-  const regionEntrance = { 1: { x: 0, y: 0 }, 2: { x: 0, y: 3 }, 3: { x: 0, y: 6 } };
+  const regionEntrance = {
+    1: { x: 0, y: 0 },
+    2: topology.REGION_GATEWAYS[0].to,
+    3: topology.REGION_GATEWAYS[1].to
+  };
   const pick = (cells, n) => {
     const arr = cells.slice();
     const out = [];
@@ -147,6 +151,7 @@ function buildWorldMap(rng) {
     assign('boss', conf.bossPlaced || 0, { origin: regionEntrance[region], minDistance: conf.bossMinDistance || 0 });
     assign('mission', conf.mission);
     assign('city', conf.city);
+    if (conf.camp) assign('camp', conf.camp);
     assign('dungeon', conf.dungeon);
     assign('event', conf.event);
     assign('boss', conf.boss);
@@ -187,7 +192,10 @@ function waveForCell(rng, cell) {
   const summoners = [IDS.NECRO, IDS.SHAMAN];
   const controllers = [IDS.SPIDER, IDS.ICE_ELEM, IDS.HEXER, IDS.BANSHEE, IDS.ARCANE_SENTINEL];
   const assassins = [IDS.ASSASSIN, IDS.VOID_STALKER, IDS.BLOOD_KNIGHT];
-  const heavyElites = [IDS.BLOOD_KNIGHT, IDS.ARCANE_SENTINEL, IDS.STONE_GOLEM];
+  // Mirrors WAVE_MINI_BOSSES / WAVE_HEAVY_ARMOR in src/game-screens.js.
+  const miniBosses = [IDS.STONE_GOLEM, IDS.DARK_KNIGHT, IDS.BLOOD_KNIGHT, IDS.ARCANE_SENTINEL];
+  const heavyArmor = [IDS.ORC_GUARD, IDS.SHIELDBEARER];
+  const miniBossCap = cell.region >= 3 ? 2 : 1;
   const allows = (wave, candidate) => {
     if (wave.filter(id => id === candidate).length >= 2) return false;
     if (volatile.includes(candidate) && countGroup(wave, volatile) >= 1) return false;
@@ -196,7 +204,8 @@ function waveForCell(rng, cell) {
     if (summoners.includes(candidate) && countGroup(wave, summoners) >= 1) return false;
     if (controllers.includes(candidate) && countGroup(wave, controllers) >= 2) return false;
     if (assassins.includes(candidate) && countGroup(wave, assassins) >= 2) return false;
-    if (heavyElites.includes(candidate) && countGroup(wave, heavyElites) >= 1) return false;
+    if (miniBosses.includes(candidate) && countGroup(wave, miniBosses) >= miniBossCap) return false;
+    if (heavyArmor.includes(candidate) && countGroup(wave, heavyArmor) >= 1) return false;
     return true;
   };
   const wave = [];
@@ -312,13 +321,119 @@ console.log('PASS regional boss units are absent from ordinary region 3 waves');
 const maxThreatFor = (region, type) => Math.max(0, ...rows
   .filter(row => row.region === region && row.type === type)
   .map(row => row.maxThreat));
+// ── Purchase economy ───────────────────────────────────────────────────────
+// Region 1 lost half its battles and region 3 gained rows, so income per region
+// moved. This block checks the thing that actually matters to a player: can the
+// money earned inside a region buy that region's gear tier?
+function constantBody(name) {
+  const start = index.indexOf(`const ${name} = {`);
+  if (start < 0) return null;
+  const open = index.indexOf('{', start);
+  const close = index.indexOf('}', open);
+  return close < 0 ? null : index.slice(open + 1, close);
+}
+function readNumberMap(name) {
+  const body = constantBody(name);
+  if (!body) return null;
+  return Object.fromEntries([...body.matchAll(/(\d+)\s*:\s*([\d.]+)/g)]
+    .map(match => [Number(match[1]), Number(match[2])]));
+}
+function readRangeMap(name) {
+  const body = constantBody(name);
+  if (!body) return null;
+  return Object.fromEntries([...body.matchAll(/(\d+)\s*:\s*\[\s*(\d+)\s*,\s*(\d+)\s*\]/g)]
+    .map(match => [Number(match[1]), [Number(match[2]), Number(match[3])]]));
+}
+function readItemPool() {
+  const block = index.match(/const ITEM_POOL = \[([\s\S]*?)\n\s*\];/);
+  if (!block) return [];
+  // One item per line; a brace-matching regex will not work because every entry
+  // carries a nested mods object.
+  return block[1].split('\n').filter(line => /\bid\s*:\s*'/.test(line)).map(line => ({
+    id: (line.match(/\bid\s*:\s*'([^']+)'/) || [])[1],
+    rarity: (line.match(/\brarity\s*:\s*'(\w+)'/) || [])[1],
+    minRegion: Number((line.match(/\bminRegion\s*:\s*(\d+)/) || [])[1]),
+    price: Number((line.match(/\bprice\s*:\s*(\d+)/) || [])[1])
+  })).filter(item => item.id && item.rarity && item.price);
+}
+
+const goldMultiplier = readNumberMap('REGION_GOLD_MULTIPLIER');
+const bossGold = readRangeMap('REGION_BOSS_GOLD');
+const finalGold = Number((index.match(/const FINAL_BOSS_GOLD = (\d+)/) || [])[1]);
+const xpBase = readNumberMap('REGION_XP_BASE');
+const itemPool = readItemPool();
+
+if (!goldMultiplier || !bossGold || !finalGold || !xpBase || !itemPool.length) {
+  console.error('FAIL economy constants could not be read from the runtime source');
+  process.exitCode = 1;
+} else {
+  const nodeBudget = {
+    1: { mission: 9, dungeon: 2, arena: 0, boss: 1, final: 0 },
+    2: { mission: 13, dungeon: 3, arena: 1, boss: 1, final: 0 },
+    3: { mission: 12, dungeon: 4, arena: 1, boss: 1, final: 1 }
+  };
+  // Averages, not rolls: 20-35 for a mission or arena, 45-80 for a dungeon.
+  const MISSION_AVG = 27.5;
+  const DUNGEON_AVG = 62.5;
+  // Objective and scenario bonuses are added after the regional multiplier and
+  // land on most battles; 20 per fight is the conservative estimate.
+  const BONUS_PER_BATTLE = 20;
+  const economyRows = [];
+  let previousIncome = 0;
+  for (const region of [1, 2, 3]) {
+    const budget = nodeBudget[region];
+    const battles = budget.mission + budget.dungeon + budget.arena + budget.boss + budget.final;
+    const multiplier = goldMultiplier[region] || 1;
+    const [bossLow, bossHigh] = bossGold[region] || bossGold[1];
+    const income = Math.round(
+      (budget.mission + budget.arena) * MISSION_AVG * multiplier +
+      budget.dungeon * DUNGEON_AVG * multiplier +
+      budget.boss * ((bossLow + bossHigh) / 2) +
+      budget.final * finalGold +
+      battles * BONUS_PER_BATTLE
+    );
+    const epics = itemPool.filter(item => item.minRegion === region && item.rarity === 'epic')
+      .sort((a, b) => a.price - b.price);
+    const twoCheapest = epics.slice(0, 2).reduce((sum, item) => sum + item.price, 0);
+    economyRows.push({ region, battles, income, epics: epics.length, twoCheapestEpics: twoCheapest });
+    if (epics.length >= 2 && income < twoCheapest) {
+      console.error(`FAIL R${region} income ${income} cannot afford its two cheapest epics (${twoCheapest})`);
+      process.exitCode = 1;
+    } else {
+      console.log(`PASS R${region} income ${income} covers its gear tier (two cheapest epics ${twoCheapest || 'n/a'})`);
+    }
+    if (income <= previousIncome) {
+      console.error(`FAIL R${region} income ${income} does not exceed R${region - 1} income ${previousIncome}`);
+      process.exitCode = 1;
+    }
+    previousIncome = income;
+  }
+  console.log(`PASS income grows with the campaign: ${economyRows.map(row => `R${row.region}:${row.income}`).join(' ')}`);
+  const totalXp = [1, 2, 3].reduce((sum, region) => {
+    const budget = nodeBudget[region];
+    const base = xpBase[region] || xpBase[1];
+    return sum + (budget.mission + budget.arena) * base + budget.dungeon * (base + 20) +
+      budget.boss * (base + 70) + budget.final * (base + 120);
+  }, 0);
+  // Level 8 costs 50+100+...+350 = 1400 experience.
+  console.log(`Campaign experience ${totalXp} against 1400 needed for the level cap`);
+  if (totalXp < 1400) {
+    console.error(`FAIL campaign grants ${totalXp} experience, below the 1400 needed to cap`);
+    process.exitCode = 1;
+  }
+  if (!summaryOnly) console.table(economyRows);
+}
+
+// Caps used to sit far above the observed maxima, which let region 2 spike to
+// 753 while region 3 topped out at 605 and still report PASS. They now describe
+// the curve the campaign is meant to have.
 const threatCaps = [
-  { region: 1, type: 'mission', cap: 380 },
-  { region: 1, type: 'dungeon', cap: 520 },
-  { region: 2, type: 'mission', cap: 760 },
-  { region: 2, type: 'dungeon', cap: 820 },
-  { region: 3, type: 'mission', cap: 850 },
-  { region: 3, type: 'dungeon', cap: 900 }
+  { region: 1, type: 'mission', cap: 330 },
+  { region: 1, type: 'dungeon', cap: 430 },
+  { region: 2, type: 'mission', cap: 620 },
+  { region: 2, type: 'dungeon', cap: 620 },
+  { region: 3, type: 'mission', cap: 760 },
+  { region: 3, type: 'dungeon', cap: 760 }
 ];
 let capFailed = false;
 for (const rule of threatCaps) {
@@ -328,6 +443,19 @@ for (const rule of threatCaps) {
     console.error(`FAIL R${rule.region} ${rule.type} threat ${maximum} exceeds cap ${rule.cap}`);
   } else {
     console.log(`PASS R${rule.region} ${rule.type} max threat ${maximum}/${rule.cap}`);
+  }
+}
+
+// The worst fight of each act must be worse than the worst fight of the one
+// before it. Medians alone hid an inverted tail for two balance passes.
+for (const type of ['mission', 'dungeon']) {
+  const peaks = [1, 2, 3].map(region => maxThreatFor(region, type));
+  const rising = peaks[0] < peaks[1] && peaks[1] < peaks[2];
+  if (rising) {
+    console.log(`PASS ${type} peaks escalate across acts: ${peaks.join(' -> ')}`);
+  } else {
+    capFailed = true;
+    console.error(`FAIL ${type} peaks do not escalate across acts: ${peaks.join(' -> ')}`);
   }
 }
 if (capFailed) process.exit(1);

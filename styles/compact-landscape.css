@@ -1,0 +1,280 @@
+/* Three Blades — Ultra-compact phone-landscape overrides for battle, map, city and menus.
+ * Extracted from the inline <style> block in index.html; load order is intentional.
+ */
+@media (max-height: 430px) and (orientation: landscape) {
+  /* The side panel on a 375px-tall phone has no room for a learning aid: the
+     legend pushed the map actions off the panel. The wall and distance messages
+     still explain themselves in place. */
+  #map-screen .map-legend { display: none; }
+  #game-container { padding: 4px; }
+  #hud-top {
+    height: 26px;
+    margin: -4px -4px 4px;
+    padding: 0 5px;
+  }
+  #topbar-right { min-width: 58px; }
+  #topbar-center { font-size: 9px; }
+  #btn-open-menu { height: 20px; min-height: 20px !important; padding: 0 6px; font-size: 9px; }
+  #hud-top { grid-template-columns: minmax(150px, .8fr) minmax(0, 1.4fr) auto; }
+  #battle-objective-top { font-size: 9px; }
+  .battle-top-action { height: 20px; min-height: 20px !important; padding: 0 6px; font-size: 11px; }
+  .battle-top-label { display: none; }
+  .btn { min-height: 30px; }
+
+  /* Battle ultra-compact */
+  .battle-layout { --battle-side-w: 124px; grid-template-columns: var(--battle-side-w) 1fr var(--battle-side-w); flex: 1; min-height: 0; height: auto; }
+  .battle-left { padding: 4px 3px; gap: 3px; }
+  .hero-card { padding: 4px; }
+  .hero-card-top { margin-bottom: 3px; gap: 4px; }
+  .hero-icon-large { font-size: 12px; }
+  .hero-card-name { font-size: 9px; }
+  .hero-card-class { display: none; }
+  .bar-wrap { margin-bottom: 2px; }
+  .bar-label { font-size: 8px; margin-bottom: 1px; }
+  .skills-row { gap: 2px; margin-top: 2px; }
+  .skill-btn { width: 18px; height: 18px; font-size: 9px; }
+  #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
+  #ui-overlay { min-width: 0; padding: 4px; gap: 2px; overflow: hidden; display: flex; flex-direction: column; }
+  .br-label { font-size: 8px; margin-bottom: 0; }
+  .init-slot { width: 20px; height: 20px; font-size: 10px; }
+  #battle-log { min-height: 28px; max-height: 56px; font-size: 8px; line-height: 1.25; padding: 2px; }
+  #unit-panel { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+  #unit-stats { font-size: 7px !important; margin-bottom: 1px !important; }
+  .battle-actions { display: flex; flex-direction: column; gap: 2px; }
+  .battle-actions .btn { min-height: 22px; padding: 1px 3px; font-size: 7px; width: 100%; box-sizing: border-box; margin: 0; }
+  .battle-actions .skill-action-btn {
+    min-height: 27px;
+    grid-template-columns: 20px minmax(0, 1fr);
+    column-gap: 4px;
+    padding: 2px 4px;
+  }
+  .skill-action-btn .skill-action-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    border-radius: 4px;
+  }
+  .skill-action-btn .skill-action-name { font-size: 8px; }
+  .skill-action-btn .skill-action-meta { font-size: 6px; }
+  .battle-actions #btn-start-battle { grid-column: unset; }
+  .deploy-hint-box { display: none; }
+
+  /* Map ultra-compact */
+  .map-screen-layout { grid-template-columns: 1fr 140px; flex: 1; min-height: 0; }
+  .map-grid-wrap { padding: 4px; }
+  #map-screen .node-grid { gap: 1px; }
+  #map-screen .map-node { font-size: 9px; border-radius: 3px; }
+  #map-screen .map-node small { display: none; }
+  .map-panel { padding: 5px; gap: 4px; overflow: hidden; }
+  .map-panel-title { font-size: 8px; }
+  .cell-info { padding: 6px; font-size: 8px; }
+  .cell-info-icon { font-size: 14px; margin-bottom: 2px; }
+  .cell-info-name { font-size: 9px; }
+  #map-help { font-size: 8px; }
+  #party-strip { gap: 3px; margin-bottom: 3px; }
+  .party-card { font-size: 8px; padding: 3px 5px; }
+  .eq-mini { display: none; }
+
+  /* City + Inventory ultra-compact */
+  .city-body { grid-template-columns: 124px 1fr 124px; flex: 1; min-height: 0; }
+  .city-left, .city-center, .city-right { padding: 4px; gap: 4px; }
+  .city-banner { padding: 4px; }
+  .city-banner-title { font-size: 8px; }
+  .city-desc, .city-banner-desc { display: none; }
+  .npc-tab { padding: 4px 5px; font-size: 7px; justify-content: flex-start; gap: 5px; }
+  .npc-tab-text { display: block; font-size: 6px; line-height: 1.2; }
+  .heroes-bar-title { display: none; }
+  .hero-heal-btn { font-size: 7px; padding: 1px 3px; }
+  .heal-all-row { flex-direction: column; gap: 4px; }
+  .btn-heal-all { font-size: 8px !important; padding: 5px 4px; min-height: 26px; }
+  .btn-heal-ad { font-size: 8px !important; padding: 5px 4px; min-height: 26px; }
+  .items-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    padding: 5px;
+    gap: 4px;
+  }
+  #shop-list:not(.items-grid-scroll) .item-card { height: 100%; }
+  #shop-list.items-grid-scroll .item-card,
+  #shop-sell-list.items-grid-scroll .item-card { height: auto; }
+  .city-panel-trader { --shop-icon-size: 40px; }
+  #shop-list .card-body { padding: 5px 5px 4px; gap: 4px; }
+  #shop-list .card-name,
+  #shop-sell-list .card-name { font-size: 7px; }
+  #shop-list .card-stat,
+  #shop-sell-list .card-stat { font-size: 7px; }
+  #shop-list .card-desc,
+  #shop-sell-list .card-desc { font-size: 7px; }
+  #shop-list .card-footer { padding: 4px 5px; gap: 3px; }
+  #shop-list .btn-buy, #shop-sell-list .btn-sell { font-size: 5px; padding: 4px 2px; }
+  .trader-mode-tab { font-size: 6px; padding: 4px 3px; }
+  #shop-list .card-price, #shop-sell-list .card-price { font-size: 8px; }
+  #shop-list .card-footer .badge { font-size: 5px; }
+  #shop-sell-list .card-body { padding: 5px 5px 4px; gap: 4px; }
+  #shop-list:not(.items-grid-scroll) .item-card.secret { grid-column: auto !important; height: 100%; }
+  #shop-list.items-grid-scroll .item-card.secret { grid-column: 1 / -1 !important; height: auto; }
+  #shop-list .btn-buy-ad { font-size: 5px; padding: 4px 2px; }
+  .service-card .service-desc, .sc-desc { display: none; }
+  .city-shortcuts .sc-btn { font-size: 7px; padding: 1px 3px; min-height: 22px; }
+  .npc-tab-img { width: 20px; height: 20px; border-radius: 3px; }
+  .npc-inline-face { width: 24px; height: 24px; border-radius: 4px; }
+  .btn-leave::before { content: '←'; }
+  .btn-leave .btn-leave-text { display: none; }
+
+  #inv-layout { grid-template-columns: 126px minmax(230px, 1fr) 190px; flex: 1; min-height: 0; overflow: hidden; }
+  #inv-sidebar, #inv-paperdoll, #inv-backpack { padding: 4px; gap: 4px; }
+  #inv-paperdoll-area { padding: 6px 4px; gap: 6px; min-height: 0; }
+  #inv-hero-figure img,
+  .inv-hero-figure-img { width: 48px; height: 48px; }
+  .inv-hero-figure-emoji,
+  #inv-hero-figure { font-size: 48px; }
+  .paperdoll-row { gap: 8px; }
+  .eq-zone { width: 54px; height: 54px; }
+  .eq-slot-wrap { max-width: 72px; gap: 2px; }
+  .eq-slot-heading,
+  .eq-slot-item-name { font-size: 8px; }
+  .inv-tab { font-size: 8px; min-height: 28px; padding: 2px 3px; }
+  .inv-portrait-icon { font-size: 18px; }
+  .inv-portrait-name { font-size: 8px; }
+  .inv-portrait-class, .slots-title { display: none; }
+  .inv-stats { padding: 4px; }
+  .stat-row { font-size: 8px; margin-bottom: 2px; }
+  #inv-hero-perks { margin-top: 4px; }
+  .inv-perks-label { font-size: 7px; margin-bottom: 3px; }
+  .inv-perk-btn { max-width: 38px; height: 28px; font-size: 12px; }
+  .inv-perks-row { gap: 3px; }
+  .equip-slot { padding: 3px; margin-bottom: 2px; }
+  .equip-slot-icon { width: 16px; height: 16px; font-size: 10px; }
+  .equip-slot-name { font-size: 7px; }
+  #bag-grid { grid-template-columns: repeat(5, minmax(40px, 1fr)); gap: 3px; }
+  .inv-item-card { padding: 0; }
+  .inv-item-thumb > span:not(.inv-item-price):not(.item-icon-wrap):not(.inv-item-best-badge) { font-size: 20px; }
+  .inv-item-price { font-size: 6px; }
+  .inv-item-name { font-size: 6px; }
+  #inv-detail { padding: 5px; font-size: 7px; }
+  .item-detail-head { gap: 5px; margin-bottom: 3px; }
+  .item-detail-icon { font-size: 14px; }
+  .item-detail-title { font-size: 8px; }
+  .item-detail-sub, .item-detail-stats, .item-detail-desc { font-size: 7px; margin-bottom: 3px; }
+  .item-detail-mismatch { font-size: 9px; margin-top: 4px; }
+  .item-detail-btns { gap: 3px; }
+  .item-detail-btns .btn { min-height: 24px; font-size: 7px; padding: 2px 4px; }
+
+  /* Menu + perk modal ultra-compact */
+  .screen-menu { padding: 16px 10px; }
+  .menu-title-main { font-size: 14px; letter-spacing: 3px; margin-bottom: 12px; }
+  .menu-btn { padding: 10px 12px; font-size: 7px; min-height: 36px; }
+  .perk-modal-box { width: min(960px, 99vw); max-height: 98vh; }
+  .perk-modal-topbar { padding: 5px 10px; }
+  .perk-hero-portrait { width: 30px; height: 30px; flex-basis: 30px; }
+  .perk-modal-title { font-size: 10px; }
+  .perk-modal-hint { font-size: 8px; }
+  .perk-modal-body { grid-template-columns: minmax(0, 1fr) 160px; }
+  .perk-branches { padding: 8px 6px; gap: 4px; overflow-x: hidden; }
+  .perk-col-header { font-size: 8px; padding: 3px 5px; margin-bottom: 5px; }
+  .perk-skill { max-width: 72px; min-height: 58px; padding: 4px; }
+  .perk-skill-icon { font-size: 14px; margin-bottom: 3px; }
+  .perk-skill-name { font-size: 7px; line-height: 1.3; }
+  .perk-connector { height: 8px; }
+  .perk-detail-panel { padding: 8px; gap: 5px; overflow-x: hidden; overflow-y: hidden; }
+  .perk-detail-icon { font-size: 20px; }
+  .perk-detail-name { font-size: 9px; }
+  .perk-detail-branch, .perk-detail-effect, .perk-detail-desc { font-size: 8px; }
+  #perk-detail-panel .btn { min-height: 26px; font-size: 7px; }
+  #game-menu-overlay .game-menu-box { width: min(340px, calc(100vw - 16px)); max-width: min(340px, calc(100vw - 16px)); padding: 0; }
+  .game-menu-head { padding: 10px 12px 8px; }
+  .game-menu-title { font-size: 11px; }
+  .game-menu-sub { font-size: 8px; margin-top: 3px; }
+  .game-menu-actions { gap: 6px; padding: 10px 12px 12px; }
+  #game-menu-overlay .game-menu-actions .btn { min-height: 30px; font-size: 9px !important; padding: 5px 6px; }
+  .modal-box.game-dialog-box {
+    max-width: min(300px, calc(100vw - 16px));
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .gameover-card { width: min(340px, calc(100vw - 16px)); }
+  .gameover-head { padding: 10px 12px 8px; }
+  .gameover-icon { font-size: 20px; margin-bottom: 5px; }
+  .gameover-title { font-size: 12px; }
+  .gameover-sub { font-size: 8px; }
+  .gameover-body { padding: 10px 12px 12px; gap: 8px; }
+  .gameover-stats { gap: 5px; }
+  .gameover-stat { padding: 6px 4px; }
+  .gameover-stat-val { font-size: 11px; }
+  .gameover-stat-label { font-size: 6px; letter-spacing: 0.5px; }
+  .gameover-actions { gap: 6px; }
+  .gameover-actions .btn { min-height: 30px; font-size: 9px !important; padding: 5px 6px; }
+  #confirm-text { font-size: 7px; }
+  .game-dialog-btns .btn { min-height: 28px; }
+}
+@media (max-width: 480px) and (orientation: portrait) {
+  #battle-canvas { width: 100%; height: auto; aspect-ratio: 3/2; max-height: 100%; }
+  .btn { padding: 6px 8px; }
+}
+
+#orientation-gate {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(74,158,255,.16), transparent 34%),
+    linear-gradient(180deg, #111128, #070712);
+  color: var(--text-main);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 28px;
+  box-sizing: border-box;
+}
+.orientation-gate-card { max-width: 320px; }
+.orientation-gate-icon { font-size: 56px; line-height: 1; color: var(--accent-gold); animation: rotate-device-hint 1.8s ease-in-out infinite; }
+.orientation-gate-title { margin-top: 18px; color: var(--accent-gold); font-size: 18px; letter-spacing: 2px; }
+.orientation-gate-text { margin-top: 10px; color: var(--text-dim); font-size: 13px; line-height: 1.55; }
+.battle-order-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.battle-speed-toggle {
+  min-width: 34px;
+  min-height: 28px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: rgba(255,255,255,.06);
+  color: var(--accent-gold);
+  font: inherit;
+  cursor: pointer;
+}
+.battle-speed-toggle:hover { border-color: var(--accent-gold); background: rgba(255,214,102,.1); }
+.empty-bag-state {
+  grid-column: 1 / -1;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+}
+.empty-bag-state strong { color: var(--text-main); font-size: 12px; }
+.empty-bag-state span { max-width: 420px; font-size: 12px; }
+.empty-bag-icon { font-size: 32px; color: var(--accent-gold); opacity: .8; }
+@keyframes rotate-device-hint {
+  0%, 20%, 100% { transform: rotate(0deg); }
+  55%, 75% { transform: rotate(90deg); }
+}
+@media (orientation: portrait) and (max-width: 899px) {
+  #orientation-gate { display: flex; }
+  #game-container,
+  #tooltip,
+  #fx-layer,
+  #game-menu-overlay,
+  #confirm-modal,
+  #game-alert-modal,
+  #game-prompt-modal,
+  #onboarding-modal,
+  #perk-modal,
+  #skill-unlock-modal,
+  #sfx-auditor-modal { visibility: hidden !important; }
+}

@@ -599,7 +599,22 @@
       .replace(/Spells gain \+1 AoE radius\./g, 'Заклинания получают +1 к радиусу области.')
       .replace(/Attackers take 1 damage\./g, 'Атакующие получают 1 урон.')
       .replace(/Revive once with 5 HP\./g, 'Один раз воскрешает с 5 HP.')
-      .replace(/Freeze lasts 2 turns\./g, 'Заморозка длится 2 хода.');
+      .replace(/Freeze lasts 2 turns and spreads to one nearby enemy\./g, 'Заморозка длится 2 хода и переходит на одного соседнего врага.')
+      .replace(/Freeze lasts 2 turns\./g, 'Заморозка длится 2 хода.')
+      .replace(/Ignores 2 armor\./g, 'Игнорирует 2 брони.')
+      .replace(/Splashes 3 damage to enemies beside the target\./g, 'Задевает соседей цели на 3 урона.')
+      .replace(/The first hit each round is fully blocked\./g, 'Первый удар в раунде поглощается полностью.')
+      .replace(/Drags the target one tile closer\./g, 'Притягивает цель на одну клетку.')
+      .replace(/Restores 2 mana whenever the wearer is hit\./g, 'Возвращает 2 маны при получении урона.')
+      .replace(/Clears one negative status at the start of the turn\./g, 'Снимает один негативный эффект в начале хода.');
+    if (currentLanguage() === 'es') return desc
+      .replace(/Ignores 2 armor\./g, 'Ignora 2 de armadura.')
+      .replace(/Splashes 3 damage to enemies beside the target\./g, 'Salpica 3 de daño a los enemigos junto al objetivo.')
+      .replace(/The first hit each round is fully blocked\./g, 'El primer golpe de cada ronda se bloquea por completo.')
+      .replace(/Drags the target one tile closer\./g, 'Arrastra al objetivo una casilla.')
+      .replace(/Freeze lasts 2 turns and spreads to one nearby enemy\./g, 'La congelación dura 2 turnos y se contagia a un enemigo cercano.')
+      .replace(/Restores 2 mana whenever the wearer is hit\./g, 'Devuelve 2 de maná al recibir daño.')
+      .replace(/Clears one negative status at the start of the turn\./g, 'Elimina un efecto negativo al inicio del turno.');
     return desc;
   }
   function renderArsenal() {
@@ -1006,18 +1021,25 @@
     const source = fresh.length >= 3 ? fresh : pool;
     return [...source].sort(() => Math.random() - 0.5).slice(0, 3).map(deepClone);
   }
+  /** True while the boss reward choice (or its confirmation) owns the screen.
+   *  showVictoryUI waits on this before opening perk and skill-unlock modals. */
+  let BossRewardPromptOpen = false;
+  function bossRewardPromptActive() {
+    return BossRewardPromptOpen || !!GameState.pendingBossReward?.choices?.length;
+  }
   function showPendingBossReward() {
     const reward = GameState.pendingBossReward;
-    if (!reward?.choices?.length) return;
+    if (!reward?.choices?.length || BossRewardPromptOpen) return Promise.resolve();
+    BossRewardPromptOpen = true;
     const choices = reward.choices.map(item => ({ value: item.id, label: `${translateText(item.name)} — ${formatItemMods(item).map(translateText).join(', ')}` }));
-    showGamePickOne(`🏆 ${currentLanguage() === 'ru' ? 'Выберите награду следующего региона' : 'Choose a reward for the next region'}`, choices).then(id => {
+    return showGamePickOne(`🏆 ${currentLanguage() === 'ru' ? 'Выберите награду следующего региона' : 'Choose a reward for the next region'}`, choices).then(id => {
       const item = reward.choices.find(choice => choice.id === id) || reward.choices[0];
       GameState.inventory.push(item.id);
       GameState._lastBossReward = item;
       GameState.pendingBossReward = null;
       saveGame(true);
-      void showGameAlert(`${translateKey('victoryLoot')}: ${translateText(item.name)}`);
-    });
+      return showGameAlert(`${translateKey('victoryLoot')}: ${translateText(item.name)}`);
+    }).finally(() => { BossRewardPromptOpen = false; });
   }
   function equipItem(hero, item) {
     hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
@@ -1591,27 +1613,77 @@
     };
     updateInventoryCloseButton();
   }
-  function generateShopStock(region) {
+  /** Everything the shops of a region should avoid repeating: what the party
+   *  already carries, and what the other cities of the same region are already
+   *  selling. Region 1 has only five commons, eight rares and a single epic, so
+   *  without this every town looked like the last one, down to offering back the
+   *  sword the player had just bought. */
+  function shopAvoidSet(region, cityId) {
+    const avoid = new Set(ownedItemIds());
+    const stocks = GameState.cityShopStocks || {};
+    Object.entries(stocks).forEach(([id, state]) => {
+      if (id === cityId) return;
+      const cell = (GameState.mapGrid || []).find(node => node.id === id);
+      if (cell && cell.region !== region) return;
+      ((state?.shopStock?.stock) || []).forEach(item => avoid.add(item.id));
+      if (state?.cityState?.secretItemId) avoid.add(state.cityState.secretItemId);
+    });
+    return avoid;
+  }
+  /** Premium hidden offer: this region's epics first, then the next region's. */
+  function drawSecret(region, avoid, taken) {
+    const tiers = [
+      ITEM_POOL.filter(i => i.rarity === 'epic' && i.minRegion === region && !avoid.has(i.id) && !taken.has(i.id)),
+      ITEM_POOL.filter(i => i.rarity === 'epic' && i.minRegion === region + 1 && !avoid.has(i.id) && !taken.has(i.id)),
+      ITEM_POOL.filter(i => i.rarity === 'epic' && i.minRegion <= region && !taken.has(i.id))
+    ];
+    const pool = tiers.find(list => list.length);
+    if (!pool) return null;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    taken.add(pick.id);
+    return deepClone(pick);
+  }
+
+  function generateShopStock(region, cityId) {
     const currentTier = ITEM_POOL.filter(i => i.minRegion === region);
     const olderTier = ITEM_POOL.filter(i => i.minRegion < region);
     const byRegion = currentTier.length ? [...currentTier, ...olderTier] : ITEM_POOL.filter(i => i.minRegion <= region);
-    const commons = byRegion.filter(i => i.rarity === 'common');
-    const rares   = byRegion.filter(i => i.rarity === 'rare');
-    const epics   = byRegion.filter(i => i.rarity === 'epic');
+    const avoid = shopAvoidSet(region, cityId);
     const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+    const taken = new Set();
+    /** Prefer this region's tier, then anything unseen, then whatever is left. */
+    const draw = rarity => {
+      const all = byRegion.filter(i => i.rarity === rarity && !taken.has(i.id));
+      const tiers = [
+        all.filter(i => i.minRegion === region && !avoid.has(i.id)),
+        all.filter(i => !avoid.has(i.id)),
+        all.filter(i => i.minRegion === region),
+        all
+      ];
+      const pool = tiers.find(list => list.length);
+      if (!pool) return null;
+      const pick = shuffle(pool)[0];
+      taken.add(pick.id);
+      return deepClone(pick);
+    };
     const stock = [];
-    // Two different common items.
-    const sc = shuffle(commons.filter(i => i.minRegion === region).length ? commons.filter(i => i.minRegion === region) : commons);
-    if (sc[0]) stock.push(deepClone(sc[0]));
-    if (sc[1]) stock.push(deepClone(sc[1]));
+    // Two commons. The whole game ships five of them, so once a region's towns
+    // have shared them out, offer a fresh rare rather than repeat a shelf.
+    const freshCommons = byRegion.filter(i => i.rarity === 'common' && !avoid.has(i.id)).length;
+    for (let i = 0; i < 2; i++) {
+      const item = i < freshCommons ? draw('common') : (draw('rare') || draw('common'));
+      if (item) stock.push(item);
+    }
     // At least one rare item, sometimes two.
-    const sr = shuffle(rares.filter(i => i.minRegion === region).length ? rares.filter(i => i.minRegion === region) : rares);
-    if (sr[0]) stock.push(deepClone(sr[0]));
-    if (sr[1] && Math.random() < 0.3 + (region - 1) * 0.15) stock.push(deepClone(sr[1]));
-    // Secret epic slot.
-    const currentEpics = epics.filter(i => i.minRegion === region);
-    const se = shuffle(currentEpics.length ? currentEpics : (epics.length ? epics : byRegion));
-    const secretItem = deepClone(se[0]);
+    const rare = draw('rare');
+    if (rare) stock.push(rare);
+    if (Math.random() < 0.3 + (region - 1) * 0.15) {
+      const second = draw('rare');
+      if (second) stock.push(second);
+    }
+    // The secret slot may reach one region ahead: region 1 owns a single epic, so
+    // without this every town in the forest hid the very same hammer.
+    const secretItem = drawSecret(region, avoid, taken) || draw('rare') || stock[0] || deepClone(byRegion[0]);
     return { stock: stock.slice(0, 4), secretItem };
   }
 
@@ -1640,7 +1712,16 @@
     return Math.max(10, missing * 2);
   }
 
-  function waveCompositionAllows(wave, candidate) {
+  /** Enemies flagged miniBoss in enemyDef. The old rules capped only three of
+   *  them, and the Dark Knight was not on the list, so an ordinary region 2
+   *  mission could field two Dark Knights plus a Stone Golem — three mini-bosses,
+   *  while region 3 was capped at one. That is what made the hardest non-boss
+   *  fight in the campaign sit in the middle of it. */
+  const WAVE_MINI_BOSSES = [ENEMY_IDS.STONE_GOLEM, ENEMY_IDS.DARK_KNIGHT, ENEMY_IDS.BLOOD_KNIGHT, ENEMY_IDS.ARCANE_SENTINEL];
+  const WAVE_HEAVY_ARMOR = [ENEMY_IDS.ORC_GUARD, ENEMY_IDS.SHIELDBEARER];
+  /** The finale may field an elite pair; earlier acts may not. */
+  const miniBossCapForRegion = region => (Number(region) >= 3 ? 2 : 1);
+  function waveCompositionAllows(wave, candidate, region = 1) {
     const countGroup = ids => wave.filter(id => ids.includes(id)).length;
     const duplicateCount = wave.filter(id => id === candidate).length;
     const volatile = [ENEMY_IDS.SUICIDE, ENEMY_IDS.PLAGUE_DOCTOR];
@@ -1649,7 +1730,6 @@
     const summoners = [ENEMY_IDS.NECRO, ENEMY_IDS.SHAMAN];
     const controllers = [ENEMY_IDS.SPIDER, ENEMY_IDS.ICE_ELEM, ENEMY_IDS.HEXER, ENEMY_IDS.BANSHEE, ENEMY_IDS.ARCANE_SENTINEL];
     const assassins = [ENEMY_IDS.ASSASSIN, ENEMY_IDS.VOID_STALKER, ENEMY_IDS.BLOOD_KNIGHT];
-    const heavyElites = [ENEMY_IDS.BLOOD_KNIGHT, ENEMY_IDS.ARCANE_SENTINEL, ENEMY_IDS.STONE_GOLEM];
     if (duplicateCount >= 2) return false;
     if (volatile.includes(candidate) && countGroup(volatile) >= 1) return false;
     if (ranged.includes(candidate) && countGroup(ranged) >= 2) return false;
@@ -1657,8 +1737,32 @@
     if (summoners.includes(candidate) && countGroup(summoners) >= 1) return false;
     if (controllers.includes(candidate) && countGroup(controllers) >= 2) return false;
     if (assassins.includes(candidate) && countGroup(assassins) >= 2) return false;
-    if (heavyElites.includes(candidate) && countGroup(heavyElites) >= 1) return false;
+    if (WAVE_MINI_BOSSES.includes(candidate) && countGroup(WAVE_MINI_BOSSES) >= miniBossCapForRegion(region)) return false;
+    if (WAVE_HEAVY_ARMOR.includes(candidate) && countGroup(WAVE_HEAVY_ARMOR) >= 1) return false;
     return true;
+  }
+
+  /** Which slots of a wave carry an elite affix. Derived from the cell id, so the
+   *  map preview and the battle that follows always agree, and so a route decision
+   *  can be made on real information rather than a surprise at deployment. */
+  function eliteAffixesForWave(cell, wave) {
+    const affixes = wave.map(() => null);
+    if (!cell || !Array.isArray(wave) || !wave.length) return affixes;
+    if (['boss', 'final'].includes(cell.type)) return affixes;
+    const region = Math.max(1, Math.min(3, Number(cell.region) || 1));
+    const chance = ELITE_AFFIX_CHANCE[region] || 0;
+    const cap = ELITE_AFFIX_CAP[region] || 1;
+    let placed = 0;
+    wave.forEach((enemyId, index) => {
+      if (placed >= cap) return;
+      const def = enemyDef(enemyId);
+      if (!def || def.boss || def.miniBoss) return;
+      const roll = hashSeed(`${cell.id}:${index}:${enemyId}`);
+      if ((roll % 1000) / 1000 >= chance) return;
+      affixes[index] = ELITE_AFFIX_IDS[Math.floor(roll / 1000) % ELITE_AFFIX_IDS.length];
+      placed += 1;
+    });
+    return affixes;
   }
 
   function generateEnemyWaveForCell(cell) {
@@ -1691,7 +1795,7 @@
     }
     const wave = [];
     for (let i = 0; i < cnt; i++) {
-      const allowed = pool.filter(candidate => waveCompositionAllows(wave, candidate));
+      const allowed = pool.filter(candidate => waveCompositionAllows(wave, candidate, cell.region));
       const candidates = allowed.length ? allowed : pool.filter(candidate => wave.filter(id => id === candidate).length < 2);
       const pick = candidates[randInt(0, candidates.length - 1)];
       wave.push(pick);
@@ -2086,7 +2190,7 @@
     const enemyId = regionBossEnemyId(node.region);
     const src = enemyIconUrl(enemyId);
     return `<div class="map-node-face map-node-face-boss" aria-label="${translateKey('nodeBoss')}">
-      <div class="map-boss-silhouette" style="--boss-mask:url('${src}')"></div>
+      <div class="map-boss-silhouette" style="-webkit-mask-image:url('${src}');mask-image:url('${src}')"></div>
     </div>`;
   }
 
@@ -2118,22 +2222,57 @@
     return `<div class="cell-info-icon">${em}</div>`;
   }
 
+  /** Wall and gateway decorations for a rendered map node, read back from the
+   *  classes WorldMapTopology assigned to it. */
+  function mapWallDecorationHtml(el) {
+    let html = '';
+    // Regional walls are the hard act boundaries and stay loud; internal walls
+    // are terrain and must not turn the board into a red grid.
+    const side = (name) => el.classList.contains(`map-wall-${name}-regional`) ? ' is-regional' : '';
+    if (el.classList.contains('map-wall-top')) html += `<span class="map-wall-seg map-wall-seg-top${side('top')}" aria-hidden="true"></span>`;
+    if (el.classList.contains('map-wall-bottom')) html += `<span class="map-wall-seg map-wall-seg-bottom${side('bottom')}" aria-hidden="true"></span>`;
+    if (el.classList.contains('map-gateway-down')) html += '<span class="map-gateway-mark map-gateway-mark-down" aria-hidden="true">▼</span>';
+    if (el.classList.contains('map-gateway-up')) html += '<span class="map-gateway-mark map-gateway-mark-up" aria-hidden="true">▲</span>';
+    return html;
+  }
+
+  /** The board has four cell states and a wall, and none of them said what they
+   *  meant: a dimmed tile reads as "broken" rather than "seen but not one step
+   *  away". The legend is small, permanent, and costs one render. */
+  function renderMapLegend() {
+    const root = document.getElementById('map-legend');
+    if (!root) return;
+    const rows = [
+      ['legend-swatch-option', 'legendOption'],
+      ['legend-swatch-secondary', 'legendSecondary'],
+      ['legend-swatch-explored', 'legendExplored'],
+      ['legend-swatch-fog', 'legendFog'],
+      ['legend-swatch-wall', 'legendWall']
+    ];
+    root.innerHTML = `<div class="map-legend-title">${translateKey('legendTitle')}</div>` +
+      rows.map(([swatch, key]) =>
+        `<div class="map-legend-row"><span class="legend-swatch ${swatch}"></span><span>${translateKey(key)}</span></div>`).join('');
+  }
+
   function mapLocationName(node) {
     const names = {
       1: {
         mission: ['Лешачий тракт', 'Мшистый перелесок', 'Волчья просека'],
         dungeon: ['Забытая чаща'], event: ['Перекрёсток судеб'], city: ['Лесной приют'],
-        boss: ['Сердце чащи'], wanderer: ['Стоянка странника'], arena: ['Круг старых дубов']
+        boss: ['Сердце чащи'], wanderer: ['Стоянка странника'], arena: ['Круг старых дубов'],
+        camp: ['Костёр под елью', 'Тихая поляна']
       },
       2: {
         mission: ['Обугленный тракт', 'Багровая расщелина', 'Пепельный мост'],
         dungeon: ['Остывшая кузня'], event: ['Пепельный перекрёсток'], city: ['Кузня у разлома'],
-        boss: ['Врата пламени'], wanderer: ['Лагерь пилигрима'], arena: ['Огненный круг']
+        boss: ['Врата пламени'], wanderer: ['Лагерь пилигрима'], arena: ['Огненный круг'],
+        camp: ['Привал у жаровни', 'Обжитая штольня']
       },
       3: {
         mission: ['Утонувший тракт', 'Мёртвая гавань', 'Зал приливов'],
         dungeon: ['Затопленный склеп'], event: ['Берег шёпота'], city: ['Пристань изгнанников'],
-        boss: ['Чертог глубин'], wanderer: ['Плот торговца'], arena: ['Арена прилива'], final: ['Последний престол']
+        boss: ['Чертог глубин'], wanderer: ['Плот торговца'], arena: ['Арена прилива'], final: ['Последний престол'],
+        camp: ['Сухой причал', 'Костёр на отмели']
       }
     };
     const fallback = campaignRegionName(node.region);
@@ -2141,11 +2280,44 @@
     return pool?.[(node.x * 3 + node.y) % pool.length] || fallback;
   }
 
+  /** Rough danger of a generated wave. Same shape as the heuristic in
+   *  scripts/balance-seeds.mjs, so the label the player reads and the number the
+   *  balance report validates describe the same thing. */
+  function waveThreatScore(wave) {
+    if (!Array.isArray(wave) || !wave.length) return 0;
+    return wave.reduce((total, enemyId) => {
+      const d = enemyDef(enemyId);
+      if (!d) return total;
+      let score = d.hp + d.attack * 6 + d.armor * 4 + d.range * 3 + d.move * 2 + d.speed;
+      if (d.miniBoss) score *= 1.25;
+      if (d.boss) score *= 1.5;
+      if ((d.sizeW || 1) > 1) score *= 1.12;
+      return total + Math.round(score);
+    }, 0);
+  }
+  /** Bands are per region: "high" has to mean high for where the party is now,
+   *  not high compared to the opening act. Values follow the measured curve in
+   *  docs/BALANCE_SEED_REPORT.md. */
+  const REGION_THREAT_BANDS = {
+    1: { medium: 200, high: 250, extreme: 300 },
+    2: { medium: 360, high: 460, extreme: 560 },
+    3: { medium: 450, high: 560, extreme: 650 }
+  };
+  function waveThreatKey(node, wave, affixes = []) {
+    if (['boss', 'final'].includes(node.type)) return 'threatExtreme';
+    let score = waveThreatScore(wave);
+    if (!score) return 'threatLow';
+    // Every elite in the wave counts as a fifth of the fight again.
+    score = Math.round(score * (1 + 0.2 * affixes.filter(Boolean).length));
+    const bands = REGION_THREAT_BANDS[node.region] || REGION_THREAT_BANDS[1];
+    if (score >= bands.extreme) return 'threatExtreme';
+    if (score >= bands.high) return 'threatHigh';
+    if (score >= bands.medium) return 'threatMedium';
+    return 'threatLow';
+  }
+
   function mapNodeIntel(node) {
-    const threatKey = ['dungeon', 'arena', 'boss', 'final'].includes(node.type)
-      ? 'threatHigh'
-      : ['mission', 'wanderer'].includes(node.type) ? 'threatMedium' : 'threatLow';
-    const rewardKey = node.type === 'city' ? 'rewardRecovery'
+    const rewardKey = node.type === 'city' || node.type === 'camp' ? 'rewardRecovery'
       : node.type === 'event' ? 'rewardUnknown'
       : ['dungeon', 'boss', 'final', 'arena'].includes(node.type) ? 'rewardGear'
       : 'rewardResources';
@@ -2155,9 +2327,22 @@
     const bossSteps = boss ? WorldMapTopology.shortestDistance(node, boss) : 0;
     const combatNode = ['mission', 'dungeon', 'arena', 'boss', 'final'].includes(node.type);
     if (combatNode && !node.enemyWavePreview) node.enemyWavePreview = generateEnemyWaveForCell(node);
-    const wave = combatNode ? (node.enemyWavePreview || []) : [];
-    const priority = ['threatHealer', 'threatSummoner', 'threatController', 'threatAssassin', 'threatExplosive', 'threatTank', 'threatRanged'];
+    // The wave the player is shown must be the wave that spawns, mutators and
+    // elite affixes included. Campaign mutators can append an enemy, so the count
+    // has to be taken after them, not before.
+    const baseWave = combatNode ? (node.enemyWavePreview || []) : [];
+    const wave = combatNode ? CampaignExpansion.applyMutatorsToWave(baseWave, {
+      id: node.id, region: node.region, type: node.type,
+      boss: node.type === 'boss', final: node.type === 'final'
+    }) : [];
+    const waveAffixes = combatNode ? eliteAffixesForWave(node, wave) : [];
+    // Threat now follows the actual wave. Reading it off the node type meant a
+    // 271-point mission and a 673-point mission both said "medium threat", so a
+    // spike was invisible until the party had already committed to the fight.
+    const threatKey = combatNode ? waveThreatKey(node, wave, waveAffixes) : 'threatLow';
+    const priority = ['threatElite', 'threatHealer', 'threatSummoner', 'threatController', 'threatAssassin', 'threatExplosive', 'threatTank', 'threatRanged'];
     const tagKeys = [];
+    if (waveAffixes.some(Boolean)) tagKeys.push('threatElite');
     wave.forEach(enemyId => enemyThreatTags(enemyId).forEach(tag => {
       if (!tagKeys.includes(tag.key)) tagKeys.push(tag.key);
     }));
@@ -2168,10 +2353,17 @@
     const hasScoutedIntel = (GameState.campaignEffects?.scoutedNodeIds || []).includes(node.id);
     const currentNode = getCurrentCell();
     const hasHunterIntel = !!GameState.campaignEffects?.hunterIntel && !!currentNode && cellNeighbors(currentNode, node);
+    // Elites are listed by name of their own, so they must not also be counted
+    // among the plain bodies of the same type.
     const enemyCounts = new Map();
-    wave.forEach(enemyId => enemyCounts.set(enemyId, (enemyCounts.get(enemyId) || 0) + 1));
-    const exactLineup = [...enemyCounts.entries()]
-      .map(([enemyId, count]) => `${translateText(enemyDef(enemyId).name)}${count > 1 ? ` ×${count}` : ''}`)
+    wave.forEach((enemyId, index) => {
+      if (waveAffixes[index]) return;
+      enemyCounts.set(enemyId, (enemyCounts.get(enemyId) || 0) + 1);
+    });
+    const eliteNames = wave.map((enemyId, index) => waveAffixes[index]
+      ? `${eliteAffixLabel(waveAffixes[index])} ${translateText(enemyDef(enemyId).name)}` : null).filter(Boolean);
+    const exactLineup = [...eliteNames, ...[...enemyCounts.entries()]
+      .map(([enemyId, count]) => `${translateText(enemyDef(enemyId).name)}${count > 1 ? ` ×${count}` : ''}`)]
       .join(' · ');
     const composition = wave.length
       ? (hasSeerEye || hasScoutedIntel || hasHunterIntel)
@@ -2187,6 +2379,27 @@
       risk: campaignIntel.risk,
       region: campaignIntel.region
     };
+  }
+
+  /** Share of max HP a camp restores. Camps are what let the board keep its 96
+   *  cells while carrying far fewer battles, and they give the route a beat
+   *  between fights that the city — a paid service in a fixed place — cannot. */
+  const CAMP_REST_FRACTION = 0.25;
+  function restAtCamp(node) {
+    const healed = [];
+    GameState.heroes.forEach(hero => {
+      if (hero.hp <= 0) return;
+      const before = hero.hp;
+      hero.hp = Math.min(hero.maxHp, hero.hp + Math.max(1, Math.round(hero.maxHp * CAMP_REST_FRACTION)));
+      if (hero.hp > before) healed.push(`${hero.name} +${hero.hp - before}`);
+    });
+    node.completed = true;
+    node.visited = true;
+    saveGame();
+    renderMap();
+    void showGameAlert(healed.length
+      ? `🏕️ ${translateKey('campRested')}: ${healed.join(' · ')}`
+      : translateKey('campAlreadyFull'));
   }
 
   function applyRouteDecision(from, chosen) {
@@ -2208,7 +2421,7 @@
     let selectedNode = getCurrentCell();
     let explicitlySelectedNodeId = null;
     const currentCell = selectedNode;
-    const mapTypeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
+    const mapTypeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), camp: translateKey('nodeCamp'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
     const selectedCellInfoHtml = (node) => {
       const intel = mapNodeIntel(node);
       const combatNode = ['mission', 'dungeon', 'arena', 'boss', 'final'].includes(node.type);
@@ -2217,7 +2430,9 @@
         : (mapTypeNames[node.type] || node.type);
       const detail = intel.scenario
         ? CampaignExpansion.scenarioShort(intel.scenario)
-        : intel.reward;
+        : node.type === 'camp'
+          ? translateKey(node.completed ? 'rewardCampUsed' : 'rewardCamp')
+          : intel.reward;
       const completion = node.completed
         ? `<div class="cell-info-completion ${['boss', 'final'].includes(node.type) ? 'boss-defeated' : ''}">${['boss', 'final'].includes(node.type) ? '☠ ' + translateKey('bossDefeated') : '✓ ' + translateKey('mapCleared')}</div>`
         : (node.visited ? `<div class="cell-info-completion">✓ ${translateKey('mapVisited')}</div>` : '');
@@ -2238,6 +2453,7 @@
     const py = GameState.playerPos.y;
     const nodeElements = new Map();
     if (fogCounterEl) fogCounterEl.textContent = `${translateKey('opened')}: ${GameState.mapFogVisited.length} / ${MAP_CELL_TOTAL}`;
+    renderMapLegend();
     GameState.mapGrid.forEach(node => {
       const el = document.createElement('div');
       el.className = 'map-node';
@@ -2269,7 +2485,7 @@
       if (node.x === px && node.y === py) el.classList.add('current');
       if (node.type === 'city') el.classList.add('type-city');
       if (revealedBoss) el.classList.add('type-boss-revealed');
-      const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
+      const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), camp: translateKey('nodeCamp'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
       const typeLbl = unlocked ? (node.completed && ['boss', 'final'].includes(node.type)
         ? translateKey('bossDefeated')
         : node.visited && !node.completed ? translateKey('mapVisited')
@@ -2281,6 +2497,10 @@
       } else {
         el.innerHTML = partyMarker;
       }
+      // Walls and gateway arrows are child elements, not pseudo-elements. With
+      // internal walls a node can carry two segments at once, and the node's own
+      // ::before/::after already belong to fog, the explored stamp and selection.
+      el.insertAdjacentHTML('beforeend', mapWallDecorationHtml(el));
       const setInfo = (n) => {
         showInfo(n);
         selectedNode = n;
@@ -2329,7 +2549,7 @@
     if (routeChoices) {
       const current = getCurrentCell();
       const routes = GameState.mapGrid.filter(n => current && cellNeighbors(current, n) && n.region <= GameState.regionUnlocked).slice(0, 3);
-      const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
+      const typeNames = { mission: translateKey('nodeMission'), city: translateKey('nodeCity'), camp: translateKey('nodeCamp'), dungeon: translateKey('nodeDungeon'), event: translateKey('nodeEvent'), boss: translateKey('nodeBoss'), wanderer: translateKey('nodeWanderer'), arena: translateKey('nodeArena'), final: translateKey('nodeFinal') };
       const firstBattlePending = !GameState.firstBattleCompleted && current?.id === 'c_0_0';
       const firstBattleCopy = currentLanguage() === 'ru'
         ? { title: 'ОБЯЗАТЕЛЬНЫЙ ПЕРВЫЙ БОЙ', action: '⚔ Начать обучение', detail: 'Расставьте героев, затем начните бой' }
@@ -2400,6 +2620,8 @@
           GameState._campaignNotice = CampaignExpansion.loc({ ru: 'Город встречает отряд: +12 золота.', en: 'The city welcomes the party: +12 gold.', es: 'La ciudad recibe al grupo: +12 oro.' });
         }
         enterCity(node);
+      } else if (node.type === 'camp' && !node.completed) {
+        restAtCamp(node);
       } else if (node.type === 'event' && !node.completed) {
         triggerEvent(node);
       } else if (node.type === 'wanderer' && !GameState.wandererUsedByRegion[node.region]) {
@@ -2452,7 +2674,10 @@
       }
       const sameCell = cur && node.x === cur.x && node.y === cur.y;
       if (!sameCell && !cellNeighbors(cur, node)) {
-        void showGameAlert(translateKey('tooFar'));
+        // A wall between two touching cells is not distance, and saying "too far"
+        // about the tile right below the party is how the rule reads as a bug.
+        const touching = cur && Math.abs(node.x - cur.x) <= 1 && Math.abs(node.y - cur.y) <= 1;
+        void showGameAlert(translateKey(touching ? 'pathBlockedWall' : 'tooFar'));
         return;
       }
       applyRouteDecision(cur, node);
@@ -2894,7 +3119,7 @@
     if (rer) rer.onclick = () => {
       if (GameState.gold >= 20) {
         GameState.gold -= 20;
-        const stockResult = generateShopStock(n.region);
+        const stockResult = generateShopStock(n.region, n.id);
         const cityState = {
           adUpgradeUsed: !!GameState.cityState?.adUpgradeUsed,
           secretRevealed: false,
@@ -2935,7 +3160,7 @@
         shopState = { shopStock: GameState.shopStock, cityState: GameState.cityState || {} };
       }
       if (!shopState) {
-        const stockResult = generateShopStock(node.region);
+        const stockResult = generateShopStock(node.region, node.id);
         shopState = {
           shopStock: stockResult,
           cityState: {

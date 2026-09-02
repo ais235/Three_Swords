@@ -324,6 +324,21 @@
     } catch (e) { console.warn(e); }
     return false;
   }
+  function discardUnsavedProgress() {
+    // "Exit without saving" must not leave an in-memory run that can later be
+    // written by a delayed cloud-save timer. Rehydrate the last durable local
+    // snapshot instead, so Continue always resumes that exact checkpoint.
+    clearTimeout(YandexServices.saveTimer);
+    YandexServices.pendingSave = null;
+    try {
+      const raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem(LEGACY_SAVE_KEY);
+      if (!raw) return false;
+      return applySaveSnapshot(JSON.parse(raw));
+    } catch (e) {
+      console.warn(e);
+      return false;
+    }
+  }
   function randInt(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
   function inBounds(x, y) { return x >= 0 && x < GRID_W && y >= 0 && y < GRID_H; }
 
@@ -500,7 +515,7 @@
     return false;
   }
   function rangedBlocked(ax, ay, tx, ty, grid, ignoreForestForTarget) {
-    if (grid[ty][tx] === TILE.FOREST && ignoreForestForTarget) return false;
+    if (grid[ty][tx] === TILE.FOREST && !ignoreForestForTarget) return true;
     const steps = Math.max(Math.abs(tx - ax), Math.abs(ty - ay));
     if (steps === 0) return false;
     for (let i = 1; i < steps; i++) {
@@ -520,7 +535,7 @@
     u.heroId = h.id;
     u.x = -1; u.y = -1;
     // Speed comes from hero config (Warrior:13, Archer:11, Mage:9) plus perks.
-    u.cds = { ...(u.cds || {}), shieldBash: u.cds?.shieldBash || 0, fireCall: u.cds?.fireCall || 0, berserk: u.cds?.berserk || 0,
+    u.cds = { ...(u.cds || {}), shieldBash: u.cds?.shieldBash || 0, taunt: u.cds?.taunt || 0, fireCall: u.cds?.fireCall || 0, berserk: u.cds?.berserk || 0,
       doubleShot: u.cds?.doubleShot || 0, slowArrow: u.cds?.slowArrow || 0, arrowRain: u.cds?.arrowRain || 0,
       fireball: u.cds?.fireball || 0, freeze: u.cds?.freeze || 0, meteor: u.cds?.meteor || 0 };
     u.flags = { firstAttackTurn: true, mysticShield: src.flags?.mysticShield ?? 3, ...(u.flags || {}) };
@@ -531,10 +546,12 @@
     u.sprite = u.emoji;
     return u;
   }
+  // Party power measures offensive investment only. Armor, range and speed are
+  // deliberately excluded: while they counted, buying a shield raised enemy
+  // attack, so every defensive purchase quietly made the game harder.
+  const PARTY_POWER_BASELINE = 30;
   function calculatePartyPower() {
-    return GameState.heroes.reduce((sum, h) => {
-      return sum + h.attack + h.armor + h.maxHp / 10 + h.range + h.speed / 2;
-    }, 0);
+    return GameState.heroes.reduce((sum, h) => sum + h.attack + h.maxHp / 10, 0);
   }
   function isHardcoreMode() {
     return GameState.difficulty === 'hardcore';
@@ -551,14 +568,30 @@
     [ENEMY_IDS.DARK_LORD]:   { hp: 180, attack: 20, armor: 6 }
   };
 
+  // Only enemy HP follows the party. Attack and armor are authored per region so
+  // difficulty grows by design and a new weapon stays felt instead of being
+  // cancelled out by the same formula that granted it.
+  const REGION_COMBAT_PROFILE = {
+    1: { attack: 0.65, armor: 0.50 },
+    2: { attack: 0.82, armor: 0.66 },
+    3: { attack: 0.98, armor: 0.82 }
+  };
+  function regionCombatProfile(region) {
+    return REGION_COMBAT_PROFILE[region] || REGION_COMBAT_PROFILE[1];
+  }
+  /** HP follows the square root of party power: a doubled party meets ~1.4x HP,
+   *  so investment still outruns the curve and trash melts once the party is
+   *  geared, while bosses keep their authored fixed profiles. */
+  function enemyHpScale(partyPower) {
+    const raw = (Number(partyPower) || PARTY_POWER_BASELINE) / PARTY_POWER_BASELINE;
+    return Math.max(1, Math.min(1.8, Math.sqrt(Math.max(1, raw))));
+  }
   function scaleEnemy(base, partyPower, region) {
-    const scale = Math.max(1, Math.min(2.5,
-      (partyPower / 70) * (1 + (region - 1) * 0.1)
-    ));
+    const profile = regionCombatProfile(region);
     return {
-      hp:     Math.round(base.hp     * scale),
-      attack: Math.round(base.attack * scale * 0.65),
-      armor:  Math.round(base.armor  * scale * 0.5)
+      hp:     Math.round(base.hp * enemyHpScale(partyPower)),
+      attack: Math.max(1, Math.round(base.attack * profile.attack)),
+      armor:  Math.round(base.armor * profile.armor)
     };
   }
 
@@ -600,6 +633,22 @@
     return u;
   }
 
+  /** Turn a spawned enemy into an elite. Stat affixes land before the unit sees
+   *  combat; behavioural ones are read back from `u.affix` by the battle code. */
+  function applyEliteAffix(unit, affixId) {
+    const def = typeof eliteAffixDef === 'function' ? eliteAffixDef(affixId) : null;
+    if (!unit || !def) return unit;
+    unit.affix = affixId;
+    if (def.hp) {
+      unit.maxHp = Math.max(1, Math.round(unit.maxHp * (1 + def.hp)));
+      unit.hp = unit.maxHp;
+    }
+    if (def.armor) unit.armor += def.armor;
+    if (def.move) unit.move += def.move;
+    if (def.speed) unit.speed += def.speed;
+    return unit;
+  }
+
   function regionFromMapRow(y) {
     return WorldMapTopology.regionForRow(y);
   }
@@ -615,10 +664,16 @@
         });
       }
     }
+    // Node budget per region. Two rules drive these numbers:
+    //  - region 1 is the short opening act and region 3 the long finale, so the
+    //    campaign escalates instead of front-loading 21 skeleton missions;
+    //  - roughly a third of every region is non-combat (city, camp, event), which
+    //    is what brings the run down from 64 fights to about 49 without shrinking
+    //    the board. Counts must sum to rows x COLS exactly.
     const byRegion = {
-      1: { rows: [0, 1, 2], mission: 20, city: 4, dungeon: 4, event: 6 },
-      2: { rows: [3, 4, 5], mission: 16, city: 3, dungeon: 4, event: 5, wanderer: 3, arena: 3 },
-      3: { rows: [6, 7], mission: 8, city: 2, dungeon: 3, event: 3, wanderer: 2, arena: 3 }
+      1: { rows: WorldMapTopology.REGION_ROWS[1], mission: 9, city: 3, camp: 3, dungeon: 2, event: 6 },
+      2: { rows: WorldMapTopology.REGION_ROWS[2], mission: 13, city: 4, camp: 4, dungeon: 3, event: 7, wanderer: 2, arena: 2 },
+      3: { rows: WorldMapTopology.REGION_ROWS[3], mission: 12, city: 3, camp: 4, dungeon: 4, event: 7, wanderer: 2, arena: 2 }
     };
     const pick = (cells, n) => {
       const arr = cells.slice();
@@ -647,6 +702,7 @@
       if (region === 3) assignAt('final', '👑', WorldMapTopology.FINAL_ANCHOR);
       assign('mission', conf.mission, '⚔️');
       assign('city', conf.city, '🏘️');
+      assign('camp', conf.camp || 0, '🏕️');
       assign('dungeon', conf.dungeon, '🗺️');
       assign('event', conf.event, '❓');
       if (conf.wanderer) assign('wanderer', conf.wanderer, '✨');
@@ -661,6 +717,7 @@
     const start = GameState.mapGrid.find(c => c.x === 0 && c.y === 0);
     start.type = 'mission';
     start.emoji = '⚔️';
+    start.visited = true;
     GameState.mapGrid.forEach(cell => {
       cell.routeCommitment = ['event', 'dungeon', 'wanderer', 'arena'].includes(cell.type) && ((cell.x * 3 + cell.y * 5) % 4 === 0);
       if (['mission', 'dungeon'].includes(cell.type)) cell.scenarioPreview = CampaignExpansion.scenarioForPreview(cell);
@@ -710,6 +767,22 @@
     if (start) {
       start.type = 'mission';
       start.emoji = '⚔️';
+    }
+
+    // Rows changed hands between regions in layout 3, so a saved party can wake
+    // up standing in a region it has not unlocked, with every neighbour locked
+    // and no legal move. Put it back at the entrance of the furthest region it
+    // has actually earned.
+    const unlocked = Math.max(1, Math.min(3, Number(GameState.regionUnlocked) || 1));
+    const position = GameState.playerPos || { x: 0, y: 0 };
+    if (regionFromMapRow(position.y) > unlocked) {
+      const entrance = unlocked === 1
+        ? { x: 0, y: 0 }
+        : WorldMapTopology.REGION_GATEWAYS[unlocked - 2].to;
+      GameState.playerPos = { x: entrance.x, y: entrance.y };
+      mapFogVisitedAdd(GameState.playerPos.y, GameState.playerPos.x);
+      const landing = GameState.mapGrid.find(cell => cell.x === entrance.x && cell.y === entrance.y);
+      if (landing) landing.visited = true;
     }
     GameState.mapLayoutVersion = WorldMapTopology.LAYOUT_VERSION;
     return true;

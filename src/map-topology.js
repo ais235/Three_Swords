@@ -7,11 +7,16 @@
 
   const COLS = 12;
   const ROWS = 8;
-  const LAYOUT_VERSION = 2;
+  const LAYOUT_VERSION = 3;
+
+  // Act proportions. Layout 2 gave the tutorial region the most room (3 rows)
+  // and the finale the least (2 rows), so the campaign got shorter and simpler
+  // exactly where it should have escalated. Region 1 is now the short act.
+  const REGION_ROWS = Object.freeze({ 1: [0, 1], 2: [2, 3, 4], 3: [5, 6, 7] });
 
   const REGION_BOSS_ANCHORS = Object.freeze({
-    1: Object.freeze({ x: 11, y: 1 }),
-    2: Object.freeze({ x: 0, y: 4 }),
+    1: Object.freeze({ x: 11, y: 0 }),
+    2: Object.freeze({ x: 0, y: 3 }),
     3: Object.freeze({ x: 11, y: 6 })
   });
   const FINAL_ANCHOR = Object.freeze({ x: 11, y: 7 });
@@ -20,21 +25,41 @@
     Object.freeze({
       fromRegion: 1,
       toRegion: 2,
-      from: Object.freeze({ x: 11, y: 2 }),
-      to: Object.freeze({ x: 11, y: 3 })
+      from: Object.freeze({ x: 11, y: 1 }),
+      to: Object.freeze({ x: 11, y: 2 })
     }),
     Object.freeze({
       fromRegion: 2,
       toRegion: 3,
-      from: Object.freeze({ x: 0, y: 5 }),
-      to: Object.freeze({ x: 0, y: 6 })
+      from: Object.freeze({ x: 0, y: 4 }),
+      to: Object.freeze({ x: 0, y: 5 })
     })
   ]);
 
+  /** Every horizontal wall on the board, keyed by the row it sits under.
+   *  `open` lists the columns a party may step through, and a wall may only be
+   *  crossed straight down or straight up — never diagonally.
+   *
+   *  Only four rows carry a wall, and that is deliberate. A first pass put one
+   *  under every row; because a diagonal step is by definition a row change, that
+   *  silently removed diagonal movement from the entire map. Region 1 is now fully
+   *  open — it is the short opening act — and regions 2 and 3 are each split once,
+   *  which keeps the corridor commitment while diagonals work everywhere else. */
+  const WALL_ROWS = Object.freeze([
+    Object.freeze({ above: 1, open: Object.freeze([11]), regional: true }),
+    Object.freeze({ above: 2, open: Object.freeze([1, 2, 7, 8]), regional: false }),
+    Object.freeze({ above: 4, open: Object.freeze([0]), regional: true }),
+    Object.freeze({ above: 6, open: Object.freeze([4, 5, 10, 11]), regional: false })
+  ]);
+
   function regionForRow(y) {
-    if (y <= 2) return 1;
-    if (y <= 5) return 2;
+    if (y <= 1) return 1;
+    if (y <= 4) return 2;
     return 3;
+  }
+
+  function wallAboveRow(row) {
+    return WALL_ROWS.find(wall => wall.above === row) || null;
   }
 
   function samePoint(a, b) {
@@ -50,10 +75,12 @@
 
   function movementAllowed(a, b) {
     if (!a || !b) return false;
-    const aRegion = Number(a.region) || regionForRow(a.y);
-    const bRegion = Number(b.region) || regionForRow(b.y);
-    if (aRegion === bRegion) return true;
-    return isGatewayTransition(a, b);
+    if (a.y === b.y) return true;
+    const wall = wallAboveRow(Math.min(a.y, b.y));
+    if (!wall) return true;
+    // A wall is crossed straight or not at all: no diagonal slipping past a gate.
+    if (a.x !== b.x) return false;
+    return wall.open.includes(a.x);
   }
 
   function isNeighbor(a, b) {
@@ -65,10 +92,16 @@
   function wallClasses(cell) {
     if (!cell) return [];
     const classes = [];
-    if (cell.y === 2 && cell.x < 11) classes.push('map-wall-bottom');
-    if (cell.y === 3 && cell.x < 11) classes.push('map-wall-top');
-    if (cell.y === 5 && cell.x > 0) classes.push('map-wall-bottom');
-    if (cell.y === 6 && cell.x > 0) classes.push('map-wall-top');
+    const below = wallAboveRow(cell.y);
+    if (below && !below.open.includes(cell.x)) {
+      classes.push('map-wall-bottom');
+      if (below.regional) classes.push('map-wall-bottom-regional');
+    }
+    const above = wallAboveRow(cell.y - 1);
+    if (above && !above.open.includes(cell.x)) {
+      classes.push('map-wall-top');
+      if (above.regional) classes.push('map-wall-top-regional');
+    }
     if (samePoint(cell, REGION_GATEWAYS[0].from) || samePoint(cell, REGION_GATEWAYS[1].from)) {
       classes.push('map-gateway-down');
     }
@@ -80,10 +113,10 @@
 
   function bossZoneContains(region, point) {
     if (!point) return false;
-    if (region === 1) return point.x === 11 && point.y >= 0 && point.y <= 2;
-    if (region === 2) return point.x === 0 && point.y >= 3 && point.y <= 5;
-    if (region === 3) return point.x === 11 && point.y >= 6 && point.y <= 7;
-    return false;
+    const rows = REGION_ROWS[region];
+    if (!rows) return false;
+    const anchor = region === 3 ? FINAL_ANCHOR : REGION_BOSS_ANCHORS[region];
+    return point.x === anchor.x && rows.includes(point.y);
   }
 
   function shortestDistance(start, target) {
@@ -117,9 +150,11 @@
     COLS,
     ROWS,
     LAYOUT_VERSION,
+    REGION_ROWS,
     REGION_BOSS_ANCHORS,
     FINAL_ANCHOR,
     REGION_GATEWAYS,
+    WALL_ROWS,
     regionForRow,
     isGatewayTransition,
     movementAllowed,

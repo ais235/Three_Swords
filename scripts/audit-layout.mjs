@@ -32,6 +32,16 @@ function enemyEntries() {
     .map(match => ({ key: match[1], id: match[2] }));
 }
 
+function everyEquipmentItemHasUniqueIcon() {
+  const pool = index.match(/const ITEM_POOL = \[([\s\S]*?)\n\s*\];/);
+  const iconMap = index.match(/const ITEM_ICON_MAP = \{([\s\S]*?)\n\s*\};/);
+  if (!pool || !iconMap) return false;
+  const ids = [...pool[1].matchAll(/\bid\s*:\s*'([^']+)'/g)].map(match => match[1]);
+  const mappings = new Map([...iconMap[1].matchAll(/\b(\w+)\s*:\s*'([^']+\.png)'/g)].map(match => [match[1], match[2]]));
+  const paths = ids.map(id => mappings.get(id));
+  return paths.every(Boolean) && new Set(paths).size === paths.length && paths.every(path => existsSync(resolve(root, 'assets/items', path)));
+}
+
 function allEnemiesHaveAbilityText() {
   return enemyEntries().every(enemy => index.includes(`[ENEMY_IDS.${enemy.key}]:`) && index.includes('function enemyAbilityText'));
 }
@@ -88,7 +98,10 @@ const checks = [
   ['inventory equip best present', () => index.includes('function equipBestForHero') && index.includes('btn-inv-equip-best') && index.includes('inv-item-best')],
   ['inventory comparison present', () => index.includes('function itemCompareHtml') && index.includes('item-compare') && index.includes('powerDelta')],
   ['battle item proc feedback present', () => index.includes('function spawnBattleTextFx') && index.includes('DODGE') && index.includes('MANA +') && index.includes('REVIVE 5')],
-  ['battle perk feedback present', () => index.includes('PIERCE -') && index.includes('AURA +10%') && index.includes('HEAL +5') && index.includes("spawnBattleTextFx(target.x, target.y, 'BURN'")],
+  // Every proc that changes the maths must announce itself on the field.
+  ['battle perk feedback present', () => ['PIERCE -', 'AURA +10%', 'HEAL +5', 'BURN', 'FLANK +25%', 'BLOCK', 'DODGE',
+    'BANNER +2', 'EXECUTION', 'INCINERATE', 'CHAIN FREEZE', 'WARD', 'SPLASH ', 'PULL', 'CLEANSE']
+    .every(label => index.includes(`'${label}'`))],
   ['battle defensive feedback present', () => index.includes('STATUS REFLECT') && index.includes('AURA +1 ARM') && index.includes('SHIELD -') && index.includes("'BLOCK'")],
   ['status tick feedback present', () => index.includes('POISON -3') && index.includes('BURN -3') && index.includes('GUARD -50%')],
   ['hero flank mechanic present', () => index.includes('function heroFlankSupport') && index.includes('FLANK +25%') && index.includes('flankBonus')],
@@ -160,6 +173,7 @@ const checks = [
   ,['varied battle objectives are present', () => index.includes("id === 'holdout'") && index.includes("id === 'escape'") && index.includes("id === 'defense'") && index.includes("id === 'ritual'") && index.includes("id === 'waves'")]
   ,['event choices and delayed consequences are present', () => index.includes('event-choice-list') && index.includes('resolveDelayedEvents') && index.includes('druid_cache')]
   ,['regional terrain assets are packaged from source', () => existsSync(resolve(root, 'assets/tiles/region-forest-glade.png')) && existsSync(resolve(root, 'assets/tiles/region-volcanic-depths.png')) && existsSync(resolve(root, 'assets/tiles/region-sunken-ruins.png'))]
+  ,['every equipment item has its own packaged icon', everyEquipmentItemHasUniqueIcon]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
   ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
   ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]

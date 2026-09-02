@@ -148,7 +148,7 @@
     ftueSerisText: { ru: 'Выберите «Огненный шар» и наведите его на соседние цели, чтобы задеть сразу несколько врагов.', en: 'Choose Fireball and target adjacent enemies to hit more than one foe.', es: 'Elige Bola de fuego y apunta a enemigos adyacentes para golpear a varios.' },
     ftueSkillsDoneTitle: { ru: 'РОЛИ ПОНЯТНЫ', en: 'ROLES LEARNED', es: 'ROLES APRENDIDOS' },
     ftueSkillsDoneText: { ru: 'Используйте позицию, фокус и область, чтобы завершить бой.', en: 'Use positioning, focus fire, and area damage to finish the battle.', es: 'Usa posición, fuego concentrado y daño de área para terminar el combate.' },
-    ftueProgress: { ru: 'Фирменные умения', en: 'Signature abilities', es: 'Habilidades características' },
+    ftueProgress: { ru: 'Испытайте умения', en: 'Try each ability', es: 'Prueba cada habilidad' },
     ftueSkip: { ru: 'Скрыть подсказки', en: 'Hide tips', es: 'Ocultar consejos' },
     orientationTitle: { ru: 'ПОВЕРНИТЕ УСТРОЙСТВО', en: 'ROTATE YOUR DEVICE', es: 'GIRA EL DISPOSITIVO' },
     orientationText: { ru: 'Игра создана для ПК и мобильных устройств в альбомном режиме.', en: 'This game is designed for PC and mobile devices in landscape mode.', es: 'Este juego está diseñado para PC y móviles en modo horizontal.' },
@@ -191,6 +191,10 @@
     enter: { ru: '▶ Войти', en: '▶ Enter', es: '▶ Entrar' },
     bag: { ru: '🎒 Рюкзак', en: '🎒 Bag', es: '🎒 Mochila' },
     bestiary: { ru: '📖 Бестиарий', en: '📖 Bestiary', es: '📖 Bestiario' },
+    arsenal: { ru: 'Арсенал', en: 'Arsenal', es: 'Arsenal' },
+    arsenalWeapons: { ru: 'Оружие', en: 'Weapons', es: 'Armas' },
+    arsenalArmor: { ru: 'Броня', en: 'Armor', es: 'Armadura' },
+    arsenalArtifacts: { ru: 'Артефакты', en: 'Artifacts', es: 'Artefactos' },
     party: { ru: 'Отряд', en: 'Party', es: 'Grupo' },
     forestRefuge: { ru: 'ЛЕСНОЙ ПРИЮТ', en: 'FOREST HAVEN', es: 'REFUGIO DEL BOSQUE' },
     cityDesc: { ru: 'Торговый пост на краю Тёмного леса. Отдых, снаряжение, разведданные.', en: 'A trading post on the edge of the Dark Forest. Rest, gear, intel.', es: 'Un puesto comercial al borde del Bosque Oscuro. Descanso, equipo e informes.' },
@@ -273,6 +277,9 @@
     nodeDungeon: { ru: 'Подземелье', en: 'Dungeon', es: 'Mazmorra' },
     nodeEvent: { ru: 'Событие', en: 'Event', es: 'Evento' },
     nodeBoss: { ru: 'Босс', en: 'Boss', es: 'Jefe' },
+    nodeCamp: { ru: 'Привал', en: 'Camp', es: 'Campamento' },
+    campRested: { ru: 'Отряд отдохнул', en: 'The party rested', es: 'El grupo descansó' },
+    campAlreadyFull: { ru: 'Отряд и так полон сил.', en: 'The party is already at full strength.', es: 'El grupo ya está a plena fuerza.' },
     nodeWanderer: { ru: 'Странник', en: 'Wanderer', es: 'Errante' },
     nodeArena: { ru: 'Арена', en: 'Arena', es: 'Arena' },
     nodeFinal: { ru: 'Финал', en: 'Final', es: 'Final' },
@@ -319,6 +326,12 @@
     chooseTarget: { ru: '✦ Выбери цель', en: '✦ Choose target', es: '✦ Elige objetivo' },
     preview: { ru: 'Предпросмотр', en: 'Preview', es: 'Vista previa' },
     enemyReach: { ru: 'Зона угрозы', en: 'Threat zone', es: 'Zona de amenaza' },
+    aiTargetLabel: { ru: 'Цель', en: 'Target', es: 'Objetivo' },
+    avoidShort: { ru: 'мимо', en: 'miss', es: 'fallo' },
+    avoidChanceTitle: { ru: 'Шанс полностью избежать удара: блок и уклонение', en: 'Chance to fully avoid a hit: block and dodge', es: 'Probabilidad de evitar un golpe: bloqueo y esquiva' },
+    damageGuardianCover: { ru: 'Прикрытие −2', en: 'Cover −2', es: 'Cobertura −2' },
+    damagePierce: { ru: 'Пробитие брони', en: 'Armor pierce', es: 'Perfora armadura' },
+    damageBanner: { ru: 'Знамя +2', en: 'Banner +2', es: 'Estandarte +2' },
     affectedTiles: { ru: 'клеток заденет', en: 'tiles affected', es: 'casillas afectadas' },
     terrain: { ru: 'Местность', en: 'Terrain', es: 'Terreno' },
     terrainGround: { ru: 'Равнина', en: 'Ground', es: 'Suelo' },
@@ -454,6 +467,8 @@
     fateSecondChance: { ru: '🎲 Судьба даёт второй шанс (реклама)?', en: '🎲 Fate offers a second chance (ad)?', es: '🎲 El destino ofrece una segunda oportunidad (anuncio)?' },
     placeHeroFirst: { ru: 'Поставьте хотя бы одного героя.', en: 'Deploy at least one hero.', es: 'Coloca al menos un héroe.' },
     mapCleared: { ru: 'Локация зачищена.', en: 'Location cleared.', es: 'Ubicación despejada.' },
+    mapVisited: { ru: 'ПОСЕЩЕНО', en: 'VISITED', es: 'VISITADO' },
+    bossDefeated: { ru: 'БОСС ПОВЕРЖЕН', en: 'BOSS DEFEATED', es: 'JEFE DERROTADO' },
     mapActive: { ru: 'Локация активна.', en: 'Location active.', es: 'Ubicación activa.' },
     fogOfWar: { ru: 'Туман войны', en: 'Fog of war', es: 'Niebla de guerra' },
     tooFar: { ru: 'Слишком далеко.', en: 'Too far away.', es: 'Demasiado lejos.' },
@@ -464,9 +479,20 @@
     threatLow: { ru: 'Низкая угроза', en: 'Low threat', es: 'Amenaza baja' },
     threatMedium: { ru: 'Средняя угроза', en: 'Medium threat', es: 'Amenaza media' },
     threatHigh: { ru: 'Высокая угроза', en: 'High threat', es: 'Amenaza alta' },
+    threatExtreme: { ru: 'Смертельная угроза', en: 'Deadly threat', es: 'Amenaza mortal' },
+    threatElite: { ru: 'ЭЛИТА', en: 'ELITE', es: 'ÉLITE' },
     rewardGear: { ru: 'Шанс снаряжения', en: 'Gear chance', es: 'Posible equipo' },
     rewardResources: { ru: 'Золото и ресурсы', en: 'Gold and resources', es: 'Oro y recursos' },
     rewardRecovery: { ru: 'Отдых и торговля', en: 'Rest and trade', es: 'Descanso y comercio' },
+    rewardCamp: { ru: 'Привал: отряд восстановит 25% здоровья. Боя нет.', en: 'Camp: the party recovers 25% of its health. No battle.', es: 'Campamento: el grupo recupera el 25% de su salud. Sin combate.' },
+    rewardCampUsed: { ru: 'Костёр уже догорел.', en: 'This fire has burned out.', es: 'Esta hoguera ya se apagó.' },
+    pathBlockedWall: { ru: 'Путь перекрыт стеной. Обойдите через проём.', en: 'A wall blocks the way. Use an opening.', es: 'Un muro bloquea el paso. Usa una abertura.' },
+    legendTitle: { ru: 'Обозначения', en: 'Legend', es: 'Leyenda' },
+    legendOption: { ru: 'ход доступен', en: 'you can go here', es: 'puedes ir aquí' },
+    legendSecondary: { ru: 'видно, но не дойти за один ход', en: 'seen, not one step away', es: 'visible, no a un paso' },
+    legendExplored: { ru: 'уже пройдено', en: 'already cleared', es: 'ya despejado' },
+    legendFog: { ru: 'туман войны', en: 'fog of war', es: 'niebla de guerra' },
+    legendWall: { ru: 'стена: только через проём', en: 'wall: only through an opening', es: 'muro: solo por una abertura' },
     rewardUnknown: { ru: 'Неизвестный исход', en: 'Unknown outcome', es: 'Resultado incierto' },
     bossDistance: { ru: 'До босса', en: 'Boss distance', es: 'Distancia al jefe' },
     routeEnemies: { ru: 'Врагов', en: 'Enemies', es: 'Enemigos' },
@@ -738,6 +764,7 @@
         'Маг': 'Mage',
         'Все герои': 'All heroes',
         'Удар щитом': 'Shield Bash',
+        'Вызов': 'Challenge',
         'Вызов огня': 'Call Fire',
         'Берсерк': 'Berserk',
         'Двойной выстрел': 'Double Shot',
@@ -1061,6 +1088,7 @@
         'Маг': 'Mago',
         'Все герои': 'Todos los héroes',
         'Удар щитом': 'Golpe de escudo',
+        'Вызов': 'Desafío',
         'Вызов огня': 'Llamar fuego',
         'Берсерк': 'Berserker',
         'Двойной выстрел': 'Disparo doble',
@@ -1366,6 +1394,33 @@
     }
     const menuBtn = document.getElementById('btn-open-menu');
     if (menuBtn) menuBtn.textContent = `☰ ${translateKey('menu')}`;
+    const battleVisible = ActiveScreen === 'battle' && !!GameState.currentBattle;
+    const objective = document.getElementById('battle-objective-top');
+    const inventoryBtn = document.getElementById('btn-battle-inventory');
+    const bestiaryBtn = document.getElementById('btn-battle-bestiary');
+    inventoryBtn?.classList.toggle('hidden', !battleVisible);
+    bestiaryBtn?.classList.toggle('hidden', !battleVisible);
+    if (inventoryBtn) inventoryBtn.innerHTML = `<span class="battle-top-icon" aria-hidden="true">🎒</span><span class="battle-top-label">${translateKey('battleInventory').replace(/^[^\p{L}\p{N}]+/u, '')}</span>`;
+    if (bestiaryBtn) bestiaryBtn.innerHTML = `<span class="battle-top-icon" aria-hidden="true">📖</span><span class="battle-top-label">${translateKey('bestiary').replace(/^[^\p{L}\p{N}]+/u, '')}</span>`;
+    if (objective) {
+      const status = battleVisible && typeof CampaignExpansion !== 'undefined'
+        ? CampaignExpansion.scenarioStatus(GameState.currentBattle) : null;
+      const battle = GameState.currentBattle;
+      let short = '';
+      if (status && battle) {
+        if (status.id === 'eliminate') short = CampaignExpansion.loc({ ru: 'Разгром: победите всех', en: 'Eliminate: defeat all', es: 'Eliminar: derrota a todos' });
+        else if (status.id === 'holdout') short = CampaignExpansion.loc({ ru: `Выдержка: раунд ${Math.min(battle.round, battle.scenario.roundTarget)}/${battle.scenario.roundTarget}`, en: `Holdout: round ${Math.min(battle.round, battle.scenario.roundTarget)}/${battle.scenario.roundTarget}`, es: `Resiste: ronda ${Math.min(battle.round, battle.scenario.roundTarget)}/${battle.scenario.roundTarget}` });
+        else if (status.id === 'waves') short = CampaignExpansion.loc({ ru: `Волны: раунд ${Math.min(battle.round, battle.scenario.roundTarget)}/${battle.scenario.roundTarget}`, en: `Waves: round ${Math.min(battle.round, battle.scenario.roundTarget)}/${battle.scenario.roundTarget}`, es: `Oleadas: ronda ${Math.min(battle.round, battle.scenario.roundTarget)}/${battle.scenario.roundTarget}` });
+        else if (status.id === 'escape') short = CampaignExpansion.loc({ ru: 'Прорыв: герой → правый край', en: 'Escape: hero → right edge', es: 'Escape: héroe → borde derecho' });
+        else if (status.id === 'defense') short = CampaignExpansion.loc({ ru: `Защита: оберег ${battle.scenario.ward.hp}/${battle.scenario.ward.maxHp} · ${battle.round}/${battle.scenario.roundTarget}`, en: `Defense: ward ${battle.scenario.ward.hp}/${battle.scenario.ward.maxHp} · ${battle.round}/${battle.scenario.roundTarget}`, es: `Defensa: sello ${battle.scenario.ward.hp}/${battle.scenario.ward.maxHp} · ${battle.round}/${battle.scenario.roundTarget}` });
+        else if (status.id === 'ritual') short = CampaignExpansion.loc({ ru: `Ритуал: уничтожить цель · ${Math.max(0, battle.scenario.roundLimit - battle.round + 1)} ходов`, en: `Ritual: destroy target · ${Math.max(0, battle.scenario.roundLimit - battle.round + 1)} turns`, es: `Ritual: destruye objetivo · ${Math.max(0, battle.scenario.roundLimit - battle.round + 1)} turnos` });
+        else if (status.id === 'hunt') short = CampaignExpansion.loc({ ru: 'Охота: цель → правый край', en: 'Hunt: target → right edge', es: 'Caza: objetivo → borde derecho' });
+      }
+      const text = status ? `${status.icon} ${short || status.label}` : '';
+      objective.textContent = text;
+      objective.title = text;
+      objective.classList.toggle('hidden', !text);
+    }
   }
   function updateRegionClouds() {
     [2, 3].forEach(region => {

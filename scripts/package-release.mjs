@@ -23,8 +23,12 @@ function scanRuntimeSource(relative, source) {
   for (const match of source.matchAll(/['"(](assets\/[^'"()?#]+\.(?:png|jpe?g|webp|gif|svg|mp3|wav|ogg))['")]/gi)) {
     if (!match[1].includes('${')) runtimeFiles.add(match[1].replaceAll('\\', '/'));
   }
-  for (const match of source.matchAll(/['"]((?:weapons|armor|accessories|materials|misc|consumables)\/[^'"]+\.(?:png|webp))['"]/gi)) {
-    runtimeFiles.add(`assets/items/${match[1]}`);
+  // ITEM_ICON_MAP values are relative to assets/items/. Listing folder names
+  // here meant every new category (progression/, ...) silently shipped without
+  // its icons, so match any single-folder item path instead.
+  for (const match of source.matchAll(/['"]([a-z0-9_-]+\/[a-z0-9_-]+\.(?:png|webp))['"]/gi)) {
+    const candidate = `assets/items/${match[1]}`;
+    if (existsSync(resolve(root, candidate))) runtimeFiles.add(candidate);
   }
   for (const match of source.matchAll(/(?:src|href)=["']([^"'?#]+\.(?:js|css))["']/gi)) addRelativePath(match[1]);
 }

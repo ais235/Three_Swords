@@ -33,6 +33,7 @@
     garet: Object.freeze({
       basic: 'melee',
       shieldBash: 'shield',
+      taunt: 'shield',
       fireCall: 'fire',
       berserk: 'buff'
     }),

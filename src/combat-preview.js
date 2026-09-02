@@ -102,24 +102,29 @@
     }
 
     const firstHit = damageForHit(context, false);
-    const minimum = Math.min(...outcomes);
+    // Avoidance applies per hit: each shot in the sequence can be blocked or
+    // dodged independently, so a two-shot volley expects (1 - avoid) of each.
+    const blockChance = clampChance(context.blockChance);
+    const dodgeChance = clampChance(context.dodgeChance);
+    const avoidChance = 1 - ((1 - blockChance) * (1 - dodgeChance));
+    const minimum = avoidChance > 0 ? 0 : Math.min(...outcomes);
     const maximum = Math.max(...outcomes);
     return {
       minimum,
       maximum,
-      expected: Math.round(expected * 10) / 10,
+      expected: Math.round(expected * (1 - avoidChance) * 10) / 10,
       regularPerHit: firstHit.damage,
       criticalPerHit: damageForHit(context, true).damage,
       armorAbsorbed: firstHit.armorAbsorbed,
       hitCount,
       critChance,
-      blockChance: 0,
-      dodgeChance: 0,
-      avoidChance: 0,
+      blockChance,
+      dodgeChance,
+      avoidChance,
       statusDamage: Math.max(0, Number(context.statusDamage) || 0),
       statusLabel: context.statusLabel || '',
       immune: !!context.immune,
-      guaranteedKill: targetHp > 0 && minimum >= targetHp,
+      guaranteedKill: targetHp > 0 && avoidChance === 0 && minimum >= targetHp,
       possibleKill: targetHp > 0 && maximum + (Number(context.statusDamage) || 0) >= targetHp,
       tags: Array.isArray(context.tags) ? context.tags.filter(Boolean) : []
     };

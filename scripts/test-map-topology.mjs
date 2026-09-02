@@ -43,8 +43,58 @@ for (const region of [1, 2, 3]) {
 check('final boss is inside the region 3 terminal zone', topology.bossZoneContains(3, topology.FINAL_ANCHOR));
 check('region 3 boss leads directly to the final boss', topology.isNeighbor(topology.REGION_BOSS_ANCHORS[3], topology.FINAL_ANCHOR));
 check('distance to region 1 boss follows actual movement', topology.shortestDistance({ x: 0, y: 0 }, topology.REGION_BOSS_ANCHORS[1]) === 11);
-check('distance from region 1 to region 2 boss uses the right gateway', topology.shortestDistance(topology.REGION_BOSS_ANCHORS[1], topology.REGION_BOSS_ANCHORS[2]) === 13);
+check('distance from region 1 to region 2 boss uses the right gateway', topology.shortestDistance(topology.REGION_BOSS_ANCHORS[1], topology.REGION_BOSS_ANCHORS[2]) === 14);
 check('distance from region 2 to region 3 boss uses the left gateway', topology.shortestDistance(topology.REGION_BOSS_ANCHORS[2], topology.REGION_BOSS_ANCHORS[3]) === 13);
+
+// Act proportions: the finale must own at least as much board as the opening.
+const rowsPerRegion = [1, 2, 3].map(region => topology.REGION_ROWS[region].length);
+check('region 1 is the short opening act', rowsPerRegion[0] < rowsPerRegion[2], JSON.stringify(rowsPerRegion));
+check('regions cover every row exactly once', [1, 2, 3].flatMap(r => topology.REGION_ROWS[r]).sort((a, b) => a - b)
+  .every((row, index) => row === index) && rowsPerRegion.reduce((a, b) => a + b, 0) === topology.ROWS, JSON.stringify(rowsPerRegion));
+for (const cell of cells) {
+  const declared = topology.REGION_ROWS[cell.region];
+  if (!declared.includes(cell.y)) failures.push(`row ${cell.y} is not listed under region ${cell.region}`);
+}
+pass('regionForRow agrees with REGION_ROWS');
+
+// Internal walls: leaving the direct line to the boss has to cost real steps,
+// otherwise a route is only a visiting order on a fully connected slab.
+const detours = [
+  ['region 2 entry to the far bottom corner', { x: 11, y: 2 }, { x: 11, y: 4 }],
+  ['region 3 entry to the far bottom corner', { x: 0, y: 5 }, { x: 0, y: 7 }]
+];
+for (const [label, from, to] of detours) {
+  const steps = topology.shortestDistance(from, to);
+  const straight = Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y));
+  check(`internal walls make a detour cost more than a straight hop: ${label}`, steps >= straight + 3, `${steps} vs ${straight}`);
+}
+for (const region of [1, 2, 3]) {
+  const anchor = topology.REGION_BOSS_ANCHORS[region];
+  const entry = region === 1 ? { x: 0, y: 0 } : topology.REGION_GATEWAYS[region - 2].to;
+  const steps = topology.shortestDistance(entry, anchor);
+  const straight = Math.abs(entry.x - anchor.x);
+  check(`region ${region} boss stays on a near-direct route`, steps <= straight + 2, `${steps} vs ${straight}`);
+}
+for (const wall of topology.WALL_ROWS) {
+  check(`wall under row ${wall.above} has at least one opening`, wall.open.length > 0);
+  const diagonal = topology.isNeighbor({ x: wall.open[0], y: wall.above }, { x: wall.open[0] + 1, y: wall.above + 1 });
+  check(`wall under row ${wall.above} cannot be crossed diagonally`, !diagonal);
+}
+
+// A diagonal step is a row change, so a wall under every row would remove diagonal
+// movement from the whole board. Rows without a wall must stay diagonally open.
+const walledRows = new Set(topology.WALL_ROWS.map(wall => wall.above));
+const openRowPairs = [];
+for (let row = 0; row < topology.ROWS - 1; row++) if (!walledRows.has(row)) openRowPairs.push(row);
+check('at least one row boundary in every region stays open', openRowPairs.length >= 2, JSON.stringify(openRowPairs));
+let diagonalMoves = 0;
+for (const cell of cells) {
+  for (const other of cells) {
+    if (Math.abs(cell.x - other.x) === 1 && Math.abs(cell.y - other.y) === 1 && topology.isNeighbor(cell, other)) diagonalMoves++;
+  }
+}
+check('diagonal movement survives outside the walls', diagonalMoves > 100, String(diagonalMoves));
+check('region 1 has no internal wall', !walledRows.has(0), JSON.stringify([...walledRows]));
 
 const crossRegionEdges = [];
 for (const cell of cells) {
@@ -67,7 +117,7 @@ for (const gateway of topology.REGION_GATEWAYS) {
 }
 
 const allReachable = reachable(byKey.get('0,0'));
-check('snake topology keeps all 96 cells reachable', allReachable.size === topology.COLS * topology.ROWS, String(allReachable.size));
+check('walled topology keeps all 96 cells reachable', allReachable.size === topology.COLS * topology.ROWS, String(allReachable.size));
 
 const sequence = [
   byKey.get('0,0'),
@@ -80,8 +130,18 @@ for (let i = 0; i < sequence.length - 1; i++) {
 }
 
 const wallSegments = cells.flatMap(cell => topology.wallClasses(cell));
-check('both regional walls have complete visual segments', wallSegments.filter(name => name.startsWith('map-wall-')).length === 44, String(wallSegments.length));
+const expectedSegments = topology.WALL_ROWS.reduce((sum, wall) => sum + (topology.COLS - wall.open.length) * 2, 0);
+check('every wall renders a segment on both of its sides', wallSegments.filter(name => name === 'map-wall-top' || name === 'map-wall-bottom').length === expectedSegments, String(wallSegments.length));
+const regionalSegments = topology.WALL_ROWS.filter(wall => wall.regional)
+  .reduce((sum, wall) => sum + (topology.COLS - wall.open.length) * 2, 0);
+check('only the two act boundaries are marked regional', wallSegments.filter(name => name.endsWith('-regional')).length === regionalSegments, String(regionalSegments));
 check('four cells mark the two gateway directions', wallSegments.filter(name => name.startsWith('map-gateway-')).length === 4, String(wallSegments.length));
+// Both gateway cells must still be marked, wall segment or not: they render as
+// separate child elements, so a wall on the same cell no longer hides the arrow.
+for (const gateway of topology.REGION_GATEWAYS) {
+  check(`gateway ${gateway.fromRegion} exit is marked`, topology.wallClasses(gateway.from).includes('map-gateway-down'));
+  check(`gateway ${gateway.toRegion} entry is marked`, topology.wallClasses(gateway.to).includes('map-gateway-up'));
+}
 
 if (failures.length) {
   failures.forEach(failure => console.error(`FAIL ${failure}`));

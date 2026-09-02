@@ -41,10 +41,25 @@ try {
   });
   check('new campaign starts in battle', await page.locator('#battle-screen:not(.hidden)').count() === 1);
 
+  // After a region boss the victory screen also asks for the next region's
+  // reward, then confirms it. Both own the screen and must be answered before
+  // Continue is reachable, so the release test drives them like a player would.
   async function settleLevelUpChoices() {
     await page.waitForTimeout(500);
     let idleChecks = 0;
-    for (let guard = 0; guard < 24; guard++) {
+    for (let guard = 0; guard < 32; guard++) {
+      if (await page.locator('#game-prompt-modal:not(.hidden)').count()) {
+        idleChecks = 0;
+        await page.locator('#game-prompt-ok').click();
+        await page.waitForTimeout(30);
+        continue;
+      }
+      if (await page.locator('#game-alert-modal:not(.hidden)').count()) {
+        idleChecks = 0;
+        await page.locator('#game-alert-ok').click();
+        await page.waitForTimeout(30);
+        continue;
+      }
       if (await page.locator('#perk-modal:not(.hidden)').count()) {
         idleChecks = 0;
         const available = page.locator('#perk-modal .perk-skill.available');

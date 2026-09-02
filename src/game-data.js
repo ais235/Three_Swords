@@ -667,10 +667,22 @@
     }
   };
 
+  /** Heroes cap at 10. Levels 2-10 give nine perk points against twelve nodes
+   *  (three tiers plus a capstone per branch), so region 3 still carries real
+   *  character progression instead of purchases only. */
+  const HERO_LEVEL_CAP = 10;
+
+  /** Garet's passive shield block: a full negate of one non-magic hit.
+   *  Data, not a magic number, because the hero sheet and the damage preview
+   *  both have to show the player the same figure the combat roll uses. */
+  const GARET_BLOCK_CHANCE = 0.25;
+  /** Raised by the Unbreakable capstone, which also covers magic. */
+  const GARET_UNBREAKABLE_BLOCK_CHANCE = 0.4;
+
   function baseHeroTemplate() {
     return [
       { id: 'garet', name: 'Garet', emoji: '⚔️', role: 'warrior', hp: 30, maxHp: 30, armor: 4, attack: 6, range: 1, move: 3, speed: 11, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
-        cds: { shieldBash: 0, fireCall: 0, berserk: 0 }, flags: { firstAttackTurn: true } },
+        cds: { shieldBash: 0, taunt: 0, fireCall: 0, berserk: 0 }, flags: { firstAttackTurn: true } },
       { id: 'alira', name: 'Alira', emoji: '🏹', role: 'archer', hp: 19, maxHp: 19, armor: 1, attack: 8, range: 3, move: 3, speed: 9, level: 1, xp: 0, perks: [], mana: 0, maxMana: 0,
         cds: { doubleShot: 0, slowArrow: 0, arrowRain: 0 }, flags: { firstAttackTurn: true } },
       { id: 'seris', name: 'Seris', emoji: '🔮', role: 'mage', hp: 15, maxHp: 15, armor: 0, attack: 9, range: 2, move: 2, speed: 7, level: 1, xp: 0, perks: [], mana: 8, maxMana: 8,
@@ -678,64 +690,76 @@
     ];
   }
 
+  /** Three tiers per branch plus a capstone that only becomes available once
+   *  the branch is complete. Nine perk points against twelve nodes means a
+   *  capstone costs four points in one branch, so committing is a real trade. */
   const PERK_TREES = {
     garet: {
       defense: [
         { level: 1, id: 'd1', name: 'Guardian Cover', apply: h => { h.perks.push('guardianCover'); } },
         { level: 2, id: 'd2', name: '+1 armor', apply: h => { applyPermanentHeroStat(h, 'armor', 1); } },
-        { level: 3, id: 'd3', name: 'Reflected 1 damage', apply: h => { h.perks.push('reflect1'); } }
+        { level: 3, id: 'd3', name: 'Reflected 1 damage', apply: h => { h.perks.push('reflect1'); } },
+        { level: 4, id: 'd4', name: 'Unbreakable', apply: h => { h.perks.push('unbreakable'); } }
       ],
       attack: [
         { level: 1, id: 'a1', name: 'Executioner', apply: h => { h.perks.push('finisher'); } },
         { level: 2, id: 'a2', name: 'Armor Pierce', apply: h => { h.perks.push('armorPierce'); } },
-        { level: 3, id: 'a3', name: 'Crit 15%', apply: h => { h.perks.push('crit15'); } }
+        { level: 3, id: 'a3', name: 'Crit 15%', apply: h => { h.perks.push('crit15'); } },
+        { level: 4, id: 'a4', name: 'Execution', apply: h => { h.perks.push('execution'); } }
       ],
       leader: [
         { level: 1, id: 'l1', name: 'Adjacent allies +1 armor', apply: h => { h.perks.push('auraArmor'); } },
         { level: 2, id: 'l2', name: 'Aura +10% damage', apply: h => { h.perks.push('auraDmg'); } },
-        { level: 3, id: 'l3', name: 'Commander', apply: h => { h.speed += 1; } }
+        { level: 3, id: 'l3', name: 'Commander', apply: h => { h.speed += 1; } },
+        { level: 4, id: 'l4', name: 'Banner', apply: h => { h.perks.push('banner'); } }
       ]
     },
     alira: {
       accuracy: [
         { level: 1, id: 'm1', name: '+1 range', apply: h => { applyPermanentHeroStat(h, 'range', 1); } },
         { level: 2, id: 'm2', name: '+3 damage', apply: h => { applyPermanentHeroStat(h, 'attack', 3); } },
-        { level: 3, id: 'm3', name: 'Ignore cover', apply: h => { h.perks.push('ignoreCover'); } }
+        { level: 3, id: 'm3', name: 'Ignore cover', apply: h => { h.perks.push('ignoreCover'); } },
+        { level: 4, id: 'm4', name: 'Deadeye', apply: h => { h.perks.push('deadeye'); } }
       ],
       speed: [
         { level: 1, id: 's1', name: '+1 movement', apply: h => { applyPermanentHeroStat(h, 'move', 1); } },
         { level: 2, id: 's2', name: 'Shot after moving', apply: h => { h.perks.push('moveAttack'); } },
-        { level: 3, id: 's3', name: '+2 speed', apply: h => { h.speed += 2; } }
+        { level: 3, id: 's3', name: '+2 speed', apply: h => { h.speed += 2; } },
+        { level: 4, id: 's4', name: 'Windrunner', apply: h => { h.perks.push('windrunner'); applyPermanentHeroStat(h, 'move', 2); } }
       ],
       traps: [
         { level: 1, id: 't1', name: 'Damage trap', apply: h => { h.perks.push('trapDmg'); } },
         { level: 2, id: 't2', name: 'Slow trap', apply: h => { h.perks.push('trapSlow'); } },
-        { level: 3, id: 't3', name: 'Double traps', apply: h => { h.perks.push('trapDouble'); } }
+        { level: 3, id: 't3', name: 'Double traps', apply: h => { h.perks.push('trapDouble'); } },
+        { level: 4, id: 't4', name: 'Minefield', apply: h => { h.perks.push('minefield'); } }
       ]
     },
     seris: {
       destruction: [
         { level: 1, id: 'r1', name: 'Arcane Charge', apply: h => { h.perks.push('spellCharge'); } },
         { level: 2, id: 'r2', name: 'AoE +1', apply: h => { h.perks.push('aoePlus'); } },
-        { level: 3, id: 'r3', name: 'Burn 2 turns', apply: h => { h.perks.push('burnSpell'); } }
+        { level: 3, id: 'r3', name: 'Burn 2 turns', apply: h => { h.perks.push('burnSpell'); } },
+        { level: 4, id: 'r4', name: 'Incinerate', apply: h => { h.perks.push('incinerate'); } }
       ],
       control: [
         { level: 1, id: 'c1', name: 'Freeze 2 turns', apply: h => { h.perks.push('freeze2'); } },
         { level: 2, id: 'c2', name: 'Fear 1 turn', apply: h => { h.perks.push('fear'); } },
-        { level: 3, id: 'c3', name: 'Control master', apply: h => { applyPermanentHeroStat(h, 'maxMana', 2); } }
+        { level: 3, id: 'c3', name: 'Control master', apply: h => { applyPermanentHeroStat(h, 'maxMana', 2); } },
+        { level: 4, id: 'c4', name: 'Deep Freeze', apply: h => { h.perks.push('deepFreeze'); } }
       ],
       mystic: [
         { level: 1, id: 'y1', name: '+3 max mana', apply: h => { applyPermanentHeroStat(h, 'maxMana', 3); } },
         { level: 2, id: 'y2', name: 'HP for a kill', apply: h => { h.perks.push('killHeal'); } },
-        { level: 3, id: 'y3', name: 'Teleport', apply: h => { h.perks.push('teleport'); } }
+        { level: 3, id: 'y3', name: 'Teleport', apply: h => { h.perks.push('teleport'); } },
+        { level: 4, id: 'y4', name: 'Wellspring', apply: h => { h.perks.push('wellspring'); applyPermanentHeroStat(h, 'maxMana', 4); } }
       ]
     }
   };
 
   const PERK_ICONS = {
-    d1:'🛡',d2:'🔰',d3:'💎', a1:'⚡',a2:'🔥',a3:'💥', l1:'🌟',l2:'🤝',l3:'👑',
-    m1:'🎯',m2:'🏹',m3:'🔍', s1:'💨',s2:'🌀',s3:'⚡', t1:'🕸',t2:'💣',t3:'🌧',
-    r1:'🔥',r2:'☄',r3:'💥', c1:'🧊',c2:'😱',c3:'🌀', y1:'✨',y2:'💊',y3:'🌀'
+    d1:'🛡',d2:'🔰',d3:'💎',d4:'🏔', a1:'⚡',a2:'🔥',a3:'💥',a4:'☠', l1:'🌟',l2:'🤝',l3:'👑',l4:'🚩',
+    m1:'🎯',m2:'🏹',m3:'🔍',m4:'👁', s1:'💨',s2:'🌀',s3:'⚡',s4:'🌪', t1:'🕸',t2:'💣',t3:'🌧',t4:'🕳',
+    r1:'🔥',r2:'☄',r3:'💥',r4:'🌋', c1:'🧊',c2:'😱',c3:'🌀',c4:'❄', y1:'✨',y2:'💊',y3:'🌀',y4:'🌟'
   };
   const PERK_BRANCH_LABELS = {
     defense: 'DEFENSE', attack: 'ATTACK', leader: 'LEADERSHIP',
@@ -743,15 +767,15 @@
     destruction: 'DESTRUCTION', control: 'CONTROL', mystic: 'MYSTIC'
   };
   const PERK_NAMES_RU = {
-    d1:'Защитное прикрытие', d2:'+1 к броне', d3:'Ответный урон 1',
-    a1:'Палач', a2:'Пробитие брони', a3:'Критический удар 15%',
-    l1:'Соседям +1 к броне', l2:'Аура: +10% к урону', l3:'Командир',
-    m1:'+1 к дальности', m2:'+3 к урону', m3:'Игнорирование укрытий',
-    s1:'+1 к движению', s2:'Выстрел после движения', s3:'+2 к скорости',
-    t1:'Наносящая урон ловушка', t2:'Замедляющая ловушка', t3:'Двойные ловушки',
-    r1:'Магический заряд', r2:'Область действия +1', r3:'Горение на 2 хода',
-    c1:'Заморозка на 2 хода', c2:'Страх на 1 ход', c3:'Мастер контроля',
-    y1:'+3 к максимуму маны', y2:'Лечение за убийство', y3:'Телепортация'
+    d1:'Защитное прикрытие', d2:'+1 к броне', d3:'Ответный урон 1', d4:'Несокрушимый',
+    a1:'Палач', a2:'Пробитие брони', a3:'Критический удар 15%', a4:'Казнь',
+    l1:'Соседям +1 к броне', l2:'Аура: +10% к урону', l3:'Командир', l4:'Знамя',
+    m1:'+1 к дальности', m2:'+3 к урону', m3:'Игнорирование укрытий', m4:'Верный глаз',
+    s1:'+1 к движению', s2:'Выстрел после движения', s3:'+2 к скорости', s4:'Бегущая по ветру',
+    t1:'Наносящая урон ловушка', t2:'Замедляющая ловушка', t3:'Двойные ловушки', t4:'Минное поле',
+    r1:'Магический заряд', r2:'Область действия +1', r3:'Горение на 2 хода', r4:'Испепеление',
+    c1:'Заморозка на 2 хода', c2:'Страх на 1 ход', c3:'Мастер контроля', c4:'Глубокая заморозка',
+    y1:'+3 к максимуму маны', y2:'Лечение за убийство', y3:'Телепортация', y4:'Источник силы'
   };
   const PERK_BRANCH_NAMES = {
     defense:{ru:'ЗАЩИТА',en:'DEFENSE',es:'DEFENSA'},
@@ -799,7 +823,16 @@
     c3: { ru: 'Путь контроля: получай больше маны для повторных заклинаний контроля.', en: 'Control path: gain more mana for repeated control spells.', es: 'Ruta de control: gana más maná para repetir hechizos de control.' },
     y1: { ru: 'Путь мистика: колдуй чаще и не оставайся без маны.', en: 'Mystic path: cast more often before running dry.', es: 'Ruta mística: lanza hechizos con más frecuencia sin quedarte sin maná.' },
     y2: { ru: 'Путь мистика: убийства поддерживают выживание Сэрис.', en: 'Mystic path: reward kills with sustain for Seris.', es: 'Ruta mística: las bajas sostienen la supervivencia de Seris.' },
-    y3: { ru: 'Путь мистика: решай проблемы с позицией телепортацией.', en: 'Mystic path: solve positioning problems with teleport.', es: 'Ruta mística: resuelve problemas de posición con teletransporte.' }
+    y3: { ru: 'Путь мистика: решай проблемы с позицией телепортацией.', en: 'Mystic path: solve positioning problems with teleport.', es: 'Ruta mística: resuelve problemas de posición con teletransporte.' },
+    d4: { ru: 'Вершина танка: Гарет перестаёт бояться и магии, и тяжёлых ударов.', en: 'Tank capstone: Garet stops fearing magic and heavy blows alike.', es: 'Cumbre del tanque: Garet deja de temer la magia y los golpes pesados.' },
+    a4: { ru: 'Вершина дуэлянта: убийство открывает второе действие в том же ходу.', en: 'Duelist capstone: a kill opens a second action in the same turn.', es: 'Cumbre del duelista: una baja abre una segunda acción en el mismo turno.' },
+    l4: { ru: 'Вершина командира: рядом с Гаретом весь отряд бьёт сильнее.', en: 'Commander capstone: the whole squad hits harder beside Garet.', es: 'Cumbre del comandante: todo el grupo golpea más fuerte junto a Garet.' },
+    m4: { ru: 'Вершина снайпера: броня перестаёт быть защитой от Алиры.', en: 'Sniper capstone: armor stops protecting anyone from Alira.', es: 'Cumbre del francotirador: la armadura deja de proteger de Alira.' },
+    s4: { ru: 'Вершина застрельщика: перемещение превращается в главный источник урона.', en: 'Skirmisher capstone: movement becomes the main damage source.', es: 'Cumbre del hostigador: el movimiento se vuelve la fuente principal de daño.' },
+    t4: { ru: 'Вершина ловчего: ловушки становятся смертельными, а не досадными.', en: 'Trapper capstone: traps become lethal instead of annoying.', es: 'Cumbre del trampero: las trampas se vuelven letales, no molestas.' },
+    r4: { ru: 'Вершина разрушения: каждое заклинание оставляет за собой пожар.', en: 'Destruction capstone: every spell leaves a fire behind it.', es: 'Cumbre de la destrucción: cada hechizo deja fuego tras de sí.' },
+    c4: { ru: 'Вершина контроля: заморозка выключает сразу двух врагов.', en: 'Control capstone: one freeze shuts down two enemies.', es: 'Cumbre del control: una congelación anula a dos enemigos.' },
+    y4: { ru: 'Вершина мистика: мана перестаёт ограничивать Сэрис.', en: 'Mystic capstone: mana stops limiting Seris.', es: 'Cumbre mística: el maná deja de limitar a Seris.' }
   };
 
   const PERK_RULES_RU = {
@@ -829,7 +862,16 @@
     c3: { summary:'Постоянно: +2 к максимуму маны', trigger:'Срабатывает сразу при изучении и действует постоянно.', effect:'Максимум маны Сэрис увеличивается на 2; при изучении она также сразу восстанавливает 2 маны.' },
     y1: { summary:'Постоянно: +3 к максимуму маны', trigger:'Срабатывает сразу при изучении и действует постоянно.', effect:'Максимум маны Сэрис увеличивается на 3; при изучении она также сразу восстанавливает 3 маны.' },
     y2: { summary:'Смерть врага: Сэрис лечится на 5 HP', trigger:'Любой враг погибает, пока Сэрис жива.', effect:'Сэрис восстанавливает 5 HP, но не выше своего максимального здоровья.' },
-    y3: { summary:'1 раз за бой: телепорт до 4 клеток', trigger:'Один раз за бой выберите свободную клетку не дальше 4 клеток от Сэрис.', effect:'Сэрис мгновенно перемещается на выбранную клетку. Телепорт считается движением, но не расходует её атаку.' }
+    y3: { summary:'1 раз за бой: телепорт до 4 клеток', trigger:'Один раз за бой выберите свободную клетку не дальше 4 клеток от Сэрис.', effect:'Сэрис мгновенно перемещается на выбранную клетку. Телепорт считается движением, но не расходует её атаку.' },
+    d4: { summary:'Блок 40% и против магии', trigger:'Любая атака по Гарету, включая магическую.', effect:'С шансом 40% урон полностью поглощается. Заменяет обычный щитовой блок 25%.' },
+    a4: { summary:'Убийство: ещё одно действие, раз в раунд', trigger:'Гарет убивает врага своей атакой или умением.', effect:'Ход возвращается Гарету, и он снова может двигаться и атаковать. Не чаще одного раза за раунд.' },
+    l4: { summary:'Союзники в 2 клетках: +2 к атаке', trigger:'Союзник атакует, находясь не дальше 2 клеток от живого Гарета.', effect:'Его урон увеличивается на 2 до вычета брони. Сам Гарет бонус не получает.' },
+    m4: { summary:'Атаки игнорируют 3 брони', trigger:'Алира наносит урон любой атакой или умением.', effect:'Броня цели считается меньше на 3, но не ниже 0. Складывается с пробитием от оружия.' },
+    s4: { summary:'+2 к движению, выстрел после движения +45%', trigger:'Алира перемещается и затем атакует в том же ходу.', effect:'Урон этой атаки увеличивается на 45% вместо 20%. Дальность перемещения растёт на 2 клетки.' },
+    t4: { summary:'Ловушки: двойной урон и яд', trigger:'Враг наступает на ловушку Алиры.', effect:'Ловушка наносит 8 урона вместо 4 и отравляет выжившего на 2 хода.' },
+    r4: { summary:'Магия поджигает на 3 хода', trigger:'Любая магическая атака Сэрис попадает по выжившей цели.', effect:'Цель горит 3 хода и теряет по 3 здоровья в начале каждого своего хода.' },
+    c4: { summary:'Заморозка переходит на соседа', trigger:'Сэрис замораживает цель, рядом с которой стоит другой враг.', effect:'Ближайший незамороженный сосед получает заморозку на тот же срок.' },
+    y4: { summary:'+4 к максимуму маны и +4 маны в начале хода', trigger:'Действует постоянно после изучения.', effect:'Максимум маны растёт на 4, и в начале каждого хода Сэрис восстанавливает на 4 маны больше.' }
   };
 
   const PERK_RULES_EXACT = {
@@ -860,7 +902,16 @@
       c3:['Permanent: +2 maximum mana','Applied immediately and then remains active.','Increase maximum mana by 2 and immediately restore 2 mana.'],
       y1:['Permanent: +3 maximum mana','Applied immediately and then remains active.','Increase maximum mana by 3 and immediately restore 3 mana.'],
       y2:['Enemy death: Seris heals 5 HP','Any enemy dies while Seris is alive.','Restore 5 HP to Seris, up to her maximum HP.'],
-      y3:['Once per battle: teleport up to 4 tiles','Choose a free tile within 4 tiles of Seris once per battle.','Move there instantly. It counts as movement but does not consume her attack.']
+      y3:['Once per battle: teleport up to 4 tiles','Choose a free tile within 4 tiles of Seris once per battle.','Move there instantly. It counts as movement but does not consume her attack.'],
+      d4:['Block 40%, magic included','Any attack against Garet, magical attacks included.','A 40% chance to negate the damage completely. Replaces the standard 25% shield block.'],
+      a4:['Kill: one more action, once per round','Garet kills an enemy with an attack or a skill.','The turn returns to Garet and he may move and attack again. Once per round at most.'],
+      l4:['Allies within 2 tiles: +2 attack','An ally attacks within 2 tiles of living Garet.','Add 2 damage before armor is subtracted. Garet does not buff himself.'],
+      m4:['Attacks ignore 3 armor','Alira deals damage with any attack or skill.','Treat the target as having 3 less armor, never below 0. Stacks with weapon pierce.'],
+      s4:['+2 movement, shot after moving +45%','Alira moves and then attacks in the same turn.','That attack deals 45% more damage instead of 20%, and her movement range grows by 2.'],
+      t4:['Traps: double damage and poison','An enemy steps on one of Alira traps.','The trap deals 8 damage instead of 4 and poisons a survivor for 2 turns.'],
+      r4:['Magic burns for 3 turns','Any magic attack from Seris hits a surviving target.','The target burns for 3 turns, losing 3 health at the start of each of its turns.'],
+      c4:['Freeze spreads to a neighbour','Seris freezes a target with another enemy adjacent to it.','The nearest unfrozen neighbour is frozen for the same duration.'],
+      y4:['+4 maximum mana and +4 mana each turn','Applied immediately and then remains active.','Maximum mana grows by 4 and Seris restores 4 extra mana at the start of every turn.']
     },
     es: {
       d1:['Aliado adyacente: −2 de daño','Un aliado adyacente a Garet recibe daño.','Reduce ese daño en 2. Garet no puede protegerse a sí mismo.'],
@@ -889,7 +940,16 @@
       c3:['Permanente: +2 maná máximo','Se aplica inmediatamente y permanece activo.','Aumenta el maná máximo en 2 y recupera 2 de maná.'],
       y1:['Permanente: +3 maná máximo','Se aplica inmediatamente y permanece activo.','Aumenta el maná máximo en 3 y recupera 3 de maná.'],
       y2:['Muere un enemigo: Seris cura 5 PV','Cualquier enemigo muere mientras Seris vive.','Seris recupera 5 PV, sin superar su máximo.'],
-      y3:['Una vez por batalla: teletransporte 4','Elige una casilla libre a 4 casillas o menos una vez por batalla.','Seris se mueve allí al instante; cuenta como movimiento pero no consume el ataque.']
+      y3:['Una vez por batalla: teletransporte 4','Elige una casilla libre a 4 casillas o menos una vez por batalla.','Seris se mueve allí al instante; cuenta como movimiento pero no consume el ataque.'],
+      d4:['Bloqueo 40%, magia incluida','Cualquier ataque contra Garet, incluidos los mágicos.','Un 40% de probabilidad de anular el daño por completo. Sustituye al bloqueo de escudo del 25%.'],
+      a4:['Baja: una acción más, una vez por ronda','Garet mata a un enemigo con un ataque o una habilidad.','El turno vuelve a Garet y puede moverse y atacar de nuevo. Como mucho una vez por ronda.'],
+      l4:['Aliados a 2 casillas: +2 de ataque','Un aliado ataca a 2 casillas o menos de Garet vivo.','Suma 2 de daño antes de restar la armadura. Garet no se beneficia a sí mismo.'],
+      m4:['Los ataques ignoran 3 de armadura','Alira inflige daño con cualquier ataque o habilidad.','La armadura del objetivo cuenta 3 menos, nunca por debajo de 0. Se acumula con la perforación del arma.'],
+      s4:['+2 de movimiento, disparo tras moverse +45%','Alira se mueve y luego ataca en el mismo turno.','Ese ataque inflige un 45% más de daño en vez de un 20%, y su movimiento aumenta en 2.'],
+      t4:['Trampas: daño doble y veneno','Un enemigo pisa una trampa de Alira.','La trampa inflige 8 de daño en vez de 4 y envenena al superviviente durante 2 turnos.'],
+      r4:['La magia quema 3 turnos','Cualquier ataque mágico de Seris impacta a un objetivo que sobrevive.','El objetivo arde 3 turnos y pierde 3 de vida al inicio de cada uno de sus turnos.'],
+      c4:['La congelación pasa a un vecino','Seris congela a un objetivo con otro enemigo adyacente.','El vecino no congelado más cercano queda congelado el mismo tiempo.'],
+      y4:['+4 de maná máximo y +4 de maná por turno','Se aplica de inmediato y permanece activo.','El maná máximo sube 4 y Seris recupera 4 de maná extra al inicio de cada turno.']
     }
   };
 
@@ -999,6 +1059,29 @@
     return `<div class="inv-perks-label">${translateText('Perks')}</div><div class="inv-perks-row">${btns}</div>`;
   }
 
+  /** Elite affixes. One systemic table multiplies wave variety without new art,
+   *  new AI or new enemy types: an affixed enemy is a familiar body that has to
+   *  be answered differently. Bosses and mini-bosses never roll one, because
+   *  their profiles are authored. */
+  const ELITE_AFFIXES = {
+    armored:  { icon: '🛡', hp: 0.25, armor: 3,            name: { ru: 'Бронированный', en: 'Armored',  es: 'Acorazado' } },
+    swift:    { icon: '💨', hp: 0.25, move: 2, speed: 2,   name: { ru: 'Быстрый',       en: 'Swift',    es: 'Veloz' } },
+    venomous: { icon: '🧪', hp: 0.25,                      name: { ru: 'Ядовитый',      en: 'Venomous', es: 'Venenoso' } },
+    unstable: { icon: '💥', hp: 0.25,                      name: { ru: 'Взрывной',      en: 'Unstable', es: 'Inestable' } },
+    warlord:  { icon: '🚩', hp: 0.25,                      name: { ru: 'Вожак',         en: 'Warlord',  es: 'Caudillo' } }
+  };
+  const ELITE_AFFIX_IDS = Object.keys(ELITE_AFFIXES);
+  /** Chance per wave slot, and how many elites a single wave may hold. */
+  const ELITE_AFFIX_CHANCE = { 1: 0.10, 2: 0.16, 3: 0.22 };
+  const ELITE_AFFIX_CAP = { 1: 1, 2: 1, 3: 2 };
+  /** Extra gold for putting an elite down, paid out with the battle reward. */
+  const ELITE_KILL_GOLD = 14;
+  function eliteAffixDef(id) { return ELITE_AFFIXES[id] || null; }
+  function eliteAffixLabel(id) {
+    const def = eliteAffixDef(id);
+    return def ? `${def.icon} ${def.name[currentLanguage()] || def.name.en}` : '';
+  }
+
   function enemyDef(type) {
     const D = ENEMY_IDS;
     const map = {
@@ -1073,13 +1156,14 @@
   const HERO_SKILLS = {
     garet: [
       { key: 'shieldBash', name: 'Shield Bash',   icon: '🛡', unlockLevel: 1, cd: 3,  cost: null, signature: true, desc: { ru: 'Атакует врага и оглушает его на 1 ход. КД 3.', en: 'Attacks the target enemy and stuns it for 1 turn. CD 3.', es: 'Ataca al enemigo objetivo y lo aturde durante 1 turno. REC 3.' } },
+      { key: 'taunt',      name: 'Challenge',     icon: '📢', unlockLevel: 2, cd: 4,  cost: null, desc: { ru: 'Враги в радиусе 3 обязаны атаковать Гарета до его следующего хода. КД 4.', en: 'Enemies within 3 tiles must attack Garet until his next turn. CD 4.', es: 'Los enemigos a 3 casillas deben atacar a Garet hasta su próximo turno. REC 4.' } },
       { key: 'fireCall',   name: 'Call Fire',     icon: '🔥', unlockLevel: 3, cd: 4,  cost: null, desc: { ru: 'Поджигает всех врагов рядом с Гаретом (по области). КД 4.', en: 'Ignites all enemies around Garet (AoE). CD 4.', es: 'Prende fuego a todos los enemigos cerca de Garet (área). REC 4.' } },
       { key: 'berserk',    name: 'Berserk',       icon: '💪', unlockLevel: 5, cd: 6,  cost: null, desc: { ru: 'Ульта: ×1.5 атаки, −50% брони на 3 хода. КД 6.', en: 'Ultimate: x1.5 attack, -50% armor for 3 turns. CD 6.', es: 'Definitiva: ×1.5 ataque, −50% armadura durante 3 turnos. REC 6.' } }
     ],
     alira: [
       { key: 'doubleShot', name: 'Double Shot',   icon: '🏹', unlockLevel: 1, cd: 2, cost: null, signature: true, desc: { ru: 'Два выстрела подряд по одной цели. КД 2.', en: 'Two shots in a row at one target. CD 2.', es: 'Dos disparos seguidos al mismo objetivo. REC 2.' } },
       { key: 'slowArrow',  name: 'Slowing Arrow', icon: '🐢', unlockLevel: 3, cd: 3, cost: null, desc: { ru: 'Замедляет цель: −2 к перемещению на 2 раунда. КД 3.', en: 'Slows the target: -2 movement for 2 rounds. CD 3.', es: 'Ralentiza al objetivo: −2 de movimiento durante 2 rondas. REC 3.' } },
-      { key: 'arrowRain',  name: 'Arrow Rain',    icon: '🌧', unlockLevel: 5, cd: 5, cost: null, desc: { ru: 'Ульта: атака по области по всем ближайшим врагам. КД 5.', en: 'Ultimate: AoE attack against all nearby enemies. CD 5.', es: 'Definitiva: ataque de área contra todos los enemigos cercanos. REC 5.' } }
+      { key: 'arrowRain',  name: 'Arrow Rain',    icon: '🌧', unlockLevel: 5, cd: 5, cost: null, desc: { ru: 'Выберите клетку в пределах дальности Алиры: цель и 4 соседние клетки получают по одной атаке. Пустая область не расходует ход. КД 5.', en: 'Choose a tile within Alira\'s range: the target tile and its 4 neighbors each take one attack. An empty area costs no action. CD 5.', es: 'Elige una casilla al alcance de Alira: esa casilla y sus 4 vecinas reciben un ataque. Un área vacía no consume la acción. REC 5.' } }
     ],
     seris: [
       { key: 'fireball', name: 'Fireball', icon: '🔥', unlockLevel: 1, cd: 0, cost: 3, signature: true, desc: { ru: 'Взрыв по цели и соседним клеткам. Стоимость: 3 MP.', en: 'Explosion on the target and adjacent tiles. Cost: 3 MP.', es: 'Explosión en el objetivo y las casillas adyacentes. Coste: 3 MP.' } },
@@ -1170,7 +1254,27 @@
     { id: 'hourglass',      slot: 'artifact', heroClass: 'all',   rarity: 'rare',   minRegion: 2, emoji: '⏳', name: 'Hourglass',           price: 95,  sellPrice: 47,  mods: { extraAction: true },                 desc: 'Once per battle: gain one extra turn after your action.' },
     { id: 'death_ring',     slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 2, emoji: '💀', name: 'Death Ring',           price: 175, sellPrice: 87,  mods: { deathExplode: 15 },                  desc: 'When a hero dies: 3×3 explosion, 15 damage to enemies.' },
     { id: 'portal_stone',   slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 2, emoji: '🌀', name: 'Portal Stone',       price: 185, sellPrice: 92,  mods: { battleTeleport: true },              desc: 'Once per battle: teleport the owner to any free tile.' },
-    { id: 'crown',          slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 3, emoji: '👑', name: 'Crown of Power',           price: 195, sellPrice: 97,  mods: { allyAttack: 2, allyArmor: 1 },       desc: 'All allies gain +2 attack and +1 armor (aura).' }
+    { id: 'crown',          slot: 'artifact', heroClass: 'all',   rarity: 'epic',   minRegion: 3, emoji: '👑', name: 'Crown of Power',           price: 750, sellPrice: 375, mods: { allyAttack: 2, allyArmor: 1 },       desc: 'All allies gain +2 attack and +1 armor (aura).' },
+    { id:'ash_sword', slot:'weapon', heroClass:'warrior', rarity:'rare', minRegion:2, emoji:'⚔️', name:'Ash Sword', price:260, sellPrice:130, mods:{attack:5,armor:1}, desc:'+5 attack and +1 armor.' },
+    { id:'forge_hammer', slot:'weapon', heroClass:'warrior', rarity:'epic', minRegion:2, emoji:'🔨', name:'Forge Hammer', price:420, sellPrice:210, mods:{attack:7,stunOnHit:true}, desc:'+7 attack. Stuns on hit.' },
+    { id:'coal_bow', slot:'weapon', heroClass:'archer', rarity:'rare', minRegion:2, emoji:'🏹', name:'Coal Bow', price:270, sellPrice:135, mods:{attack:7,range:1}, desc:'+7 attack and +1 range: more power than the War Crossbow, but less reach.' },
+    { id:'siege_crossbow', slot:'weapon', heroClass:'archer', rarity:'epic', minRegion:2, emoji:'🏹', name:'Siege Crossbow', price:430, sellPrice:215, mods:{attack:7,range:2,pierce:2}, desc:'+7 attack and +2 range. Ignores 2 armor.' },
+    { id:'magma_wand', slot:'weapon', heroClass:'mage', rarity:'rare', minRegion:2, emoji:'🔥', name:'Magma Wand', price:280, sellPrice:140, mods:{attack:6,mana:3}, desc:'+6 attack and +3 mana.' },
+    { id:'volcano_staff', slot:'weapon', heroClass:'mage', rarity:'epic', minRegion:2, emoji:'🔥', name:'Volcano Staff', price:440, sellPrice:220, mods:{attack:7,aoePlus:true}, desc:'+7 attack. Spells gain +1 AoE radius.' },
+    { id:'tide_blade', slot:'weapon', heroClass:'warrior', rarity:'rare', minRegion:3, emoji:'🗡️', name:'Tide Blade', price:480, sellPrice:240, mods:{attack:7,armor:1}, desc:'+7 attack and +1 armor.' },
+    { id:'abyss_staff', slot:'weapon', heroClass:'mage', rarity:'rare', minRegion:3, emoji:'🔮', name:'Abyss Staff', price:500, sellPrice:250, mods:{attack:7,mana:5}, desc:'+7 attack and +5 mana.' },
+    { id:'vent_shield', slot:'armor', heroClass:'warrior', rarity:'epic', minRegion:2, emoji:'🛡️', name:'Vent Shield', price:430, sellPrice:215, mods:{armor:5,reflectFlat:1}, desc:'+5 armor. Attackers take 1 damage.' },
+    { id:'spark_cloak', slot:'armor', heroClass:'archer', rarity:'rare', minRegion:2, emoji:'🧥', name:'Spark Cloak', price:250, sellPrice:125, mods:{armor:3,dodge:.20}, desc:'+3 armor and 20% dodge.' },
+    { id:'phoenix_robe_2', slot:'armor', heroClass:'mage', rarity:'epic', minRegion:2, emoji:'🔥', name:'Phoenix Robe', price:430, sellPrice:215, mods:{armor:5,revive5:true}, desc:'+5 armor. Revive once with 5 HP.' },
+    { id:'forge_hourglass', slot:'artifact', heroClass:'all', rarity:'rare', minRegion:2, emoji:'⏳', name:'Forge Hourglass', price:240, sellPrice:120, mods:{attack:2,move:1}, desc:'+2 attack and +1 move.' },
+    { id:'tide_trident', slot:'weapon', heroClass:'warrior', rarity:'epic', minRegion:3, emoji:'🔱', name:'Guardian Trident', price:700, sellPrice:350, mods:{attack:8,armor:2,cleave:3}, desc:'+8 attack and +2 armor. Splashes 3 damage to enemies beside the target.' },
+    { id:'deep_shell', slot:'armor', heroClass:'warrior', rarity:'epic', minRegion:3, emoji:'🛡️', name:'Deep Shell', price:680, sellPrice:340, mods:{armor:6,maxHp:12,firstHitWard:true}, desc:'+6 armor and +12 HP. The first hit each round is fully blocked.' },
+    { id:'current_bow', slot:'weapon', heroClass:'archer', rarity:'rare', minRegion:3, emoji:'🏹', name:'Current Bow', price:490, sellPrice:245, mods:{attack:8,range:2}, desc:'+8 attack and +2 range: a direct upgrade over the Siege Crossbow.' },
+    { id:'harpoon_crossbow', slot:'weapon', heroClass:'archer', rarity:'epic', minRegion:3, emoji:'🏹', name:'Harpoon Crossbow', price:720, sellPrice:360, mods:{attack:9,range:2,pullOnHit:true}, desc:'+9 attack and +2 range. Drags the target one tile closer.' },
+    { id:'sea_cloak', slot:'armor', heroClass:'archer', rarity:'rare', minRegion:3, emoji:'🧥', name:'Sea Ghost Cloak', price:450, sellPrice:225, mods:{armor:4,dodge:.25}, desc:'+4 armor and 25% dodge.' },
+    { id:'tide_staff', slot:'weapon', heroClass:'mage', rarity:'epic', minRegion:3, emoji:'🔮', name:'Tide Staff', price:720, sellPrice:360, mods:{attack:8,freeze2:true,chainFreeze:true}, desc:'+8 attack. Freeze lasts 2 turns and spreads to one nearby enemy.' },
+    { id:'deep_robe', slot:'armor', heroClass:'mage', rarity:'epic', minRegion:3, emoji:'🧥', name:'Deep Robe', price:650, sellPrice:325, mods:{armor:6,maxHp:10,manaOnHit:2}, desc:'+6 armor and +10 HP. Restores 2 mana whenever the wearer is hit.' },
+    { id:'tide_heart', slot:'artifact', heroClass:'all', rarity:'rare', minRegion:3, emoji:'💠', name:'Tide Heart', price:460, sellPrice:230, mods:{armor:2,maxHp:10,cleanseStart:true}, desc:'+2 armor and +10 HP. Clears one negative status at the start of the turn.' }
   ];
 
   /** PNG item icons: normalized to 64x64. Values are paths relative to assets/items/. */
@@ -1202,6 +1306,13 @@
     death_ring: 'accessories/ring_of_skulls.png',
     portal_stone: 'misc/rune_stone.png',
     crown: 'accessories/royal_crown.png',
+    ash_sword: 'progression/ash_sword.png', forge_hammer: 'progression/forge_hammer.png', vent_shield: 'progression/vent_shield.png',
+    coal_bow: 'progression/coal_bow.png', siege_crossbow: 'progression/siege_crossbow.png', spark_cloak: 'progression/spark_cloak.png',
+    magma_wand: 'progression/magma_wand.png', volcano_staff: 'progression/volcano_staff.png', phoenix_robe_2: 'progression/phoenix_robe.png',
+    forge_hourglass: 'progression/hourglass_forge.png', tide_blade: 'progression/tide_blade.png', abyss_staff: 'progression/abyss_staff.png',
+    tide_trident: 'progression/tide_trident.png', deep_shell: 'progression/deep_shell.png', current_bow: 'progression/current_bow.png',
+    harpoon_crossbow: 'progression/harpoon_crossbow.png', sea_cloak: 'progression/sea_cloak.png', tide_staff: 'progression/tide_staff.png',
+    deep_robe: 'progression/deep_robe.png', tide_heart: 'progression/tide_heart.png',
     /* SHOP_ITEMS consumables are code-ready; potion-shop icons are prepared. */
     potion_small: 'consumables/health_potion.png',
     potion_mid: 'consumables/health_potion.png',
@@ -1238,7 +1349,8 @@
       else if (r < epicChance + rareChance) rarity = 'rare';
       else rarity = 'common';
     }
-    const pool = ITEM_POOL.filter(i => i.rarity === rarity && i.minRegion <= region);
+    const sameRegionPool = ITEM_POOL.filter(i => i.rarity === rarity && i.minRegion === region);
+    const pool = sameRegionPool.length ? sameRegionPool : ITEM_POOL.filter(i => i.rarity === rarity && i.minRegion <= region);
     if (!pool.length) return deepClone(ITEM_POOL[0]);
     const freshPool = preferNew ? pool.filter(i => !ownedItemIds().has(i.id)) : [];
     const finalPool = freshPool.length ? freshPool : pool;

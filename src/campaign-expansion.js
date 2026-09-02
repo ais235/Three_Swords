@@ -299,6 +299,7 @@ const CampaignExpansion = (() => {
     } else if (b.region === 3) {
       b.regionalRule = 'tide';
       b.tideWarnings = [];
+      b.tideFloodedTiles = [];
     }
   }
 
@@ -453,6 +454,10 @@ const CampaignExpansion = (() => {
       let spawned = false;
       triggered.forEach(warning => {
         b.grid[warning.y][warning.x] = TILE.WATER;
+        b.tideFloodedTiles = b.tideFloodedTiles || [];
+        if (!b.tideFloodedTiles.some(tile => tile.x === warning.x && tile.y === warning.y)) {
+          b.tideFloodedTiles.push({ x: warning.x, y: warning.y });
+        }
         if (!spawned && !cellOccupied(warning.x, warning.y)) {
           const living = b.units.filter(unit => unit.enemyId === ENEMY_IDS.WATER_ELEMENTAL && unit.hp > 0).length;
           const proto = { isHero: false, enemyId: ENEMY_IDS.WATER_ELEMENTAL, sizeW: 1, sizeH: 1 };
