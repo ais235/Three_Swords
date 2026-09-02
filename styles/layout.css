@@ -13,8 +13,6 @@
   --accent-red: #e74c3c;
   --accent-green: #2ecc71;
   --text-main: #e8e8f0;
-  --text-dim: #8888aa;
-  --text-hint: #555577;
   --border: #2a2a4a;
   --border-active: #4a9eff;
 }
@@ -24,12 +22,11 @@ body {
   background: var(--bg-dark);
   color: var(--text-main);
   font-family: "Courier New", Consolas, monospace;
-  font-size: 10px;
   line-height: 1.45;
   height: 100vh;
   overflow: hidden;
 }
-#game-container { max-width: 1200px; margin: 0 auto; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+#game-container { margin: 0 auto; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 8px; display: none; }
 #hud-top {
   height: 36px;
@@ -208,7 +205,6 @@ h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 8px; display: non
 .turn-focus-arrow { color: #8bd3ff; text-align: center; font-weight: 700; }
 #ui-overlay { min-width: 160px; background: #111128; border-left: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
 #unit-title:empty, #unit-stats:empty { display: none; }
-.br-section { }
 .br-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 4px; }
 .battle-actions { display: flex; flex-direction: column; gap: 4px; }
 .battle-actions .btn { font-size: 10px; padding: 5px 8px; text-align: center; width: 100%; margin: 0; box-sizing: border-box; }
@@ -299,14 +295,12 @@ h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 8px; display: non
   text-overflow: ellipsis;
 }
 .battle-actions .skill-action-btn {
-  min-height: 42px;
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr);
   grid-template-rows: 1fr auto;
   column-gap: 7px;
   align-items: center;
   text-align: left;
-  padding: 6px 8px;
   border-radius: 6px;
   background: linear-gradient(180deg, rgba(26,26,46,0.98), rgba(13,13,26,0.98));
 }
@@ -363,13 +357,11 @@ button, input, select, textarea {
   background: var(--bg-panel);
   border: 1px solid var(--accent-blue);
   color: var(--accent-blue);
-  padding: 5px 14px;
   margin: 4px 4px 4px 0;
   cursor: pointer;
   border-radius: 5px;
   font-family: inherit;
   font-size: 8px;
-  line-height: 1.35;
 }
 .btn:hover { background: var(--bg-card-hover); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -497,7 +489,6 @@ button, input, select, textarea {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: clamp(7px, 1.35vmin, 12px);
   cursor: pointer;
   background: rgba(17, 17, 40, 0.82);
   position: relative;
@@ -573,7 +564,7 @@ button, input, select, textarea {
   line-height: 1.2;
   white-space: nowrap;
 }
-#map-screen .map-node small { font-size: 5px; color: var(--text-hint); margin-top: 1px; line-height: 1.2; }
+#map-screen .map-node small { color: var(--text-hint); margin-top: 1px; }
 #map-screen .map-node .map-node-face,
 #map-screen .map-node .map-node-lbl { position: relative; z-index: 2; }
 #map-screen .map-node-face.map-node-face-img {
@@ -734,7 +725,7 @@ button, input, select, textarea {
 }
 #map-screen .map-node.map-secondary:not(.current) { opacity: .42; }
 #map-screen .map-node.route-tension { border-color:#e86d55; box-shadow:inset 0 0 14px rgba(232,109,85,.28); }
-.city-body { display: grid; grid-template-columns: 190px 1fr 190px; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
+.city-body { display: grid; flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
 .city-left { background: #111128; border-right: 1px solid var(--border); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden; }
 .city-left .city-banner { flex-shrink: 0; }
 .city-left .npc-tabs { flex-shrink: 0; }
@@ -931,7 +922,7 @@ button, input, select, textarea {
   height: 100%;
 }
 #shop-list .card-name,
-#shop-sell-list .card-name { font-size: 9px; color: #e8e8f0; line-height: 1.45; word-break: break-word; }
+#shop-sell-list .card-name { color: #e8e8f0; word-break: break-word; }
 #shop-list .card-stat,
 #shop-sell-list .card-stat { font-size: 8px; color: #2ecc71; line-height: 1.55; }
 #shop-list .card-desc,

@@ -24,6 +24,7 @@ import { gameRuntimeStylePaths } from './runtime-source.mjs';
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const chromePath = process.env.CHROME_PATH || String.raw`C:\Program Files\Google\Chrome\Application\chrome.exe`;
 const apply = process.argv.includes('--apply');
+const applyDeclarations = process.argv.includes('--apply-decls');
 
 const server = createStaticServer(root);
 await new Promise((done, fail) => { server.once('error', fail); server.listen(0, '127.0.0.1', done); });
@@ -31,9 +32,10 @@ const url = `http://127.0.0.1:${server.address().port}/index.html?seed=css-fold`
 
 let inventory;
 let browser;
+let page;
 try {
   browser = await chromium.launch({ executablePath: chromePath, headless: true, args: ['--disable-gpu'] });
-  const page = await browser.newPage();
+  page = await browser.newPage();
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.styleSheets.length > 3);
   inventory = await page.evaluate(() => {
@@ -55,9 +57,18 @@ try {
     }
     return rules;
   });
-} finally {
+} catch (error) {
   if (browser) await browser.close();
   await new Promise(done => server.close(done));
+  throw error;
+}
+
+/** Close the browser and the dev server once every phase is done. The page has
+ *  to stay alive: expanding shorthands into longhands asks the browser itself. */
+async function shutdown(code) {
+  if (browser) await browser.close();
+  await new Promise(done => server.close(done));
+  process.exit(code);
 }
 
 /** Last writer for each (media, selector, property), with its importance. */
@@ -94,9 +105,9 @@ for (const [file, rules] of [...byFile.entries()].sort((a, b) => b[1].length - a
   if (rules.length > 6) console.log(`      ... ещё ${rules.length - 6}`);
 }
 
-if (!apply) {
-  console.log('\nЗапустите с --apply, чтобы удалить их из файлов.');
-  process.exit(0);
+if (!apply && !applyDeclarations) {
+  console.log('\n--apply удаляет полностью перекрытые правила, --apply-decls — отдельные перекрытые объявления.');
+  await shutdown(0);
 }
 
 /** Walk a stylesheet's source, yielding each rule with its byte range. */
@@ -127,7 +138,7 @@ function sourceRules(css, media = '', counter = { index: 0 }) {
       found.push(...sourceRules(css.slice(brace + 1, j - 1), prelude.replace(/^@media\s*/, ''), counter)
         .map(entry => ({ ...entry, start: entry.start + brace + 1, end: entry.end + brace + 1 })));
     } else if (!prelude.startsWith('@')) {
-      found.push({ selector: prelude, media, start: i, end: j, index: counter.index++ });
+      found.push({ selector: prelude, media, start: i, end: j, bodyStart: brace + 1, bodyEnd: j - 1, index: counter.index++ });
     }
     i = j;
   }
@@ -135,6 +146,33 @@ function sourceRules(css, media = '', counter = { index: 0 }) {
 }
 
 const normalise = selector => selector.split(',').map(part => part.trim().replace(/\s+/g, ' ')).join(', ');
+
+/** Split a rule body into declarations, with their byte ranges.
+ *  Semicolons inside url(), quotes or parentheses do not end a declaration. */
+function sourceDeclarations(body, offset) {
+  const found = [];
+  let depth = 0;
+  let quote = null;
+  let start = 0;
+  for (let i = 0; i < body.length; i += 1) {
+    const ch = body[i];
+    if (quote) { if (ch === quote && body[i - 1] !== '\\') quote = null; continue; }
+    if (ch === '"' || ch === "'") { quote = ch; continue; }
+    if (ch === '(') depth += 1;
+    else if (ch === ')') depth = Math.max(0, depth - 1);
+    else if (ch === ';' && !depth) {
+      const text = body.slice(start, i);
+      if (text.trim()) found.push({ text, start: offset + start, end: offset + i + 1 });
+      start = i + 1;
+    }
+  }
+  const tail = body.slice(start);
+  if (tail.trim() && tail.includes(':')) found.push({ text: tail, start: offset + start, end: offset + body.length });
+  return found.map(entry => {
+    const colon = entry.text.indexOf(':');
+    return { ...entry, prop: entry.text.slice(0, colon).trim().toLowerCase(), value: entry.text.slice(colon + 1) };
+  }).filter(entry => entry.prop && !entry.prop.startsWith('/*'));
+}
 let removed = 0;
 for (const stylePath of gameRuntimeStylePaths(root)) {
   const file = stylePath.split(/[\\/]/).pop();
@@ -169,4 +207,69 @@ for (const stylePath of gameRuntimeStylePaths(root)) {
   writeFileSync(stylePath, out.replace(/\n{3,}/g, '\n\n'), 'utf8');
   console.log(`${file}: удалено ${doomed.length}`);
 }
-console.log(`Удалено правил: ${removed}. Проверьте npm run css:check.`);
+if (apply) console.log(`Удалено правил: ${removed}. Проверьте npm run css:check.`);
+
+if (applyDeclarations) {
+  // Phase two: inside rules that survive, drop the individual declarations whose
+  // every longhand is written again later. A shorthand may only go when all the
+  // longhands it expands to are shadowed, or the untouched sides would move.
+  const stylePaths = gameRuntimeStylePaths(root);
+  const parsed = stylePaths.map(stylePath => {
+    const css = readFileSync(stylePath, 'utf8');
+    const rules = sourceRules(css).map(rule => ({
+      ...rule,
+      decls: sourceDeclarations(css.slice(rule.bodyStart, rule.bodyEnd), rule.bodyStart)
+    }));
+    return { stylePath, file: stylePath.split(/[\\/]/).pop(), css, rules };
+  });
+
+  const texts = [...new Set(parsed.flatMap(entry =>
+    entry.rules.flatMap(rule => rule.decls.map(decl => decl.text.trim()))))];
+  const longhands = await page.evaluate(list => {
+    const probe = document.createElement('div');
+    const out = {};
+    for (const text of list) {
+      probe.style.cssText = '';
+      probe.style.cssText = text.replace(/\s*!important\s*$/i, '');
+      out[text] = [...probe.style];
+    }
+    return out;
+  }, texts);
+
+  let declRemoved = 0;
+  for (const entry of parsed) {
+    const byKey = new Map();
+    for (const rule of inventory.filter(item => item.file === entry.file)) {
+      const id = `${normalise(rule.media)}|${normalise(rule.selector)}`;
+      if (!byKey.has(id)) byKey.set(id, []);
+      byKey.get(id).push(rule);
+    }
+    const cuts = [];
+    for (const rule of entry.rules) {
+      const matches = byKey.get(`${normalise(rule.media)}|${normalise(rule.selector)}`) || [];
+      if (matches.length !== 1) continue;
+      const live = matches[0];
+      for (const decl of rule.decls) {
+        const props = longhands[decl.text.trim()] || [];
+        if (!props.length) continue;
+        const important = /!important\s*$/i.test(decl.text);
+        const shadowed = props.every(prop => {
+          const winner = lastWriter.get(`${live.media}|${live.selector}|${prop}`);
+          return winner && winner.order > live.order && (winner.important || !important);
+        });
+        if (shadowed) cuts.push(decl);
+      }
+    }
+    if (!cuts.length) continue;
+    let out = entry.css;
+    for (const decl of [...cuts].sort((a, b) => b.start - a.start)) out = out.slice(0, decl.start) + out.slice(decl.end);
+    // A rule left holding nothing but whitespace is noise; drop it whole.
+    out = out.replace(/(^|\n)([^{}\n][^{}]*)\{\s*\}\s*\n/g, '$1');
+    writeFileSync(entry.stylePath, out.replace(/\n{3,}/g, '\n\n'), 'utf8');
+    console.log(`${entry.file}: удалено объявлений ${cuts.length}`);
+    declRemoved += cuts.length;
+  }
+  console.log(`Удалено объявлений: ${declRemoved}. Проверьте npm run css:check.`);
+}
+
+await shutdown(0);

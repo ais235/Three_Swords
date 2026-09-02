@@ -1,7 +1,5 @@
 /* Readable perk tree: wide cards, stable wrapping, and explicit mechanics. */
 #perk-modal .perk-modal-box {
-  width: min(980px, 96vw);
-  max-height: min(92vh, 720px);
   border-color: #414168;
   box-shadow: 0 24px 80px rgba(0, 0, 0, .72), 0 0 32px rgba(74, 158, 255, .08);
 }
@@ -16,27 +14,21 @@
 }
 
 #perk-modal .perk-col-header {
-  min-height: 30px;
   display: grid;
   place-items: center;
   box-sizing: border-box;
   margin-bottom: 8px;
-  font-size: 10px !important;
   line-height: 1.2 !important;
 }
 
 #perk-modal .perk-skill {
   width: 100%;
   max-width: none;
-  min-height: 64px;
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
   grid-template-rows: auto auto;
   align-items: center;
   justify-content: stretch;
-  column-gap: 8px;
   row-gap: 3px;
-  padding: 8px 9px;
   border-radius: 8px;
   text-align: left;
 }
@@ -50,14 +42,11 @@
 #perk-modal .perk-skill-icon {
   grid-column: 1;
   grid-row: 1 / 3;
-  width: 30px;
-  height: 30px;
   display: grid;
   place-items: center;
   margin: 0;
   border-radius: 7px;
   background: rgba(255,255,255,.055);
-  font-size: 17px;
 }
 
 #perk-modal .perk-skill-copy {
@@ -71,8 +60,6 @@
   max-width: none;
   color: #f2f2f8;
   text-align: left;
-  font-size: 10px !important;
-  line-height: 1.3 !important;
   word-break: normal;
   overflow-wrap: normal;
   hyphens: none;
@@ -80,9 +67,6 @@
 
 #perk-modal .perk-skill-summary {
   margin-top: 3px;
-  color: #aeb4cd;
-  font-size: 8px;
-  line-height: 1.3;
   word-break: normal;
   overflow-wrap: normal;
 }
@@ -91,12 +75,9 @@
   grid-column: 3;
   grid-row: 1 / 3;
   align-self: start;
-  padding: 2px 5px;
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 999px;
-  color: #9399b5;
   background: rgba(0,0,0,.2);
-  font-size: 7px;
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -106,8 +87,6 @@
 }
 
 #perk-modal .perk-detail-panel {
-  padding: 16px;
-  gap: 9px;
   overflow: hidden;
   background:
     radial-gradient(circle at 85% 5%, rgba(74,158,255,.09), transparent 34%),

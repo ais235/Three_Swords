@@ -388,7 +388,6 @@
 }
 .onboarding-title {
   color: var(--accent-gold);
-  font-size: 18px;
   line-height: 1.3;
   letter-spacing: 1px;
 }
@@ -408,7 +407,6 @@
 }
 .onboarding-text {
   color: var(--text-main);
-  font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
 }
@@ -432,7 +430,6 @@
 }
 .onboarding-tip-text {
   color: var(--text-dim);
-  font-size: 11px;
   line-height: 1.5;
 }
 .onboarding-progress {

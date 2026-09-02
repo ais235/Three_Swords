@@ -144,7 +144,10 @@ const checks = [
   ['first battle coach uses field overlay', () => index.includes('id="battle-coach-overlay"') && index.includes('function renderFtueCoachOverlay')],
   ['Russian perk names are complete', () => index.includes('const PERK_NAMES_RU') && index.includes("y3:'") && index.includes('localizedPerkName(perk)')],
   ['perk rules expose exact triggers and values', () => index.includes('const PERK_RULES_RU') && index.includes('a1: { summary:') && index.includes('y3: { summary:') && index.includes('trigger:') && index.includes('effect:')],
-  ['perk menu uses readable horizontal cards', () => existsSync(resolve(root, 'styles/perk-menu.css')) && readFileSync(resolve(root, 'styles/perk-menu.css'), 'utf8').includes('grid-template-columns: 32px minmax(0, 1fr) auto')],
+  // Assert the card shape, not the file it lives in: perk-menu.css declared a
+  // 32px icon column that readability.css overrode with 36px, so the check was
+  // pinned to a value that never rendered.
+  ['perk menu uses readable horizontal cards', () => /#perk-modal \.perk-skill \{[^}]*grid-template-columns:\s*\d+px minmax\(0, 1fr\) auto/.test(index)],
   ['perk detail separates trigger and effect', () => index.includes('perk-detail-rule') && index.includes("trigger:'") && index.includes("effect:'")],
   ['damage preview has a dedicated card', () => index.includes('function damagePreviewCardHtml') && index.includes('damage-preview-card')],
   ['contextual map cell intelligence is present', () => index.includes('selectedCellInfoHtml') && index.includes('function mapNodeIntel') && index.includes('bossDistance')],
