@@ -21,7 +21,8 @@ export const UI_STATE_NAMES = [
   'bestiary', 'bestiary-detail', 'arsenal', 'arsenal-detail',
   'victory', 'perk-modal', 'perk-modal-selected', 'skill-unlock-modal',
   'story-modal', 'event-screen', 'confirm-modal', 'alert-modal', 'prompt-modal',
-  'gameover', 'ending'
+  'gameover', 'ending',
+  'game-menu-overlay', 'sfx-auditor'
 ];
 
 /** Roots worth measuring. Anything outside these is chrome the game does not style. */
@@ -29,12 +30,16 @@ export const MEASURED_ROOTS = [
   '#main-menu', '#hud-top', '#map-screen', '#battle-screen', '#city-screen', '#inventory-screen',
   '#victory-screen', '#gameover-screen', '#ending-screen', '#event-screen', '#bestiary-screen',
   '#arsenal-screen', '#perk-modal', '#confirm-modal', '#game-alert-modal', '#game-prompt-modal',
-  '#skill-unlock-modal', '#story-modal', '#menu-settings-overlay'
+  '#skill-unlock-modal', '#story-modal', '#menu-settings-overlay',
+  '#game-menu-overlay', '#sfx-auditor-modal', '#orientation-gate'
 ];
 
 export const VIEWPORTS = [
   { name: 'desktop', width: 1440, height: 900 },
-  { name: 'landscape-phone', width: 812, height: 375 }
+  { name: 'landscape-phone', width: 812, height: 375 },
+  // Portrait is not a target layout, but the rotate-your-device gate and the
+  // portrait media queries are shipped code and need measuring too.
+  { name: 'portrait-phone', width: 375, height: 812 }
 ];
 
 /** Put the page into one named state. Returns false when the state cannot be built. */
@@ -280,6 +285,18 @@ export async function applyUiState(page, name) {
           { value: 'b', label: 'Второй вариант' }
         ]);
         await settle(260);
+      },
+      'game-menu-overlay': async () => {
+        await toMap();
+        openGameMenu();
+        await settle(280);
+      },
+      'sfx-auditor': async () => {
+        await toMap();
+        // The auditor ships behind a dev flag but its styles ride along.
+        const modal = document.getElementById('sfx-auditor-modal');
+        if (modal) { renderSfxAuditor(); modal.classList.remove('hidden'); }
+        await settle(280);
       },
       'gameover': () => toListScreen(renderGameOverUI, 'gameover'),
       'ending': () => toListScreen(renderEndingSummary, 'ending')
