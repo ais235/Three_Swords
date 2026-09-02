@@ -443,14 +443,7 @@ textarea {
   font-size: 16px !important;
   line-height: 1 !important;
 }
-#battle-screen .battle-actions .skill-action-name {
-  font-size: 11px !important;
-  line-height: 1.15 !important;
-}
-#battle-screen .battle-actions .skill-action-meta {
-  font-size: 9px !important;
-  line-height: 1.2 !important;
-}
+
 @media (max-height: 520px) and (orientation: landscape) {
   #battle-screen .battle-actions .skill-action-btn {
     min-height: 32px !important;

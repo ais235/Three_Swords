@@ -11,16 +11,6 @@
   background: linear-gradient(90deg, #191930, #121225);
 }
 
-#perk-modal .perk-modal-body {
-  grid-template-columns: minmax(0, 1fr) minmax(270px, 310px);
-  min-height: 400px;
-}
-
-#perk-modal .perk-branches {
-  padding: 16px;
-  gap: 12px;
-}
-
 #perk-modal .perk-col {
   align-items: stretch;
 }
