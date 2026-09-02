@@ -1,5 +1,5 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -31,6 +31,15 @@ function scanRuntimeSource(relative, source) {
     if (existsSync(resolve(root, candidate))) runtimeFiles.add(candidate);
   }
   for (const match of source.matchAll(/(?:src|href)=["']([^"'?#]+\.(?:js|css))["']/gi)) addRelativePath(match[1]);
+  // A url() inside a stylesheet resolves against that stylesheet, not the root.
+  // Moving the CSS out of index.html turned assets/ui/fon.png into
+  // ../assets/ui/fon.png, and the plain assets/ scan stopped seeing it, so the
+  // menu and map backgrounds silently dropped out of the archive.
+  for (const match of source.matchAll(/url\(\s*['"]?([^'")?#]+\.(?:png|jpe?g|webp|gif|svg|woff2?|ttf|otf))['"]?\s*\)/gi)) {
+    const raw = match[1].replaceAll('\\', '/');
+    if (raw.startsWith('data:') || raw.includes('://') || raw.startsWith('/')) continue;
+    addRelativePath(posix.normalize(posix.join(posix.dirname(relative.replaceAll('\\', '/')), raw)));
+  }
 }
 
 scanRuntimeSource('index.html', index);

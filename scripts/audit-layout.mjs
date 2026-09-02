@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { GAME_RUNTIME_SCRIPTS, gameRuntimeScriptPaths, loadGameRuntimeSource } from './runtime-source.mjs';
+import { GAME_RUNTIME_SCRIPTS, gameRuntimeScriptPaths, gameRuntimeStylePaths, loadGameRuntimeSource } from './runtime-source.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const indexPath = resolve(root, 'index.html');
@@ -30,6 +30,21 @@ function enemyEntries() {
   if (!block) return [];
   return [...block[1].matchAll(/([A-Z0-9_]+):\s*'([^']+)'/g)]
     .map(match => ({ key: match[1], id: match[2] }));
+}
+
+/** Every url() in a shipped stylesheet must resolve to a file on disk, relative
+ *  to that stylesheet. Moving the CSS out of index.html rewrote these paths, and
+ *  the menu and map backgrounds quietly stopped being packaged into the release. */
+function everyStylesheetUrlResolves() {
+  return gameRuntimeStylePaths(root).every(stylePath => {
+    const css = readFileSync(stylePath, 'utf8');
+    const dir = dirname(stylePath);
+    return [...css.matchAll(/url\(\s*['"]?([^'")?#]+)['"]?\s*\)/gi)].every(match => {
+      const raw = match[1];
+      if (raw.startsWith('data:') || raw.includes('://') || raw.startsWith('/')) return true;
+      return existsSync(resolve(dir, raw));
+    });
+  });
 }
 
 function everyEquipmentItemHasUniqueIcon() {
@@ -174,6 +189,7 @@ const checks = [
   ,['event choices and delayed consequences are present', () => index.includes('event-choice-list') && index.includes('resolveDelayedEvents') && index.includes('druid_cache')]
   ,['regional terrain assets are packaged from source', () => existsSync(resolve(root, 'assets/tiles/region-forest-glade.png')) && existsSync(resolve(root, 'assets/tiles/region-volcanic-depths.png')) && existsSync(resolve(root, 'assets/tiles/region-sunken-ruins.png'))]
   ,['every equipment item has its own packaged icon', everyEquipmentItemHasUniqueIcon]
+  ,['every stylesheet url resolves from its own folder', everyStylesheetUrlResolves]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
   ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
   ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]
