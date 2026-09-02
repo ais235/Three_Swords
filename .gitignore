@@ -2,3 +2,8 @@ node_modules/
 assets/audio/_extracted/
 dist/
 .npm-cache/
+
+# CSS baseline for the layering refactor: regenerate with
+#   node scripts/css-snapshot.mjs --write
+docs/css-baseline.json
+tmp/

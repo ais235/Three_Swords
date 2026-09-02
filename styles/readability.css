@@ -36,10 +36,6 @@ body,
 #map-screen .cell-info,
 #map-screen .cell-info-name,
 #map-screen .cell-info-completion,
-#map-screen .map-route-title,
-#map-screen .map-route-card strong,
-#map-screen .map-route-card small,
-#map-screen .map-route-threat,
 #map-screen .map-region-cloud-label,
 #map-screen #map-help {
   font-size: var(--readable-compact) !important;

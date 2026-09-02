@@ -199,21 +199,10 @@
     border-top: 0;
     border-left: 1px solid var(--border);
   }
-  #map-screen .map-route-choices {
-    display: grid;
-    gap: 5px;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  #map-screen .map-route-card {
-    flex: none;
-    min-height: 0;
-    padding: 6px 7px;
-  }
-  #map-screen .map-route-card small { display: none; }
-  #map-screen .map-route-card strong,
-  #map-screen .map-route-threat { font-size: 10px !important; }
+  
+  
+  
+  
   #map-screen .map-panel-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -349,30 +338,13 @@
     overflow: hidden !important;
   }
 
-  #map-screen .map-route-choices {
-    min-width: 0;
-  }
+  
 
-  #map-screen .map-route-card {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 3px;
-    min-width: 0;
-    height: auto;
-  }
+  
 
-  #map-screen .map-route-card strong,
-  #map-screen .map-route-threat,
-  #map-screen .map-route-card small {
-    grid-column: 1;
-    min-width: 0;
-    max-width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
+  
 
-  #map-screen .map-route-threat {
-    line-height: 1.25;
-  }
+  
 }
 
 /* UX overhaul: keep primary actions visible in phone landscape. */
@@ -438,13 +410,8 @@
   #map-screen .map-panel-title,
   #map-screen .map-fog-counter,
   #map-screen #map-help { display: none !important; }
-  #map-screen .map-route-choices {
-    display: flex;
-    gap: 5px;
-    min-width: 0;
-    overflow-x: auto;
-  }
-  #map-screen .map-route-card { flex: 1 0 145px; min-height: 44px; }
+  
+  
   #map-screen .map-panel-actions {
     display: grid;
     grid-template-columns: minmax(108px, 1fr) 40px 40px;
@@ -500,15 +467,9 @@
     border-top: 0;
     border-left: 1px solid var(--border);
   }
-  #map-screen .map-route-choices {
-    display: grid;
-    gap: 5px;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  #map-screen .map-route-card { flex: none; min-height: 0; padding: 6px 7px; }
-  #map-screen .map-route-card small { display: none; }
+  
+  
+  
   #map-screen .map-panel-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;

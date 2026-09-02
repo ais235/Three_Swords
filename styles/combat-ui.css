@@ -76,16 +76,6 @@
   .skill-action-btn.ftue-recommended { animation: none; }
 }
 
-.route-intel-line,
-.map-route-intel {
-  color: #9fd7ff !important;
-}
-
-.map-route-intel {
-  padding-top: 3px;
-  border-top: 1px solid rgba(159, 215, 255, .13);
-}
-
 @media (min-width: 900px) and (min-height: 560px) and (hover: hover) and (pointer: fine) {
   #map-screen .map-panel-title,
   #map-screen .map-fog-counter {
@@ -97,14 +87,9 @@
     line-height: 1.5;
   }
 
-  #map-screen .cell-info-name,
-  #map-screen .map-route-card strong {
+  #map-screen .cell-info-name {
     font-size: 12px;
   }
 
-  #map-screen .map-route-card small,
-  #map-screen .map-route-threat {
-    font-size: 10px;
-    line-height: 1.4;
-  }
+  
 }

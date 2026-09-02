@@ -17,6 +17,8 @@
     "test:campaign": "node scripts/test-full-campaign.mjs",
     "test:readability": "node scripts/test-readability.mjs",
     "test:ui-fit": "node scripts/test-ui-fit.mjs",
+    "css:baseline": "node scripts/css-snapshot.mjs --write",
+    "css:check": "node scripts/css-snapshot.mjs",
     "balance:quick": "node scripts/balance-seeds.mjs --quick",
     "balance:check": "node scripts/balance-seeds.mjs --summary",
     "balance:seeds": "node scripts/balance-seeds.mjs",

@@ -137,7 +137,10 @@ const checks = [
   ['touch target confirmation present', () => index.includes('touchConfirmKey') && index.includes('tapToConfirm') && index.includes('function heroDamagePreview')],
   ['touch coordinates account for contained canvas', () => index.includes('function canvasContentRect') && index.includes('const r = canvasContentRect();')],
   ['unit movement is animated and speed-aware', () => index.includes('function startUnitMoveAnimation') && index.includes('function unitVisualPosition') && index.includes('duration: battleDelay(')],
-  ['first battle cannot be skipped', () => index.includes("cur?.id === 'c_0_0' && node.id !== cur.id") && index.includes('btn-first-battle-route')],
+  // The route-card panel that used to carry btn-first-battle-route was removed
+  // from the markup long ago; the live guard is the map Enter handler.
+  ['first battle cannot be skipped', () => index.includes("cur?.id === 'c_0_0' && node.id !== cur.id")
+    && index.includes('startBattleForCell(cur, { skipDeploy: false })')],
   ['first battle coach uses field overlay', () => index.includes('id="battle-coach-overlay"') && index.includes('function renderFtueCoachOverlay')],
   ['Russian perk names are complete', () => index.includes('const PERK_NAMES_RU') && index.includes("y3:'") && index.includes('localizedPerkName(perk)')],
   ['perk rules expose exact triggers and values', () => index.includes('const PERK_RULES_RU') && index.includes('a1: { summary:') && index.includes('y3: { summary:') && index.includes('trigger:') && index.includes('effect:')],
