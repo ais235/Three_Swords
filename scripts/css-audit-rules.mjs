@@ -14,12 +14,39 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { createStaticServer } from './static-server.mjs';
 import { applyUiState, UI_STATE_NAMES, VIEWPORTS } from './ui-states.mjs';
+import { readFileSync } from 'node:fs';
+import { gameRuntimeScriptPaths } from './runtime-source.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const chromePath = process.env.CHROME_PATH || String.raw`C:\Program Files\Google\Chrome\Application\chrome.exe`;
 const args = process.argv.slice(2);
 const showDead = args.includes('--dead');
 const showDupes = args.includes('--dupes');
+const applyDead = args.includes('--apply-dead');
+
+/** Class and id names the running game can actually produce.
+ *
+ *  "Matched no element in any state" is only evidence, never proof: a state can
+ *  be missing from the driver. But a class whose name appears nowhere in the
+ *  markup or the scripts can never be attached to anything, and a rule that needs
+ *  one is dead whatever the coverage. Names built by template literals are kept:
+ *  map-region-1 never appears literally, only map-region-${'$'}{region} does, so a
+ *  prefix hit counts as present. */
+// Markup and scripts only. loadGameRuntimeSource also concatenates the
+// stylesheets, and a class would then always find itself in its own rule.
+const runtimeSource = [resolve(root, 'index.html'), ...gameRuntimeScriptPaths(root)]
+  .map(path => readFileSync(path, 'utf8')).join('\n');
+const tokenExists = token => {
+  if (runtimeSource.includes(token)) return true;
+  const parts = token.split('-');
+  for (let take = parts.length - 1; take >= 1; take -= 1) {
+    if (runtimeSource.includes(parts.slice(0, take).join('-') + '-')) return true;
+  }
+  return false;
+};
+const selectorTokens = selector => [...selector.matchAll(/[.#]([\w-]+)/g)].map(match => match[1]);
+const provablyDead = selector => selector.split(',')
+  .every(part => selectorTokens(part).some(token => !tokenExists(token)));
 
 const server = createStaticServer(root);
 await new Promise((done, fail) => { server.once('error', fail); server.listen(0, '127.0.0.1', done); });
@@ -100,7 +127,9 @@ const byFile = (list, pick) => {
 };
 
 console.log(`Правил: ${inventory.length}, объявлений: ${declarations.size}, состояний проверено: ${UI_STATE_NAMES.length} x ${VIEWPORTS.length}`);
+const proven = dead.filter(rule => provablyDead(rule.selector));
 console.log(`Селекторов без совпадений: ${dead.length}`);
+console.log(`Из них доказуемо мёртвых (имя класса не встречается в разметке и коде): ${proven.length}`);
 console.log(`Объявлений, заданных в нескольких файлах: ${duplicated.length}`);
 console.log('\nНесовпавшие селекторы по файлам:');
 for (const [file, count] of byFile(dead, rule => [rule.file])) console.log(`  ${file.padEnd(28)} ${count}`);
@@ -110,8 +139,12 @@ for (const [file, count] of byFile(duplicated, dupe => new Set(dupe.files.map(na
 }
 
 if (showDead) {
-  console.log('\n== Несовпавшие селекторы ==');
-  for (const rule of dead) console.log(`  ${rule.file}${rule.media ? ` @${rule.media}` : ''}: ${rule.selector}`);
+  console.log('\n== Доказуемо мёртвые ==');
+  for (const rule of proven) console.log(`  ${rule.file}${rule.media ? ` @${rule.media}` : ''}: ${rule.selector}`);
+  console.log('\n== Не совпали, но классы существуют в коде (не удалять) ==');
+  for (const rule of dead.filter(rule => !proven.includes(rule))) {
+    console.log(`  ${rule.file}${rule.media ? ` @${rule.media}` : ''}: ${rule.selector}`);
+  }
 }
 if (showDupes) {
   console.log('\n== Дублированные объявления ==');

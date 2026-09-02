@@ -183,9 +183,6 @@ body,
 #city-screen .shop-footer,
 #city-screen .trader-mode-tab,
 #city-screen .badge,
-#city-screen .service-name,
-#city-screen .service-desc,
-#city-screen .service-btns .btn,
 #city-screen .city-shortcuts-title,
 #city-screen .city-shortcuts .sc-btn,
 #city-screen .alchemist-help,
@@ -208,7 +205,6 @@ body,
 
 #city-screen .city-banner-title,
 #city-screen .shop-title,
-#city-screen .services-title,
 #city-screen .alchemist-panel-title,
 #city-screen .oracle-panel-title {
   font-size: 16px !important;

@@ -114,7 +114,7 @@
   #shop-list:not(.items-grid-scroll) .item-card.secret { grid-column: auto !important; height: 100%; }
   #shop-list.items-grid-scroll .item-card.secret { grid-column: 1 / -1 !important; height: auto; }
   #shop-list .btn-buy-ad { font-size: 5px; padding: 4px 2px; }
-  .service-card .service-desc, .sc-desc { display: none; }
+  .sc-desc { display: none; }
   .city-shortcuts .sc-btn { font-size: 7px; padding: 1px 3px; min-height: 22px; }
   .npc-tab-img { width: 20px; height: 20px; border-radius: 3px; }
   .npc-inline-face { width: 24px; height: 24px; border-radius: 4px; }
@@ -136,7 +136,7 @@
   .inv-tab { font-size: 8px; min-height: 28px; padding: 2px 3px; }
   .inv-portrait-icon { font-size: 18px; }
   .inv-portrait-name { font-size: 8px; }
-  .inv-portrait-class, .slots-title { display: none; }
+  .inv-portrait-class { display: none; }
   .inv-stats { padding: 4px; }
   .stat-row { font-size: 8px; margin-bottom: 2px; }
   #inv-hero-perks { margin-top: 4px; }

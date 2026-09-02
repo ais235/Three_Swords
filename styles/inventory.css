@@ -141,13 +141,11 @@
   .alchemist-row-meta { font-size: 10px; }
 
   .city-banner-title,
-  .shop-title,
-  .services-title,
-  .alchemist-panel-title,
-  .oracle-panel-title { font-size: 13px; }
+.shop-title,
+.alchemist-panel-title,
+.oracle-panel-title { font-size: 13px; }
 
-  .city-banner-desc,
-  .service-desc { font-size: 10px; }
+  .city-banner-desc { font-size: 10px; }
 
   #shop-list .card-name,
   #shop-sell-list .card-name { font-size: 11px; }
@@ -450,12 +448,12 @@
   .trader-mode-tab { font-size: 7px; padding: 5px 4px; }
   #shop-list .card-price, #shop-sell-list .card-price, #shop-list .card-footer .badge { font-size: 8px; }
   #shop-sell-list .card-body { padding: 8px; gap: 5px; }
-  .services-title { font-size: 9px; margin-bottom: 0; }
-  .service-card { padding: 7px; }
-  .service-icon { font-size: 14px; }
-  .service-name { font-size: 9px; }
-  .service-desc { font-size: 8px; margin-bottom: 4px; }
-  .service-btns .btn { min-height: 30px; padding: 3px 5px; font-size: 8px; }
+  
+  
+  
+  
+  
+  
   .city-shortcuts .sc-btn { font-size: 8px; padding: 2px 4px; min-height: 26px; }
   .npc-tab-img { width: 22px; height: 22px; }
   .npc-inline-face { width: 28px; height: 28px; }
@@ -488,7 +486,7 @@
   .inv-portrait-class { font-size: 8px; }
   .inv-stats { padding: 6px; margin-bottom: 2px; }
   .stat-row { font-size: 8px; margin-bottom: 2px; }
-  .slots-title { font-size: 8px; margin-top: 4px; margin-bottom: 2px; }
+  
   .equip-slot { padding: 5px; gap: 5px; margin-bottom: 3px; }
   .equip-slot-icon { width: 20px; height: 20px; font-size: 12px; }
   .equip-slot-name, .equip-slot-type { font-size: 8px; }
