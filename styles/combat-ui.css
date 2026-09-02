@@ -2,7 +2,7 @@
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 0 4px;
+  gap: 0 var(--space-2);
 }
 
 .damage-preview-main > span {
@@ -22,12 +22,12 @@
 .damage-preview-meta { color: var(--text-dim); }
 .damage-preview-status { color: #ff9b42; }
 .damage-preview-tags { color: #9fd7ff; }
-.damage-preview-warning { margin-top: 4px; color: #ff7b72; font-size: 10px; }
+.damage-preview-warning { margin-top: var(--space-2); color: #ff7b72; font-size: var(--font-sm); }
 
 .damage-kill {
   display: block;
   margin-top: 5px;
-  padding-top: 4px;
+  padding-top: var(--space-2);
   border-top: 1px solid rgba(255, 255, 255, .12);
   font-size: 9px;
   letter-spacing: .5px;
@@ -60,7 +60,7 @@
   place-items: center;
   width: 17px;
   height: 17px;
-  border-radius: 50%;
+  border-radius: var(--radius-circle);
   background: var(--accent-gold);
   color: #12101a;
   font-weight: 900;
@@ -88,7 +88,7 @@
   }
 
   #map-screen .cell-info-name {
-    font-size: 12px;
+    font-size: var(--font-md);
   }
 
   

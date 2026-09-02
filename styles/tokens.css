@@ -1,0 +1,114 @@
+/* Three Blades — design tokens. The single place where the look is decided.
+ *
+ * WHY THIS FILE EXISTS. Before it, the values were spread across ten stylesheets:
+ * the colour tokens sat in layout.css, but --text-dim and --text-hint were declared
+ * in readability.css — the last correction layer — while the base files used them a
+ * hundred times. Custom properties resolve at computed-value time, so it worked,
+ * but it meant the bottom of the cascade owned colours the top of it depended on.
+ * Everything is declared here now, before any rule can use it.
+ *
+ * THE SCALES ARE EVEN ON PURPOSE. An audit of the stylesheets found 16 distinct
+ * font sizes (every whole number from 5 to 18), 12 line heights spaced 0.05 apart,
+ * 13 corner radii and 142 spacing values. That is not a design system, it is the
+ * residue of patching one element at a time, and it is the concrete reason the
+ * game reads as a web page rather than an interface. This is a pixel-art game, so
+ * the scales below sit on an even grid: a 3px gap or a 5px radius cannot line up
+ * with art drawn on 2px steps, and the eye reads the misalignment as sloppiness
+ * even when it cannot name it.
+ *
+ * ODD VALUES ARE NOT TOKENS ON PURPOSE. Roughly 210 font-size and 113 spacing
+ * declarations still use off-grid numbers. They are deliberately left as literals
+ * so they stay visible: anything spelled as a raw value in a rule has not been
+ * brought onto the system yet. `node scripts/css-audit-tokens.mjs` lists them.
+ */
+:root {
+  /* Surfaces, darkest first. --bg-dark is the game's one box background. */
+  --bg-deep: #0a0a14;
+  --bg-dark: #0d0d1a;
+  --bg-card: #111128;
+  --bg-card-hover: #151530;
+  --bg-panel: #1a1a2e;
+
+  /* Text. --text-main for content, --text-dim for secondary, --text-hint for
+   * anything the player can ignore without losing information. */
+  --text-main: #e8e8f0;
+  --text-dim: #aeb3ca;
+  --text-hint: #858ba8;
+
+  /* Accents. Each one carries a fixed meaning in the interface: gold is worth
+   * and reward, blue is action, green is health and gain, red is damage and
+   * loss, purple is magic, teal is information. */
+  --accent-gold: #f0a500;
+  --accent-blue: #4a9eff;
+  --accent-green: #2ecc71;
+  --accent-red: #e74c3c;
+  --accent-purple: #9b59b6;
+  --accent-teal: #1abc9c;
+
+  --border: #2a2a4a;
+
+  /* THE SURFACE — the game's one box, and the only layout primitive here.
+   *
+   * An audit found 81 rules declaring background + border + radius on their own,
+   * in 65 different combinations, even though 27 of them are the same box: a dark
+   * ground with a one-pixel border. Every panel, card, tab, slot and button frame
+   * in the game is that box. Spelled 65 ways it reads as a web page; spelled once
+   * it reads as an interface.
+   *
+   * Components point at these rather than at the palette directly, so "boxes are
+   * darker than the page" stays one decision instead of being spread over the
+   * meaning of --bg-dark, which is also the page itself.
+   *
+   * Radius is deliberately not here. Those same rules use 4, 5, 6 and 8 px with no
+   * rule behind the choice, and picking one would move pixels; it belongs to the
+   * screen-by-screen pass, and until then the raw number marks the open question. */
+  --surface-bg: var(--bg-dark);
+  --surface-bg-sunken: var(--bg-deep);
+  --surface-bg-raised: var(--bg-card);
+  --surface-border-color: var(--border);
+  --surface-border: 1px solid var(--surface-border-color);
+
+  /* Spacing, 2px grid. Zero has no token: it needs no name, and naming it only
+   * makes `margin: 0` longer to read. */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+
+  /* Corner radii. --radius-pill and --radius-circle are shapes, not steps. */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* Font sizes, 2px grid. */
+  --font-xs: 8px;
+  --font-sm: 10px;
+  --font-md: 12px;
+  --font-lg: 14px;
+  --font-xl: 16px;
+  --font-2xl: 20px;
+
+  /* Reading sizes by role rather than by number. These are the floors the
+   * readability audit enforces, which is why they shrink on short screens
+   * instead of being pinned like the scale above. */
+  --readable-copy: 13px;
+  --readable-compact: 12px;
+  --readable-label: 12px;
+}
+
+/*
+ * Landscape phones have much less vertical room. Ten pixels is the hard floor:
+ * panels may scroll internally, but gameplay text never returns to 6-9 px.
+ */
+@media (orientation: landscape) and (max-height: 560px) {
+  :root {
+    --readable-copy: 11px;
+    --readable-compact: 10px;
+    --readable-label: 10px;
+  }
+}

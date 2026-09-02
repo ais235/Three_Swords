@@ -1,5 +1,5 @@
 import { readFileSync, existsSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GAME_RUNTIME_SCRIPTS, gameRuntimeScriptPaths, gameRuntimeStylePaths, loadGameRuntimeSource } from './runtime-source.mjs';
 
@@ -24,6 +24,10 @@ const runtimeScriptPaths = gameRuntimeScriptPaths(root);
 const index = loadGameRuntimeSource(root);
 const plan = readFileSync(planPath, 'utf8');
 const readability = existsSync(readabilityPath) ? readFileSync(readabilityPath, 'utf8') : '';
+// The --readable-* sizes moved to the token file; the rules that enforce them
+// stayed in readability.css. Both halves of the contract are checked below.
+const tokensPath = resolve(root, 'styles/tokens.css');
+const tokens = existsSync(tokensPath) ? readFileSync(tokensPath, 'utf8') : '';
 
 function enemyEntries() {
   const block = index.match(/const ENEMY_IDS = \{([\s\S]*?)\n\s*\};/);
@@ -64,6 +68,25 @@ function bundledFontIsSelfContained() {
   return declaresFace && noRemoteFont
     && existsSync(resolve(root, 'assets/fonts/press-start-2p-cyrillic.woff2'))
     && existsSync(resolve(root, 'assets/fonts/PressStart2P-OFL.txt'));
+}
+
+/** Global tokens belong to styles/tokens.css and nowhere else.
+ *
+ *  They used to be split: the palette sat in layout.css while --text-dim and the
+ *  --readable-* sizes were declared in readability.css, the last correction layer,
+ *  even though the base files used them a hundred times. It worked, because custom
+ *  properties resolve at computed-value time rather than by source order, but it
+ *  meant deleting the bottom of the cascade would have silently recoloured the top.
+ *
+ *  Component-scoped properties are a different thing and stay allowed: a rule like
+ *  .city-panel-trader { --shop-icon-size: 40px } is how a component parameterises
+ *  itself, and it is not a global decision. Only :root declarations are global. */
+function globalTokensLiveInOneFile() {
+  return gameRuntimeStylePaths(root).every(stylePath => {
+    if (basename(stylePath) === 'tokens.css') return true;
+    const css = readFileSync(stylePath, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    return [...css.matchAll(/:root[^{]*\{([^{}]*)\}/g)].every(match => !/--[a-z0-9-]+\s*:/i.test(match[1]));
+  });
 }
 
 function everyEquipmentItemHasUniqueIcon() {
@@ -184,8 +207,8 @@ const checks = [
   ['combat preview module present', () => existsSync(resolve(root, 'src/combat-preview.js'))],
   ['critical path browser test present', () => existsSync(resolve(root, 'scripts/test-critical-path.mjs'))],
   ['global readability layer loads last', () => index.includes('<link rel="stylesheet" href="styles/readability.css">') && index.indexOf('styles/readability.css') > index.indexOf('styles/combat-ui.css')],
-  ['desktop typography floor is present', () => readability.includes('--readable-compact: 12px') && readability.includes('#perk-modal .perk-skill-summary')],
-  ['mobile typography floor is present', () => readability.includes('@media (orientation: landscape) and (max-height: 560px)') && readability.includes('--readable-label: 10px')],
+  ['desktop typography floor is present', () => tokens.includes('--readable-compact: 12px') && readability.includes('#perk-modal .perk-skill-summary')],
+  ['mobile typography floor is present', () => readability.includes('@media (orientation: landscape) and (max-height: 560px)') && tokens.includes('--readable-label: 10px')],
   ['readability browser test present', () => existsSync(readabilityTestPath)],
   ['snake map topology module present', () => existsSync(mapTopologyPath) && index.includes('src/map-topology.js')],
   ['bosses use fixed terminal-zone anchors', () => index.includes('WorldMapTopology.REGION_BOSS_ANCHORS') && index.includes("assignAt('boss'") && index.includes('WorldMapTopology.FINAL_ANCHOR')],
@@ -216,6 +239,7 @@ const checks = [
   ,['every equipment item has its own packaged icon', everyEquipmentItemHasUniqueIcon]
   ,['every stylesheet url resolves from its own folder', everyStylesheetUrlResolves]
   ,['bundled display font ships self-hosted with its licence', bundledFontIsSelfContained]
+  ,['global design tokens live in one file', globalTokensLiveInOneFile]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
   ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
   ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]

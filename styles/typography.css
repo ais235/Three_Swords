@@ -4,7 +4,7 @@
 
 /* Readability pass: the local monospace font needs larger sizes than the old webfont. */
 body {
-  font-size: 12px;
+  font-size: var(--font-md);
 }
 #game-container {
   max-width: min(1360px, 100vw);
@@ -16,7 +16,7 @@ button,
 input,
 select,
 textarea {
-  font-size: 12px !important;
+  font-size: var(--font-md) !important;
 }
 .btn {
   min-height: 34px;
@@ -33,7 +33,7 @@ textarea {
 #confirm-text,
 .game-prompt-label,
 #inv-detail {
-  font-size: 12px !important;
+  font-size: var(--font-md) !important;
   line-height: 1.55;
 }
 #map-screen .map-node {
@@ -50,7 +50,7 @@ textarea {
 .cell-info-name,
 #map-help,
 .party-card {
-  font-size: 12px !important;
+  font-size: var(--font-md) !important;
 }
 .city-body {
   grid-template-columns: 210px 1fr 210px;
@@ -149,10 +149,10 @@ textarea {
 }
 .battle-actions .skill-action-btn {
   min-height: 42px;
-  padding: 6px 8px;
+  padding: var(--space-3) var(--space-4);
 }
 .battle-actions .skill-action-btn .skill-action-icon {
-  font-size: 16px !important;
+  font-size: var(--font-xl) !important;
   line-height: 1 !important;
 }
 .battle-actions .skill-action-btn .skill-action-name {
@@ -165,7 +165,7 @@ textarea {
 }
 #shop-list .card-name,
 #shop-sell-list .card-name {
-  font-size: 12px !important;
+  font-size: var(--font-md) !important;
   line-height: 1.45;
 }
 #shop-list .card-stat,
@@ -185,16 +185,16 @@ textarea {
 .bestiary-stat b,
 .skill-unlock-name,
 .perk-detail-name {
-  font-size: 14px !important;
+  font-size: var(--font-lg) !important;
 }
 .menu-btn,
 .menu-diff-btn,
 .menu-diff-label {
-  font-size: 12px !important;
+  font-size: var(--font-md) !important;
   line-height: 1.35;
 }
 .onboarding-title {
-  font-size: 20px !important;
+  font-size: var(--font-2xl) !important;
 }
 .onboarding-subtitle,
 .onboarding-tip-title {
@@ -204,7 +204,7 @@ textarea {
   font-size: 15px !important;
 }
 .onboarding-tip-text {
-  font-size: 12px !important;
+  font-size: var(--font-md) !important;
 }
 @media (max-width: 620px) {
   .onboarding-tips {
@@ -213,8 +213,8 @@ textarea {
   .onboarding-head,
   .onboarding-body,
   .onboarding-actions {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
   }
   .onboarding-actions {
     flex-direction: column;
@@ -333,7 +333,7 @@ textarea {
   line-height: 1.55 !important;
 }
 #inventory-screen .item-detail-desc {
-  font-size: 14px !important;
+  font-size: var(--font-lg) !important;
   line-height: 1.65 !important;
 }
 #inventory-screen .item-detail-title,
@@ -349,7 +349,7 @@ textarea {
   line-height: 1.35 !important;
 }
 #map-screen .map-node small {
-  font-size: 10px !important;
+  font-size: var(--font-sm) !important;
 }
 #shop-list .card-price,
 #shop-sell-list .card-price,
@@ -359,31 +359,31 @@ textarea {
   font-size: 15px !important;
 }
 #battle-screen .battle-left {
-  gap: 6px;
-  padding: 6px;
+  gap: var(--space-3);
+  padding: var(--space-3);
 }
 #battle-screen .battle-left .hero-card {
-  padding: 6px;
+  padding: var(--space-3);
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 #battle-screen .battle-left .hero-card-top {
-  margin-bottom: 4px;
+  margin-bottom: var(--space-2);
   flex-shrink: 0;
 }
 #battle-screen .battle-left .hero-card-name {
-  font-size: 12px !important;
+  font-size: var(--font-md) !important;
   line-height: 1.2 !important;
 }
 #battle-screen .battle-left .hero-card-class,
 #battle-screen .battle-left .bar-label,
 #battle-screen .battle-left .hero-mini-stats {
-  font-size: 10px !important;
+  font-size: var(--font-sm) !important;
   line-height: 1.2 !important;
 }
 #battle-screen .battle-left .bar-wrap {
-  margin-bottom: 2px;
+  margin-bottom: var(--space-1);
   flex-shrink: 0;
 }
 #battle-screen .battle-left .skills-row {
@@ -395,23 +395,23 @@ textarea {
 #battle-screen .battle-left .skill-btn {
   width: 21px;
   height: 21px;
-  font-size: 10px;
+  font-size: var(--font-sm);
   flex: 0 0 21px;
 }
 /* Desktop battle cards have enough vertical room for a readable hero summary. */
 @media (min-width: 1000px) and (min-height: 600px) {
-  #battle-screen .battle-left { padding: 10px; gap: 8px; }
+  #battle-screen .battle-left { padding: var(--space-5); gap: var(--space-4); }
   #battle-screen .battle-left .hero-card {
-    padding: 10px;
+    padding: var(--space-5);
     justify-content: space-evenly;
   }
-  #battle-screen .battle-left .hero-card-top { gap: 8px; margin-bottom: 0; }
+  #battle-screen .battle-left .hero-card-top { gap: var(--space-4); margin-bottom: 0; }
   #battle-screen .battle-left .hero-icon-large-img {
     width: 28px;
     height: 28px;
   }
   #battle-screen .battle-left .hero-icon-large { font-size: 24px; }
-  #battle-screen .battle-left .hero-card-name { font-size: 14px !important; }
+  #battle-screen .battle-left .hero-card-name { font-size: var(--font-lg) !important; }
   #battle-screen .battle-left .hero-card-class,
   #battle-screen .battle-left .bar-label,
   #battle-screen .battle-left .hero-mini-stats { font-size: 11px !important; }
@@ -425,13 +425,13 @@ textarea {
 }
 #battle-screen .battle-actions .skill-action-btn {
   grid-template-columns: 30px minmax(0, 1fr);
-  padding: 6px 8px !important;
+  padding: var(--space-3) var(--space-4) !important;
   text-align: left;
 }
 #battle-screen .battle-actions .skill-action-icon {
   width: 28px;
   height: 28px;
-  font-size: 16px !important;
+  font-size: var(--font-xl) !important;
   line-height: 1 !important;
 }
 
@@ -444,21 +444,21 @@ textarea {
   #battle-screen .battle-actions .skill-action-icon {
     width: 22px;
     height: 22px;
-    font-size: 12px !important;
+    font-size: var(--font-md) !important;
   }
-  #battle-screen .battle-actions .skill-action-name { font-size: 8px !important; }
+  #battle-screen .battle-actions .skill-action-name { font-size: var(--font-xs) !important; }
   #battle-screen .battle-actions .skill-action-meta { font-size: 7px !important; }
 }
 @media (max-height: 430px) and (orientation: landscape) {
   #battle-screen .battle-actions .skill-action-btn {
     min-height: 27px !important;
     grid-template-columns: 20px minmax(0, 1fr);
-    padding: 2px 4px !important;
+    padding: var(--space-1) var(--space-2) !important;
   }
   #battle-screen .battle-actions .skill-action-icon {
     width: 18px;
     height: 18px;
-    font-size: 10px !important;
+    font-size: var(--font-sm) !important;
   }
   #battle-screen .battle-actions .skill-action-name { font-size: 7px !important; }
   #battle-screen .battle-actions .skill-action-meta { font-size: 6px !important; }
@@ -466,15 +466,15 @@ textarea {
   #battle-screen .battle-actions #btn-start-battle {
     min-height: 36px !important;
     grid-template-columns: 24px minmax(0, 1fr);
-    padding: 4px 5px !important;
+    padding: var(--space-2) 5px !important;
   }
   #battle-screen .battle-actions #btn-start-battle .skill-action-icon {
     width: 22px;
     height: 22px;
-    font-size: 12px !important;
+    font-size: var(--font-md) !important;
   }
-  #battle-screen .battle-actions #btn-start-battle .skill-action-name { font-size: 10px !important; }
-  #battle-screen .battle-actions #btn-start-battle .skill-action-meta { font-size: 8px !important; }
+  #battle-screen .battle-actions #btn-start-battle .skill-action-name { font-size: var(--font-sm) !important; }
+  #battle-screen .battle-actions #btn-start-battle .skill-action-meta { font-size: var(--font-xs) !important; }
 }
 
 /* Phone landscape rescue pass: prioritize canvas, commands, and no-scroll equipment flow. */
@@ -483,7 +483,7 @@ textarea {
   #game-container .screen,
   #game-container .btn,
   #game-container button {
-    font-size: 10px !important;
+    font-size: var(--font-sm) !important;
     line-height: 1.25 !important;
   }
   #hud-top {
@@ -534,7 +534,7 @@ textarea {
   #battle-screen .battle-left .hero-icon-large-img {
     width: 16px !important;
     height: 16px !important;
-    font-size: 12px !important;
+    font-size: var(--font-md) !important;
     flex: 0 0 16px;
   }
   #battle-screen .battle-left .hero-card-name {
@@ -553,7 +553,7 @@ textarea {
   #battle-screen .battle-left .hero-mobile-resources {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-2);
     min-width: 0;
   }
   #battle-screen .battle-left .bar-wrap {
@@ -589,7 +589,7 @@ textarea {
   #battle-screen #ui-overlay {
     grid-area: actions;
     min-width: 0;
-    padding: 4px !important;
+    padding: var(--space-2) !important;
     gap: 3px;
     overflow: hidden;
   }
@@ -609,7 +609,7 @@ textarea {
   }
   #battle-screen .battle-order-head > span { display: none; }
   #battle-screen #initiative-bar {
-    gap: 2px;
+    gap: var(--space-1);
     margin: 0;
     max-height: 24px;
     overflow: hidden;
@@ -617,7 +617,7 @@ textarea {
   #battle-screen .init-slot {
     width: 20px !important;
     height: 20px !important;
-    font-size: 10px !important;
+    font-size: var(--font-sm) !important;
     border-width: 1px;
   }
   #battle-screen .init-slot.current {
@@ -627,16 +627,16 @@ textarea {
   }
   #battle-screen .turn-focus-banner {
     min-height: 22px;
-    margin: 1px 0 2px;
-    padding: 2px 4px;
+    margin: 1px 0 var(--space-1);
+    padding: var(--space-1) var(--space-2);
   }
   #battle-screen .turn-focus-unit small { display: none; }
-  #battle-screen .turn-focus-unit strong { font-size: 10px; }
+  #battle-screen .turn-focus-unit strong { font-size: var(--font-sm); }
   #battle-screen .hero-turn-chip {
     top: 2px;
     right: 2px;
     padding: 1px 3px;
-    font-size: 10px;
+    font-size: var(--font-sm);
   }
   #battle-screen #unit-panel {
     flex: 1;
@@ -656,7 +656,7 @@ textarea {
   #battle-screen .battle-actions .skill-action-btn {
     min-height: 44px !important;
     padding: 5px 7px !important;
-    font-size: 10px !important;
+    font-size: var(--font-sm) !important;
     line-height: 1.15 !important;
   }
   #battle-screen .battle-actions .skill-action-btn.is-locked { display: none; }
@@ -666,10 +666,10 @@ textarea {
   #battle-screen .battle-actions .skill-action-icon {
     width: 28px !important;
     height: 28px !important;
-    font-size: 16px !important;
+    font-size: var(--font-xl) !important;
   }
   #battle-screen .battle-actions .skill-action-name {
-    font-size: 10px !important;
+    font-size: var(--font-sm) !important;
     line-height: 1.1 !important;
   }
   #battle-screen .battle-actions .skill-action-meta {
@@ -679,18 +679,18 @@ textarea {
   #battle-screen .battle-tactical-strip {
     grid-template-columns: 38px minmax(0, 1fr) !important;
     min-height: 24px !important;
-    padding: 2px 4px !important;
+    padding: var(--space-1) var(--space-2) !important;
     gap: 3px;
   }
-  #battle-screen .battle-tactical-kicker { font-size: 8px !important; letter-spacing: 0.2px; }
-  #battle-screen .battle-tactical-main { font-size: 10px !important; line-height: 1.1 !important; }
+  #battle-screen .battle-tactical-kicker { font-size: var(--font-xs) !important; letter-spacing: 0.2px; }
+  #battle-screen .battle-tactical-main { font-size: var(--font-sm) !important; line-height: 1.1 !important; }
   #battle-screen .battle-tactical-sub { font-size: 9px !important; line-height: 1.1 !important; }
-  #battle-screen .ftue-coach { padding: 5px 6px; margin-bottom: 3px; }
+  #battle-screen .ftue-coach { padding: 5px var(--space-3); margin-bottom: 3px; }
   #battle-screen .ftue-coach-title { font-size: 9px; }
   #battle-screen .ftue-coach-text { font-size: 9px; line-height: 1.25; }
   #battle-screen .ftue-coach-foot { margin-top: 3px; }
   #battle-screen .ftue-coach-progress,
-  #battle-screen .ftue-coach-skip { font-size: 8px !important; }
+  #battle-screen .ftue-coach-skip { font-size: var(--font-xs) !important; }
 
   #inventory-screen #inv-layout {
     grid-template-columns: 112px minmax(230px, 1fr) 180px !important;
@@ -700,7 +700,7 @@ textarea {
   #inventory-screen #inv-sidebar,
   #inventory-screen #inv-paperdoll,
   #inventory-screen #inv-backpack {
-    padding: 4px !important;
+    padding: var(--space-2) !important;
     gap: 3px;
     min-width: 0;
   }
@@ -714,7 +714,7 @@ textarea {
   }
   #inventory-screen .inv-tab {
     min-height: 40px !important;
-    padding: 2px 3px !important;
+    padding: var(--space-1) 3px !important;
     min-width: 0;
     display: flex;
     align-items: center;
@@ -726,7 +726,7 @@ textarea {
     height: 26px !important;
   }
   #inventory-screen .inv-portrait {
-    padding: 2px 0 !important;
+    padding: var(--space-1) 0 !important;
     margin-bottom: 3px;
   }
   #inventory-screen .inv-portrait-img {
@@ -734,7 +734,7 @@ textarea {
     height: 38px !important;
   }
   #inventory-screen .inv-portrait-name {
-    font-size: 8px !important;
+    font-size: var(--font-xs) !important;
     line-height: 1.1 !important;
   }
   #inventory-screen #inv-sidebar {
@@ -748,28 +748,28 @@ textarea {
   }
   #inventory-screen .inv-stats {
     display: block;
-    padding: 4px !important;
+    padding: var(--space-2) !important;
     margin-bottom: 3px;
     flex-shrink: 0;
   }
   #inventory-screen .inv-stats .stat-row {
-    font-size: 8px !important;
+    font-size: var(--font-xs) !important;
     line-height: 1.2;
-    margin-bottom: 2px;
-    padding-bottom: 2px;
+    margin-bottom: var(--space-1);
+    padding-bottom: var(--space-1);
   }
   #inventory-screen .inv-action-stack .btn {
     min-height: 36px !important;
-    padding: 2px 3px !important;
+    padding: var(--space-1) 3px !important;
     font-size: 7px !important;
   }
   #inventory-screen #inv-paperdoll-area {
-    padding: 8px 6px !important;
-    gap: 6px;
+    padding: var(--space-4) var(--space-3) !important;
+    gap: var(--space-3);
     min-height: 0 !important;
   }
   #inventory-screen .paperdoll-row {
-    gap: 10px;
+    gap: var(--space-5);
   }
   #inventory-screen #inv-hero-figure img,
   #inventory-screen .inv-hero-figure-img {
@@ -784,11 +784,11 @@ textarea {
     width: 58px !important;
     height: 58px !important;
   }
-  #inventory-screen .eq-slot-wrap { max-width: 76px; gap: 2px; }
+  #inventory-screen .eq-slot-wrap { max-width: 76px; gap: var(--space-1); }
   #inventory-screen .eq-slot-heading,
-  #inventory-screen .eq-slot-item-name { display: block; font-size: 8px !important; }
+  #inventory-screen .eq-slot-item-name { display: block; font-size: var(--font-xs) !important; }
   #inventory-screen .eq-zone-fill > span:not(.item-icon-wrap) {
-    font-size: 20px !important;
+    font-size: var(--font-2xl) !important;
   }
   #inventory-screen #bag-grid {
     grid-template-columns: repeat(4, minmax(32px, 1fr)) !important;
@@ -803,11 +803,11 @@ textarea {
     padding: 5px !important;
     font-size: 7px !important;
     line-height: 1.2 !important;
-    gap: 4px;
+    gap: var(--space-2);
   }
-  #inventory-screen .item-detail-headline { padding-bottom: 4px; margin-bottom: 4px; }
+  #inventory-screen .item-detail-headline { padding-bottom: var(--space-2); margin-bottom: var(--space-2); }
   #inventory-screen .item-detail-title {
-    font-size: 8px !important;
+    font-size: var(--font-xs) !important;
     line-height: 1.1 !important;
   }
   #inventory-screen .item-detail-stats,
@@ -818,11 +818,11 @@ textarea {
   }
   #inventory-screen .item-detail-btns {
     gap: 3px;
-    padding-top: 4px;
+    padding-top: var(--space-2);
   }
   #inventory-screen .item-detail-btns .btn {
     min-height: 36px !important;
-    padding: 2px 3px !important;
+    padding: var(--space-1) 3px !important;
     font-size: 7px !important;
   }
 }
