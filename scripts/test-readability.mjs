@@ -58,6 +58,61 @@ try {
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await auditScreen('main menu', '#main-menu', 12);
 
+  // A subset file's unicode-range advertises what it covers, and it can lie: the
+  // latin subset of Press Start 2P claims U+2212 but ships no glyph for it, so the
+  // minus in "−5 золота" was quietly drawn by the fallback and read as "_5" in the
+  // middle of pixel text. Every glyph in this font is exactly one em wide, which
+  // makes the fallback measurable: a claimed character that is not one em wide was
+  // painted by some other face. Characters outside the declared ranges (emoji, the
+  // ▶ ↩ ⚙ button icons) are expected to fall back and are not the subject here.
+  const glyphGaps = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const family = 'Press Start 2P';
+    const ranges = [];
+    for (const sheet of document.styleSheets) {
+      let rules; try { rules = sheet.cssRules; } catch { continue; }
+      for (const rule of rules) {
+        if (rule.constructor.name !== 'CSSFontFaceRule') continue;
+        if (!rule.style.fontFamily.includes(family)) continue;
+        for (const part of (rule.style.unicodeRange || '').split(',')) {
+          const match = part.trim().match(/^U\+([0-9A-F]+)(?:-([0-9A-F]+))?$/i);
+          if (match) ranges.push([parseInt(match[1], 16), parseInt(match[2] || match[1], 16)]);
+        }
+      }
+    }
+    if (!ranges.length) return [{ error: 'нет @font-face для ' + family }];
+
+    const measure = text => {
+      const span = document.createElement('span');
+      span.style.cssText = `position:absolute;visibility:hidden;white-space:pre;font-size:100px;font-family:'${family}'`;
+      span.textContent = text;
+      document.body.appendChild(span);
+      const width = span.getBoundingClientRect().width;
+      span.remove();
+      return width;
+    };
+
+    const chars = new Set();
+    for (const el of document.querySelectorAll('#main-menu *')) {
+      if (!getComputedStyle(el).fontFamily.includes(family)) continue;
+      for (const node of el.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE) for (const ch of node.textContent) chars.add(ch);
+      }
+    }
+    // Whitespace is not a glyph question: markup newlines and indentation collapse
+    // to zero width in any face.
+    const claimed = [...chars].filter(ch => {
+      if (/\s/.test(ch) || ch.codePointAt(0) < 0x20) return false;
+      const code = ch.codePointAt(0);
+      return ranges.some(([from, to]) => code >= from && code <= to);
+    });
+    return claimed
+      .filter(ch => Math.abs(measure(ch) - 100) > 1)
+      .map(ch => ({ char: ch, code: 'U+' + ch.codePointAt(0).toString(16).toUpperCase(), advance: Math.round(measure(ch)) }));
+  });
+  check('menu display font has a glyph for every character it claims',
+    glyphGaps.length === 0, JSON.stringify(glyphGaps));
+
   await page.locator('#btn-new-game').click();
   await page.locator('#battle-screen:not(.hidden)').waitFor({ state: 'visible' });
   await page.evaluate(() => {

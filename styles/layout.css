@@ -937,11 +937,13 @@ button, input, select, textarea {
   background: #0a0a18;
   flex-shrink: 0;
 }
+/* No display face here on purpose: see styles/fonts.css. These two buttons sit
+ * inside a card whose title, tag and price are all body text, and the pixel font
+ * made them the one shouting element on the screen. */
 #shop-list .btn-buy,
 #shop-sell-list .btn-sell {
   flex: 1;
   padding: 6px 4px;
-  font-family: 'Press Start 2P', monospace;
   font-size: 6px;
   cursor: pointer;
   letter-spacing: 1px;

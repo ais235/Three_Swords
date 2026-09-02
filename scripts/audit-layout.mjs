@@ -47,6 +47,25 @@ function everyStylesheetUrlResolves() {
   });
 }
 
+/** The display font must be served from the archive, never from a CDN, and its
+ *  SIL Open Font License text has to travel with it. layout.css named this face
+ *  for a long time with no @font-face and no file behind it, so it never once
+ *  rendered; a link to fonts.googleapis.com would fail the same way whenever that
+ *  host is slow or blocked for a player. */
+function bundledFontIsSelfContained() {
+  const stylesheets = gameRuntimeStylePaths(root).map(path => readFileSync(path, 'utf8'));
+  const declaresFace = stylesheets.some(css => /@font-face[\s\S]*?Press Start 2P/.test(css));
+  // Comments explain why the font is bundled and name the CDN while doing so, so
+  // only a real reference counts: a url(), an @import or a link/src attribute.
+  const withoutComments = source => source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
+  const noRemoteFont = ![...stylesheets, index]
+    .map(withoutComments)
+    .some(source => /(?:url\(|@import|href=|src=)\s*['"]?[^'")\s]*fonts\.(?:googleapis|gstatic)\.com/i.test(source));
+  return declaresFace && noRemoteFont
+    && existsSync(resolve(root, 'assets/fonts/press-start-2p-cyrillic.woff2'))
+    && existsSync(resolve(root, 'assets/fonts/PressStart2P-OFL.txt'));
+}
+
 function everyEquipmentItemHasUniqueIcon() {
   const pool = index.match(/const ITEM_POOL = \[([\s\S]*?)\n\s*\];/);
   const iconMap = index.match(/const ITEM_ICON_MAP = \{([\s\S]*?)\n\s*\};/);
@@ -196,6 +215,7 @@ const checks = [
   ,['regional terrain assets are packaged from source', () => existsSync(resolve(root, 'assets/tiles/region-forest-glade.png')) && existsSync(resolve(root, 'assets/tiles/region-volcanic-depths.png')) && existsSync(resolve(root, 'assets/tiles/region-sunken-ruins.png'))]
   ,['every equipment item has its own packaged icon', everyEquipmentItemHasUniqueIcon]
   ,['every stylesheet url resolves from its own folder', everyStylesheetUrlResolves]
+  ,['bundled display font ships self-hosted with its licence', bundledFontIsSelfContained]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
   ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
   ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]

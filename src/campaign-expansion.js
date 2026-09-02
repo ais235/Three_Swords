@@ -6,7 +6,7 @@ const CampaignExpansion = (() => {
     hunters: {
       icon: '🔭',
       name: { ru: 'Охотники', en: 'Pathfinders', es: 'Rastreadores' },
-      summary: { ru: 'Больше разведданных о врагах, но −5 золота в начале.', en: 'More enemy intel, but start with 5 less gold.', es: 'Más información, pero 5 de oro menos.' }
+      summary: { ru: 'Больше разведданных о врагах, но -5 золота в начале.', en: 'More enemy intel, but start with 5 less gold.', es: 'Más información, pero 5 de oro menos.' }
     },
     mercenaries: {
       icon: '🪙',

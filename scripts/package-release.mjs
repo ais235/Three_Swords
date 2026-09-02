@@ -48,6 +48,16 @@ for (const relative of [...runtimeFiles].filter(path => path.endsWith('.js') || 
   if (existsSync(sourcePath)) scanRuntimeSource(relative, readFileSync(sourcePath, 'utf8'));
 }
 
+// The bundled font is under the SIL Open Font License, which requires its licence
+// text to travel with any copy of the font. Nothing links to the file, so the url()
+// scan above never sees it; the archive we upload is a redistribution and must
+// carry it regardless.
+const fontDirs = new Set([...runtimeFiles].filter(path => path.endsWith('.woff2')).map(posix.dirname));
+for (const dir of fontDirs) {
+  const licence = `${dir}/PressStart2P-OFL.txt`;
+  if (existsSync(resolve(root, licence))) runtimeFiles.add(licence);
+}
+
 const missing = [];
 for (const relative of [...runtimeFiles].sort()) {
   const source = resolve(root, relative);

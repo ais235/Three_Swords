@@ -149,10 +149,14 @@ for (const diff of differences) {
 console.error(`FAIL расхождений: ${differences.length}`);
 console.error('По свойствам: ' + [...byProp.entries()].sort((a, b) => b[1] - a[1])
   .map(([prop, count]) => `${prop}=${count}`).join(', '));
-for (const diff of differences.slice(0, 40)) {
+// A deliberate visual change needs the whole list, not a sample: the first 40
+// entries all land in the same state and hide whether the rest of the game moved.
+const limitArg = args.find(arg => arg.startsWith('--limit='));
+const limit = limitArg ? Number(limitArg.slice('--limit='.length)) || differences.length : 40;
+for (const diff of differences.slice(0, limit)) {
   console.error(diff.kind === 'changed'
     ? `  ${diff.group} ${diff.key}\n      ${diff.prop}: ${diff.before}  ->  ${diff.after}`
     : `  ${diff.group} ${diff.key} (${diff.kind})`);
 }
-if (differences.length > 40) console.error(`  ... и ещё ${differences.length - 40}`);
+if (differences.length > limit) console.error(`  ... и ещё ${differences.length - limit} (все: --limit=0)`);
 process.exit(1);

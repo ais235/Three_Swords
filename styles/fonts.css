@@ -1,0 +1,57 @@
+/* Three Blades — bundled display font.
+ *
+ * layout.css named 'Press Start 2P' in six places, but nothing ever loaded it:
+ * there was no @font-face, no font file in assets, and no link to Google Fonts.
+ * Every one of those elements silently fell back to monospace, so the pixel font
+ * the interface was designed around had never once rendered.
+ *
+ * The archive uploaded to Yandex Games has to be self-contained, so the faces are
+ * bundled rather than fetched: a runtime request to fonts.googleapis.com would
+ * leave the game bare-faced whenever that host is slow or blocked.
+ *
+ * Three subsets, 27 KB in total. Greek and cyrillic-ext are not shipped — the
+ * game speaks Russian, English and Spanish, and plain cyrillic covers Russian
+ * including Ё and №.
+ *
+ * WHERE IT IS USED. Press Start 2P is the title-screen face and nothing else.
+ * It is set once, on #screen-menu, and inherited by the whole main menu. Once the
+ * font actually started rendering it turned out to be declared on the shop's buy
+ * and sell buttons too, where it made them the single loudest thing on a screen
+ * of body text; that declaration is gone. A display face used in scattered places
+ * reads as inconsistency, which is the opposite of what it is here for.
+ *
+ * Press Start 2P by CodeMan38, SIL Open Font License 1.1.
+ * Licence text travels with the font in assets/fonts/PressStart2P-OFL.txt.
+ */
+
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  /* swap, not block: a missing face must never hold up the first frame. */
+  font-display: swap;
+  src: url('../assets/fonts/press-start-2p-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/press-start-2p-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/press-start-2p-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
