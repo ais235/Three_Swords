@@ -125,6 +125,9 @@ try {
   await page.locator('#map-screen:not(.hidden)').waitFor({ state: 'visible' });
 
   await auditScreen('world map', '#map-screen', 12);
+  // The top bar sits outside every screen root, so nothing used to audit it even
+  // though it is the one piece of interface visible on all of them.
+  await auditScreen('top bar', '#hud-top', 12);
 
   await page.locator('#btn-map-bag').click();
   await auditScreen('inventory', '#inventory-screen', 12);

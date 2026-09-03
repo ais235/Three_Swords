@@ -1390,7 +1390,16 @@
   function updateHud() {
     const center = document.getElementById('topbar-center');
     if (center) {
-      center.innerHTML = `${translateKey('gold')}: <span id="gold-display">${GameState.gold}</span> | <span id="region-display">${campaignRegionName(GameState.region)}</span> | ${translateKey('turn')}: <span id="turn-display">${GameState.turn}</span>`;
+      // Three separate things, so they are marked up as three: a resource, the
+      // place the party is in, and a counter. Written as one pipe-separated line
+      // they read as a status bar in a terminal, which is what they used to be.
+      center.innerHTML = `<span class="hud-stat hud-stat-gold">`
+        + `<span class="hud-stat-label">${translateKey('gold')}</span>`
+        + `<span class="hud-stat-value" id="gold-display">${GameState.gold}</span></span>`
+        + `<span class="hud-place" id="region-display">${campaignRegionName(GameState.region)}</span>`
+        + `<span class="hud-stat">`
+        + `<span class="hud-stat-label">${translateKey('turn')}</span>`
+        + `<span class="hud-stat-value" id="turn-display">${GameState.turn}</span></span>`;
     }
     const menuBtn = document.getElementById('btn-open-menu');
     if (menuBtn) menuBtn.textContent = `☰ ${translateKey('menu')}`;

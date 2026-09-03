@@ -41,7 +41,10 @@ const groupTokens = prefixes => {
   return table;
 };
 
-const COLOUR_PROPS = /^(color|background|background-color|border-color|border-(top|right|bottom|left)-color|outline-color|fill|stroke|caret-color|text-decoration-color|column-rule-color)$/;
+// Shorthands carry a colour too, and leaving them out is how `border-bottom: 1px
+// solid #2a2a4a` kept a raw hex while every longhand around it became a token.
+// Only hex literals are touched inside them, so the width and style are untouched.
+const COLOUR_PROPS = /^(color|background|background-color|border|border-(top|right|bottom|left)|border-color|border-(top|right|bottom|left)-color|outline|outline-color|box-shadow|text-shadow|fill|stroke|caret-color|text-decoration-color|column-rule|column-rule-color)$/;
 const SPACE_PROPS = /^(padding|margin|gap|row-gap|column-gap|inset)(-(top|right|bottom|left|block|inline))?$/;
 const RADIUS_PROPS = /^border(-[a-z]+)?-radius$/;
 const FONT_PROPS = /^font-size$/;

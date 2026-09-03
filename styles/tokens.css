@@ -59,9 +59,8 @@
    * darker than the page" stays one decision instead of being spread over the
    * meaning of --bg-dark, which is also the page itself.
    *
-   * Radius is deliberately not here. Those same rules use 4, 5, 6 and 8 px with no
-   * rule behind the choice, and picking one would move pixels; it belongs to the
-   * screen-by-screen pass, and until then the raw number marks the open question. */
+   * Radius is not here because it is not a property of the surface any more: the
+   * whole interface shares one corner, set below. */
   --surface-bg: var(--bg-dark);
   --surface-bg-sunken: var(--bg-deep);
   --surface-bg-raised: var(--bg-card);
@@ -76,13 +75,27 @@
   --space-4: 8px;
   --space-5: 10px;
   --space-6: 12px;
+  /* The scale was derived from what the files already used, and they stopped at
+   * 12px because everything was cramped. Separating groups needs more room than
+   * separating items inside one, so the grid continues. */
+  --space-7: 16px;
+  --space-8: 24px;
+  --space-9: 32px;
 
-  /* Corner radii. --radius-pill and --radius-circle are shapes, not steps. */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-pill: 999px;
+  /* CORNERS. The game is square.
+   *
+   * There used to be a scale here - 4, 6, 8, 12 px - inherited from 13 different
+   * radii scattered through the files. It was the wrong question. Pixel art is
+   * drawn on a square grid, and a rounded corner is the single strongest cue that
+   * reads as "web widget" rather than "game interface": no sprite in this game has
+   * one, so every panel that did was announcing itself as something else.
+   *
+   * One value, so the decision is one line. Set it to 4px and the whole interface
+   * softens again; nothing else has to change.
+   *
+   * --radius-circle stays because it is a shape, not a corner: dots and the impact
+   * flash are circles by nature, not rectangles with soft edges. */
+  --radius: 0;
   --radius-circle: 50%;
 
   /* Font sizes, 2px grid. */
