@@ -45,6 +45,20 @@
   padding: var(--space-1) var(--space-2);
 }
 
+/* Modal boxes carry the frame at full thickness: they are the largest surfaces in
+ * the game and the ornament has room to read. */
+.game-dialog-box,
+.story-box,
+.onboarding-box,
+.perk-modal-box,
+.onboarding-tip {
+  border-style: solid;
+  border-width: 12px;
+  border-image: url('../assets/ui/kit/panel.png') 8 fill stretch;
+  background: none;
+  border-radius: 0;
+}
+
 /* ---- Buttons ------------------------------------------------------------ */
 /* The pack ships a pressed variant, so hover and active finally have art of
  * their own rather than a slightly different background colour. */
@@ -91,4 +105,43 @@
 .btn.btn-gold {
   color: #ffe9a8;
   box-shadow: 0 0 0 1px rgba(240, 165, 0, .35), 0 0 12px rgba(240, 165, 0, .18);
+}
+
+/* ---- Everything else that is a button but is not called .btn ------------- */
+/* Shop actions, tabs and event choices are buttons by behaviour, so they get the
+ * same leather. Tabs are the interesting case: selection used to be a gold border
+ * and a slightly different background, which is exactly the flat-web vocabulary.
+ * Now the selected tab is physically pressed - the pack's second state - and the
+ * gold is left to carry the label. */
+#shop-list .btn-buy,
+#shop-sell-list .btn-sell,
+.inv-tab,
+.npc-tab,
+.trader-mode-tab,
+.event-choice-btn,
+.vic-btn-continue {
+  border-style: solid;
+  border-width: 6px 12px;
+  border-image: url('../assets/ui/kit/button.png') 20 fill stretch;
+  background: none;
+  border-radius: 0;
+  color: #f6e4c2;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .55);
+}
+#shop-list .btn-buy:hover:not(:disabled),
+#shop-sell-list .btn-sell:hover:not(:disabled),
+.event-choice-btn:hover:not(:disabled),
+.vic-btn-continue:hover:not(:disabled),
+.inv-tab:hover:not(.active),
+.npc-tab:hover:not(.active),
+.trader-mode-tab:hover:not(.active) {
+  border-image-source: url('../assets/ui/kit/button-on.png');
+  color: #fff3d6;
+}
+.inv-tab.active,
+.npc-tab.active,
+.trader-mode-tab.active {
+  border-image-source: url('../assets/ui/kit/button-on.png');
+  background: none;
+  color: var(--accent-gold);
 }
