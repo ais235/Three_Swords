@@ -116,7 +116,7 @@ h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 var(--space-4); d
 .skill-btn.ready { border-color: var(--accent-blue); }
 .skill-btn.used { opacity: 0.3; }
 
-#battle-wrap { position: relative; display: flex; gap: 0; align-items: center; justify-content: center; border: 2px solid var(--border); border-radius: 0; overflow: hidden; min-width: 0; min-height: 0; background: #0b0d1b; }
+#battle-wrap { position: relative; display: flex; gap: 0; align-items: center; justify-content: center; border: 2px solid var(--border); border-radius: 0; overflow: hidden; min-width: 0; min-height: 0; background: #161310; }
 #battle-canvas {
   display: block;
   background: #111;
@@ -213,7 +213,7 @@ h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 var(--space-4); d
   padding: 5px 7px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: #0b1020;
+  background: #191512;
   color: var(--text-main);
   box-sizing: border-box;
 }
@@ -450,7 +450,7 @@ button, input, select, textarea {
   justify-content: center;
   text-align: center;
   color: #dfe8ff;
-  text-shadow: 0 2px 8px #050510, 0 0 8px #050510;
+  text-shadow: 0 2px 8px #0c0a09, 0 0 8px #0c0a09;
   font-size: var(--font-sm);
   letter-spacing: 1px;
   line-height: 1.4;
@@ -594,7 +594,7 @@ button, input, select, textarea {
 #map-screen .map-boss-silhouette {
   width: min(82%, 62px);
   height: min(82%, 62px);
-  background: linear-gradient(180deg, #aeb4bd, #656b76);
+  background: linear-gradient(180deg, #bdb5ae, #766d65);
   /* mask-image is set inline by mapBossSilhouetteHtml. A url() carried through a
      custom property resolves against this stylesheet, which broke once the CSS
      moved out of index.html into styles/. */
@@ -670,7 +670,7 @@ button, input, select, textarea {
 .legend-swatch-option { border-color: #ffd166; box-shadow: 0 0 5px rgba(240, 165, 0, .55); background: rgba(60, 52, 24, .9); }
 .legend-swatch-secondary { opacity: .45; }
 .legend-swatch-explored { border-color: rgba(140, 255, 176, .8); background: rgba(24, 52, 34, .9); }
-.legend-swatch-fog { background: repeating-linear-gradient(45deg, #05050c, #05050c 3px, #12121f 3px, #12121f 6px); border-color: #23233a; }
+.legend-swatch-fog { background: repeating-linear-gradient(45deg, #0a0807, #0a0807 3px, #1d1814 3px, #1d1814 6px); border-color: #372e26; }
 .legend-swatch-wall { background: linear-gradient(180deg, rgba(255, 117, 84, .95), rgba(47, 10, 18, .98)); border-color: rgba(255, 196, 112, .8); }
 
 .map-panel-actions { display: flex; flex-direction: column; gap: var(--space-3); flex-shrink: 0; }
@@ -793,7 +793,7 @@ button, input, select, textarea {
 .bar { height: 4px; border-radius: var(--radius); background: var(--bg-panel); overflow: hidden; }
 .bar-hp { background: var(--accent-green); height: 100%; border-radius: var(--radius); }
 .hero-heal-btn { grid-column: 2; width: 100%; min-width: 0; box-sizing: border-box; margin-top: 3px; font-size: 9px; padding: var(--space-1) var(--space-3); border-radius: var(--radius); border: 1px solid var(--accent-green); color: var(--accent-green); cursor: pointer; white-space: nowrap; background: transparent; font-family: inherit; }
-.hero-heal-btn.grey { border-color: var(--border); color: #555577; cursor: default; }
+.hero-heal-btn.grey { border-color: var(--border); color: #776555; cursor: default; }
 .city-panel { display: flex; flex-direction: column; gap: var(--space-5); flex: 1; min-height: 0; }
 .city-panel.hidden { display: none !important; }
 .city-panel-trader { gap: var(--space-4); --shop-icon-size: 56px; }
@@ -841,7 +841,7 @@ button, input, select, textarea {
 #shop-list .item-card,
 #shop-sell-list .item-card {
   background: var(--bg-dark);
-  border: 2px solid #1e1e38;
+  border: 2px solid #332a23;
   display: flex;
   flex-direction: column;
   cursor: default;
@@ -862,7 +862,7 @@ button, input, select, textarea {
 #shop-sell-list .item-card.cant:hover { border-color: var(--accent-red); }
 #shop-list .item-card.selected,
 #shop-sell-list .item-card.selected { border-color: var(--accent-gold); background: #150f00; }
-#shop-list .item-card.secret { border-color: var(--accent-purple); background: #0f0a1a; grid-column: auto; }
+#shop-list .item-card.secret { border-color: var(--accent-purple); background: #15120f; grid-column: auto; }
 #shop-list .item-card.secret.secret-reveal-play { animation: secretRevealFlash 0.65s ease forwards; }
 #shop-list .card-body,
 #shop-sell-list .card-body {
@@ -922,7 +922,7 @@ button, input, select, textarea {
 #shop-list .card-stat,
 #shop-sell-list .card-stat { font-size: var(--font-xs); color: var(--accent-green); line-height: 1.55; }
 #shop-list .card-desc,
-#shop-sell-list .card-desc { font-size: var(--font-xs); color: #a8aac0; line-height: 1.5; margin-top: var(--space-1); font-style: italic; }
+#shop-sell-list .card-desc { font-size: var(--font-xs); color: #c0b3a8; line-height: 1.5; margin-top: var(--space-1); font-style: italic; }
 #shop-list .card-footer,
 #shop-sell-list .card-footer {
   border-top: 2px solid var(--bg-panel);
@@ -930,7 +930,7 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  background: #0a0a18;
+  background: #14110e;
   flex-shrink: 0;
 }
 /* No display face here on purpose: see styles/fonts.css. These two buttons sit
@@ -975,9 +975,9 @@ button, input, select, textarea {
 #shop-list .btn-buy-ad {
   border-color: var(--accent-purple);
   color: var(--accent-purple);
-  background: #0f0a14;
+  background: #120f0c;
 }
-#shop-list .btn-buy-ad:hover:not(:disabled) { background: #1a0f22; }
+#shop-list .btn-buy-ad:hover:not(:disabled) { background: #1d1814; }
 #shop-list .card-price,
 #shop-sell-list .card-price { font-size: 11px; color: var(--accent-gold); flex-shrink: 0; font-weight: 700; }
 #shop-list .card-price.cant,
@@ -1235,8 +1235,8 @@ button, input, select, textarea {
     linear-gradient(var(--accent-gold),var(--accent-gold)) bottom right/3px 8px no-repeat;
 }
 .menu-pixel-frame-inner {
-  border: 1px solid #3a3a5a;
-  background: #12121e;
+  border: 1px solid #57493d;
+  background: #1c1814;
   padding: var(--space-2);
 }
 
@@ -1247,7 +1247,7 @@ button, input, select, textarea {
   padding: 14px 20px;
   background: var(--bg-dark);
   border: 2px solid var(--border);
-  color: #c8c8e8;
+  color: #dfd8d1;
   font-family: 'Press Start 2P', monospace;
   font-size: 9px;
   cursor: pointer;
@@ -1324,7 +1324,7 @@ button, input, select, textarea {
   width: 100%;
   max-width: 400px;
   border: 2px solid var(--border);
-  background: #12121e;
+  background: #1c1814;
   padding: 16px 18px 14px;
   display: flex;
   flex-direction: column;
@@ -1339,7 +1339,7 @@ button, input, select, textarea {
 }
 .menu-settings-sub {
   font-size: var(--font-xs);
-  color: #8a8ab8;
+  color: #b2a090;
   letter-spacing: 1px;
   margin: 0 0 var(--space-4);
   text-align: center;
@@ -1350,7 +1350,7 @@ button, input, select, textarea {
   justify-content: space-between;
   gap: var(--space-6);
   font-size: var(--font-xs);
-  color: #c8c8e8;
+  color: #dfd8d1;
 }
 .menu-settings-row label { display: flex; align-items: center; gap: var(--space-5); cursor: pointer; }
 .menu-settings-row input[type="checkbox"] { width: 14px; height: 14px; accent-color: #f0a500; cursor: pointer; }
@@ -1384,7 +1384,7 @@ button, input, select, textarea {
 .menu-record-label { color: var(--text-dim); font-size: 6px; line-height: 1.3; }
 .menu-settings-hint {
   font-size: 6px;
-  color: #666688;
+  color: #887666;
   line-height: 1.5;
   margin-top: -6px;
 }
@@ -1501,7 +1501,7 @@ button, input, select, textarea {
 .menu-diff-label {
   font-family: 'Press Start 2P', monospace;
   font-size: 6px;
-  color: #555577;
+  color: #776555;
   padding: var(--space-4) var(--space-5);
   letter-spacing: 1px;
   border-right: 1px solid var(--border);
@@ -1514,7 +1514,7 @@ button, input, select, textarea {
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   cursor: pointer;
-  color: #555577;
+  color: #776555;
   border: none;
   background: none;
   letter-spacing: 1px;
@@ -1528,11 +1528,11 @@ button, input, select, textarea {
 .menu-diff-btn.active-hard   { color: var(--accent-red); background: #1a0a0a; }
 .menu-diff-btn:hover         { color: var(--text-main); }
 .menu-contract-row { display:grid; grid-template-columns:1fr; gap:var(--space-2); margin-top:var(--space-5); text-align:left; }
-.menu-contract-btn { border:1px solid var(--border); background:#101022; color:var(--text-dim); border-radius:var(--radius); padding:7px 9px; font:inherit; font-size:var(--font-md); text-align:left; cursor:pointer; }
+.menu-contract-btn { border:1px solid var(--border); background:#1d1914; color:var(--text-dim); border-radius:var(--radius); padding:7px 9px; font:inherit; font-size:var(--font-md); text-align:left; cursor:pointer; }
 .menu-contract-btn:hover, .menu-contract-btn.active { color:#ffe4a2; border-color:var(--accent-gold); background:rgba(240,165,0,.1); }
 #menu-contract-copy { min-height:32px; color:var(--text-dim); font-size:var(--font-md); line-height:1.4; }
 .run-history { display:grid; gap:5px; margin-top:var(--space-3); }
-.run-history-entry { display:flex; justify-content:space-between; gap:var(--space-4); width:100%; padding:7px var(--space-4); border:1px solid var(--border); border-radius:var(--radius); background:#101022; color:var(--text-dim); font:inherit; font-size:var(--font-md); text-align:left; cursor:pointer; }
+.run-history-entry { display:flex; justify-content:space-between; gap:var(--space-4); width:100%; padding:7px var(--space-4); border:1px solid var(--border); border-radius:var(--radius); background:#1d1914; color:var(--text-dim); font:inherit; font-size:var(--font-md); text-align:left; cursor:pointer; }
 .run-history-entry:hover { color:#ffe4a2; border-color:var(--accent-gold); }
 .run-history-entry small, .run-history-empty { color:var(--text-dim); font-size:var(--font-md); }
 

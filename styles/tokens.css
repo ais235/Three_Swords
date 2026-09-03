@@ -22,18 +22,26 @@
  * brought onto the system yet. `node scripts/css-audit-tokens.mjs` lists them.
  */
 :root {
-  /* Surfaces, darkest first. --bg-dark is the game's one box background. */
-  --bg-deep: #0a0a14;
-  --bg-dark: #0d0d1a;
-  --bg-card: #111128;
-  --bg-card-hover: #151530;
-  --bg-panel: #1a1a2e;
+  /* Surfaces, darkest first. --bg-dark is the game's one box background.
+   *
+   * These used to be blue-violet (#0d0d1a, #111128, #1a1a2e). Once the painted
+   * frames went in, that became the loudest problem on the screen: the art is a
+   * warm world - the frame's metal samples as #967d66 over #5c473b, the button
+   * leather as #411a00 - and warm bronze sitting on a cold blue ground reads as
+   * two interfaces stacked on each other. The greys are warm now, sampled from
+   * the art rather than picked by eye, so the chrome and the frames belong to the
+   * same place. */
+  --bg-deep: #0a0806;
+  --bg-dark: #13100c;
+  --bg-card: #1a1611;
+  --bg-card-hover: #241e17;
+  --bg-panel: #201a14;
 
   /* Text. --text-main for content, --text-dim for secondary, --text-hint for
    * anything the player can ignore without losing information. */
-  --text-main: #e8e8f0;
-  --text-dim: #aeb3ca;
-  --text-hint: #858ba8;
+  --text-main: #ece4d6;
+  --text-dim: #b8ab97;
+  --text-hint: #8d8171;
 
   /* Accents. Each one carries a fixed meaning in the interface: gold is worth
    * and reward, blue is action, green is health and gain, red is damage and
@@ -45,7 +53,9 @@
   --accent-purple: #9b59b6;
   --accent-teal: #1abc9c;
 
-  --border: #2a2a4a;
+  /* The frame's own metal shadow, so a plain 1px border and a painted edge are
+   * the same material seen at two levels of detail. */
+  --border: #4d3b32;
 
   /* THE SURFACE — the game's one box, and the only layout primitive here.
    *

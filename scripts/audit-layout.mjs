@@ -89,6 +89,26 @@ function globalTokensLiveInOneFile() {
   });
 }
 
+/** An undiscovered boss is shown as a featureless stone silhouette, so the point
+ *  is that its gradient carries no hue: a coloured silhouette would read as
+ *  information the player has not earned yet.
+ *
+ *  This used to assert the two hex values literally, which broke the moment the
+ *  palette moved from cold greys to warm ones even though the silhouette stayed
+ *  just as grey. Saturation is the property that actually matters, so that is
+ *  what gets measured. */
+function bossSilhouetteIsGrey() {
+  if (!index.includes('function mapBossSilhouetteHtml') || !index.includes('map-boss-silhouette')) return false;
+  const gradient = /\.map-boss-silhouette[^{}]*\{[^{}]*background:\s*linear-gradient\(([^)]*)\)/.exec(index);
+  if (!gradient) return false;
+  const stops = [...gradient[1].matchAll(/#([0-9a-f]{6})/gi)].map(match => match[1]);
+  if (stops.length < 2) return false;
+  return stops.every(hex => {
+    const [r, g, b] = [0, 2, 4].map(at => parseInt(hex.slice(at, at + 2), 16));
+    return Math.max(r, g, b) - Math.min(r, g, b) <= 24;
+  });
+}
+
 function everyEquipmentItemHasUniqueIcon() {
   const pool = index.match(/const ITEM_POOL = \[([\s\S]*?)\n\s*\];/);
   const iconMap = index.match(/const ITEM_ICON_MAP = \{([\s\S]*?)\n\s*\};/);
@@ -193,7 +213,7 @@ const checks = [
   ['perk detail separates trigger and effect', () => index.includes('perk-detail-rule') && index.includes("trigger:'") && index.includes("effect:'")],
   ['damage preview has a dedicated card', () => index.includes('function damagePreviewCardHtml') && index.includes('damage-preview-card')],
   ['contextual map cell intelligence is present', () => index.includes('selectedCellInfoHtml') && index.includes('function mapNodeIntel') && index.includes('bossDistance')],
-  ['unlocked region boss has a grey silhouette', () => index.includes('function mapBossSilhouetteHtml') && index.includes('map-boss-silhouette') && index.includes('background: linear-gradient(180deg, #aeb4bd, #656b76)')],
+  ['unlocked region boss has a grey silhouette', bossSilhouetteIsGrey],
   ['boss silhouette uses the real regional boss asset', () => index.includes('function regionBossEnemyId') && index.includes('if (region === 1) return ENEMY_IDS.LESHY') && index.includes('ENEMY_IDS.FIRE_TITAN') && index.includes('ENEMY_IDS.HYDRA') && index.includes('enemyIconUrl(enemyId)')],
   ['unlocked boss cell is revealed across map fog', () => index.includes("const revealedBoss = node.type === 'boss' && node.region <= GameState.regionUnlocked") && index.includes('dist <= 2 || revealedBoss')],
   ['first battle flow present', () => index.includes('function createFirstBattleGrid') && index.includes('firstBattleCompleted') && index.includes('ftueSkillsUsed')],

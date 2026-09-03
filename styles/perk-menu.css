@@ -1,12 +1,12 @@
 /* Readable perk tree: wide cards, stable wrapping, and explicit mechanics. */
 #perk-modal .perk-modal-box {
-  border-color: #414168;
+  border-color: #645345;
   box-shadow: 0 24px 80px rgba(0, 0, 0, .72), 0 0 32px rgba(74, 158, 255, .08);
 }
 
 #perk-modal .perk-modal-topbar {
   padding: var(--space-6) 16px;
-  background: linear-gradient(90deg, #191930, #121225);
+  background: linear-gradient(90deg, #2b241e, #201b17);
 }
 
 #perk-modal .perk-col {
@@ -58,7 +58,7 @@
 #perk-modal .perk-skill-name {
   padding: 0;
   max-width: none;
-  color: #f2f2f8;
+  color: #f7f5f3;
   text-align: left;
   word-break: normal;
   overflow-wrap: normal;
@@ -110,7 +110,7 @@
 #perk-modal .perk-detail-action {
   flex: 0 0 auto;
   padding-top: var(--space-4);
-  border-top: 1px solid #303052;
+  border-top: 1px solid #4d4035;
   background: var(--bg-card);
 }
 
@@ -127,9 +127,9 @@
   display: grid;
   place-items: center;
   margin: 0;
-  border: 1px solid #47476e;
+  border: 1px solid #6b594a;
   border-radius: var(--radius);
-  background: #090918;
+  background: #13100e;
   font-size: 22px;
 }
 
@@ -143,7 +143,7 @@
 
 #perk-modal .perk-detail-branch {
   margin: 3px 0 0;
-  color: #9096b3;
+  color: #b2a091;
   font-size: 9px;
   line-height: 1.25 !important;
 }
@@ -161,7 +161,7 @@
 
 #perk-modal .perk-detail-rule {
   padding: 9px var(--space-5);
-  border: 1px solid #303052;
+  border: 1px solid #4d4035;
   border-radius: var(--radius);
   background: rgba(5,5,17,.42);
 }
@@ -186,7 +186,7 @@
 #perk-modal .perk-detail-synergy span {
   display: block;
   margin-bottom: var(--space-2);
-  color: #8187a5;
+  color: #a59281;
   font-size: 7px;
   letter-spacing: 1px;
 }
@@ -194,7 +194,7 @@
 #perk-modal .perk-detail-stat-preview strong,
 #perk-modal .perk-detail-synergy strong {
   display: block;
-  color: #e4e5ef;
+  color: #ede9e6;
   font-size: 9px;
   line-height: 1.4;
   font-weight: 400;
@@ -208,21 +208,21 @@
 #perk-modal .perk-detail-rule span {
   display: block;
   margin-bottom: var(--space-2);
-  color: #8187a5;
+  color: #a59281;
   font-size: 7px;
   letter-spacing: 1px;
 }
 
 #perk-modal .perk-detail-rule strong {
   display: block;
-  color: #e4e5ef;
+  color: #ede9e6;
   font-size: var(--font-sm);
   line-height: 1.5;
   font-weight: 400;
 }
 
 #perk-modal .perk-detail-tierline {
-  color: #777d9a;
+  color: #9a8777;
   font-size: var(--font-xs);
   line-height: 1.3;
 }

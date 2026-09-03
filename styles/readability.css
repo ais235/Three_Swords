@@ -366,13 +366,13 @@ body,
 #perk-modal .perk-skill-summary {
   font-size: var(--readable-label) !important;
   line-height: 1.4 !important;
-  color: #c3c8da;
+  color: #d7cec6;
 }
 
 #perk-modal .perk-skill-tier {
   font-size: 11px !important;
   padding: 3px var(--space-3);
-  color: #bdc2d5;
+  color: #d3c8bf;
 }
 
 #perk-modal .perk-skill.locked {
@@ -407,12 +407,12 @@ body,
 #perk-modal .perk-detail-rule span,
 #perk-modal .perk-detail-stat-preview span,
 #perk-modal .perk-detail-synergy span {
-  color: #a9aec4;
+  color: #c4b6a9;
 }
 
 #perk-modal .perk-detail-rule strong,
 #perk-modal .perk-detail-synergy strong {
-  color: #f0f1f7;
+  color: #f6f3f1;
 }
 
 #perk-modal .perk-detail-summary,
