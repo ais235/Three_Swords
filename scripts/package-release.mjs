@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -48,14 +48,25 @@ for (const relative of [...runtimeFiles].filter(path => path.endsWith('.js') || 
   if (existsSync(sourcePath)) scanRuntimeSource(relative, readFileSync(sourcePath, 'utf8'));
 }
 
-// The bundled font is under the SIL Open Font License, which requires its licence
-// text to travel with any copy of the font. Nothing links to the file, so the url()
-// scan above never sees it; the archive we upload is a redistribution and must
-// carry it regardless.
-const fontDirs = new Set([...runtimeFiles].filter(path => path.endsWith('.woff2')).map(posix.dirname));
-for (const dir of fontDirs) {
-  const licence = `${dir}/PressStart2P-OFL.txt`;
-  if (existsSync(resolve(root, licence))) runtimeFiles.add(licence);
+// Bundled art and fonts come with licences that require their text to travel with
+// any copy - SIL OFL for the font, CC BY for the interface kit. Nothing links to
+// those files, so the url() scan above never sees them, but the archive we upload
+// is a redistribution and has to carry them.
+//
+// Written as a sweep over the folders that actually contributed a file, rather
+// than a list of filenames: the font licence was once hardcoded here, and when the
+// interface art arrived with a licence of its own it would have shipped without it.
+const assetDirs = new Set([...runtimeFiles]
+  .filter(path => path.startsWith('assets/'))
+  .map(posix.dirname));
+for (const dir of assetDirs) {
+  const absolute = resolve(root, dir);
+  if (!existsSync(absolute)) continue;
+  for (const entry of readdirSync(absolute)) {
+    if (!/^(licen[cs]e|readme|copying|ofl)\b/i.test(entry)) continue;
+    if (!statSync(resolve(absolute, entry)).isFile()) continue;
+    runtimeFiles.add(`${dir}/${entry}`);
+  }
 }
 
 const missing = [];

@@ -70,6 +70,28 @@ function bundledFontIsSelfContained() {
     && existsSync(resolve(root, 'assets/fonts/PressStart2P-OFL.txt'));
 }
 
+/** Every piece of interface art must ship with the licence that permits it.
+ *
+ *  The first version of this kit came from a commercial pack given to the owner
+ *  by another studio. That licence is issued to the purchaser and does not
+ *  transfer, so the files carried no right to publish, and the whole kit had to be
+ *  replaced. The replacement is CC BY 3.0, which permits commercial use and
+ *  derivative work but requires the author be credited where the work is seen.
+ *
+ *  So this checks all three halves of that obligation: the licence text is in the
+ *  repository, the README records the source and what was changed, and the credit
+ *  is in the interface rather than only in a file no player opens. */
+function interfaceArtIsLicensed() {
+  const kit = resolve(root, 'assets/ui/kit');
+  const readmePath = resolve(kit, 'README.md');
+  if (!existsSync(readmePath) || !existsSync(resolve(kit, 'LICENSE-CC-BY-3.0.txt'))) return false;
+  const readme = readFileSync(readmePath, 'utf8');
+  const namesAuthorAndLicence = readme.includes('Lamoot') && readme.includes('CC BY 3.0');
+  const recordsChanges = /изменен|Что изменено/i.test(readme);
+  const shownToPlayer = index.includes('Lamoot') && index.includes('CC BY 3.0');
+  return namesAuthorAndLicence && recordsChanges && shownToPlayer;
+}
+
 /** Global tokens belong to styles/tokens.css and nowhere else.
  *
  *  They used to be split: the palette sat in layout.css while --text-dim and the
@@ -260,6 +282,7 @@ const checks = [
   ,['every stylesheet url resolves from its own folder', everyStylesheetUrlResolves]
   ,['bundled display font ships self-hosted with its licence', bundledFontIsSelfContained]
   ,['global design tokens live in one file', globalTokensLiveInOneFile]
+  ,['interface art ships with its licence and credit', interfaceArtIsLicensed]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
   ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
   ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]
