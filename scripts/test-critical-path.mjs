@@ -486,6 +486,57 @@ try {
   check('combat names current and next units', await page.locator('#turn-focus-banner:not(.hidden)').count() === 1 && (await page.locator('#turn-focus-banner').textContent())?.includes('→'));
   check('current hero card has a turn chip', await page.locator('.hero-card.active .hero-turn-chip').count() === 1);
 
+  // Заклинание по области целится в клетку, а не в тело: смысл площадного удара
+  // в том, чтобы встать между двумя монстрами. Раньше клик по пустой клетке
+  // отсекался общей проверкой «под курсором должен быть враг».
+  const fireballOnEmpty = await page.evaluate(() => {
+    const b = GameState.currentBattle;
+    const seris = b.units.find(unit => unit.isHero && unit.heroId === 'seris');
+    const enemies = b.units.filter(unit => !unit.isHero && unit.hp > 0);
+    if (!seris || enemies.length < 2) return { skipped: true };
+    // Двое врагов по бокам от пустой клетки: цель на две клетки правее мага,
+    // враги слева и справа от неё по горизонтали — так расстановка не зависит
+    // от того, у какого края поля стоит маг.
+    const cx = seris.x + 2;
+    const cy = seris.y;
+    enemies[0].x = cx - 1; enemies[0].y = cy;
+    enemies[1].x = cx + 1; enemies[1].y = cy;
+    seris.mana = 9;
+    seris.cds = seris.cds || {};
+    seris.cds.fireball = 0;
+    // order хранит индексы юнитов, а activeIndex — позицию в order, не в units.
+    b.activeIndex = Math.max(0, b.order.indexOf(b.units.indexOf(seris)));
+    b.heroActionDone = false;
+    b.pendingSkill = 'fireball';
+    b.mode = 'skill';
+    const before = enemies.slice(0, 2).map(e => e.hp);
+    const emptyCell = !b.units.some(unit => unit.x === cx && unit.y === cy);
+    canvasBattleClick(cx, cy);
+    const after = enemies.slice(0, 2).map(e => e.hp);
+    return { emptyCell, before, after, hurt: after.filter((hp, i) => hp < before[i]).length };
+  });
+  check('area spell can be aimed at an empty cell',
+    fireballOnEmpty.skipped || (fireballOnEmpty.emptyCell && fireballOnEmpty.hurt === 2),
+    JSON.stringify(fireballOnEmpty));
+
+  // Подсветка и удар считаются одной функцией, поэтому область обязана быть
+  // центрирована на клетке под курсором, а не построена от её угла.
+  const meteorShape = await page.evaluate(() => {
+    const b = GameState.currentBattle;
+    const seris = b.units.find(unit => unit.isHero && unit.heroId === 'seris');
+    if (!seris) return { skipped: true };
+    const cells = aoeCellsFor('meteor', seris, 5, 5);
+    const xs = cells.map(c => c.x);
+    const ys = cells.map(c => c.y);
+    return {
+      count: cells.length,
+      centred: Math.min(...xs) < 5 && Math.max(...xs) > 5 && Math.min(...ys) < 5 && Math.max(...ys) > 5,
+      hasCentre: cells.some(c => c.x === 5 && c.y === 5)
+    };
+  });
+  check('meteor area is centred on the aimed cell',
+    meteorShape.skipped || (meteorShape.centred && meteorShape.hasCentre), JSON.stringify(meteorShape));
+
   await page.locator('#btn-open-menu').click();
   const speed = page.locator('#battle-speed-toggle');
   check('speed control lives in the pause menu', await speed.isVisible());

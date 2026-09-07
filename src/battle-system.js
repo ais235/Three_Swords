@@ -396,6 +396,32 @@
     return Math.min(2, bonus);
   }
 
+  /** Клетки, которые накроет заклинание по области, если целиться в (gx, gy).
+   *
+   *  Одна функция на превью и на попадание. Раньше формула была написана дважды —
+   *  в подсветке и в исполнении, — и они разъезжались: метеор в подсветке строил
+   *  квадрат от угла, и удар приходился туда же, но игрок целился в центр.
+   *  Расхождение превью и факта в этой игре уже случалось с уроном, и правило
+   *  простое: то, что показано, и то, что произойдёт, считается одним кодом.
+   *
+   *  Область всегда центрирована на клетке под курсором. Ромб, а не квадрат, для
+   *  метеора выбран именно поэтому: у квадрата со стороной 2 нет центральной
+   *  клетки, и «держаться за центр» для него невыполнимо в принципе. */
+  function aoeCellsFor(skill, unit, gx, gy) {
+    const radius = skill === 'meteor'
+      ? 1 + serisAoeBonus(unit)
+      : skill === 'fireball'
+        ? 1 + serisAoeBonus(unit)
+        : skill === 'arrowRain' ? 1 : 0;
+    const cells = [];
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (Math.abs(dx) + Math.abs(dy) <= radius) cells.push({ x: gx + dx, y: gy + dy });
+      }
+    }
+    return cells;
+  }
+
   function damageEnemiesAtCells(b, attacker, cells, dmg, opts = {}) {
     const hit = new Set();
     const exclude = new Set(opts.excludeUnits || []);
@@ -1911,16 +1937,8 @@
       }
       return cells;
     }
-    if (skill === 'fireball' && sel.heroId === 'seris') {
-      const radius = 1 + serisAoeBonus(sel);
-      for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) {
-        if (Math.abs(dx) + Math.abs(dy) <= radius) add(gx + dx, gy + dy);
-      }
-      return cells;
-    }
-    if (skill === 'meteor' && sel.heroId === 'seris') {
-      const size = 2 + serisAoeBonus(sel);
-      for (let dy = 0; dy < size; dy++) for (let dx = 0; dx < size; dx++) add(gx + dx, gy + dy);
+    if ((skill === 'fireball' || skill === 'meteor') && sel.heroId === 'seris') {
+      aoeCellsFor(skill, sel, gx, gy).forEach(cell => add(cell.x, cell.y));
       return cells;
     }
     if (skill === 'freeze' || skill === 'slowArrow' || skill === 'shieldBash' || skill === 'double') {
@@ -4895,27 +4913,49 @@
         endUnitTurn();
         return;
       }
-      const tgt = unitAt(b, gx, gy);
-      if (!tgt || tgt.isHero) return;
+      // Площадные заклинания бьют по клетке, а не по телу: целиться между двумя
+      // монстрами — это и есть смысл заклинания по области. Раньше сюда нельзя
+      // было попасть без врага прямо под курсором, потому что проверка ниже
+      // отсекала пустую клетку для всех умений сразу.
       if (b.pendingSkill === 'fireball' && u.heroId === 'seris') {
         if (u.mana < 3) return;
         if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range) return;
+        const direct = unitAt(b, gx, gy);
+        const directEnemy = direct && !direct.isHero ? direct : null;
         b.objectiveUsedSkill = true;
         if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_seris_fireball, 0.95);
         u.mana -= 3; u.cds.fireball = 2;
-        const splashRadius = 1 + serisAoeBonus(u);
-        dealDamage(u, tgt, 15, { fire: true, magic: true, sfxImpactOnly: true, animationSkill: 'fireball' });
-        const splashCells = [];
-        for (let dy = -splashRadius; dy <= splashRadius; dy++) {
-          for (let dx = -splashRadius; dx <= splashRadius; dx++) {
-            if (Math.abs(dx) + Math.abs(dy) <= splashRadius && !(dx === 0 && dy === 0)) splashCells.push({ x: gx + dx, y: gy + dy });
-          }
+        // Прямое попадание по-прежнему стоит вдвое дороже разлёта: целиться в
+        // монстра остаётся выгодным, а по пустой клетке все получают только 7.
+        if (directEnemy) {
+          dealDamage(u, directEnemy, 15, { fire: true, magic: true, sfxImpactOnly: true, animationSkill: 'fireball' });
         }
-        damageEnemiesAtCells(b, u, splashCells, 7, { fire: true, magic: true, sfxImpactOnly: true, excludeUnits: [tgt], animationSkill: 'fireball', animationImpactOnly: true, animationOffsetMs: 285 });
+        const splashCells = aoeCellsFor('fireball', u, gx, gy)
+          .filter(cell => !(cell.x === gx && cell.y === gy) || !directEnemy);
+        damageEnemiesAtCells(b, u, splashCells, 7, { fire: true, magic: true, sfxImpactOnly: true, excludeUnits: directEnemy ? [directEnemy] : [], animationSkill: 'fireball', animationImpactOnly: true, animationOffsetMs: 285 });
         applySerisChaosAoe(u);
         markFtueSkillUsed(u.heroId, 'fireball');
         b.heroActionDone = true; endUnitTurn(); return;
       }
+      if (b.pendingSkill === 'meteor' && u.heroId === 'seris') {
+        if (u.mana < 8) return;
+        b.objectiveUsedSkill = true;
+        if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_seris_meteor, 1);
+        u.mana -= 8; u.cds.meteor = 6;
+        // Область считается общей функцией, той же, что рисует подсветку, и она
+        // центрирована на клетке под курсором. Раньше это был квадрат 2x2,
+        // выстроенный вправо-вниз от точки клика: игрок целился в центр, а удар
+        // приходился в угол. У квадрата с чётной стороной центральной клетки нет,
+        // поэтому форма заменена на ромб — «держаться за центр» для него
+        // выполнимо, и он совпадает по языку с огненным шаром.
+        const meteorCells = aoeCellsFor('meteor', u, gx, gy);
+        playBattleAbilityFx(u, 'meteor', { x: gx, y: gy, radius: 1 + serisAoeBonus(u), glyph: '☄', projectile: 'meteor' });
+        damageEnemiesAtCells(b, u, meteorCells, 30, { fire: true, magic: true, sfxImpactOnly: true, animationSkill: 'meteor', animationImpactOnly: true, animationOffsetMs: 320 });
+        applySerisChaosAoe(u);
+        b.heroActionDone = true; endUnitTurn(); return;
+      }
+      const tgt = unitAt(b, gx, gy);
+      if (!tgt || tgt.isHero) return;
       if (b.pendingSkill === 'freeze' && u.heroId === 'seris') {
         if (u.mana < 4) return;
         if (Math.abs(u.x - gx) + Math.abs(u.y - gy) > u.range) return;
@@ -4942,19 +4982,6 @@
             .forEach(enemy => addStatus(enemy, STATUS.FEAR, 1));
         }
         pushBattleLog(`🧊 ${tgt.name} frozen`, 'status');
-        applySerisChaosAoe(u);
-        b.heroActionDone = true; endUnitTurn(); return;
-      }
-      if (b.pendingSkill === 'meteor' && u.heroId === 'seris') {
-        if (u.mana < 8) return;
-        b.objectiveUsedSkill = true;
-        if (typeof BattleSfx !== 'undefined') BattleSfx.playSampledUrl(BSX.heroes_seris_meteor, 1);
-        u.mana -= 8; u.cds.meteor = 6;
-        const meteorSize = 2 + serisAoeBonus(u);
-        const meteorCells = [];
-        for (let dy = 0; dy < meteorSize; dy++) for (let dx = 0; dx < meteorSize; dx++) meteorCells.push({ x: gx + dx, y: gy + dy });
-        playBattleAbilityFx(u, 'meteor', { x: gx + (meteorSize - 1) / 2, y: gy + (meteorSize - 1) / 2, radius: meteorSize, glyph: '☄', projectile: 'meteor' });
-        damageEnemiesAtCells(b, u, meteorCells, 30, { fire: true, magic: true, sfxImpactOnly: true, animationSkill: 'meteor', animationImpactOnly: true, animationOffsetMs: 260 });
         applySerisChaosAoe(u);
         b.heroActionDone = true; endUnitTurn(); return;
       }
