@@ -114,6 +114,42 @@
   border-radius: 0;
 }
 
+/* ---- Icons in controls --------------------------------------------------- */
+/* Navigation buttons used colour emoji - 🎒 for the bag, 📖 for the bestiary.
+ * They are drawn by the operating system's emoji font, so they look different on
+ * every machine and belong to no art style at all; on a wooden plaque a glossy
+ * pink backpack is the most obviously web-shaped thing left on the screen.
+ *
+ * These are silhouettes painted through a CSS mask rather than images, so they
+ * take `currentColor` and are always exactly the colour of the label beside them:
+ * gold on a plaque, dim when the button is disabled, without a second asset per
+ * state. The same technique the map already uses for boss silhouettes.
+ *
+ * Only navigation and action controls are converted. Emoji inside game text - the
+ * battle log, ability descriptions, event copy - stay: there are 89 of them, they
+ * are content rather than interface, and replacing them is not a release matter.
+ *
+ * Art: game-icons.net, CC BY 3.0. Authors are credited in settings and in
+ * assets/ui/icons/README.md. */
+.ico {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
+  background-color: currentColor;
+  -webkit-mask: var(--ico) center / contain no-repeat;
+  mask: var(--ico) center / contain no-repeat;
+  flex-shrink: 0;
+}
+.ico-bag { --ico: url('../assets/ui/icons/bag.svg'); }
+.ico-book { --ico: url('../assets/ui/icons/book.svg'); }
+.ico-swords { --ico: url('../assets/ui/icons/swords.svg'); }
+.ico-scout { --ico: url('../assets/ui/icons/scout.svg'); }
+.ico-coins { --ico: url('../assets/ui/icons/coins.svg'); }
+.ico-shield { --ico: url('../assets/ui/icons/shield.svg'); }
+.ico-artifact { --ico: url('../assets/ui/icons/artifact.svg'); }
+.ico-ad { --ico: url('../assets/ui/icons/ad.svg'); }
+
 /* ---- Main menu ----------------------------------------------------------- */
 /* The first screen the player sees, and it was a flat dark rectangle with a thin
  * gold outline laid over the pixel-art painting - the one place where "looks like

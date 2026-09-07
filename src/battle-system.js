@@ -1518,7 +1518,9 @@
       inventoryButton.title = lootNeedsAttention
         ? `${translateKey('openBagEquip')}: ${translateText(drop.name)}`
         : (hasBag ? translateKey('openBag') : translateKey('openBagEmpty'));
-      inventoryButton.textContent = lootNeedsAttention ? translateKey('equipLoot') : translateKey('bag');
+      // Иконка рисуется маской, поэтому нужен элемент, а не текст.
+      const bagLabel = lootNeedsAttention ? translateKey('equipLoot') : translateKey('bag');
+      inventoryButton.innerHTML = `<span class="ico ico-bag" aria-hidden="true"></span> ${escapeHtml(bagLabel)}`;
     }
     if (continueButton) {
       continueButton.classList.toggle('vic-btn-continue-ready', !lootNeedsAttention);

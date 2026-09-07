@@ -85,11 +85,31 @@ function interfaceArtIsLicensed() {
   const kit = resolve(root, 'assets/ui/kit');
   const readmePath = resolve(kit, 'README.md');
   if (!existsSync(readmePath) || !existsSync(resolve(kit, 'LICENSE-CC-BY-3.0.txt'))) return false;
+  const iconsReadmePath = resolve(root, 'assets/ui/icons/README.md');
+  if (!existsSync(iconsReadmePath)) return false;
   const readme = readFileSync(readmePath, 'utf8');
-  const namesAuthorAndLicence = readme.includes('Lamoot') && readme.includes('CC BY 3.0');
-  const recordsChanges = /изменен|Что изменено/i.test(readme);
-  const shownToPlayer = index.includes('Lamoot') && index.includes('CC BY 3.0');
+  const iconsReadme = readFileSync(iconsReadmePath, 'utf8');
+  const namesAuthorAndLicence = readme.includes('Lamoot') && readme.includes('CC BY 3.0')
+    && ['Lorc', 'Delapouite', 'sbed'].every(author => iconsReadme.includes(author));
+  const recordsChanges = [readme, iconsReadme].every(text => /Что изменено/i.test(text));
+  // Every author the licence names has to reach the player, not just the file.
+  const shownToPlayer = ['Lamoot', 'Lorc', 'Delapouite', 'sbed', 'CC BY 3.0']
+    .every(name => index.includes(name));
   return namesAuthorAndLicence && recordsChanges && shownToPlayer;
+}
+
+/** Every icon named in the markup must have a rule behind it.
+ *
+ *  Control icons are CSS masks: the element carries `ico ico-<name>` and a rule
+ *  supplies the file. Miss the rule and the button silently renders an empty box -
+ *  and because the packager finds assets by following url(), the file never even
+ *  reaches the archive. That happened to the artifact icon: it was downloaded,
+ *  used in the arsenal tab, and had no rule for it. */
+function everyIconClassHasARule() {
+  const css = gameRuntimeStylePaths(root).map(path => readFileSync(path, 'utf8')).join('\n');
+  const declared = new Set([...css.matchAll(/\.ico-([a-z0-9-]+)\s*\{/gi)].map(match => match[1]));
+  const used = new Set([...index.matchAll(/\bico-([a-z0-9-]+)\b/gi)].map(match => match[1]));
+  return [...used].every(name => declared.has(name));
 }
 
 /** Global tokens belong to styles/tokens.css and nowhere else.
@@ -283,6 +303,7 @@ const checks = [
   ,['bundled display font ships self-hosted with its licence', bundledFontIsSelfContained]
   ,['global design tokens live in one file', globalTokensLiveInOneFile]
   ,['interface art ships with its licence and credit', interfaceArtIsLicensed]
+  ,['every control icon has a rule behind it', everyIconClassHasARule]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
   ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
   ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]

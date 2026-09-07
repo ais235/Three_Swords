@@ -417,8 +417,14 @@ try {
   check('mission objective stays visible in the battle top bar', await page.locator('#battle-objective-top:not(.hidden)').count() === 1 && ((await page.locator('#battle-objective-top').textContent()) || '').trim().length > 8);
   check('inventory and bestiary are available beside the battle menu', await page.locator('#btn-battle-inventory:not(.hidden)').count() === 1 && await page.locator('#btn-battle-bestiary:not(.hidden)').count() === 1);
   check('battle has only the top inventory command', await page.locator('#btn-battle-inv').count() === 0 && /Инвентарь|Inventory/i.test((await page.locator('#btn-battle-inventory').textContent()) || ''));
-  const bestiaryTopText = (await page.locator('#btn-battle-bestiary').textContent()) || '';
-  check('battle bestiary button has one book icon', (bestiaryTopText.match(/📖/g) || []).length === 1, bestiaryTopText);
+  // Иконка стала элементом с CSS-маской вместо эмодзи, но проверяем то же самое:
+  // ровно одна, а не задвоенная при перерисовке кнопки.
+  const bestiaryTop = await page.evaluate(() => {
+    const btn = document.getElementById('btn-battle-bestiary');
+    return { icons: btn.querySelectorAll('.ico').length, text: (btn.textContent || '').trim() };
+  });
+  check('battle bestiary button has one book icon',
+    bestiaryTop.icons === 1 && /Бестиарий|Bestiary/i.test(bestiaryTop.text), JSON.stringify(bestiaryTop));
   const desktopTopButtonFit = await page.evaluate(() => {
     const hud = document.getElementById('hud-top').getBoundingClientRect();
     return ['btn-battle-inventory', 'btn-battle-bestiary', 'btn-open-menu'].map(id => {
@@ -623,12 +629,19 @@ try {
   const arsenalLayout = await page.evaluate(() => {
     const screen = document.getElementById('arsenal-screen');
     const back = document.getElementById('btn-arsenal-back');
-    const tabTexts = [...document.querySelectorAll('[data-arsenal-slot]')].map(el => el.textContent.trim());
+    const tabs = [...document.querySelectorAll('[data-arsenal-slot]')];
+    const tabTexts = tabs.map(el => el.textContent.trim());
+    const tabIcons = tabs.map(el => el.querySelectorAll('.ico').length);
     const rect = back.getBoundingClientRect();
-    return { backVisible: !!(rect.width && rect.height) && rect.bottom <= window.innerHeight, tabTexts, title: screen.querySelector('.bestiary-bar-title')?.textContent.trim() };
+    return { backVisible: !!(rect.width && rect.height) && rect.bottom <= window.innerHeight, tabTexts, tabIcons, title: screen.querySelector('.bestiary-bar-title')?.textContent.trim() };
   });
   check('Arsenal back button fits inside the viewport', arsenalLayout.backVisible, JSON.stringify(arsenalLayout));
-  check('Arsenal Russian navigation is localized', arsenalLayout.title === '⚔ Арсенал' && arsenalLayout.tabTexts.join('|') === '⚔ Оружие|🛡 Броня|✨ Артефакты', JSON.stringify(arsenalLayout));
+  // Подписи по-русски, и у каждой вкладки ровно одна иконка. Раньше здесь
+  // сверялась строка вместе с эмодзи; эмодзи в кнопках заменены на элементы.
+  check('Arsenal Russian navigation is localized',
+    /Арсенал/.test(arsenalLayout.title || '')
+    && arsenalLayout.tabTexts.join('|') === 'Оружие|Броня|Артефакты'
+    && arsenalLayout.tabIcons.join('') === '111', JSON.stringify(arsenalLayout));
   await page.locator('#btn-arsenal-back').click();
   await page.locator('#map-screen:not(.hidden)').waitFor({ state: 'visible' });
   check('regional boss silhouette is visible', await page.locator('.map-boss-silhouette').count() >= 1);

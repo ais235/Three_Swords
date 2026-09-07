@@ -625,7 +625,10 @@
     const labels = { weapon: translateKey('arsenalWeapons'), armor: translateKey('arsenalArmor'), artifact: translateKey('arsenalArtifacts') };
     document.querySelectorAll('[data-arsenal-slot]').forEach(btn => {
       const slot = btn.dataset.arsenalSlot;
-      btn.textContent = `${slot === 'weapon' ? '⚔' : slot === 'armor' ? '🛡' : '✨'} ${labels[slot]}`;
+      // Иконка — маска, а не эмодзи, поэтому нужен элемент: textContent тут
+      // затирал бы разметку.
+      const iconName = slot === 'weapon' ? 'swords' : slot === 'armor' ? 'shield' : 'artifact';
+      btn.innerHTML = `<span class="ico ico-${iconName}" aria-hidden="true"></span> ${escapeHtml(labels[slot])}`;
       btn.classList.toggle('active', slot === ArsenalState.slot);
     });
     const title = document.querySelector('#arsenal-screen .bestiary-bar-title');
@@ -2413,7 +2416,7 @@
     const root = document.getElementById('map-nodes');
     document.getElementById('map-screen')?.setAttribute('data-region', String(GameState.region || 1));
     const mapArsenalButton = document.getElementById('btn-map-arsenal');
-    if (mapArsenalButton) mapArsenalButton.textContent = `⚔ ${translateKey('arsenal')}`;
+    if (mapArsenalButton) mapArsenalButton.innerHTML = `<span class="ico ico-swords" aria-hidden="true"></span> ${escapeHtml(translateKey('arsenal'))}`;
     const info = document.getElementById('map-cell-info');
     const fogCounterEl = document.getElementById('map-fog-counter');
     root.innerHTML = '';
@@ -3492,7 +3495,7 @@
         <div style="height:100%;width:${hpPct}%;background:#e74c3c"></div>
       </div>
       ${damagePreviewCardHtml(b, getActiveUnit(), u)}
-      ${translateKey('battleAttack').replace(/^.\s*/, '')}: ${u.attack} | ${translateKey('armor')}: ${u.armor}<br/>
+      ${translateKey('battleAttack')}: ${u.attack} | ${translateKey('armor')}: ${u.armor}<br/>
       ${translateKey('statuses')}: ${sts || translateKey('none')}<br/>
       ${u.scenarioTarget ? `<span class="stats-line">${translateKey(u.scenarioTarget === 'ritualist' ? 'ritualTargetTooltip' : 'huntTargetTooltip')}</span><br/>` : ''}
       <span class="stats-line">${battleHoverPreviewText(b, u)}</span><br/>

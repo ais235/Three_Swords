@@ -79,9 +79,9 @@
 
             <div class="menu-contract-row" id="menu-contracts" aria-label="Starting contract">
               <span class="menu-diff-label" id="menu-contract-label">CONTRACT</span>
-              <button type="button" class="menu-contract-btn active" data-contract="hunters" onclick="setCampaignContract('hunters')">🔭 Pathfinders</button>
-              <button type="button" class="menu-contract-btn" data-contract="mercenaries" onclick="setCampaignContract('mercenaries')">🪙 Mercenaries</button>
-              <button type="button" class="menu-contract-btn" data-contract="guardians" onclick="setCampaignContract('guardians')">🛡️ Wardens</button>
+              <button type="button" class="menu-contract-btn active" data-contract="hunters" onclick="setCampaignContract('hunters')"><span class="ico ico-scout" aria-hidden="true"></span> Pathfinders</button>
+              <button type="button" class="menu-contract-btn" data-contract="mercenaries" onclick="setCampaignContract('mercenaries')"><span class="ico ico-coins" aria-hidden="true"></span> Mercenaries</button>
+              <button type="button" class="menu-contract-btn" data-contract="guardians" onclick="setCampaignContract('guardians')"><span class="ico ico-shield" aria-hidden="true"></span> Wardens</button>
               <small id="menu-contract-copy"></small>
             </div>
 
@@ -127,6 +127,7 @@
                Полная лицензия и перечень изменений: assets/ui/kit/README.md -->
           <p class="menu-settings-hint" id="credits-line">
             Interface art: RPG GUI construction kit by Lamoot, CC BY 3.0, modified.
+            Icons: game-icons.net by Lorc, Delapouite, sbed, CC BY 3.0, modified.
             Font: Press Start 2P by CodeMan38, SIL OFL 1.1.
           </p>
           <button type="button" class="menu-btn menu-btn-continue" id="btn-menu-settings-back" style="margin-top:4px">
@@ -144,8 +145,8 @@
       </div>
       <div id="battle-objective-top" class="hidden" title=""></div>
       <div id="topbar-right">
-        <button class="btn battle-top-action hidden" id="btn-battle-inventory" title="Inventory">🎒 Inventory</button>
-        <button class="btn battle-top-action hidden" id="btn-battle-bestiary" title="Bestiary">📖 Bestiary</button>
+        <button class="btn battle-top-action hidden" id="btn-battle-inventory" title="Inventory"><span class="ico ico-bag" aria-hidden="true"></span> Inventory</button>
+        <button class="btn battle-top-action hidden" id="btn-battle-bestiary" title="Bestiary"><span class="ico ico-book" aria-hidden="true"></span> Bestiary</button>
         <button class="btn" id="btn-open-menu">☰ Menu</button>
       </div>
     </div>
@@ -169,9 +170,9 @@
           <div id="map-legend" class="map-legend"></div>
           <div class="map-panel-actions">
             <button class="btn btn-gold btn-enter-full" id="btn-map-enter">▶ Enter</button>
-            <button class="btn btn-dim" id="btn-map-bag">🎒 Bag</button>
-            <button class="btn btn-dim" id="btn-map-arsenal">⚔ Arsenal</button>
-            <button class="btn btn-dim" id="btn-map-bestiary">📖 Bestiary</button>
+            <button class="btn btn-dim" id="btn-map-bag"><span class="ico ico-bag" aria-hidden="true"></span> Bag</button>
+            <button class="btn btn-dim" id="btn-map-arsenal"><span class="ico ico-swords" aria-hidden="true"></span> Arsenal</button>
+            <button class="btn btn-dim" id="btn-map-bestiary"><span class="ico ico-book" aria-hidden="true"></span> Bestiary</button>
           </div>
         </div>
       </div>
@@ -236,15 +237,15 @@
               </div>
               <div class="oracle-crystal" aria-hidden="true">🧭</div>
               <p class="oracle-hint">Veira will scout the nearest battle on the map: enemy lineup after watching an ad.</p>
-              <button type="button" class="btn btn-ad btn-oracle-main" id="btn-oracle-center-ad">📺 Get intel</button>
+              <button type="button" class="btn btn-ad btn-oracle-main" id="btn-oracle-center-ad"><span class="ico ico-ad" aria-hidden="true"></span> Get intel</button>
               <div id="oracle-result" class="oracle-result hidden" role="status"></div>
             </div>
           </div>
         </div>
         <div class="city-right city-shortcuts">
           <div class="city-shortcuts-title">Quick</div>
-          <button type="button" class="btn btn-dim sc-btn" id="btn-city-bag">🎒 Bag</button>
-          <button type="button" class="btn btn-dim sc-btn" id="btn-city-bestiary">📖 Bestiary</button>
+          <button type="button" class="btn btn-dim sc-btn" id="btn-city-bag"><span class="ico ico-bag" aria-hidden="true"></span> Bag</button>
+          <button type="button" class="btn btn-dim sc-btn" id="btn-city-bestiary"><span class="ico ico-book" aria-hidden="true"></span> Bestiary</button>
           <button type="button" class="btn btn-dim btn-leave sc-btn" id="btn-leave-city"><span class="btn-leave-text">← Leave town</span></button>
         </div>
       </div>
@@ -374,10 +375,10 @@
         </div>
         <!-- Right column (landscape) / bottom (portrait) -->
         <div class="victory-buttons" id="victory-buttons">
-          <button class="btn vic-btn-ad" id="btn-vic-ad">📺 ×2 GOLD [AD]</button>
-          <button class="btn vic-btn-inventory" id="btn-vic-inventory" title="Open bag and equip loot">🎒 BAG</button>
+          <button class="btn vic-btn-ad" id="btn-vic-ad"><span class="ico ico-ad" aria-hidden="true"></span> ×2 GOLD [AD]</button>
+          <button class="btn vic-btn-inventory" id="btn-vic-inventory" title="Open bag and equip loot"><span class="ico ico-bag" aria-hidden="true"></span> BAG</button>
           <button class="btn vic-btn-continue" id="btn-vic-continue">▶ CONTINUE</button>
-          <button class="btn vic-btn-bestiary" id="btn-vic-bestiary">📖 BESTIARY</button>
+          <button class="btn vic-btn-bestiary" id="btn-vic-bestiary"><span class="ico ico-book" aria-hidden="true"></span> BESTIARY</button>
         </div>
       </div>
     </div>
@@ -427,7 +428,7 @@
 
     <div id="arsenal-screen" class="screen hidden">
       <div class="bestiary-bar"><span class="bestiary-bar-title">⚔ ARSENAL</span><span class="bestiary-bar-count" id="arsenal-count">0 / 0</span></div>
-      <div class="arsenal-tabs" id="arsenal-tabs"><button class="btn active" data-arsenal-slot="weapon">⚔ Weapons</button><button class="btn" data-arsenal-slot="armor">🛡 Armor</button><button class="btn" data-arsenal-slot="artifact">✨ Artifacts</button></div>
+      <div class="arsenal-tabs" id="arsenal-tabs"><button class="btn active" data-arsenal-slot="weapon"><span class="ico ico-swords" aria-hidden="true"></span> Weapons</button><button class="btn" data-arsenal-slot="armor"><span class="ico ico-shield" aria-hidden="true"></span> Armor</button><button class="btn" data-arsenal-slot="artifact"><span class="ico ico-artifact" aria-hidden="true"></span> Artifacts</button></div>
       <div class="bestiary-layout arsenal-layout"><div class="bestiary-list" id="arsenal-list"></div><div class="bestiary-detail" id="arsenal-detail"></div></div>
       <div style="padding:8px;flex-shrink:0"><button class="btn btn-dim" id="btn-arsenal-back" style="width:100%">← Back</button></div>
     </div>

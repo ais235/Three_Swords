@@ -193,8 +193,8 @@
     selectCell: { ru: 'Выберите клетку', en: 'Select a tile', es: 'Elige una casilla' },
     cellInfoHint: { ru: 'Показывает информацию о выбранной зоне.', en: 'Shows information about the selected area.', es: 'Muestra información de la zona seleccionada.' },
     enter: { ru: '▶ Войти', en: '▶ Enter', es: '▶ Entrar' },
-    bag: { ru: '🎒 Рюкзак', en: '🎒 Bag', es: '🎒 Mochila' },
-    bestiary: { ru: '📖 Бестиарий', en: '📖 Bestiary', es: '📖 Bestiario' },
+    bag: { ru: 'Рюкзак', en: 'Bag', es: 'Mochila' },
+    bestiary: { ru: 'Бестиарий', en: 'Bestiary', es: 'Bestiario' },
     arsenal: { ru: 'Арсенал', en: 'Arsenal', es: 'Arsenal' },
     arsenalWeapons: { ru: 'Оружие', en: 'Weapons', es: 'Armas' },
     arsenalArmor: { ru: 'Броня', en: 'Armor', es: 'Armadura' },
@@ -218,7 +218,7 @@
     gearUpgrade: { ru: 'Улучшение снаряжения', en: 'Gear upgrades', es: 'Mejoras de equipo' },
     scoutVeira: { ru: 'РАЗВЕДЧИЦА ВЕЙРА', en: 'SCOUT VEIRA', es: 'EXPLORADORA VEIRA' },
     scoutHint: { ru: 'Вейра изучит ближайший бой на карте: состав врагов после просмотра рекламы.', en: 'Veira will scout the nearest battle on the map: enemy lineup after watching an ad.', es: 'Veira explorará la batalla más cercana del mapa: enemigos tras ver un anuncio.' },
-    getIntel: { ru: '📺 Получить разведданные', en: '📺 Get intel', es: '📺 Obtener informe' },
+    getIntel: { ru: 'Получить разведданные', en: 'Get intel', es: 'Obtener informe' },
     quick: { ru: 'Быстро', en: 'Quick', es: 'Rápido' },
     leaveTown: { ru: '← Покинуть город', en: '← Leave town', es: '← Salir de la ciudad' },
     returnTown: { ru: '↩ В город', en: '↩ To town', es: '↩ A la ciudad' },
@@ -234,7 +234,7 @@
     pickItem: { ru: 'Выберите предмет в рюкзаке.', en: 'Choose an item in the bag.', es: 'Elige un objeto de la mochila.' },
     dragWrongSlot: { ru: 'Этот предмет предназначен для другого слота.', en: 'This item belongs in a different slot.', es: 'Este objeto pertenece a otra ranura.' },
     close: { ru: '✕ Закрыть', en: '✕ Close', es: '✕ Cerrar' },
-    doubleGold: { ru: '📺 ×2 ЗОЛОТО [РЕКЛАМА]', en: '📺 ×2 GOLD [AD]', es: '📺 ×2 ORO [ANUNCIO]' },
+    doubleGold: { ru: '×2 ЗОЛОТО [РЕКЛАМА]', en: '×2 GOLD [AD]', es: '×2 ORO [ANUNCIO]' },
     victoryContinue: { ru: '▶ ПРОДОЛЖИТЬ', en: '▶ CONTINUE', es: '▶ CONTINUAR' },
     defeat: { ru: 'Поражение', en: 'Defeat', es: 'Derrota' },
     squadFell: { ru: 'Отряд пал...', en: 'The party has fallen...', es: 'El grupo ha caído...' },
@@ -268,7 +268,7 @@
     leshyNoTarget: { ru: 'укоренён и ждёт приближения героев', en: 'is rooted and waits for the heroes to approach', es: 'está enraizado y espera a que se acerquen los héroes' },
     threatTank: { ru: 'ТАНК', en: 'TANK', es: 'TANQUE' },
     threatRanged: { ru: 'ДАЛЬНИЙ', en: 'RANGED', es: 'DISTANCIA' },
-    equipLoot: { ru: '🎒 НАДЕТЬ ДОБЫЧУ', en: '🎒 EQUIP LOOT', es: '🎒 EQUIPAR BOTÍN' },
+    equipLoot: { ru: 'НАДЕТЬ ДОБЫЧУ', en: 'EQUIP LOOT', es: 'EQUIPAR BOTÍN' },
     openBag: { ru: 'Открыть рюкзак', en: 'Open bag', es: 'Abrir mochila' },
     openBagEmpty: { ru: 'Открыть рюкзак (пусто)', en: 'Open bag (empty)', es: 'Abrir mochila (vacía)' },
     openBagEquip: { ru: 'Открыть рюкзак и надеть', en: 'Open bag and equip', es: 'Abrir mochila y equipar' },
@@ -317,7 +317,7 @@
     allHealthy: { ru: '✓ Все здоровы', en: '✓ Everyone healthy', es: '✓ Todos sanos' },
     healOne: { ru: 'Лечить', en: 'Heal', es: 'Curar' },
     healAll: { ru: 'Лечить всех', en: 'Heal all', es: 'Curar a todos' },
-    freeAdHeal: { ru: '📺 Бесплатно за рекламу', en: '📺 Free with ad', es: '📺 Gratis con anuncio' },
+    freeAdHeal: { ru: 'Бесплатно за рекламу', en: 'Free with ad', es: 'Gratis con anuncio' },
     adHealTitle: { ru: 'Лечение за просмотр рекламы', en: 'Healing for watching an ad', es: 'Curación por ver un anuncio' },
     adTitle: { ru: 'Реклама', en: 'Ad', es: 'Anuncio' },
     buy: { ru: 'КУПИТЬ', en: 'BUY', es: 'COMPRAR' },
@@ -356,7 +356,7 @@
     terrainSlows: { ru: 'замедляет', en: 'slows movement', es: 'ralentiza' },
     terrainNoBonus: { ru: 'без бонуса', en: 'no bonus', es: 'sin bonificación' },
     battleMove: { ru: '◇ Движение', en: '◇ Move', es: '◇ Mover' },
-    battleAttack: { ru: '⚔ Атака', en: '⚔ Attack', es: '⚔ Atacar' },
+    battleAttack: { ru: 'Атака', en: 'Attack', es: 'Atacar' },
     enemyTurn: { ru: 'Ход противника…', en: 'Enemy turn...', es: 'Turno enemigo...' },
     turnNow: { ru: 'Сейчас', en: 'Now', es: 'Ahora' },
     turnNext: { ru: 'Далее', en: 'Next', es: 'Siguiente' },
@@ -366,7 +366,7 @@
     undoMoveTitle: { ru: 'Вернуть на клетку до перемещения', en: 'Return to the tile before moving', es: 'Volver a la casilla anterior' },
     skipMove: { ru: '⚡ Не двигаться', en: '⚡ Skip move', es: '⚡ No moverse' },
     waitTurn: { ru: '⏹ Ждать', en: '⏹ Wait', es: '⏹ Esperar' },
-    battleInventory: { ru: '🎒 Инвентарь', en: '🎒 Inventory', es: '🎒 Inventario' },
+    battleInventory: { ru: 'Инвентарь', en: 'Inventory', es: 'Inventario' },
     battleConsumables: { ru: '🧪 Расходники', en: '🧪 Consumables', es: '🧪 Consumibles' },
     consumablesEmpty: { ru: 'Расходников нет', en: 'No consumables', es: 'Sin consumibles' },
     useItem: { ru: 'Использовать', en: 'Use', es: 'Usar' },
@@ -559,7 +559,7 @@
     veiraIntel: { ru: 'Разведка Вейры', en: 'Veira intel', es: 'Informe de Veira' },
     secretGoods: { ru: 'Тайный товар', en: 'Secret goods', es: 'Mercancía secreta' },
     secret: { ru: 'Тайна', en: 'Secret', es: 'Secreto' },
-    openAd: { ru: '📺 Открыть', en: '📺 Reveal', es: '📺 Revelar' },
+    openAd: { ru: 'Открыть', en: 'Reveal', es: 'Revelar' },
     partyState: { ru: 'СОСТОЯНИЕ ОТРЯДА', en: 'PARTY STATUS', es: 'ESTADO DEL GRUPO' }
   };
 
@@ -1413,8 +1413,8 @@
     const bestiaryBtn = document.getElementById('btn-battle-bestiary');
     inventoryBtn?.classList.toggle('hidden', !battleVisible);
     bestiaryBtn?.classList.toggle('hidden', !battleVisible);
-    if (inventoryBtn) inventoryBtn.innerHTML = `<span class="battle-top-icon" aria-hidden="true">🎒</span><span class="battle-top-label">${translateKey('battleInventory').replace(/^[^\p{L}\p{N}]+/u, '')}</span>`;
-    if (bestiaryBtn) bestiaryBtn.innerHTML = `<span class="battle-top-icon" aria-hidden="true">📖</span><span class="battle-top-label">${translateKey('bestiary').replace(/^[^\p{L}\p{N}]+/u, '')}</span>`;
+    if (inventoryBtn) inventoryBtn.innerHTML = `<span class="battle-top-icon ico ico-bag" aria-hidden="true"></span><span class="battle-top-label">${translateKey('battleInventory').replace(/^[^\p{L}\p{N}]+/u, '')}</span>`;
+    if (bestiaryBtn) bestiaryBtn.innerHTML = `<span class="battle-top-icon ico ico-book" aria-hidden="true"></span><span class="battle-top-label">${translateKey('bestiary').replace(/^[^\p{L}\p{N}]+/u, '')}</span>`;
     if (objective) {
       const status = battleVisible && typeof CampaignExpansion !== 'undefined'
         ? CampaignExpansion.scenarioStatus(GameState.currentBattle) : null;
