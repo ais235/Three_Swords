@@ -17,6 +17,8 @@ CSS-маску (`mask`), а не как картинки: так иконка к
 | `scout.svg` | telescope | Delapouite | Контракт «Охотники» |
 | `coins.svg` | two-coins | Delapouite | Контракт «Наёмники» |
 | `ad.svg` | tv-remote | Delapouite | Кнопки с просмотром рекламы |
+| `perks.svg` | oak | Lorc | Кнопка дерева перков |
+| `lock.svg` | padlock | Lorc | Закрытая ячейка навыка |
 
 ## Лицензия
 
