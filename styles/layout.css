@@ -1388,6 +1388,13 @@ button, input, select, textarea {
   line-height: 1.5;
   margin-top: -6px;
 }
+/* The credits line is a licence obligation rather than a hint, so it has to be
+ * readable in full. The settings box is a flex column: on a landscape phone flex
+ * shrank this to the 34px floor that .menu-settings-hint carries, while its three
+ * lines needed 45, and the last line ran under the Back button. */
+#credits-line {
+  flex-shrink: 0;
+}
 
 #sfx-auditor-modal {
   position: fixed;

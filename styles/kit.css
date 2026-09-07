@@ -114,6 +114,65 @@
   border-radius: 0;
 }
 
+/* ---- Main menu ----------------------------------------------------------- */
+/* The first screen the player sees, and it was a flat dark rectangle with a thin
+ * gold outline laid over the pixel-art painting - the one place where "looks like
+ * a web page" costs the most. The box takes the panel frame and the entries take
+ * the plaque, so the menu sits in the scene instead of on top of it.
+ *
+ * The title keeps Press Start 2P: it belongs to the pixel background behind it,
+ * not to the wooden furniture in front. */
+.menu-pixel-frame {
+  border-style: solid;
+  border-width: 12px;
+  border-image: url('../assets/ui/kit/panel.png') 7 stretch;
+  border-radius: 0;
+}
+.menu-btn,
+.menu-contract-btn {
+  border-style: solid;
+  border-width: 7px 16px;
+  border-image: url('../assets/ui/kit/button.png') 8 28 8 28 fill stretch;
+  background: none;
+  border-radius: 0;
+  color: #f0e2c4;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .65);
+}
+.menu-btn:hover,
+.menu-btn.menu-btn-active,
+.menu-contract-btn:hover,
+.menu-contract-btn.active {
+  border-image-source: url('../assets/ui/kit/button-on.png');
+  background: none;
+  color: #ffe9a8;
+}
+/* The difficulty row is three narrow cells side by side; a 16px side frame would
+ * leave no room for "ОБЫЧНАЯ". Thin cut of the same wood. */
+.menu-diff-btn {
+  border-style: solid;
+  border-width: 5px 8px;
+  border-image: url('../assets/ui/kit/button.png') 8 28 8 28 fill stretch;
+  background: none;
+  border-radius: 0;
+  /* Dark on wood, not light: the inactive label is 7px, and its old #776555 -
+   * chosen when it sat on a near-black panel - vanished completely once the
+   * plaque went in. "Хардкор" was invisible. */
+  color: #2f261d;
+  text-shadow: none;
+}
+.menu-diff-btn:hover { color: #120e0a; }
+.menu-diff-btn.active-normal,
+.menu-diff-btn.active-hard {
+  border-image-source: url('../assets/ui/kit/button-on.png');
+  background: none;
+}
+.menu-settings-box {
+  border-style: solid;
+  border-width: 12px;
+  border-image: url('../assets/ui/kit/panel.png') 7 stretch;
+  border-radius: 0;
+}
+
 /* ---- Battle screen ------------------------------------------------------ */
 /* The most-seen screen in the game, and the last one still drawn entirely in CSS.
  *

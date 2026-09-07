@@ -166,6 +166,10 @@
     noRecord: { ru: '—', en: '—', es: '—' },
     lockedRegion: { ru: 'Регион закрыт', en: 'Region locked', es: 'Región bloqueada' },
     defeatBoss: { ru: 'Победите босса', en: 'Defeat the boss', es: 'Derrota al jefe' },
+    // Подзаголовки настроек переводятся подстановкой по фразе; без записи
+    // здесь они так и остаются английскими в русском интерфейсе.
+    previousRuns: { ru: 'Прошлые походы · seed для повтора', en: 'Previous expeditions · replay seed', es: 'Expediciones previas · semilla' },
+    credits: { ru: 'Благодарности', en: 'Credits', es: 'Créditos' },
     sound: { ru: 'Звук', en: 'Sound', es: 'Sonido' },
     music: { ru: 'Музыка', en: 'Music', es: 'Música' },
     volume: { ru: 'Громкость', en: 'Volume', es: 'Volumen' },
