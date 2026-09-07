@@ -853,7 +853,7 @@ button, input, select, textarea {
   border-radius: 0;
 }
 #shop-list .item-card:hover:not(.cant),
-#shop-sell-list .item-card:hover:not(.cant) { border-color: var(--accent-blue); background: #06101e; }
+#shop-sell-list .item-card:hover:not(.cant) { border-color: var(--accent-blue); background: #15120f; }
 #shop-list .item-card.rare,
 #shop-sell-list .item-card.rare { border-color: #1a3a6a; }
 #shop-list .item-card.epic,
@@ -949,7 +949,7 @@ button, input, select, textarea {
 }
 #shop-list .btn-buy {
   border: 1px solid var(--accent-blue);
-  background: #060e18;
+  background: #120f0c;
   color: var(--accent-blue);
 }
 #shop-sell-list .btn-sell {
@@ -957,7 +957,7 @@ button, input, select, textarea {
   background: #1a1408;
   color: #e8c860;
 }
-#shop-list .btn-buy:hover:not(:disabled) { background: #0d1e38; }
+#shop-list .btn-buy:hover:not(:disabled) { background: #29221c; }
 #shop-sell-list .btn-sell:hover:not(:disabled) { background: #2a2010; }
 #shop-list .item-card.cant .btn-buy,
 #shop-sell-list .item-card.cant .btn-sell {
