@@ -1414,7 +1414,13 @@
     // Paperdoll — equipment zones
     hero.equipment = hero.equipment || { weapon: null, armor: null, artifact: null };
     const slotNames = { weapon: `⚔ ${translateKey('weapon')}`, armor: `🛡 ${translateKey('armor')}`, artifact: `✨ ${translateKey('artifact')}` };
-    const slotDefIcons = { weapon: '⚔', armor: '🛡', artifact: '✨' };
+    // Маски, а не эмодзи: подсказка пустого слота должна брать цвет от CSS,
+    // иначе на светлом дереве ✨ так и остаётся бледно-бежевой.
+    const slotDefIcons = {
+      weapon: '<span class="ico ico-swords" aria-hidden="true"></span>',
+      armor: '<span class="ico ico-shield" aria-hidden="true"></span>',
+      artifact: '<span class="ico ico-artifact" aria-hidden="true"></span>'
+    };
     const rarBadge = r => r === 'epic' ? `<span class="badge badge-epic">${translateKey('epic')}</span>` : r === 'rare' ? `<span class="badge badge-rare">${translateKey('rare')}</span>` : `<span class="badge badge-common">${translateKey('common')}</span>`;
 
     ['weapon', 'armor', 'artifact'].forEach(slot => {
