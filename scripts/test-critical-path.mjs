@@ -428,11 +428,23 @@ try {
   const desktopTopButtonFit = await page.evaluate(() => {
     const hud = document.getElementById('hud-top').getBoundingClientRect();
     return ['btn-battle-inventory', 'btn-battle-bestiary', 'btn-open-menu'].map(id => {
-      const rect = document.getElementById(id).getBoundingClientRect();
-      return { id, top: rect.top - hud.top, bottom: hud.bottom - rect.bottom, height: rect.height };
+      const el = document.getElementById(id);
+      const rect = el.getBoundingClientRect();
+      // Зазор между надписью и краем кнопки. Кнопки одеты в нарисованную плашку,
+      // и её рамка нарисована внутри рамочной коробки: если строка выше своего
+      // места, она садится на нижнюю планку и обрезается ею. Снаружи кнопка при
+      // этом остаётся ровно на месте, поэтому проверять только её положение в
+      // панели мало.
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const text = range.getBoundingClientRect();
+      return { id, top: rect.top - hud.top, bottom: hud.bottom - rect.bottom, height: rect.height,
+        labelTop: Math.round(text.top - rect.top), labelBottom: Math.round(rect.bottom - text.bottom) };
     });
   });
   check('desktop top button borders stay inside the HUD', desktopTopButtonFit.every(item => item.top >= 2 && item.bottom >= 2), JSON.stringify(desktopTopButtonFit));
+  check('desktop top button labels sit inside their plaque',
+    desktopTopButtonFit.every(item => item.labelTop >= 3 && item.labelBottom >= 3), JSON.stringify(desktopTopButtonFit));
   const enemyClientPoint = deploymentRuntime.firstEnemy ? await page.evaluate(({ x, y }) => {
     const rect = canvasContentRect();
     const canvasX = BattleView.offsetX + (x + 0.5) * CELL * BattleView.zoom;

@@ -336,6 +336,13 @@
  * fit, and the wood still reads at this size. */
 #hud-top .btn {
   border-width: 4px 10px;
+  /* No vertical padding: the frame is the inset. typography.css gives every .btn
+   * `padding: 7px 14px`, and these buttons are pinned to 28px tall - with the 4px
+   * frame on each side that left 6px of content box for a 16.8px line, so the
+   * label sat 2px off the bottom rail and its descenders were cut by it. The menu
+   * button escaped only because its own rule is an id selector and outranks the
+   * general one, which is why two of the three looked wrong and one did not. */
+  padding-block: 0;
 }
 /* Same query the rest of the compact layout uses, where the bar drops to 26px
  * and its buttons to 20px. The critical-path test wants two clear pixels above
