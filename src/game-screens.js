@@ -1366,7 +1366,7 @@
     const atkBuff = hero.attack > baseTpl.attack;
     const armBuff = hero.armor > baseTpl.armor;
     const hpPct = Math.round(hero.hp / hero.maxHp * 100);
-    const hpBar = `<div style="height:4px;border-radius:2px;background:#1a1a2e;overflow:hidden;margin-top:2px"><div style="height:100%;width:${hpPct}%;background:${hpPct>50?'#2ecc71':hpPct>25?'#f39c12':'#e74c3c'}"></div></div>`;
+    const hpBar = `<div class="bar" style="height:4px;margin-top:2px"><div style="height:100%;width:${hpPct}%;background:${hpPct>50?'#2ecc71':hpPct>25?'#f39c12':'#e74c3c'}"></div></div>`;
     card.innerHTML = `<div class="inv-portrait">
       <div class="inv-portrait-name">${hero.name}</div>
       <div class="inv-portrait-class">${roleLabel2[hero.id] || ''} · ${translateKey('heroLevelShort')} ${hero.level}</div>
@@ -1389,7 +1389,7 @@
       const hasBetterGear = ['weapon', 'armor', 'artifact'].some(slot => !!bestInventoryCandidateForSlot(hero, slot));
       invActions.innerHTML = `<div class="inv-action-stack">
         <button type="button" class="btn btn-green" id="btn-inv-equip-best"${hasBetterGear ? '' : ' disabled'}>${translateKey('equipBest')}</button>
-        <button type="button" class="btn btn-gold" id="btn-inv-perks" title="${translateKey('progressionTitle')}">🌳 ${translateKey('progression')}</button>
+        <button type="button" class="btn btn-gold" id="btn-inv-perks" title="${translateKey('progressionTitle')}"><span class="ico ico-perks" aria-hidden="true"></span> ${translateKey('progression')}</button>
       </div>`;
       const bestBtn = document.getElementById('btn-inv-equip-best');
       if (bestBtn) bestBtn.onclick = () => {
@@ -2010,7 +2010,15 @@
     document.querySelectorAll('[data-contract]').forEach(button => {
       const contract = CampaignExpansion.CONTRACTS[button.dataset.contract];
       button.classList.toggle('active', button.dataset.contract === id);
-      if (contract) button.textContent = `${contract.icon} ${CampaignExpansion.loc(contract.name)}`;
+      // Иконка — маска с классом, а не эмодзи в тексте: textContent затирал бы
+      // разметку, из-за чего кнопки контрактов оставались единственными в меню
+      // со старыми эмодзи, хотя в index.html их уже заменили.
+      if (contract) {
+        const glyph = contract.iconClass
+          ? `<span class="ico ${contract.iconClass}" aria-hidden="true"></span>`
+          : escapeHtml(contract.icon);
+        button.innerHTML = `${glyph} ${escapeHtml(CampaignExpansion.loc(contract.name))}`;
+      }
     });
     const label = document.getElementById('menu-contract-label');
     if (label) label.textContent = currentLanguage() === 'ru' ? 'КОНТРАКТ ПОХОДА' : currentLanguage() === 'es' ? 'CONTRATO DE EXPEDICIÓN' : 'EXPEDITION CONTRACT';
@@ -3497,7 +3505,7 @@
       tip.innerHTML = `<b>${u.emoji} ${u.name}</b><br/>
       ${enemyThreatBadgesHtml(u.enemyId, true)}
       HP: ${u.hp}/${u.maxHp}
-      <div style="height:6px;background:#222;border:1px solid #444;border-radius:3px;overflow:hidden;margin:4px 0">
+      <div class="bar" style="height:6px;margin:4px 0">
         <div style="height:100%;width:${hpPct}%;background:#e74c3c"></div>
       </div>
       ${damagePreviewCardHtml(b, getActiveUnit(), u)}

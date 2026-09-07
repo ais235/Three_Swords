@@ -5,16 +5,19 @@ const CampaignExpansion = (() => {
   const CONTRACTS = {
     hunters: {
       icon: '🔭',
+      iconClass: 'ico-scout',
       name: { ru: 'Охотники', en: 'Pathfinders', es: 'Rastreadores' },
       summary: { ru: 'Больше разведданных о врагах, но -5 золота в начале.', en: 'More enemy intel, but start with 5 less gold.', es: 'Más información, pero 5 de oro menos.' }
     },
     mercenaries: {
       icon: '🪙',
+      iconClass: 'ico-coins',
       name: { ru: 'Наёмники', en: 'Mercenaries', es: 'Mercenarios' },
       summary: { ru: '+10 золота и лечебное зелье, но первая добыча скромнее.', en: '+10 gold and a potion; the first drop is weaker.', es: '+10 oro y poción; el primer botín es menor.' }
     },
     guardians: {
       icon: '🛡️',
+      iconClass: 'ico-shield',
       name: { ru: 'Хранители', en: 'Wardens', es: 'Guardianes' },
       summary: { ru: 'Защита перед первым боссом, но меньше наград за короткий путь.', en: 'Protection before the first boss, but fewer shortcut rewards.', es: 'Protección antes del jefe, menos recompensas rápidas.' }
     }

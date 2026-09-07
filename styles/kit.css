@@ -209,6 +209,11 @@
 .ico-coins { --ico: url('../assets/ui/icons/coins.svg'); }
 .ico-shield { --ico: url('../assets/ui/icons/shield.svg'); }
 .ico-artifact { --ico: url('../assets/ui/icons/artifact.svg'); }
+.ico-perks { --ico: url('../assets/ui/icons/perks.svg'); }
+.ico-lock { --ico: url('../assets/ui/icons/lock.svg'); }
+/* Замок в ячейке навыка — состояние интерфейса, а не способность, поэтому он
+ * тоже маска. Ячейка 22px, значку нужен свой размер. */
+.skill-btn .ico, .skill-action-icon .ico { width: 14px; height: 14px; }
 .ico-ad { --ico: url('../assets/ui/icons/ad.svg'); }
 
 /* ---- Main menu ----------------------------------------------------------- */

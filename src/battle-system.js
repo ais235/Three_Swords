@@ -1624,7 +1624,7 @@
         const xpGained = h.hp > 0 ? `+${xp} XP` : '—';
         const tex = HERO_TEXTURE_PATHS[h.id];
         const iconHtml = tex
-          ? `<img src="${tex}" style="width:32px;height:32px;object-fit:contain;border-radius:4px">`
+          ? `<img src="${tex}" style="width:32px;height:32px;object-fit:contain">`
           : `<div class="vic-hero-icon">${h.emoji}</div>`;
         const progressHtml = prog ? `<div class="vic-hero-progress">
           <span>LV ${prog.fromLevel} → ${prog.toLevel}</span>
@@ -4486,7 +4486,7 @@
           const ready = !locked && (!cds[skDef.key] || cds[skDef.key] <= 0);
           const cls = locked ? 'locked' : (ready ? 'ready' : 'used');
           const tip = locked ? `${translateText(skDef.name)} (${currentLanguage() === 'es' ? 'nv.' : 'lv.'}${skDef.unlockLevel})` : translateText(skDef.name);
-          return `<div class="skill-btn ${cls}" title="${tip}" style="${locked ? 'opacity:0.3' : ''}">${locked ? '🔒' : skDef.icon}</div>`;
+          return `<div class="skill-btn ${cls}" title="${tip}" style="${locked ? 'opacity:0.3' : ''}">${locked ? '<span class="ico ico-lock" aria-hidden="true"></span>' : skDef.icon}</div>`;
         }).join('');
         const moveLeft = getMovePoints(h, b);
         // Avoidance was invisible: Garet's block and item dodge silently ate hits.
@@ -4577,7 +4577,7 @@
         const actionName = skDef ? translateText(skDef.name) : translateText(label);
         if (locked) {
           return `<button class="btn skill-action-btn is-locked" id="${id}" title="${translateKey('unlocksAtLevel')} ${unlockLvl}&#10;${skDef ? localizeContent(skDef.desc) : ''}" style="cursor:not-allowed">
-            <span class="skill-action-icon">🔒</span>
+            <span class="skill-action-icon"><span class="ico ico-lock" aria-hidden="true"></span></span>
             <span class="skill-action-name">${actionName}</span>
             <span class="skill-action-meta">${lvlPrefix}${unlockLvl}</span>
           </button>`;
