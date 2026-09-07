@@ -114,6 +114,36 @@
   border-radius: 0;
 }
 
+/* ---- Battle screen ------------------------------------------------------ */
+/* The most-seen screen in the game, and the last one still drawn entirely in CSS.
+ *
+ * Only the chrome is touched. The battlefield grid, the move and attack
+ * highlights, #mode-badge (whose border colour *is* the current mode) and
+ * .init-slot (blue for a hero, red for an enemy) all keep their CSS borders:
+ * those colours are information the player reads mid-fight, and a wooden frame
+ * would erase them. Same rule as the map cells. */
+.hero-card,
+#battle-log,
+.battle-tactical-strip {
+  border-style: solid;
+  border-width: 6px;
+  border-image: url('../assets/ui/kit/panel.png') 7 stretch;
+  border-radius: 0;
+}
+/* The cards are dense - name, bars, stats, item slots - and the frame takes the
+ * room the 1px border did not, so the inner padding pays for it. */
+.hero-card {
+  padding: var(--space-1) var(--space-2);
+}
+/* Whose turn it is stays obvious, but through light rather than through a
+ * different border: overriding `border` here would reset border-image and leave
+ * one card in the old style while its neighbours wear the frame. */
+.hero-card.active {
+  border-image-source: url('../assets/ui/kit/button-on.png');
+  border-image-slice: 8 28 8 28;
+  box-shadow: inset 0 0 0 1px rgba(240, 165, 0, .5), 0 0 14px rgba(240, 165, 0, .3);
+}
+
 /* ---- Buttons ------------------------------------------------------------ */
 /* The kit ships the same plaque in several wood tones, so hover and active
  * finally have art of their own rather than a slightly different background. */
@@ -152,6 +182,12 @@
 @media (max-height: 430px) and (orientation: landscape) {
   #hud-top .btn {
     border-width: 3px 10px;
+  }
+  /* Skill buttons are about 95px wide here. At the desktop 18px side frames the
+   * plaque ate 36 of them and "Удар щитом" broke across two lines inside a button
+   * one line tall. The end caps compress; the label does not. */
+  .battle-actions .btn {
+    border-width: 4px 9px;
   }
 }
 
