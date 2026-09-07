@@ -7,3 +7,4 @@ dist/
 #   node scripts/css-snapshot.mjs --write
 docs/css-baseline.json
 tmp/
+artifacts/shots/
