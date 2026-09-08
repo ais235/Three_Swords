@@ -948,7 +948,7 @@
   const CITY_SHOP_ICON_PX = 56;
 
   function itemIconMarkup(item, sizePx) {
-    if (!item) return '<span style="font-size:' + sizePx + 'px;line-height:1;display:inline-block">📦</span>';
+    if (!item) return gameEmojiIconMarkup('📦', sizePx, '');
     const src = itemIconPath(item.id);
     if (src) {
       const px = sizePx + 'px';
@@ -956,7 +956,7 @@
       const img = '<img class="item-icon-img" src="' + src + '" alt="" width="' + sizePx + '" height="' + sizePx + '" decoding="async" loading="lazy" style="width:' + px + ';height:' + px + ';object-fit:contain;vertical-align:middle;display:block" />';
       return '<span class="item-icon-wrap' + rarCls + '">' + img + '</span>';
     }
-    return '<span style="font-size:' + sizePx + 'px;line-height:1;display:inline-block">' + (item.emoji || '📦') + '</span>';
+    return gameEmojiIconMarkup(item.emoji || '📦', sizePx, item.name || '');
   }
 
   function escapeHtmlAttr(s) {
