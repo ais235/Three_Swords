@@ -357,6 +357,13 @@
   .battle-actions .btn {
     border-width: 4px 9px;
   }
+  /* Четыре кнопки в колонке карты не помещались по высоте: рамка добавляет по
+   * 7px сверху и снизу каждой, и на экране 375px блок вылезал на 3px за панель —
+   * «Бестиарий» свисал ниже края. Уменьшена рамка, а не сама кнопка: её высота
+   * это размер под палец, его трогать нельзя. */
+  .map-panel .btn {
+    border-width: 5px 12px;
+  }
 }
 
 /* The primary action keeps its gold identity through the text and a warm glow

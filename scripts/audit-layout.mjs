@@ -98,6 +98,18 @@ function interfaceArtIsLicensed() {
   return namesAuthorAndLicence && recordsChanges && shownToPlayer;
 }
 
+/** Долгое нажатие на телефоне не должно открывать системную панель.
+ *
+ *  Требование площадки 1.6.2.7. Проверка статическая намеренно: свойство
+ *  -webkit-touch-callout реализовано только в Safari, Chrome его из вычисленных
+ *  стилей выбрасывает, поэтому в браузерном тесте оно всегда выглядит
+ *  отсутствующим — там его проверять нечем. */
+function longPressCalloutIsBlocked() {
+  return gameRuntimeStylePaths(root)
+    .map(path => readFileSync(path, 'utf8'))
+    .some(css => /-webkit-touch-callout\s*:\s*none/.test(css));
+}
+
 /** Every icon named in the markup must have a rule behind it.
  *
  *  Control icons are CSS masks: the element carries `ico ico-<name>` and a rule
@@ -304,6 +316,7 @@ const checks = [
   ,['global design tokens live in one file', globalTokensLiveInOneFile]
   ,['interface art ships with its licence and credit', interfaceArtIsLicensed]
   ,['every control icon has a rule behind it', everyIconClassHasARule]
+  ,['long press does not open the system callout', longPressCalloutIsBlocked]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
   ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
   ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]

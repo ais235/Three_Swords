@@ -3,6 +3,24 @@
  * intentional. Design tokens live in styles/tokens.css, which loads before this.
  */
 * { box-sizing: border-box; }
+/* Жесты браузера поверх игры — требования площадки 1.6.2.7 и 1.10.2.
+ *
+ * -webkit-touch-callout: долгое нажатие не должно вызывать системную панель
+ * «сохранить картинку», она перекрывает игру.
+ *
+ * overscroll-behavior: закрывает «потянуть, чтобы обновить» и резиновый отскок.
+ * Ставится на html и body, а не только на внутренние панели: жест начинается на
+ * корне документа, и защита на потомке до него не доходит.
+ *
+ * touch-action: manipulation, а не none. Прокрутка в игре живёт внутри панелей —
+ * список бестиария, настройки, журнал боя, — и `none` на корне отняло бы её у
+ * всех потомков разом. `manipulation` снимает двойной тап для зума, оставляя
+ * панорамирование там, где оно нужно. */
+html, body {
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
 body {
   margin: 0;
   background: var(--bg-dark);

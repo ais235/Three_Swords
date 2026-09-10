@@ -3996,10 +3996,31 @@
   function notifyYandexGameReady(sdk) {
     if (yandexGameReadySent || !sdk?.features?.LoadingAPI?.ready) return;
     yandexGameReadySent = true;
-    try {
-      const result = sdk.features.LoadingAPI.ready();
-      if (result && typeof result.catch === 'function') result.catch(() => {});
-    } catch (_) {}
+    const fire = () => {
+      try {
+        const result = sdk.features.LoadingAPI.ready();
+        if (result && typeof result.catch === 'function') result.catch(() => {});
+      } catch (_) {}
+    };
+    // Этим вызовом площадка снимает свой загрузчик, поэтому к нему шрифт должен
+    // быть на месте: иначе первый кадр, который видит игрок, набран запасной
+    // гарнитурой, а титул меню нарисован под пиксельную.
+    //
+    // Раньше вызов шёл сразу после init, и document.fonts.ready тут разрешался
+    // за миллисекунду — до того, как шрифт вообще запрашивался: @font-face с
+    // unicode-range грузится лениво, когда появляется текст из его диапазона.
+    // Отсюда ожидание кадра: к следующему кадру меню уже отрисовано, шрифт
+    // затребован, и ожидание становится настоящим.
+    //
+    // Таймер — страховка: если гарнитура не приедет, игра обязана сказать
+    // «готово» всё равно, иначе игрок останется на загрузчике площадки.
+    const guard = setTimeout(fire, 3000);
+    const done = () => { clearTimeout(guard); fire(); };
+    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+      requestAnimationFrame(() => document.fonts.ready.then(done, done));
+    } else {
+      done();
+    }
   }
 
   if (typeof YaGames !== 'undefined') YaGames.init().then(sdk => {
@@ -4018,6 +4039,13 @@
     const adBtn = document.getElementById('btn-ad-revive');
     if (adBtn) adBtn.classList.remove('hidden');
   }).catch(() => {});
+
+  // Правая кнопка не открывает меню браузера: требование площадки 1.6.2.7.
+  // Вешается на документ, а не на канву: игрок промахивается мимо поля чаще,
+  // чем попадает, и меню поверх игры площадка считает дефектом независимо от
+  // того, где именно нажали. В самой игре правая кнопка ничего не делает —
+  // обработчиков button===2 и auxclick в коде нет, так что отнимать нечего.
+  document.addEventListener('contextmenu', event => event.preventDefault());
 
   // Spacebar: "Start Battle" in deploy phase, "Wait" in combat phase.
   document.addEventListener('keydown', e => {
