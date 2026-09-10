@@ -26,7 +26,8 @@
     "package:release": "node scripts/package-release.mjs",
     "test:platform": "node scripts/test-platform.mjs",
     "ya:build": "node scripts/make-test-build.mjs",
-    "test:i18n": "node scripts/test-i18n.mjs"
+    "test:i18n": "node scripts/test-i18n.mjs",
+    "promo": "node scripts/make-promo.mjs"
   },
   "keywords": [],
   "author": "",
