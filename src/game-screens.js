@@ -1323,6 +1323,16 @@
   function sanitizeAllHeroEquipment() {
     (GameState.heroes || []).forEach(sanitizeHeroEquipment);
   }
+  /** Текст помощи алхимика берётся из словаря, а не висит в разметке.
+   *  Статическая строка с эмодзи 💰 не переводится обратно: модуль пиксельных
+   *  иконок разрезает текстовый узел на части, и фраза перестаёт совпадать с
+   *  ключом. На платформе язык приходит из SDK уже после загрузки, поэтому
+   *  англоязычный игрок видел здесь русский. */
+  function updateAlchemistHelp() {
+    const el = document.getElementById('alchemist-help');
+    if (el) el.textContent = translateKey('alchemistHelp');
+  }
+
   function updateInventoryCloseButton() {
     const el = document.getElementById('btn-close-inv');
     if (!el) return;
@@ -2271,30 +2281,74 @@
         `<div class="map-legend-row"><span class="legend-swatch ${swatch}"></span><span>${translateKey(key)}</span></div>`).join('');
   }
 
+  /** Названия мест на карте на трёх языках.
+   *
+   *  Раньше здесь лежали только русские строки, и на английском с испанским
+   *  игрок читал русское название на панели карты — это смешение языков,
+   *  требование площадки 8.2.3. Имена не идут через общий словарь намеренно:
+   *  они привязаны к региону и типу узла, а не к ключу интерфейса, и держать их
+   *  рядом с выбором узла понятнее, чем растворять в общей таблице. */
+  const MAP_LOCATION_NAMES = {
+    1: {
+      mission: [
+        { ru: 'Лешачий тракт', en: "Leshy's Road", es: 'Senda del Leshy' },
+        { ru: 'Мшистый перелесок', en: 'Mossy Grove', es: 'Soto musgoso' },
+        { ru: 'Волчья просека', en: "Wolf's Clearing", es: 'Claro del lobo' }
+      ],
+      dungeon: [{ ru: 'Забытая чаща', en: 'Forgotten Thicket', es: 'Espesura olvidada' }],
+      event: [{ ru: 'Перекрёсток судеб', en: 'Crossroads of Fates', es: 'Cruce de destinos' }],
+      city: [{ ru: 'Лесной приют', en: 'Forest Refuge', es: 'Refugio del bosque' }],
+      boss: [{ ru: 'Сердце чащи', en: 'Heart of the Thicket', es: 'Corazón de la espesura' }],
+      wanderer: [{ ru: 'Стоянка странника', en: "Wanderer's Camp", es: 'Campamento del viajero' }],
+      arena: [{ ru: 'Круг старых дубов', en: 'Ring of Old Oaks', es: 'Círculo de robles viejos' }],
+      camp: [
+        { ru: 'Костёр под елью', en: 'Fire Beneath the Fir', es: 'Fogata bajo el abeto' },
+        { ru: 'Тихая поляна', en: 'Quiet Glade', es: 'Claro silencioso' }
+      ]
+    },
+    2: {
+      mission: [
+        { ru: 'Обугленный тракт', en: 'Charred Road', es: 'Camino calcinado' },
+        { ru: 'Багровая расщелина', en: 'Crimson Rift', es: 'Grieta carmesí' },
+        { ru: 'Пепельный мост', en: 'Ashen Bridge', es: 'Puente de ceniza' }
+      ],
+      dungeon: [{ ru: 'Остывшая кузня', en: 'Cold Forge', es: 'Fragua apagada' }],
+      event: [{ ru: 'Пепельный перекрёсток', en: 'Ashen Crossroads', es: 'Cruce de cenizas' }],
+      city: [{ ru: 'Кузня у разлома', en: 'Forge by the Rift', es: 'Fragua junto a la grieta' }],
+      boss: [{ ru: 'Врата пламени', en: 'Gates of Flame', es: 'Puertas de llama' }],
+      wanderer: [{ ru: 'Лагерь пилигрима', en: "Pilgrim's Camp", es: 'Campamento del peregrino' }],
+      arena: [{ ru: 'Огненный круг', en: 'Ring of Fire', es: 'Círculo de fuego' }],
+      camp: [
+        { ru: 'Привал у жаровни', en: 'Rest by the Brazier', es: 'Alto junto al brasero' },
+        { ru: 'Обжитая штольня', en: 'Settled Adit', es: 'Galería habitada' }
+      ]
+    },
+    3: {
+      mission: [
+        { ru: 'Утонувший тракт', en: 'Drowned Road', es: 'Camino ahogado' },
+        { ru: 'Мёртвая гавань', en: 'Dead Harbour', es: 'Puerto muerto' },
+        { ru: 'Зал приливов', en: 'Hall of Tides', es: 'Sala de las mareas' }
+      ],
+      dungeon: [{ ru: 'Затопленный склеп', en: 'Flooded Crypt', es: 'Cripta inundada' }],
+      event: [{ ru: 'Берег шёпота', en: 'Shore of Whispers', es: 'Orilla de susurros' }],
+      city: [{ ru: 'Пристань изгнанников', en: "Exiles' Pier", es: 'Muelle de los exiliados' }],
+      boss: [{ ru: 'Чертог глубин', en: 'Hall of the Deep', es: 'Salón de las profundidades' }],
+      wanderer: [{ ru: 'Плот торговца', en: "Trader's Raft", es: 'Balsa del mercader' }],
+      arena: [{ ru: 'Арена прилива', en: 'Tide Arena', es: 'Arena de la marea' }],
+      final: [{ ru: 'Последний престол', en: 'The Last Throne', es: 'El último trono' }],
+      camp: [
+        { ru: 'Сухой причал', en: 'Dry Dock', es: 'Dique seco' },
+        { ru: 'Костёр на отмели', en: 'Fire on the Shoal', es: 'Fogata en el bajío' }
+      ]
+    }
+  };
+
   function mapLocationName(node) {
-    const names = {
-      1: {
-        mission: ['Лешачий тракт', 'Мшистый перелесок', 'Волчья просека'],
-        dungeon: ['Забытая чаща'], event: ['Перекрёсток судеб'], city: ['Лесной приют'],
-        boss: ['Сердце чащи'], wanderer: ['Стоянка странника'], arena: ['Круг старых дубов'],
-        camp: ['Костёр под елью', 'Тихая поляна']
-      },
-      2: {
-        mission: ['Обугленный тракт', 'Багровая расщелина', 'Пепельный мост'],
-        dungeon: ['Остывшая кузня'], event: ['Пепельный перекрёсток'], city: ['Кузня у разлома'],
-        boss: ['Врата пламени'], wanderer: ['Лагерь пилигрима'], arena: ['Огненный круг'],
-        camp: ['Привал у жаровни', 'Обжитая штольня']
-      },
-      3: {
-        mission: ['Утонувший тракт', 'Мёртвая гавань', 'Зал приливов'],
-        dungeon: ['Затопленный склеп'], event: ['Берег шёпота'], city: ['Пристань изгнанников'],
-        boss: ['Чертог глубин'], wanderer: ['Плот торговца'], arena: ['Арена прилива'], final: ['Последний престол'],
-        camp: ['Сухой причал', 'Костёр на отмели']
-      }
-    };
+    const names = MAP_LOCATION_NAMES;
     const fallback = campaignRegionName(node.region);
     const pool = names[node.region]?.[node.type];
-    return pool?.[(node.x * 3 + node.y) % pool.length] || fallback;
+    const picked = pool?.[(node.x * 3 + node.y) % pool.length];
+    return picked ? localizeContent(picked) : fallback;
   }
 
   /** Rough danger of a generated wave. Same shape as the heuristic in
@@ -3021,6 +3075,7 @@
   function renderCityUI(node, strangerOnly) {
     const n = node || getActiveCityNode();
     if (!n) return;
+    updateAlchemistHelp();
     const tab = GameState.cityNpcTab || 'trader';
     document.querySelectorAll('.npc-tab').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-city-tab') === tab);

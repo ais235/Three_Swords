@@ -72,7 +72,9 @@
     if (spawned) {
       b.rootSentinelCount = spawned;
       b.battleLog.push({
-        text: plan.bossRing ? '🌿 Колючие корни окружают Лешего.' : `🌿 Из травы поднимаются колючие корни: ${spawned}.`,
+        text: plan.bossRing
+          ? `🌿 ${translateKey('rootsRingBoss')}`
+          : `🌿 ${translateKey('rootsRise')} ${spawned}.`,
         t: 'enemy'
       });
     }

@@ -170,6 +170,10 @@
     // здесь они так и остаются английскими в русском интерфейсе.
     previousRuns: { ru: 'Прошлые походы · seed для повтора', en: 'Previous expeditions · replay seed', es: 'Expediciones previas · semilla' },
     credits: { ru: 'Благодарности', en: 'Credits', es: 'Créditos' },
+    // Строки журнала боя про корни Лешего: были зашиты по-русски и на других
+    // языках оставались русскими прямо в журнале.
+    rootsRingBoss: { ru: 'Колючие корни окружают Лешего.', en: 'Thorned roots ring the Leshy.', es: 'Raíces espinosas rodean al Leshy.' },
+    rootsRise: { ru: 'Из травы поднимаются колючие корни:', en: 'Thorned roots rise from the grass:', es: 'De la hierba brotan raíces espinosas:' },
     sound: { ru: 'Звук', en: 'Sound', es: 'Sonido' },
     music: { ru: 'Музыка', en: 'Music', es: 'Música' },
     volume: { ru: 'Громкость', en: 'Volume', es: 'Volumen' },
@@ -1455,6 +1459,10 @@
       else if (ActiveScreen === 'city') renderCityUI();
       else if (ActiveScreen === 'battle') updateBattleUI();
       else if (ActiveScreen === 'inventory') renderInventoryScreen();
+      // Кнопка закрытия подписана отдельно от перерисовки списка: её текст
+      // зависит от того, откуда открыт инвентарь, и при смене языка она иначе
+      // остаётся на прежнем.
+      if (typeof updateInventoryCloseButton === 'function') updateInventoryCloseButton();
       else if (ActiveScreen === 'bestiary') renderBestiary();
     } catch (_) {}
   }
