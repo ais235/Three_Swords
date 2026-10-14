@@ -536,6 +536,10 @@
     survivors: { ru: 'Герои в строю', en: 'Heroes standing', es: 'Héroes en pie' },
     heroBuilds: { ru: 'Итоговые сборки', en: 'Final builds', es: 'Configuraciones finales' },
     runSeed: { ru: 'Seed прохождения', en: 'Run seed', es: 'Seed de partida' },
+    runMinutes: { ru: 'мин', en: 'min', es: 'min' },
+    runContract: { ru: 'Контракт', en: 'Contract', es: 'Contrato' },
+    runRules: { ru: 'Правила похода', en: 'Run rules', es: 'Reglas de la partida' },
+    seedRandom: { ru: 'случайный', en: 'random', es: 'aleatoria' },
     showWandererGoods: { ru: 'Посмотреть товары странника за рекламу?', en: 'View wanderer goods for an ad?', es: '¿Ver mercancías del errante por un anuncio?' },
     wandererLeft: { ru: 'Странник ушёл.', en: 'The wanderer left.', es: 'El errante se marchó.' },
     enterShadowArena: { ru: 'Войти в Арену теней за рекламу?', en: 'Enter the Shadow Arena for an ad?', es: '¿Entrar en la Arena de Sombras por un anuncio?' },
@@ -1459,16 +1463,28 @@
       else if (ActiveScreen === 'city') renderCityUI();
       else if (ActiveScreen === 'battle') updateBattleUI();
       else if (ActiveScreen === 'inventory') renderInventoryScreen();
+      // Бестиарий был прицеплен к ветке `if (typeof updateInventoryCloseButton...)`
+      // ниже через `else`, то есть не вызывался никогда, и звал несуществующий
+      // renderBestiary — ошибка глохла в пустом catch. Его место здесь, в цепочке
+      // экранов.
+      else if (ActiveScreen === 'bestiary') renderBestiaryScreen();
       // Кнопка закрытия подписана отдельно от перерисовки списка: её текст
       // зависит от того, откуда открыт инвентарь, и при смене языка она иначе
       // остаётся на прежнем.
       if (typeof updateInventoryCloseButton === 'function') updateInventoryCloseButton();
-      else if (ActiveScreen === 'bestiary') renderBestiary();
     } catch (_) {}
   }
   function updateStaticLabels() {
     const tutorialBtn = document.getElementById('btn-menu-tutorial');
     if (tutorialBtn) tutorialBtn.textContent = translateKey('tutorial');
+    // Подпись скорости боя собирается при привязке обработчиков — один раз за
+    // загрузку — и при нажатии. Смена языка не делает ни того, ни другого, и
+    // надпись оставалась на языке, который был в момент старта.
+    const speedBtn = document.getElementById('battle-speed-toggle');
+    if (speedBtn) {
+      speedBtn.textContent = `${translateKey('battleSpeed')}: ×${GameState.battleSpeed === 2 ? 2 : 1}`;
+      speedBtn.title = speedBtn.textContent;
+    }
   }
 
   function loadAudioSettings() {

@@ -27,18 +27,37 @@ const check = (name, condition, details = '') => {
   else failures.push(`${name}${details ? `: ${details}` : ''}`);
 };
 
-/** Видимый текст с кириллицей. Возвращает узлы, а не весь текст экрана. */
-const scanCyrillic = () => {
+/** Видимый текст на чужом языке. Возвращает узлы, а не весь текст экрана.
+ *
+ * `mode: 'cyrillic'` — русский, оставшийся на английском и испанском экране.
+ * `mode: 'latin'` — обратный случай: английская разметка index.html, которую
+ * никто не перевёл на старте. Вся статика в index.html написана по-английски и
+ * заменяется на лету через translateKey; строка, которую забыли подключить к
+ * этой замене, так и остаётся английской — в том числе для русского игрока.
+ * Смешение языков на экране площадка считает отказом (п. 8.2.3).
+ */
+const scanForeign = (mode) => {
   const CYRILLIC = /[А-Яа-яЁё]/;
+  // Латиница, законная в любом языке: сокращения характеристик, пометка «лучшее»
+  // на предмете, слово seed, названия языков в самом списке языков. Границы слова
+  // обязательны: без них BEST гасит BESTIARY, и проверка слепнет на целом экране.
+  const ALLOWED = /\b(HP|MP|XP|CD|SFX|BEST|seed|Seed|English|Espanol|Español)\b/g;
+  const foreign = (text) => mode === 'cyrillic'
+    ? CYRILLIC.test(text)
+    : !CYRILLIC.test(text) && /[A-Za-z]{3,}/.test(text.replace(ALLOWED, ''));
   const found = [];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
-      if (!CYRILLIC.test(node.nodeValue || '')) return NodeFilter.FILTER_REJECT;
+      if (!foreign(node.nodeValue || '')) return NodeFilter.FILTER_REJECT;
       const parent = node.parentElement;
       if (!parent) return NodeFilter.FILTER_REJECT;
       // Скрытое не показывается игроку, а служебные узлы вроде <script> текстом
       // на экране не являются.
       if (parent.closest('script, style, [aria-hidden="true"], .hidden')) return NodeFilter.FILTER_REJECT;
+      // Значения, которые не переводятся по смыслу: seed похода и код результата.
+      // Они помечены в разметке, а не перечислены здесь, чтобы исключение жило
+      // рядом со строкой, а не в проверке.
+      if (parent.closest('.raw-value')) return NodeFilter.FILTER_REJECT;
       const rect = parent.getBoundingClientRect();
       if (rect.width < 1 || rect.height < 1) return NodeFilter.FILTER_REJECT;
       const style = getComputedStyle(parent);
@@ -65,7 +84,7 @@ const url = `http://127.0.0.1:${server.address().port}/index.html?seed=i18n`;
 let browser;
 try {
   browser = await chromium.launch({ executablePath: chromePath, headless: true, args: ['--disable-gpu'] });
-  for (const lang of ['en', 'es']) {
+  for (const lang of ['ru', 'en', 'es']) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'ru-RU' });
     const page = await context.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -73,6 +92,8 @@ try {
     await page.evaluate(code => setGameLanguage(code), lang);
     await page.waitForTimeout(150);
 
+    // На русском ищем обратную утечку — английскую статику index.html.
+    const mode = lang === 'ru' ? 'latin' : 'cyrillic';
     const leaks = new Map();
     // Испанский и английский длиннее русского, а вёрстка мерялась на русском:
     // подпись, которая помещалась, на другом языке вылезает за кнопку.
@@ -83,7 +104,7 @@ try {
       // перерисовываются на ходу, и часть из них строится заново.
       await page.evaluate(code => setGameLanguage(code), lang);
       await page.waitForTimeout(60);
-      for (const item of await page.evaluate(scanCyrillic)) {
+      for (const item of await page.evaluate(scanForeign, mode)) {
         // Строки, которые вписывает сам драйвер состояний, чтобы наполнить
         // журнал и модалки: они русские по определению и к переводу игры
         // отношения не имеют.
@@ -107,8 +128,8 @@ try {
       }
     }
     const sample = [...leaks.entries()].slice(0, 20).map(([text, state]) => `${state} → ${text}`);
-    check(`на языке ${lang} не осталось русского текста`, leaks.size === 0,
-      `${leaks.size} шт.; ${sample.join(' | ')}`);
+    check(`на языке ${lang} не осталось ${mode === 'latin' ? 'английского' : 'русского'} текста`,
+      leaks.size === 0, `${leaks.size} шт.; ${sample.join(' | ')}`);
     const clipSample = [...clipped.entries()].slice(0, 8).map(([what, state]) => `${state} → ${what}`);
     check(`на языке ${lang} подписи кнопок не обрезаны`, clipped.size === 0,
       `${clipped.size} шт.; ${clipSample.join(' | ')}`);

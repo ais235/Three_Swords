@@ -3593,13 +3593,13 @@
     root.innerHTML = `<div class="ending-summary-grid">
       <div><strong>${translateKey('statBattles')}</strong><span>${GameState.stats.battles}</span></div>
       <div><strong>${translateKey('gold')}</strong><span>${GameState.gold}</span></div>
-      <div><strong>${translateKey('runTime')}</strong><span>${elapsedMinutes} min</span></div>
+      <div><strong>${translateKey('runTime')}</strong><span>${elapsedMinutes} ${translateKey('runMinutes')}</span></div>
       <div><strong>${translateKey('survivors')}</strong><span>${GameState.heroes.filter(h => h.hp > 0).length}/3</span></div>
       <div><strong>${translateKey('statObjectives')}</strong><span>${GameState.stats.objectivesCompleted || 0}/${GameState.stats.battles || 0}</span></div>
       <div><strong>${translateKey('statDamageTaken')}</strong><span>${GameState.stats.damageTaken || 0}</span></div>
       <div><strong>${translateKey('statSkillBattles')}</strong><span>${GameState.stats.skillfulBattles || 0}</span></div>
     </div><div class="ending-build-title">${translateKey('heroBuilds')}</div>${builds}
-    <div class="ending-seed">${translateKey('difficulty')}: ${translateKey(isHardcoreMode() ? 'hardcore' : 'normal')} · ${translateKey('runSeed')}: ${escapeHtml(GameState.testSeed || 'random')} · ${translateKey('runCode')}: <strong>${resultCode}</strong><br>${currentLanguage() === 'ru' ? 'Контракт' : 'Contract'}: ${contractLine}<br>${currentLanguage() === 'ru' ? 'Правила похода' : 'Run rules'}: ${mutatorLine || '—'}</div>`;
+    <div class="ending-seed">${translateKey('difficulty')}: ${translateKey(isHardcoreMode() ? 'hardcore' : 'normal')} · ${translateKey('runSeed')}: <span class="raw-value">${escapeHtml(GameState.testSeed || translateKey('seedRandom'))}</span> · ${translateKey('runCode')}: <strong class="raw-value">${resultCode}</strong><br>${translateKey('runContract')}: ${contractLine}<br>${translateKey('runRules')}: ${mutatorLine || '—'}</div>`;
   }
 
   function renderGameOverUI() {

@@ -479,6 +479,11 @@
         .replace('{total}', allIds.length);
       countEl.textContent = `${deadCount} ${countTail}`;
     }
+    // Разметка в index.html написана по-английски и переводится на лету. Кнопку
+    // «назад» бестиария забыли подключить к переводу, и русский игрок видел на ней
+    // «Back» — соседний экран арсенала делает это строкой ниже своего списка.
+    const backBtn = document.getElementById('btn-bestiary-back');
+    if (backBtn) backBtn.textContent = `← ${translateKey('back')}`;
 
     listEl.innerHTML = allIds.map(id => {
       const st = GameState.bestiary[id] || 'new';
