@@ -8,4 +8,7 @@ dist/
 docs/css-baseline.json
 tmp/
 artifacts/shots/
+# Промо-материалы пересобираются командой: npm run promo, npm run poster.
+artifacts/promo/
+artifacts/poster-src/
 _ya_test.html

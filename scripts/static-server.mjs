@@ -16,7 +16,8 @@ const CONTENT_TYPES = {
   '.svg': 'image/svg+xml',
   '.mp3': 'audio/mpeg',
   '.ogg': 'audio/ogg',
-  '.wav': 'audio/wav'
+  '.wav': 'audio/wav',
+  '.woff2': 'font/woff2'
 };
 
 export function createStaticServer(rootDirectory) {

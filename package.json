@@ -27,7 +27,8 @@
     "test:platform": "node scripts/test-platform.mjs",
     "ya:build": "node scripts/make-test-build.mjs",
     "test:i18n": "node scripts/test-i18n.mjs",
-    "promo": "node scripts/make-promo.mjs"
+    "promo": "node scripts/make-promo.mjs",
+    "poster": "node scripts/make-poster.mjs"
   },
   "keywords": [],
   "author": "",
