@@ -7,8 +7,8 @@ dist/
 #   node scripts/css-snapshot.mjs --write
 docs/css-baseline.json
 tmp/
-artifacts/shots/
-# Промо-материалы пересобираются командой: npm run promo, npm run poster.
-artifacts/promo/
-artifacts/poster-src/
+# artifacts/ — всё, что скрипты собирают заново: снимки экранов, промо, выгрузки.
+# Исключение — материалы карточки площадки: их рисуют руками (docs/ICONS_SPEC.md).
+artifacts/
+!artifacts/store/
 _ya_test.html

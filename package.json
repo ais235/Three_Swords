@@ -30,7 +30,9 @@
     "ya:build": "node scripts/make-test-build.mjs",
     "test:i18n": "node scripts/test-i18n.mjs",
     "promo": "node scripts/make-promo.mjs",
-    "poster": "node scripts/make-poster.mjs"
+    "poster": "node scripts/make-poster.mjs",
+    "audio:compress": "node scripts/compress-audio.mjs",
+    "images:compress": "node scripts/compress-images.mjs"
   },
   "keywords": [],
   "author": "",
