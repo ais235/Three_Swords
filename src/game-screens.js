@@ -98,9 +98,9 @@
   }
 
   const STORY_PORTRAITS = {
-    garet: 'assets/portraits/garet-dialog.png',
-    alira: 'assets/portraits/alira-dialog.png',
-    seris: 'assets/portraits/seris-dialog.png'
+    garet: 'assets/portraits/garet-dialog.webp',
+    alira: 'assets/portraits/alira-dialog.webp',
+    seris: 'assets/portraits/seris-dialog.webp'
   };
 
   function storySceneData(sceneId) {
@@ -2242,7 +2242,7 @@
   }
 
   function mapPartyMarkerHtml() {
-    return `<div class="map-party-marker" aria-label="${translateKey('party')}"><img src="assets/ui/heroes.png" alt="" loading="lazy" decoding="async" /><span class="map-party-marker-label">${translateKey('party')}</span></div>`;
+    return `<div class="map-party-marker" aria-label="${translateKey('party')}"><img src="assets/ui/heroes.webp" alt="" loading="lazy" decoding="async" /><span class="map-party-marker-label">${translateKey('party')}</span></div>`;
   }
 
   function mapCellInfoIconHtml(node) {

@@ -131,7 +131,7 @@ const html = `<!doctype html>
   }
   header .bg {
     position: absolute; inset: 0;
-    background: url('/assets/ui/fon.png') center 42% / cover no-repeat;
+    background: url('/assets/ui/fon.webp') center 42% / cover no-repeat;
   }
   header .veil {
     position: absolute; inset: 0;
@@ -151,7 +151,7 @@ const html = `<!doctype html>
   .meta { margin-top: 22px; font-size: 14px; line-height: 2; color: #b8ab97; }
   .meta b { color: #1abc9c; font-weight: 400; }
   header .party { width: 372px; height: 372px; flex: 0 0 auto;
-    background: url('/assets/ui/heroes.png') center / contain no-repeat;
+    background: url('/assets/ui/heroes.webp') center / contain no-repeat;
     filter: drop-shadow(0 10px 24px rgba(0,0,0,.75)); }
 
   main { padding: 40px 40px 0; display: flex; flex-wrap: wrap; gap: 28px; }

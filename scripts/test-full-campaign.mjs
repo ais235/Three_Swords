@@ -137,7 +137,7 @@ try {
   check('final battle reaches the ending screen', finale.screen === 'ending' && finale.finalCompleted);
   check('victory is written to run history', finale.historyResult === 'victory');
   check('final completion is persisted in the save', finale.saved.mapGrid?.some(cell => cell.type === 'final' && cell.completed));
-  check('epilogue starts with a hero portrait', (await page.locator('#story-portrait').getAttribute('src'))?.includes('garet-dialog.png'));
+  check('epilogue starts with a hero portrait', /garet-dialog\.(png|webp)$/.test((await page.locator('#story-portrait').getAttribute('src')) || ''));
   for (let line = 0; line < 4; line++) await page.locator('#story-next').click();
   check('epilogue returns to the campaign summary', await page.locator('#ending-screen:not(.hidden)').count() === 1);
   check('ending copy names the consequences for the three lands', (await page.locator('#ending-epilogue').textContent())?.length > 120);

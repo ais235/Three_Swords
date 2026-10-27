@@ -415,7 +415,7 @@ button, input, select, textarea {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   background-color: var(--bg-card);
-  background-image: url('../assets/ui/mir.png');
+  background-image: url('../assets/ui/mir.webp');
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -1160,7 +1160,7 @@ button, input, select, textarea {
 
 .screen-menu {
   background-color: var(--bg-deep);
-  background-image: url('../assets/ui/fon.png');
+  background-image: url('../assets/ui/fon.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

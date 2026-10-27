@@ -24,6 +24,15 @@ mkdirSync(output, { recursive: true });
 const runtimeFiles = new Set(['index.html']);
 const scannedSources = new Set();
 
+/* assets/audio/_extracted — рабочий стол для подбора звуков: распакованные
+ * чужие наборы, из которых выбирают кандидатов на экране ?sfx-audit=1. Папка не
+ * в git, а ссылки на неё лежат в таблице кандидатов, поэтому сканер послушно
+ * тащил 30 файлов и 5.5 МБ в релизный архив. Игроку они не нужны (экран
+ * открывается только по параметру в адресе), а чужие звуковые библиотеки в
+ * коммерческой сборке — ещё и лишний разговор про лицензии. Собрать архив из
+ * чистого клона с ними было нельзя: файлов там нет. */
+const isWorkbench = path => path.startsWith('assets/audio/_extracted/');
+
 function addRelativePath(path) {
   const relative = path.replaceAll('\\', '/');
   if (!relative.startsWith('/') && !relative.includes('://')) runtimeFiles.add(relative);
@@ -79,6 +88,10 @@ for (const dir of assetDirs) {
     if (!statSync(resolve(absolute, entry)).isFile()) continue;
     runtimeFiles.add(`${dir}/${entry}`);
   }
+}
+
+for (const path of [...runtimeFiles]) {
+  if (isWorkbench(path)) runtimeFiles.delete(path);
 }
 
 const missing = [];

@@ -30,66 +30,66 @@
   /** Battle samples imported from assets/audio/battle/sfx; preloaded in Web Audio without replacing synthetic hits/deaths. */
   const BATTLE_SFX_SAMPLE_URLS = [
     'assets/audio/battle/sfx/common/hit.mp3',
-    'assets/audio/battle/sfx/common/death.wav',
+    'assets/audio/battle/sfx/common/death.mp3',
     'assets/audio/battle/sfx/common/critical_hit.mp3',
     'assets/audio/battle/sfx/common/victory.mp3',
     'assets/audio/battle/sfx/common/defeat.mp3',
-    'assets/audio/battle/sfx/movement/step_grass.wav',
-    'assets/audio/battle/sfx/movement/step_rock.wav',
-    'assets/audio/battle/sfx/movement/step_wood.wav',
-    'assets/audio/battle/sfx/movement/step_water.wav',
+    'assets/audio/battle/sfx/movement/step_grass.mp3',
+    'assets/audio/battle/sfx/movement/step_rock.mp3',
+    'assets/audio/battle/sfx/movement/step_wood.mp3',
+    'assets/audio/battle/sfx/movement/step_water.mp3',
     'assets/audio/battle/sfx/heroes/garet_melee.mp3',
-    'assets/audio/battle/sfx/heroes/alira_bow.wav',
+    'assets/audio/battle/sfx/heroes/alira_bow.mp3',
     'assets/audio/battle/sfx/heroes/alira_bow_draw.mp3',
     'assets/audio/battle/sfx/heroes/seris_magic.mp3',
     'assets/audio/battle/sfx/heroes/garet_shield_bash.mp3',
     'assets/audio/battle/sfx/heroes/garet_fire_call.mp3',
     'assets/audio/battle/sfx/heroes/garet_berserk.mp3',
     'assets/audio/battle/sfx/heroes/alira_double_shot.mp3',
-    'assets/audio/battle/sfx/heroes/alira_slow_arrow.wav',
-    'assets/audio/battle/sfx/heroes/alira_arrow_rain.wav',
-    'assets/audio/battle/sfx/heroes/seris_fireball.ogg',
+    'assets/audio/battle/sfx/heroes/alira_slow_arrow.mp3',
+    'assets/audio/battle/sfx/heroes/alira_arrow_rain.mp3',
+    'assets/audio/battle/sfx/heroes/seris_fireball.mp3',
     'assets/audio/battle/sfx/heroes/seris_freeze.mp3',
     'assets/audio/battle/sfx/heroes/seris_meteor.mp3',
-    'assets/audio/battle/sfx/enemies/skeleton_attack.wav',
-    'assets/audio/battle/sfx/enemies/goblin_archer_attack.wav',
-    'assets/audio/battle/sfx/enemies/boar_attack.wav',
-    'assets/audio/battle/sfx/enemies/zombie_attack.wav',
-    'assets/audio/battle/sfx/enemies/zombie_explosion.ogg',
-    'assets/audio/battle/sfx/enemies/shaman_attack.ogg',
-    'assets/audio/battle/sfx/enemies/shaman_heal.wav',
+    'assets/audio/battle/sfx/enemies/skeleton_attack.mp3',
+    'assets/audio/battle/sfx/enemies/goblin_archer_attack.mp3',
+    'assets/audio/battle/sfx/enemies/boar_attack.mp3',
+    'assets/audio/battle/sfx/enemies/zombie_attack.mp3',
+    'assets/audio/battle/sfx/enemies/zombie_explosion.mp3',
+    'assets/audio/battle/sfx/enemies/shaman_attack.mp3',
+    'assets/audio/battle/sfx/enemies/shaman_heal.mp3',
     'assets/audio/battle/sfx/enemies/orc_guard_attack.mp3',
-    'assets/audio/battle/sfx/enemies/suicide_attack.wav',
-    'assets/audio/battle/sfx/enemies/suicide_explosion.ogg',
-    'assets/audio/battle/sfx/enemies/spider_attack.wav',
-    'assets/audio/battle/sfx/enemies/spider_web.ogg',
-    'assets/audio/battle/sfx/enemies/watcher_attack.wav',
-    'assets/audio/battle/sfx/enemies/watcher_buff.wav',
-    'assets/audio/battle/sfx/enemies/ice_elem_attack.wav',
-    'assets/audio/battle/sfx/enemies/ice_freeze_touch.wav',
-    'assets/audio/battle/sfx/enemies/dark_knight_attack.wav',
+    'assets/audio/battle/sfx/enemies/suicide_attack.mp3',
+    'assets/audio/battle/sfx/enemies/suicide_explosion.mp3',
+    'assets/audio/battle/sfx/enemies/spider_attack.mp3',
+    'assets/audio/battle/sfx/enemies/spider_web.mp3',
+    'assets/audio/battle/sfx/enemies/watcher_attack.mp3',
+    'assets/audio/battle/sfx/enemies/watcher_buff.mp3',
+    'assets/audio/battle/sfx/enemies/ice_elem_attack.mp3',
+    'assets/audio/battle/sfx/enemies/ice_freeze_touch.mp3',
+    'assets/audio/battle/sfx/enemies/dark_knight_attack.mp3',
     'assets/audio/battle/sfx/enemies/necro_attack.mp3',
-    'assets/audio/battle/sfx/enemies/necro_raise.wav',
+    'assets/audio/battle/sfx/enemies/necro_raise.mp3',
     'assets/audio/battle/sfx/enemies/chaos_attack.mp3',
-    'assets/audio/battle/sfx/enemies/assassin_attack.wav',
-    'assets/audio/battle/sfx/enemies/hydra_attack.wav',
-    'assets/audio/battle/sfx/enemies/ghost_attack.wav',
-    'assets/audio/battle/sfx/enemies/fire_titan_attack.ogg',
-    'assets/audio/battle/sfx/enemies/fire_titan_aoe.ogg',
-    'assets/audio/battle/sfx/enemies/dark_lord_attack.wav',
+    'assets/audio/battle/sfx/enemies/assassin_attack.mp3',
+    'assets/audio/battle/sfx/enemies/hydra_attack.mp3',
+    'assets/audio/battle/sfx/enemies/ghost_attack.mp3',
+    'assets/audio/battle/sfx/enemies/fire_titan_attack.mp3',
+    'assets/audio/battle/sfx/enemies/fire_titan_aoe.mp3',
+    'assets/audio/battle/sfx/enemies/dark_lord_attack.mp3',
     'assets/audio/battle/sfx/enemies/dark_lord_teleport.mp3',
     'assets/audio/battle/sfx/enemies/dark_lord_summon.mp3',
     'assets/audio/battle/sfx/enemies/dark_lord_aoe.mp3',
     'assets/audio/battle/sfx/status/apply_stun.mp3',
-    'assets/audio/battle/sfx/status/apply_freeze.wav',
-    'assets/audio/battle/sfx/status/apply_web.wav',
+    'assets/audio/battle/sfx/status/apply_freeze.mp3',
+    'assets/audio/battle/sfx/status/apply_web.mp3',
     'assets/audio/battle/sfx/status/apply_poison.mp3',
-    'assets/audio/battle/sfx/status/tick_poison.wav',
-    'assets/audio/battle/sfx/status/apply_burn.ogg',
-    'assets/audio/battle/sfx/status/tick_burn.ogg',
+    'assets/audio/battle/sfx/status/tick_poison.mp3',
+    'assets/audio/battle/sfx/status/apply_burn.mp3',
+    'assets/audio/battle/sfx/status/tick_burn.mp3',
     'assets/audio/battle/sfx/status/apply_slow.mp3',
     'assets/audio/battle/sfx/status/apply_blind.mp3',
-    'assets/audio/battle/sfx/status/apply_curse.wav',
+    'assets/audio/battle/sfx/status/apply_curse.mp3',
     'assets/audio/battle/sfx/status/apply_berserk.mp3',
     'assets/audio/battle/sfx/ui/select_unit.mp3',
     'assets/audio/battle/sfx/ui/end_turn.mp3',
@@ -102,66 +102,66 @@
     const r = p => 'assets/audio/battle/sfx/' + p;
     return {
       common_hit: r('common/hit.mp3'),
-      common_death: r('common/death.wav'),
+      common_death: r('common/death.mp3'),
       common_critical_hit: r('common/critical_hit.mp3'),
       common_victory: r('common/victory.mp3'),
       common_defeat: r('common/defeat.mp3'),
-      move_step_grass: r('movement/step_grass.wav'),
-      move_step_rock: r('movement/step_rock.wav'),
-      move_step_wood: r('movement/step_wood.wav'),
-      move_step_water: r('movement/step_water.wav'),
+      move_step_grass: r('movement/step_grass.mp3'),
+      move_step_rock: r('movement/step_rock.mp3'),
+      move_step_wood: r('movement/step_wood.mp3'),
+      move_step_water: r('movement/step_water.mp3'),
       heroes_garet_melee: r('heroes/garet_melee.mp3'),
-      heroes_alira_bow: r('heroes/alira_bow.wav'),
+      heroes_alira_bow: r('heroes/alira_bow.mp3'),
       heroes_alira_bow_draw: r('heroes/alira_bow_draw.mp3'),
       heroes_seris_magic: r('heroes/seris_magic.mp3'),
       heroes_garet_shield_bash: r('heroes/garet_shield_bash.mp3'),
       heroes_garet_fire_call: r('heroes/garet_fire_call.mp3'),
       heroes_garet_berserk: r('heroes/garet_berserk.mp3'),
       heroes_alira_double_shot: r('heroes/alira_double_shot.mp3'),
-      heroes_alira_slow_arrow: r('heroes/alira_slow_arrow.wav'),
-      heroes_alira_arrow_rain: r('heroes/alira_arrow_rain.wav'),
-      heroes_seris_fireball: r('heroes/seris_fireball.ogg'),
+      heroes_alira_slow_arrow: r('heroes/alira_slow_arrow.mp3'),
+      heroes_alira_arrow_rain: r('heroes/alira_arrow_rain.mp3'),
+      heroes_seris_fireball: r('heroes/seris_fireball.mp3'),
       heroes_seris_freeze: r('heroes/seris_freeze.mp3'),
       heroes_seris_meteor: r('heroes/seris_meteor.mp3'),
-      enemies_skeleton_attack: r('enemies/skeleton_attack.wav'),
-      enemies_goblin_archer_attack: r('enemies/goblin_archer_attack.wav'),
-      enemies_boar_attack: r('enemies/boar_attack.wav'),
-      enemies_zombie_attack: r('enemies/zombie_attack.wav'),
-      enemies_zombie_explosion: r('enemies/zombie_explosion.ogg'),
-      enemies_shaman_attack: r('enemies/shaman_attack.ogg'),
-      enemies_shaman_heal: r('enemies/shaman_heal.wav'),
+      enemies_skeleton_attack: r('enemies/skeleton_attack.mp3'),
+      enemies_goblin_archer_attack: r('enemies/goblin_archer_attack.mp3'),
+      enemies_boar_attack: r('enemies/boar_attack.mp3'),
+      enemies_zombie_attack: r('enemies/zombie_attack.mp3'),
+      enemies_zombie_explosion: r('enemies/zombie_explosion.mp3'),
+      enemies_shaman_attack: r('enemies/shaman_attack.mp3'),
+      enemies_shaman_heal: r('enemies/shaman_heal.mp3'),
       enemies_orc_guard_attack: r('enemies/orc_guard_attack.mp3'),
-      enemies_suicide_attack: r('enemies/suicide_attack.wav'),
-      enemies_suicide_explosion: r('enemies/suicide_explosion.ogg'),
-      enemies_spider_attack: r('enemies/spider_attack.wav'),
-      enemies_spider_web: r('enemies/spider_web.ogg'),
-      enemies_watcher_attack: r('enemies/watcher_attack.wav'),
-      enemies_watcher_buff: r('enemies/watcher_buff.wav'),
-      enemies_ice_elem_attack: r('enemies/ice_elem_attack.wav'),
-      enemies_ice_freeze_touch: r('enemies/ice_freeze_touch.wav'),
-      enemies_dark_knight_attack: r('enemies/dark_knight_attack.wav'),
+      enemies_suicide_attack: r('enemies/suicide_attack.mp3'),
+      enemies_suicide_explosion: r('enemies/suicide_explosion.mp3'),
+      enemies_spider_attack: r('enemies/spider_attack.mp3'),
+      enemies_spider_web: r('enemies/spider_web.mp3'),
+      enemies_watcher_attack: r('enemies/watcher_attack.mp3'),
+      enemies_watcher_buff: r('enemies/watcher_buff.mp3'),
+      enemies_ice_elem_attack: r('enemies/ice_elem_attack.mp3'),
+      enemies_ice_freeze_touch: r('enemies/ice_freeze_touch.mp3'),
+      enemies_dark_knight_attack: r('enemies/dark_knight_attack.mp3'),
       enemies_necro_attack: r('enemies/necro_attack.mp3'),
-      enemies_necro_raise: r('enemies/necro_raise.wav'),
+      enemies_necro_raise: r('enemies/necro_raise.mp3'),
       enemies_chaos_attack: r('enemies/chaos_attack.mp3'),
-      enemies_assassin_attack: r('enemies/assassin_attack.wav'),
-      enemies_hydra_attack: r('enemies/hydra_attack.wav'),
-      enemies_ghost_attack: r('enemies/ghost_attack.wav'),
-      enemies_fire_titan_attack: r('enemies/fire_titan_attack.ogg'),
-      enemies_fire_titan_aoe: r('enemies/fire_titan_aoe.ogg'),
-      enemies_dark_lord_attack: r('enemies/dark_lord_attack.wav'),
+      enemies_assassin_attack: r('enemies/assassin_attack.mp3'),
+      enemies_hydra_attack: r('enemies/hydra_attack.mp3'),
+      enemies_ghost_attack: r('enemies/ghost_attack.mp3'),
+      enemies_fire_titan_attack: r('enemies/fire_titan_attack.mp3'),
+      enemies_fire_titan_aoe: r('enemies/fire_titan_aoe.mp3'),
+      enemies_dark_lord_attack: r('enemies/dark_lord_attack.mp3'),
       enemies_dark_lord_teleport: r('enemies/dark_lord_teleport.mp3'),
       enemies_dark_lord_summon: r('enemies/dark_lord_summon.mp3'),
       enemies_dark_lord_aoe: r('enemies/dark_lord_aoe.mp3'),
       status_apply_stun: r('status/apply_stun.mp3'),
-      status_apply_freeze: r('status/apply_freeze.wav'),
-      status_apply_web: r('status/apply_web.wav'),
+      status_apply_freeze: r('status/apply_freeze.mp3'),
+      status_apply_web: r('status/apply_web.mp3'),
       status_apply_poison: r('status/apply_poison.mp3'),
-      status_tick_poison: r('status/tick_poison.wav'),
-      status_apply_burn: r('status/apply_burn.ogg'),
-      status_tick_burn: r('status/tick_burn.ogg'),
+      status_tick_poison: r('status/tick_poison.mp3'),
+      status_apply_burn: r('status/apply_burn.mp3'),
+      status_tick_burn: r('status/tick_burn.mp3'),
       status_apply_slow: r('status/apply_slow.mp3'),
       status_apply_blind: r('status/apply_blind.mp3'),
-      status_apply_curse: r('status/apply_curse.wav'),
+      status_apply_curse: r('status/apply_curse.mp3'),
       status_apply_berserk: r('status/apply_berserk.mp3'),
       ui_select_unit: r('ui/select_unit.mp3'),
       ui_end_turn: r('ui/end_turn.mp3'),
@@ -378,7 +378,7 @@
 
     _altSampleUrls(url) {
       const base = url.replace(/\.[^.]+$/, '');
-      const exts = ['.mp3', '.wav', '.ogg', '.m4a'];
+      const exts = ['.mp3', '.mp3', '.mp3', '.m4a'];
       const out = [url];
       exts.forEach(ext => { const u = base + ext; if (!out.includes(u)) out.push(u); });
       return out;
@@ -388,7 +388,7 @@
       if (!this._sampleBuffers || !url) return null;
       if (this._sampleBuffers.has(url)) return { url, buf: this._sampleBuffers.get(url) };
       const base = url.replace(/\.[^.]+$/, '');
-      for (const ext of ['.mp3', '.wav', '.ogg', '.m4a']) {
+      for (const ext of ['.mp3', '.mp3', '.mp3', '.m4a']) {
         const alt = base + ext;
         if (this._sampleBuffers.has(alt)) return { url: alt, buf: this._sampleBuffers.get(alt) };
       }
@@ -1130,17 +1130,54 @@
 
   const ENEMY_ICON_BASE = 'assets/enemies/';
   const ENEMY_ICON_FILE = {
-    ice_elem: 'ice_elemental.png',
-    suicide: 'bomber.png',
-    necro: 'necromancer.png',
-    chaos: 'chaos_beast.png',
-    leshy: 'leshy.png',
-    root_sentinel: 'root-sentinel.png'
-    ,fire_elemental: 'fire-elemental.png'
-    ,water_elemental: 'water-elemental.png'
+    ice_elem: 'ice_elemental.webp',
+    suicide: 'bomber.webp',
+    necro: 'necromancer.webp',
+    chaos: 'chaos_beast.webp',
+    leshy: 'leshy.webp',
+    root_sentinel: 'root-sentinel.webp'
+    ,fire_elemental: 'fire-elemental.webp'
+    ,water_elemental: 'water-elemental.webp'
+    ,skeleton: 'skeleton.webp'
+    ,goblin_archer: 'goblin_archer.webp'
+    ,boar: 'boar.webp'
+    ,zombie: 'zombie.webp'
+    ,shaman: 'shaman.webp'
+    ,bandit: 'bandit.webp'
+    ,wolf: 'wolf.webp'
+    ,bandit_thrower: 'bandit_thrower.webp'
+    ,spearman: 'spearman.webp'
+    ,bog_lurker: 'bog_lurker.webp'
+    ,thorn_dryad: 'thorn_dryad.webp'
+    ,rat_swarm: 'rat_swarm.webp'
+    ,cultist: 'cultist.webp'
+    ,hexer: 'hexer.webp'
+    ,shieldbearer: 'shieldbearer.webp'
+    ,crossbowman: 'crossbowman.webp'
+    ,stone_golem: 'stone_golem.webp'
+    ,void_stalker: 'void_stalker.webp'
+    ,blood_knight: 'blood_knight.webp'
+    ,banshee: 'banshee.webp'
+    ,plague_doctor: 'plague_doctor.webp'
+    ,arcane_sentinel: 'arcane_sentinel.webp'
+    ,orc_guard: 'orc_guard.webp'
+    ,spider: 'spider.webp'
+    ,watcher: 'watcher.webp'
+    ,dark_knight: 'dark_knight.webp'
+    ,assassin: 'assassin.webp'
+    ,hydra: 'hydra.webp'
+    ,ghost: 'ghost.webp'
+    ,fire_titan: 'fire_titan.webp'
+    ,dark_lord: 'dark_lord.webp'
   };
+  /* Имя файла берётся из таблицы целиком, а не склеивается из id.
+   * Склеенный путь не видит ни упаковщик архива, ни скрипт перевода арта в
+   * WebP: после конвертации игра продолжала просить .png, которых уже нет.
+   * Записи есть на всех врагов; запасная ветка оставлена на случай нового
+   * врага без спрайта — тогда картинка не загрузится, и бестиарий покажет
+   * значок, как и при любой другой ошибке загрузки. */
   function enemyIconUrl(enemyId) {
-    const file = ENEMY_ICON_FILE[enemyId] || (enemyId + '.png');
+    const file = ENEMY_ICON_FILE[enemyId] || (enemyId + '.webp');
     return ENEMY_ICON_BASE + file;
   }
   /** Enemy portrait for the bestiary; falls back to enemyDef emoji on load failure. */
@@ -1287,37 +1324,37 @@
     hunter_bow: 'weapons/hunter_bow.png',
     shadow_bow: 'weapons/shadow_bow.png',
     moon_bow: 'weapons/moon_bow.png',
-    crossbow_war: 'weapons/war_crossbow.png',
+    crossbow_war: 'weapons/war_crossbow.webp',
     magic_wand: 'weapons/arcane_staff.png',
     fire_staff: 'weapons/fire_staff.png',
     chaos_staff: 'weapons/shadow_staff.png',
     staff_ice: 'weapons/frost_staff.png',
-    leather: 'armor/leather_armor.png',
-    shadow_cloak: 'armor/shadow_cloak.png',
-    runic_shield: 'armor/runic_shield.png',
-    mirror_robe: 'armor/mage_cloak_blue.png',
-    guardian_plate: 'armor/plate_armor.png',
-    phoenix: 'armor/magister_robe.png',
-    dark_mantle: 'armor/assassin_cloak.png',
+    leather: 'armor/leather_armor.webp',
+    shadow_cloak: 'armor/shadow_cloak.webp',
+    runic_shield: 'armor/runic_shield.webp',
+    mirror_robe: 'armor/mage_cloak_blue.webp',
+    guardian_plate: 'armor/plate_armor.webp',
+    phoenix: 'armor/magister_robe.webp',
+    dark_mantle: 'armor/assassin_cloak.webp',
     luck_amulet: 'accessories/amulet_clover.png',
-    mana_crystal: 'materials/mana_crystal.png',
-    seer_eye: 'accessories/amulet_evil_eye.png',
-    hourglass: 'misc/hourglass.png',
-    death_ring: 'accessories/ring_of_skulls.png',
-    portal_stone: 'misc/rune_stone.png',
-    crown: 'accessories/royal_crown.png',
-    ash_sword: 'progression/ash_sword.png', forge_hammer: 'progression/forge_hammer.png', vent_shield: 'progression/vent_shield.png',
-    coal_bow: 'progression/coal_bow.png', siege_crossbow: 'progression/siege_crossbow.png', spark_cloak: 'progression/spark_cloak.png',
-    magma_wand: 'progression/magma_wand.png', volcano_staff: 'progression/volcano_staff.png', phoenix_robe_2: 'progression/phoenix_robe.png',
-    forge_hourglass: 'progression/hourglass_forge.png', tide_blade: 'progression/tide_blade.png', abyss_staff: 'progression/abyss_staff.png',
-    tide_trident: 'progression/tide_trident.png', deep_shell: 'progression/deep_shell.png', current_bow: 'progression/current_bow.png',
-    harpoon_crossbow: 'progression/harpoon_crossbow.png', sea_cloak: 'progression/sea_cloak.png', tide_staff: 'progression/tide_staff.png',
-    deep_robe: 'progression/deep_robe.png', tide_heart: 'progression/tide_heart.png',
+    mana_crystal: 'materials/mana_crystal.webp',
+    seer_eye: 'accessories/amulet_evil_eye.webp',
+    hourglass: 'misc/hourglass.webp',
+    death_ring: 'accessories/ring_of_skulls.webp',
+    portal_stone: 'misc/rune_stone.webp',
+    crown: 'accessories/royal_crown.webp',
+    ash_sword: 'progression/ash_sword.png', forge_hammer: 'progression/forge_hammer.webp', vent_shield: 'progression/vent_shield.webp',
+    coal_bow: 'progression/coal_bow.png', siege_crossbow: 'progression/siege_crossbow.webp', spark_cloak: 'progression/spark_cloak.webp',
+    magma_wand: 'progression/magma_wand.png', volcano_staff: 'progression/volcano_staff.png', phoenix_robe_2: 'progression/phoenix_robe.webp',
+    forge_hourglass: 'progression/hourglass_forge.webp', tide_blade: 'progression/tide_blade.png', abyss_staff: 'progression/abyss_staff.png',
+    tide_trident: 'progression/tide_trident.webp', deep_shell: 'progression/deep_shell.webp', current_bow: 'progression/current_bow.png',
+    harpoon_crossbow: 'progression/harpoon_crossbow.webp', sea_cloak: 'progression/sea_cloak.webp', tide_staff: 'progression/tide_staff.png',
+    deep_robe: 'progression/deep_robe.webp', tide_heart: 'progression/tide_heart.webp',
     /* SHOP_ITEMS consumables are code-ready; potion-shop icons are prepared. */
-    potion_small: 'consumables/health_potion.png',
-    potion_mid: 'consumables/health_potion.png',
-    potion: 'consumables/health_potion.png',
-    elixir: 'consumables/mana_potion.png',
+    potion_small: 'consumables/health_potion.webp',
+    potion_mid: 'consumables/health_potion.webp',
+    potion: 'consumables/health_potion.webp',
+    elixir: 'consumables/mana_potion.webp',
     mag_stone: 'materials/arcane_crystal.png'
   };
 

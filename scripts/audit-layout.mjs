@@ -13,12 +13,20 @@ const mapTopologyPath = resolve(root, 'src/map-topology.js');
 const mapTopologyTestPath = resolve(root, 'scripts/test-map-topology.mjs');
 const leshyBossPath = resolve(root, 'src/leshy-boss.js');
 const leshyBossTestPath = resolve(root, 'scripts/test-leshy-boss.mjs');
-const leshySpritePath = resolve(root, 'assets/enemies/leshy.png');
+/* Формат картинок — решение сборки, а не признак готовности игры: после
+ * перевода арта в WebP три проверки упали, хотя не изменилось ничего, кроме
+ * расширения. Проверяем наличие картинки по имени без расширения. */
+const IMAGE_EXTENSIONS = ['.webp', '.png'];
+const imageExists = (relative) =>
+  IMAGE_EXTENSIONS.some(ext => existsSync(resolve(root, relative.replace(/\.(png|webp)$/i, '') + ext)));
+const imageReferenced = (text, relative) =>
+  IMAGE_EXTENSIONS.some(ext => text.includes(relative.replace(/\.(png|webp)$/i, '') + ext));
+
 const battleAnimationPath = resolve(root, 'src/battle-animations.js');
 const battleAnimationPlanPath = resolve(root, 'docs/BATTLE_ANIMATION_PLAN.md');
 const battleAnimationTestPath = resolve(root, 'scripts/test-battle-animations.mjs');
 const fullCampaignTestPath = resolve(root, 'scripts/test-full-campaign.mjs');
-const storyPortraitPaths = ['garet', 'alira', 'seris'].map(id => resolve(root, `assets/portraits/${id}-dialog.png`));
+const storyPortraitPaths = ['garet', 'alira', 'seris'].map(id => `assets/portraits/${id}-dialog.png`);
 const architecturePath = resolve(root, 'docs/TECHNICAL_MODULAR_ARCHITECTURE.md');
 const runtimeScriptPaths = gameRuntimeScriptPaths(root);
 const index = loadGameRuntimeSource(root);
@@ -187,9 +195,10 @@ function everyEquipmentItemHasUniqueIcon() {
   const iconMap = index.match(/const ITEM_ICON_MAP = \{([\s\S]*?)\n\s*\};/);
   if (!pool || !iconMap) return false;
   const ids = [...pool[1].matchAll(/\bid\s*:\s*'([^']+)'/g)].map(match => match[1]);
-  const mappings = new Map([...iconMap[1].matchAll(/\b(\w+)\s*:\s*'([^']+\.png)'/g)].map(match => [match[1], match[2]]));
+  const mappings = new Map([...iconMap[1].matchAll(/\b(\w+)\s*:\s*'([^']+\.(?:png|webp))'/g)].map(match => [match[1], match[2]]));
   const paths = ids.map(id => mappings.get(id));
-  return paths.every(Boolean) && new Set(paths).size === paths.length && paths.every(path => existsSync(resolve(root, 'assets/items', path)));
+  return paths.every(Boolean) && new Set(paths).size === paths.length &&
+    paths.every(path => imageExists(`assets/items/${path}`));
 }
 
 function allEnemiesHaveAbilityText() {
@@ -309,7 +318,7 @@ const checks = [
   ['old saves migrate to the snake layout', () => index.includes('function migrateWorldMapTopology') && index.includes('mapLayoutVersion')],
   ['map topology test present', () => existsSync(mapTopologyTestPath)],
   ['Leshy boss module and test present', () => existsSync(leshyBossPath) && existsSync(leshyBossTestPath) && index.includes('src/leshy-boss.js')],
-  ['Leshy has a dedicated sprite', () => existsSync(leshySpritePath) && index.includes("leshy: 'leshy.png'") && index.includes("leshy: 'assets/enemies/leshy.png'")],
+  ['Leshy has a dedicated sprite', () => imageExists('assets/enemies/leshy.png') && imageReferenced(index, "leshy: 'leshy.png") && imageReferenced(index, "leshy: 'assets/enemies/leshy.png")],
   ['Leshy is a rooted two-cell summoner', () => index.includes("[D.LESHY]: { name: 'Ancient Leshy'") && index.includes('move: 0, range: 3') && index.includes('sizeW: 2') && index.includes('LeshyBoss.planTurn')],
   ['battle animation system and plan present', () => existsSync(battleAnimationPath) && existsSync(battleAnimationPlanPath) && existsSync(battleAnimationTestPath) && index.includes('src/battle-animations.js')],
   ['ability-aware attack animation runtime present', () => index.includes('function startBattleAttackAnimation') && index.includes('BattleAnimations.resolveAttack') && index.includes('drawBattleCombatFx(ctx, b)')],
@@ -338,7 +347,7 @@ const checks = [
   ,['every pixel emoji icon is declared with a packable path', everyEmojiIconIsDeclaredAndPresent]
   ,['long press does not open the system callout', longPressCalloutIsBlocked]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
-  ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
+  ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(imageExists) && imageReferenced(index, 'assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
   ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]
 ];
 
