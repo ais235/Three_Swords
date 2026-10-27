@@ -17,7 +17,14 @@ https://ais235.itch.io/ — текст страницы, настройки и �
 | Скриншоты | `artifacts/promo/*.png` | `npm run promo`, 5 кадров 1920×1080 |
 | Ролик | `artifacts/promo/gameplay.webm` | можно не грузить: itch не встраивает webm, нужен YouTube |
 
-Сборка — 25 МБ, 252 файла. Лимит itch на загрузку — 1 ГБ, так что запас большой;
+Архив собирается так (важно: упаковывается **содержимое** папки, иначе index.html
+окажется на уровень ниже и itch не найдёт точку входа):
+
+```powershell
+Compress-Archive -Path 'dist	hree-blades-itch\*' -DestinationPath 'dist	hree-blades-itch.zip' -CompressionLevel Optimal
+```
+
+Сборка — 25 МБ (архив 24 МБ), 252 файла. Лимит itch на загрузку — 1 ГБ, так что запас большой;
 25 МБ важны не для лимита, а потому что их скачивают при открытии страницы.
 
 ### Настройки проекта
