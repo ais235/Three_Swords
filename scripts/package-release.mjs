@@ -3,7 +3,19 @@ import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const output = resolve(root, 'dist', 'three-blades');
+
+/* Сборка для itch.io отличается от сборки для Яндекс Игр ровно одним: в ней нет
+ * загрузки /sdk.js. Всё остальное — тот же список файлов, та же проверка путей,
+ * тот же манифест, поэтому это флаг, а не второй упаковщик: два списка файлов
+ * разошлись бы на первой же новой картинке.
+ *
+ * Сам SDK отсутствует безболезненно: YaGames не объявлен, window.ysdk остаётся
+ * пустым, и всё платформенное — реклама, лидерборды, облачные сохранения — само
+ * не показывается (это проверяет scripts/test-itch-build.mjs). Но тег оставлять
+ * нельзя: /sdk.js на itch ведёт в корень html-classic.itch.zone и даёт 404 при
+ * каждой загрузке. */
+const forItch = process.argv.includes('--itch');
+const output = resolve(root, 'dist', forItch ? 'three-blades-itch' : 'three-blades');
 const index = readFileSync(resolve(root, 'index.html'), 'utf8');
 
 rmSync(output, { recursive: true, force: true });
@@ -85,6 +97,16 @@ if (missing.length) {
   throw new Error(`Missing runtime assets:\n${missing.join('\n')}`);
 }
 
+if (forItch) {
+  const stripped = index.replace(/[ \t]*<script[^>]+src=["']\/sdk\.js["'][^>]*><\/script>\r?\n?/i, '');
+  if (stripped === index) throw new Error('itch build: тег /sdk.js не найден — проверь index.html');
+  writeFileSync(resolve(output, 'index.html'), stripped);
+  // Путь от корня домена работает только там, где игра лежит в корне. На itch
+  // сборка раздаётся из подпапки, и любой такой путь — гарантированный 404.
+  const absolute = [...stripped.matchAll(/(?:src|href)=["'](\/[^"']*)["']/gi)].map(match => match[1]);
+  if (absolute.length) throw new Error(`itch build: пути от корня домена: ${absolute.join(', ')}`);
+}
+
 const invalidPaths = [...runtimeFiles].filter(path => /[^\x20-\x7E]/.test(path) || /\s/.test(path));
 if (invalidPaths.length) {
   throw new Error(`Runtime paths must use ASCII without spaces:\n${invalidPaths.join('\n')}`);
@@ -102,5 +124,5 @@ writeFileSync(resolve(output, 'runtime-assets.json'), `${JSON.stringify({
   assets: manifest
 }, null, 2)}\n`);
 
-console.log(`Release ready: ${output}`);
+console.log(`Release ready (${forItch ? 'itch.io' : 'Яндекс Игры'}): ${output}`);
 console.log(`Files: ${manifest.length}; unpacked: ${(totalBytes / 1024 / 1024).toFixed(1)} MB`);

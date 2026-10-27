@@ -3050,6 +3050,24 @@
     }
   }
 
+  /* Разведка у Вейры — единственная услуга этого NPC, и платит за неё игрок
+   * просмотром ролика. Там, где рекламы нет (сборка для itch: SDK площадки не
+   * подключён), показывать «после просмотра рекламы» нельзя — рекламы не будет,
+   * а награда и так выдаётся сразу. Прятать кнопку тоже нельзя: вкладка NPC
+   * осталась бы пустым экраном без единого действия. Поэтому услуга становится
+   * бесплатной, а подпись перестаёт обещать то, чего нет. */
+  function applyScoutAdAvailability() {
+    const withAds = !!window.ysdk;
+    const button = document.getElementById('btn-oracle-center-ad');
+    if (button) {
+      button.classList.toggle('btn-ad', withAds);
+      const icon = button.querySelector('.ico');
+      if (icon) icon.classList.toggle('ico-ad', withAds);
+    }
+    const hint = document.querySelector('.oracle-hint');
+    if (hint) hint.textContent = translateKey(withAds ? 'scoutHint' : 'scoutHintFree');
+  }
+
   function runScoutIntel(node) {
     showRewardedAd(() => {
       const resEl = document.getElementById('oracle-result');
@@ -3126,6 +3144,7 @@
     });
     const oracleBtn = document.getElementById('btn-oracle-center-ad');
     if (oracleBtn) oracleBtn.onclick = () => runScoutIntel(navNode);
+    applyScoutAdAvailability();
 
     const rer = document.getElementById('btn-reroll-shop');
     if (rer) rer.onclick = () => {

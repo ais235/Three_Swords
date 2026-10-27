@@ -2,7 +2,34 @@
 (function () {
   'use strict';
 
-  const BASE = 'assets/ui/emoji/';
+  /* Пути перечислены целиком, а не склеиваются из BASE и имени.
+   *
+   * Упаковщик релиза собирает список файлов для архива, читая исходники и
+   * выбирая из них строковые литералы с путём внутри папки ассетов. Склеенный в
+   * шаблоне путь он не видит по построению, и эта папка уехала в архив пустой:
+   * каждая иконка в тексте была битой картинкой — и в сборке для Яндекса, и в
+   * сборке для itch.
+   * Поэтому здесь лежит ровно то, что упаковщик умеет прочесть, а отрисовка
+   * берёт путь отсюда же, чтобы список не мог разойтись с кодом.
+   * Что список полон, проверяет npm run audit. */
+  const ICON_FILES = {
+    backpack: 'assets/ui/emoji/backpack.png',
+    book:     'assets/ui/emoji/book.png',
+    bow:      'assets/ui/emoji/bow.png',
+    cloak:    'assets/ui/emoji/cloak.png',
+    crystal:  'assets/ui/emoji/crystal.png',
+    eye:      'assets/ui/emoji/eye.png',
+    fire:     'assets/ui/emoji/fire.png',
+    hourglass:'assets/ui/emoji/hourglass.png',
+    map:      'assets/ui/emoji/map.png',
+    orb:      'assets/ui/emoji/orb.png',
+    potion:   'assets/ui/emoji/potion.png',
+    roots:    'assets/ui/emoji/roots.png',
+    shield:   'assets/ui/emoji/shield.png',
+    skull:    'assets/ui/emoji/skull.png',
+    sword:    'assets/ui/emoji/sword.png',
+    water:    'assets/ui/emoji/water.png'
+  };
   const ICONS = {
     '⚔': 'sword', '🗡': 'sword', '⚔️': 'sword', '🗡️': 'sword',
     '🏹': 'bow', '🔱': 'sword', '🔨': 'sword', '🪓': 'sword',
@@ -46,9 +73,10 @@
 
   window.gameEmojiIconMarkup = function (value, size, alt) {
     const icon = lookup(value);
-    if (!icon) return String(value || '');
+    const file = icon && ICON_FILES[icon];
+    if (!file) return String(value || '');
     const px = Math.max(10, Number(size) || 20);
-    return `<img class="emoji-icon-pixel" src="${BASE}${icon}.png" alt="${escapeAttr(alt || '')}" aria-hidden="${alt ? 'false' : 'true'}" width="${px}" height="${px}" decoding="async" loading="lazy" style="width:${px}px;height:${px}px;object-fit:contain;vertical-align:middle;display:inline-block" />`;
+    return `<img class="emoji-icon-pixel" src="${file}" alt="${escapeAttr(alt || '')}" aria-hidden="${alt ? 'false' : 'true'}" width="${px}" height="${px}" decoding="async" loading="lazy" style="width:${px}px;height:${px}px;object-fit:contain;vertical-align:middle;display:inline-block" />`;
   };
 
   const tokens = Object.keys(ICONS).sort((a, b) => b.length - a.length);

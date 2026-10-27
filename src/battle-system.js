@@ -1553,6 +1553,11 @@
     if (continueButton) {
       continueButton.classList.toggle('vic-btn-continue-ready', !lootNeedsAttention);
     }
+    // Удвоение золота — плата рекламой. Без SDK площадки (сборка для itch)
+    // ролика нет, и кнопка превратилась бы в бесплатное «×2 золота» после
+    // каждого боя: обещание рекламы ложное, а экономика похода — вдвое.
+    const adButton = document.getElementById('btn-vic-ad');
+    if (adButton) adButton.classList.toggle('hidden', !window.ysdk);
     return { lootNeedsAttention, dropHandled: !!GameState._lastBattleDropHandled };
   }
 
@@ -4467,6 +4472,28 @@
     </div>`;
   }
 
+  /* Панель действий перерисовывается целиком, и это съедает нажатия.
+   *
+   * innerHTML заменяет узлы, а не правит их. Браузер считает кликом только пару
+   * «нажал и отпустил на одном элементе»: если между ними панель пересобралась,
+   * события click не будет вовсе — палец или мышь попали в узел, которого уже
+   * нет. Отсюда же мигающий тест на второе нажатие умения: он жал по кнопке,
+   * заменённой между поиском и нажатием.
+   *
+   * Разметка при этом чаще всего та же самая — updateBattleUI зовут на любое
+   * изменение состояния боя, а кнопки меняются редко. Сравнение с последней
+   * записанной строкой делает перерисовку холостой, когда менять нечего.
+   * Кэш обновляют ВСЕ места, которые пишут в панель, иначе он разойдётся с DOM. */
+  let lastActionsHtml = null;
+  function setActionsHtml(actions, html) {
+    if (!actions) return;
+    // Пустая панель при непустой разметке означает, что DOM тронули мимо кэша:
+    // тогда пишем, не веря ему.
+    if (lastActionsHtml === html && (html === '' || actions.childElementCount > 0)) return;
+    actions.innerHTML = html;
+    lastActionsHtml = html;
+  }
+
   function updateBattleUI() {
     const b = GameState.currentBattle;
     const left = document.getElementById('battle-left-heroes');
@@ -4538,11 +4565,11 @@
       title.textContent = currentLanguage() === 'ru' ? 'Коснитесь героя → клетки' : translateText('Click hero → drag');
       stats.innerHTML = '';
       renderBattleBriefing(b);
-      actions.innerHTML = `<button class="btn btn-primary skill-action-btn" id="btn-start-battle" style="width:100%">
+      setActionsHtml(actions, `<button class="btn btn-primary skill-action-btn" id="btn-start-battle" style="width:100%">
         <span class="skill-action-icon">⚔</span>
         <span class="skill-action-name">${translateText('Start Battle')}</span>
         <span class="skill-action-meta">${translateText('DEPLOYMENT')}</span>
-      </button>`;
+      </button>`);
       const sb = document.getElementById('btn-start-battle');
       if (sb) sb.onclick = () => beginCombatFromDeploy();
       return;
@@ -4553,14 +4580,14 @@
 
     if (!u) {
       if (modeBadge) { modeBadge.className = 'm-enemy hidden'; modeBadge.textContent = '—'; }
-      title.textContent = '—'; stats.innerHTML = ''; actions.innerHTML = '';
+      title.textContent = '—'; stats.innerHTML = ''; setActionsHtml(actions, '');
       return;
     }
     if (!u.isHero) {
       if (modeBadge) { modeBadge.className = 'm-enemy'; modeBadge.textContent = `${u.emoji} ${translateKey('enemyTurn')}`; modeBadge.classList.remove('hidden'); }
       title.textContent = '';
       stats.innerHTML = '';
-      actions.innerHTML = '';
+      setActionsHtml(actions, '');
       return;
     }
     b.selected = u;
@@ -4651,7 +4678,7 @@
         html += `<div class="battle-consumable-section"><div class="battle-consumable-label">${translateKey('battleConsumables')}</div><button class="btn battle-utility-btn" id="btn-battle-consumables">${translateKey('battleConsumables')} · ${consumableCount}</button></div>`;
       }
     }
-    actions.innerHTML = html;
+    setActionsHtml(actions, html);
     highlightFtueRecommendedSkill(b, u);
     const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
     bindFtueCoachSkip();

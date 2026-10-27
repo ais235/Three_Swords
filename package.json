@@ -24,6 +24,8 @@
     "balance:check": "node scripts/balance-seeds.mjs --summary",
     "balance:seeds": "node scripts/balance-seeds.mjs",
     "package:release": "node scripts/package-release.mjs",
+    "package:itch": "node scripts/package-release.mjs --itch",
+    "test:itch": "node scripts/test-itch-build.mjs",
     "test:platform": "node scripts/test-platform.mjs",
     "ya:build": "node scripts/make-test-build.mjs",
     "test:i18n": "node scripts/test-i18n.mjs",

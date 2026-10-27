@@ -124,6 +124,25 @@ function everyIconClassHasARule() {
   return [...used].every(name => declared.has(name));
 }
 
+/** Каждая пиксельная иконка-эмодзи объявлена путём, который видит упаковщик.
+ *
+ *  Путь иконки собирался в шаблоне из базы и имени, и упаковщик релиза, который
+ *  ищет в исходниках строки 'assets/….png', не видел ни одной: папка уезжала в
+ *  архив пустой, а игрок получал битую картинку на месте каждой иконки в тексте.
+ *  Теперь пути лежат в ICON_FILES целиком; проверка следит, что таблица подмен не
+ *  обогнала этот список и что все файлы на месте. */
+function everyEmojiIconIsDeclaredAndPresent() {
+  const source = readFileSync(resolve(root, 'src/emoji-icons.js'), 'utf8');
+  const files = new Map([...source.matchAll(/^\s*([a-z0-9_]+):\s*'(assets\/ui\/emoji\/[a-z0-9_-]+\.png)'/gim)]
+    .map(match => [match[1], match[2]]));
+  if (!files.size) return false;
+  const start = source.indexOf('const ICONS = {');
+  const table = source.slice(start, source.indexOf('\n  };', start));
+  const used = new Set([...table.matchAll(/:\s*'([a-z0-9_]+)'/g)].map(match => match[1]));
+  if (![...used].every(name => files.has(name))) return false;
+  return [...files.values()].every(path => existsSync(resolve(root, path)));
+}
+
 /** Global tokens belong to styles/tokens.css and nowhere else.
  *
  *  They used to be split: the palette sat in layout.css while --text-dim and the
@@ -316,6 +335,7 @@ const checks = [
   ,['global design tokens live in one file', globalTokensLiveInOneFile]
   ,['interface art ships with its licence and credit', interfaceArtIsLicensed]
   ,['every control icon has a rule behind it', everyIconClassHasARule]
+  ,['every pixel emoji icon is declared with a packable path', everyEmojiIconIsDeclaredAndPresent]
   ,['long press does not open the system callout', longPressCalloutIsBlocked]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
   ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(existsSync) && index.includes('assets/portraits/garet-dialog.png') && index.includes('story-portrait')]

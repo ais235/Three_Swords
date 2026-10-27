@@ -222,6 +222,7 @@
     gearUpgrade: { ru: 'Улучшение снаряжения', en: 'Gear upgrades', es: 'Mejoras de equipo' },
     scoutVeira: { ru: 'РАЗВЕДЧИЦА ВЕЙРА', en: 'SCOUT VEIRA', es: 'EXPLORADORA VEIRA' },
     scoutHint: { ru: 'Вейра изучит ближайший бой на карте: состав врагов после просмотра рекламы.', en: 'Veira will scout the nearest battle on the map: enemy lineup after watching an ad.', es: 'Veira explorará la batalla más cercana del mapa: enemigos tras ver un anuncio.' },
+    scoutHintFree: { ru: 'Вейра изучит ближайший бой на карте и назовёт состав врагов.', en: 'Veira will scout the nearest battle on the map and name the enemy lineup.', es: 'Veira explorará la batalla más cercana del mapa y dirá qué enemigos hay.' },
     getIntel: { ru: 'Получить разведданные', en: 'Get intel', es: 'Obtener informe' },
     quick: { ru: 'Быстро', en: 'Quick', es: 'Rápido' },
     leaveTown: { ru: '← Покинуть город', en: '← Leave town', es: '← Salir de la ciudad' },
