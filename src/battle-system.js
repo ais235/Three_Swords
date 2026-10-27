@@ -4445,7 +4445,13 @@
     } else if (b.pendingSkill) {
       tone = 'good';
       main = translateKey('selectTarget');
-      sub = `${translateKey('preview')}: ${translateText(b.pendingSkill)}`;
+      // b.pendingSkill — внутренний ключ умения ('shieldBash'), и переводчику
+      // он не знаком: в подсказке печаталось «Предпросмотр: shieldBash», да ещё
+      // обрезанное по ширине панели. Название берётся из описания умения.
+      const pendingUnit = getActiveUnit();
+      const pendingDef = pendingUnit && (HERO_SKILLS[pendingUnit.heroId] || [])
+        .find(skill => skill.key === b.pendingSkill);
+      sub = `${translateKey('preview')}: ${translateText(pendingDef ? pendingDef.name : b.pendingSkill)}`;
     } else if (summary.inRange > 0) {
       tone = 'good';
       main = `${translateKey('attackReady')}: ${summary.inRange}`;

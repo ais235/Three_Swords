@@ -10,6 +10,16 @@
       ],
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "three-blades-itch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:itch"
+      ],
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }
