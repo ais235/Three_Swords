@@ -8,16 +8,16 @@
   #map-screen .map-legend { display: none; }
   #game-container { padding: var(--space-2); }
   #hud-top {
-    height: 26px;
+    height: auto; min-height: calc(var(--tap-floor) + 6px);
     margin: -4px -4px var(--space-2);
     padding: 0 5px;
   }
   #topbar-right { min-width: 58px; }
   #topbar-center { font-size: 9px; }
-  #btn-open-menu { height: 20px; min-height: 20px !important; padding: 0 var(--space-3); font-size: 9px; }
+  #btn-open-menu { height: 20px; min-height: var(--tap-floor) !important; padding: 0 var(--space-3); font-size: 9px; }
   #hud-top { grid-template-columns: minmax(150px, .8fr) minmax(0, 1.4fr) auto; }
   #battle-objective-top { font-size: 9px; }
-  .battle-top-action { height: 20px; min-height: 20px !important; padding: 0 var(--space-3); font-size: 11px; }
+  .battle-top-action { height: auto; min-height: var(--tap-floor) !important; padding: 0 var(--space-3); font-size: 11px; }
   .battle-top-label { display: none; }
   .btn { min-height: 30px; }
 

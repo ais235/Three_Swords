@@ -159,12 +159,12 @@
 .story-portrait-wrap::after { content:""; position:absolute; inset:0; box-shadow: inset -18px 0 24px rgba(8,8,18,.78); pointer-events:none; }
 .story-portrait { width: 100%; height: 100%; object-fit: cover; object-position: center top; image-rendering: pixelated; }
 .story-content { min-width: 0; display: flex; flex-direction: column; padding: 22px; }
-.story-kicker { color: var(--text-dim); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; }
+.story-kicker { color: var(--text-dim); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
 .story-title { margin: 7px 0 var(--space-2); color: var(--accent-gold); font-size: 18px; line-height: 1.25; }
 .story-speaker { color: var(--accent-blue); font-size: 11px; letter-spacing: 1px; }
 .story-text { flex: 1; margin: 16px 0; color: #eee9dc; font-size: 13px; line-height: 1.75; }
 .story-footer { display:flex; align-items:center; justify-content:space-between; gap:var(--space-6); }
-.story-progress { color: var(--text-dim); font-size: 9px; }
+.story-progress { color: var(--text-dim); font-size: 11px; }
 .story-footer .btn { min-width: 150px; }
 @media (max-width: 900px), (max-height: 520px) {
   #story-modal { padding: var(--space-3); }

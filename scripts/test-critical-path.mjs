@@ -791,7 +791,13 @@ try {
     clientHeight: el.clientHeight,
     overflowY: getComputedStyle(el).overflowY
   }));
-  check('selected map cell summary is visible without scrolling', mapInfoFit.visible && mapInfoFit.scrollHeight <= mapInfoFit.clientHeight + 1 && mapInfoFit.overflowY !== 'auto' && mapInfoFit.overflowY !== 'scroll', JSON.stringify(mapInfoFit));
+  /* Запрет на прокрутку был здесь подпоркой под «ничего не обрезано». Он же
+     и ломал панель: блок сведений стоял нерастяжимым и выдавливал «Рюкзак»,
+     «Арсенал» и «Бестиарий» за нижний край на 1024x640 и ниже. Теперь блок
+     умеет прокручиваться, а проверка спрашивает то, что и хотела спросить:
+     содержимое помещается целиком. Досягаемость кнопок закрывает
+     test-tap-targets.mjs. */
+  check('selected map cell summary is visible without scrolling', mapInfoFit.visible && mapInfoFit.scrollHeight <= mapInfoFit.clientHeight + 1, JSON.stringify(mapInfoFit));
   const locationTitle = (await page.locator('#map-panel-title').textContent())?.trim();
   check('selected map cell shows a proper place name', !!locationTitle && !/^LOCATION|^ЛОКАЦИЯ$/i.test(locationTitle), locationTitle || '');
   check('map objective is separated into a labelled row', await page.locator('#map-cell-info .cell-info-objective small').count() === 1, infoAfterHover || '');

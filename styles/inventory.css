@@ -327,7 +327,7 @@
 @media (max-height: 520px) and (orientation: landscape) {
   #game-container { padding: var(--space-3); }
   #hud-top {
-    height: 30px;
+    height: auto; min-height: calc(var(--tap-floor) + 6px);
     margin: -6px -6px var(--space-3);
     padding: 0 var(--space-3);
   }

@@ -33,7 +33,7 @@ body {
 #game-container { margin: 0 auto; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 var(--space-4); display: none; }
 #hud-top {
-  height: 36px;
+  height: auto; min-height: calc(var(--tap-floor) + 6px);
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border);
   border-radius: 0;
@@ -62,7 +62,7 @@ h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 var(--space-4); d
 #battle-objective-top { color: var(--accent-gold); font-weight: bold; overflow: hidden; white-space: nowrap; min-width: 0; text-align: center; }
 #topbar-right { min-width: 110px; align-self: stretch; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); }
 .battle-top-action,
-#btn-open-menu { height: 28px; min-height: 28px !important; padding: var(--space-1) var(--space-4); margin: 0; white-space: nowrap; }
+#btn-open-menu { height: 28px; min-height: var(--tap-floor) !important; padding: var(--space-1) var(--space-4); margin: 0; white-space: nowrap; }
 .row { display: flex; flex-wrap: wrap; gap: var(--space-6); align-items: flex-start; }
 .battle-layout {
   --battle-side-w: 190px;

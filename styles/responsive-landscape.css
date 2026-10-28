@@ -132,7 +132,7 @@
     padding: var(--space-2);
   }
   #main-menu .menu-btn {
-    min-height: 40px !important;
+    min-height: var(--tap-floor) !important;
     padding: var(--space-3) var(--space-5) !important;
     font-size: var(--font-sm) !important;
   }
@@ -226,7 +226,7 @@
   }
   #battle-screen .battle-actions .btn,
   #battle-screen .battle-actions .skill-action-btn {
-    min-height: 42px !important;
+    min-height: var(--tap-floor) !important;
     height: auto;
     padding: 5px var(--space-3) !important;
     overflow: visible;
@@ -290,7 +290,7 @@
     overflow: visible !important;
   }
   #perk-modal #perk-detail-panel .btn {
-    min-height: 34px !important;
+    min-height: var(--tap-floor) !important;
     height: auto !important;
     overflow: visible !important;
     white-space: normal;
@@ -416,7 +416,7 @@
     grid-template-columns: 1fr auto;
   }
   #inventory-screen .item-detail-btns .btn {
-    min-height: 42px !important;
+    min-height: var(--tap-floor) !important;
     font-size: var(--font-sm) !important;
   }
 }

@@ -437,7 +437,7 @@ textarea {
 
 @media (max-height: 520px) and (orientation: landscape) {
   #battle-screen .battle-actions .skill-action-btn {
-    min-height: 32px !important;
+    min-height: var(--tap-floor) !important;
     grid-template-columns: 24px minmax(0, 1fr);
     padding: 3px 5px !important;
   }
@@ -451,7 +451,7 @@ textarea {
 }
 @media (max-height: 430px) and (orientation: landscape) {
   #battle-screen .battle-actions .skill-action-btn {
-    min-height: 27px !important;
+    min-height: var(--tap-floor) !important;
     grid-template-columns: 20px minmax(0, 1fr);
     padding: var(--space-1) var(--space-2) !important;
   }
@@ -464,7 +464,7 @@ textarea {
   #battle-screen .battle-actions .skill-action-meta { font-size: 6px !important; }
   /* During deployment this is the only action: keep its label readable. */
   #battle-screen .battle-actions #btn-start-battle {
-    min-height: 36px !important;
+    min-height: var(--tap-floor) !important;
     grid-template-columns: 24px minmax(0, 1fr);
     padding: var(--space-2) 5px !important;
   }
@@ -487,8 +487,8 @@ textarea {
     line-height: 1.25 !important;
   }
   #hud-top {
-    height: 28px !important;
-    min-height: 28px !important;
+    height: auto !important;
+    min-height: calc(var(--tap-floor) + 6px) !important;
   }
   #topbar-center {
     font-size: 9px !important;
@@ -713,7 +713,7 @@ textarea {
     display: none;
   }
   #inventory-screen .inv-tab {
-    min-height: 40px !important;
+    min-height: var(--tap-floor) !important;
     padding: var(--space-1) 3px !important;
     min-width: 0;
     display: flex;
@@ -759,7 +759,7 @@ textarea {
     padding-bottom: var(--space-1);
   }
   #inventory-screen .inv-action-stack .btn {
-    min-height: 36px !important;
+    min-height: var(--tap-floor) !important;
     padding: var(--space-1) 3px !important;
     font-size: 7px !important;
   }
@@ -821,7 +821,7 @@ textarea {
     padding-top: var(--space-2);
   }
   #inventory-screen .item-detail-btns .btn {
-    min-height: 36px !important;
+    min-height: var(--tap-floor) !important;
     padding: var(--space-1) 3px !important;
     font-size: 7px !important;
   }

@@ -12,6 +12,15 @@
   const STATUS = { STUN: 'stun', FREEZE: 'freeze', FEAR: 'fear', WEB: 'web', POISON: 'poison', BURN: 'burn', SLOW: 'slow', BLIND: 'blind', CURSE: 'curse', BERSERK: 'berserk', STEALTH: 'stealth' };
   const SFX_AUDITOR_ENABLED = /(?:\?|&)sfx-audit=1(?:&|$)/.test(window.location.search) || localStorage.getItem('threeBladesSfxAudit') === '1';
   const TEST_SEED = (new URLSearchParams(window.location.search).get('seed') || '').trim();
+  /**
+   * Версия сборки, которую видит игрок — строкой в настройках. Без неё вопрос
+   * «на чём вы это нашли» решается археологией по скриншотам: шесть из
+   * одиннадцати замечаний издателя по прошлому проекту были уже починены, и
+   * день ушёл на сделанное. Поднимать на каждой сборке, уходящей наружу;
+   * scripts/package-release.mjs сверяет значение с package.json и падает при
+   * расхождении.
+   */
+  const GAME_VERSION = '1.1.0';
   const SAVE_KEY = 'threeHeroesSave';
   const LEGACY_SAVE_KEY = 'save';
   const RECORDS_KEY = 'threeBladesRecordsV1';
@@ -99,8 +108,8 @@
   let ActiveScreen = 'menu';
 
   const I18N = {
-    gameTitle: { ru: 'ТРИ  КЛИНКА', en: 'THREE BLADES', es: 'TRES ESPADAS' },
     pageTitle: { ru: 'Три клинка', en: 'Three Blades', es: 'Tres Espadas' },
+    version: { ru: 'Версия', en: 'Version', es: 'Versión' },
     newGame: { ru: 'Новая игра', en: 'New Game', es: 'Nueva partida' },
     continue: { ru: 'Продолжить', en: 'Continue', es: 'Continuar' },
     about: { ru: 'Об игре', en: 'About', es: 'Acerca del juego' },
@@ -1476,6 +1485,8 @@
     } catch (_) {}
   }
   function updateStaticLabels() {
+    const versionLine = document.getElementById('settings-version');
+    if (versionLine) versionLine.textContent = `${translateKey('version')} ${GAME_VERSION}`;
     const tutorialBtn = document.getElementById('btn-menu-tutorial');
     if (tutorialBtn) tutorialBtn.textContent = translateKey('tutorial');
     // Подпись скорости боя собирается при привязке обработчиков — один раз за

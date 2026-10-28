@@ -1,0 +1,247 @@
+/* Three Blades — пол под палец: размер нажимаемого, зазор между соседями и
+ * кегль. Грузится последним и переопределяет компактные раскладки намеренно.
+ *
+ * Зачем отдельный файл. Размеры кнопок жили в пяти стилях вперемешку с
+ * раскладкой: `compact-landscape.css` сжимал их до 20 px ради того, чтобы всё
+ * влезло в 375 px высоты, `inventory.css` — до 30 px, и никто не мерил, что
+ * получилось. Замер 28.10.2026 показал 33 нажимаемых мельче 44 px на 812x375.
+ * Править каждое место по отдельности — значит снова развести размеры по
+ * файлам; поэтому пол задаётся одним слоем, и видно его целиком.
+ *
+ * Два порога, и второй — не поблажка, а предел арифметики. В окне выше 360 px
+ * помещается шапка 44 + поле + ряд действий 44, и там действует полное правило
+ * (44 px, зазор 6 px). В окнах ниже — 844x320, 712x292, 568x260: это телефон
+ * поперёк в браузере, где шапка браузера и панель площадки съели высоту — на
+ * три ряда по 44 px её уже нет, и выбор только между мельче и спрятать. Там
+ * пол 36 px, и проверка `test-tap-targets.mjs` знает об этом порог в порог.
+ *
+ * Зазор между плитками карты и карточками списков не трогаем: промах там
+ * выделяет соседа, а не совершает действие, вход в бой подтверждается
+ * отдельной кнопкой. Зазор нужен там, где рядом стоят два действия.
+ */
+
+/* --------------------------------------------------------------------------
+ * 1. Панели, из которых уезжала главная кнопка.
+ *
+ * `.map-panel` — колонка с `overflow:hidden`, где блок сведений стоял
+ * `flex:0 0 auto`, а ряд действий — `flex-shrink:0`. Как только сведения не
+ * помещались, они выдавливали кнопки за нижний край панели, и докрутить их
+ * было нельзя: «Рюкзак», «Арсенал» и «Бестиарий» пропадали на 1024x640,
+ * 844x320, 743x360 и 712x292. Высоту отдаёт тот, кого можно прокрутить.
+ * ------------------------------------------------------------------------ */
+#map-screen #map-cell-info {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+#map-screen .map-panel-actions { margin-top: auto; }
+/* Легенда — подсказка, она уступает место первой. */
+#map-screen .map-legend { flex: 0 1 auto; min-height: 0; overflow: hidden; }
+
+/* Список героев в городе: кнопки «подлечить» уходили под нижний край. */
+#city-screen .heroes-bar { overflow-y: auto; }
+
+/* Инвентарь в низком окне: столбец рюкзака с `overflow:hidden` выдавливал
+ * вниз сетку предметов и «Закрыть», и они просто исчезали — на 712x292 и
+ * 568x260 карточки и кнопка закрытия были недостижимы. Столбец прокручивается,
+ * а не прячет. */
+#inventory-screen #inv-backpack { overflow-y: auto; }
+#inventory-screen #bag-grid { min-height: 0; }
+#inventory-screen .inv-consumable-row .btn { min-height: var(--tap-floor); }
+
+/* Бой: карточка героя клипала собственные кнопки умений. Пока они были
+ * 26 px, это было незаметно; на 44 px ряд умений уехал за карточку, и внизу
+ * окна 1280x720 кнопки оказались вне экрана. Высоту отдаёт боковая панель,
+ * которая умеет прокручиваться, а карточка растёт под содержимое. */
+#battle-screen .battle-left .hero-card { flex: 0 0 auto; overflow: visible; }
+
+/* Правая панель боя прокручивалась только в компактных окнах. В 1280x720 —
+ * том самом окне, в котором игра едет на itch, — «Ждать» уходила на 16 px за
+ * нижний край, и докрутить её было нельзя. */
+#battle-screen #unit-panel { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+
+/* Экран события центрировался в тесной рамке: на 568x260 карточка выпускала
+ * варианты и вверх, и вниз, а прокрутить вверх нельзя. */
+#game-container > #event-screen {
+  align-items: start;
+  align-items: safe center;
+  overflow-y: auto;
+}
+
+/* Витрина в городе: сетка с жёсткими рядами `1fr 1fr` в низком окне выдавала
+ * карточки одну на другую — «КУПИТЬ» печаталось поверх соседней кнопки. В
+ * низком окне список прокручивается, а не накладывается. */
+@media (max-height: 430px) and (orientation: landscape) {
+  #city-screen .items-grid {
+    grid-template-rows: none;
+    grid-auto-rows: min-content;
+    align-content: start;
+    overflow-y: auto;
+  }
+  #city-screen .items-grid .item-card { height: auto; }
+}
+
+/* --------------------------------------------------------------------------
+ * 2. Пол 44 px там, где высота это позволяет (окно выше 360 px).
+ * ------------------------------------------------------------------------ */
+@media (min-height: 361px) {
+  .btn,
+  .menu-btn,
+  .menu-diff-btn,
+  .menu-contract-btn,
+  .npc-tab,
+  .trader-mode-tab,
+  .inv-tab,
+  .bestiary-tab,
+  .btn-buy,
+  .btn-sell,
+  .hero-heal-btn,
+  .sc-btn,
+  .choice-btn,
+  .ftue-coach-skip,
+  #btn-open-menu,
+  .battle-top-action,
+  #battle-log-toggle,
+  #btn-reroll-shop,
+  #battle-speed-toggle,
+  #perk-confirm-btn {
+    min-height: 44px !important;
+    box-sizing: border-box;
+  }
+
+  /* Кнопка умения — квадрат: полом ей нужны обе стороны. */
+  .skill-btn {
+    min-width: 44px;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  /* Зазор между соседними действиями: 8 px, чтобы палец не задевал оба.
+     Селекторы с идентификатором — потому что раскладка задаёт свои зазоры
+     тоже через идентификатор, и без него правило молча проигрывает. */
+  #main-menu .menu-pixel-frame-inner,
+  #main-menu .menu-diff-row,
+  #main-menu .menu-contract-row,
+  #map-screen .map-panel-actions,
+  #city-screen .npc-tabs,
+  #city-screen .trader-mode-tabs,
+  #inventory-screen .inv-hero-tabs,
+  #inventory-screen .item-detail-btns,
+  #battle-screen #action-buttons,
+  #battle-screen .skills-row,
+  #game-menu-overlay .game-menu-actions,
+  #gameover-screen .gameover-actions,
+  #victory-screen .victory-actions,
+  .game-dialog-btns { gap: 8px !important; }
+
+  /* Разделитель между «Обычная» и «Хардкор» был 1 px: это два разных
+     решения о партии, промах между ними заметят только после первого боя. */
+  #main-menu .menu-diff-sep { width: 8px; min-width: 8px; }
+
+  /* Вкладка героя в инвентаре была 42 px по ширине. */
+  #inventory-screen .inv-tab { min-width: 44px; }
+  /* «Закрыть» стояла в 5 px от «Надеть» и «Убрать». */
+  #inventory-screen #inv-backpack { gap: 8px; }
+}
+
+/* Кнопки главного меню стояли в 2 px друг от друга: рамка меню не была
+ * контейнером с зазором, и `gap` в ней ничего не значил. Только в просторных
+ * окнах — в компактных раскладка сама строит из рамки сетку в два столбца. */
+@media (min-height: 521px) {
+  #main-menu .menu-pixel-frame-inner {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * 3. Низкие окна (320 px высоты и ниже): пол 36 px.
+ *
+ * Эти окна — не выбор игрока, а остаток после шапки браузера и панели
+ * площадки. Полное правило здесь требует спрятать половину управления, что
+ * хуже кнопки в 36 px: палец по ней попадает, а по спрятанной — нет.
+ * ------------------------------------------------------------------------ */
+@media (max-height: 360px) and (orientation: landscape) {
+  .btn,
+  .menu-btn,
+  .menu-diff-btn,
+  .menu-contract-btn,
+  .npc-tab,
+  .trader-mode-tab,
+  .inv-tab,
+  .btn-buy,
+  .btn-sell,
+  .hero-heal-btn,
+  .ftue-coach-skip,
+  #btn-open-menu,
+  .battle-top-action,
+  #battle-log-toggle,
+  #btn-reroll-shop,
+  #battle-speed-toggle,
+  #perk-confirm-btn {
+    min-height: 36px !important;
+    box-sizing: border-box;
+  }
+  .skill-btn { min-width: 36px; min-height: 36px; box-sizing: border-box; }
+  #main-menu .menu-pixel-frame-inner,
+  #main-menu .menu-diff-row,
+  #main-menu .menu-contract-row,
+  #map-screen .map-panel-actions,
+  #city-screen .npc-tabs,
+  #city-screen .trader-mode-tabs,
+  #inventory-screen .inv-hero-tabs,
+  #inventory-screen .item-detail-btns,
+  #battle-screen #action-buttons,
+  #battle-screen .skills-row,
+  #game-menu-overlay .game-menu-actions,
+  #gameover-screen .gameover-actions,
+  #victory-screen .victory-actions,
+  .game-dialog-btns { gap: 6px !important; }
+  #main-menu .menu-diff-sep { width: 6px; min-width: 6px; }
+
+  /* Карточка товара в городе садилась до 16 px высоты: читать и попадать
+     было нечем. Пол ниже общего — выбор товара подтверждается кнопкой. */
+  #city-screen .item-card { min-height: 28px; }
+  /* Плитка карты в окне 568x260: сетка 96 клеток не даёт больше. */
+  #map-screen .map-node { min-width: 24px; min-height: 24px; }
+}
+
+/* --------------------------------------------------------------------------
+ * 4. Кегль: пол 10 px для всего, что игрок читает.
+ *
+ * Бейдж «BEST» на карточке предмета был 6 px, подписи итогового экрана — 8 px,
+ * служебные строки диалога истории — 9 px. На скриншоте это незаметно, потому
+ * что смотришь на картинку целиком, а не на надпись.
+ * ------------------------------------------------------------------------ */
+.inv-item-best-badge { font-size: 10px; }
+.map-fog-counter { font-size: 10px; }
+.map-legend { font-size: 10px; }
+#map-screen .map-node small { font-size: 10px; }
+
+/* Пол 10 px действует только в компактных окнах: мелкий кегль задан там
+ * внутри медиазапросов, местами с !important. На большом экране кегль поднимает
+ * typography.css до 12-16 px, и пол здесь стал бы потолком — проверка
+ * test-readability.mjs требует в меню не меньше 12 px.
+ */
+@media (orientation: landscape) and (max-height: 560px) {
+  /* Здесь мелкий кегль задан внутри медиазапросов, местами с !important:
+   * переопределять приходится так же, иначе правило молча проигрывает. */
+  #main-menu .menu-diff-label,
+  #main-menu .menu-diff-btn,
+  #main-menu #menu-contract-label,
+  #main-menu #menu-contract-copy,
+  #main-menu .menu-contract-btn,
+  #bestiary-screen .bestiary-card-copy,
+  #bestiary-screen .bestiary-card-copy small,
+  #arsenal-screen .bestiary-card-copy,
+  #arsenal-screen .bestiary-card-copy small,
+  #inventory-screen #btn-inv-equip-best,
+  #inventory-screen #btn-inv-perks,
+  #victory-screen .victory-topbar,
+  #victory-screen .victory-topbar span,
+  #gameover-screen .gameover-stat-label,
+  #gameover-screen .gameover-sub,
+  #story-modal .story-speaker,
+  #story-modal #story-kicker,
+  #story-modal #story-progress { font-size: 10px !important; }
+}

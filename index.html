@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="styles/combat-ui.css">
   <link rel="stylesheet" href="styles/readability.css">
   <link rel="stylesheet" href="styles/kit.css">
+  <link rel="stylesheet" href="styles/tap-targets.css">
   <script src="src/combat-preview.js"></script>
   <script src="src/map-topology.js"></script>
   <script src="src/leshy-boss.js"></script>
@@ -42,9 +43,12 @@
         <div id="menu-stars"></div>
         <div id="menu-ash" aria-hidden="true"></div>
 
+        <!-- Название игры в интерфейсе не живёт: оно утверждается последним и
+             меняется не по нашей воле, а переименование тянет за собой код,
+             словарь и промо. Имя есть только в <title> и в карточке площадки.
+             Герб — опознавательный знак без имени. -->
         <div style="position:relative;z-index:2;margin-bottom:0">
           <span class="menu-title-icon">⚔</span>
-          <span class="menu-title-main">THREE&nbsp;&nbsp;BLADES</span>
         </div>
 
         <div class="menu-pixel-frame" style="position:relative;z-index:2">
@@ -135,6 +139,9 @@
             Icons: game-icons.net by Lorc, Delapouite, sbed, CC BY 3.0, modified.
             Font: Press Start 2P by CodeMan38, SIL OFL 1.1.
           </p>
+          <!-- Номер версии в настройках: без него вопрос «что вы тестировали»
+               решается археологией по скриншотам. Значение — из GAME_VERSION. -->
+          <p class="menu-settings-hint" id="settings-version" data-i18n-skip>—</p>
           <button type="button" class="menu-btn menu-btn-continue" id="btn-menu-settings-back" style="margin-top:4px">
             <span class="menu-btn-icon">←</span>
             <span class="menu-btn-label">Back</span>

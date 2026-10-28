@@ -3973,6 +3973,9 @@
         if (settingSfxVolume) settingSfxVolume.value = String(Math.round(s.sfxVolume * 100));
         if (settingLanguage) settingLanguage.value = currentLanguage();
         updateRecordsSummary();
+        /* Строка версии рисуется здесь же: иначе она появлялась только после
+           смены языка, и у игрока с языком по умолчанию оставалось тире. */
+        updateStaticLabels();
         menuSettingsOverlay.classList.add('show');
         menuSettingsOverlay.setAttribute('aria-hidden', 'false');
         scheduleLocalize(menuSettingsOverlay);
