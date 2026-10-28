@@ -223,11 +223,12 @@ cannot afford its own tier or if income stops growing across the campaign.
 Region 1 lost half its battles, so its base experience rises from 30 to 42 per fight
 (`REGION_XP_BASE` 42 / 40 / 50). The party reaches level 5 — the level that unlocks all
 three ultimates — on exactly the last fight before the Leshy, which is where it stood
-before the act was shortened. Total campaign experience is 2684 against the 1400 needed to
-cap at level 8, and the cap now lands around the region 2 boss instead of mid-region-2.
+before the act was shortened. Total campaign experience is 2684.
 
-Raising the cap to 10 with capstones (design notes, section 2) is still the open item: at
-cap 8 the whole of region 3 grants no character progression, only purchases.
+> Запись оставлена как есть, но числа в ней устарели: потолок с тех пор поднят до
+> 10 уровня (2250 опыта), и раздел «Level cap 10 and branch capstones» ниже —
+> действующий. Старое требование 1400 ушло и из проверки: `balance-seeds.mjs`
+> теперь считает его из `HERO_LEVEL_CAP`, а не из числа в комментарии.
 
 ### Threat curve
 

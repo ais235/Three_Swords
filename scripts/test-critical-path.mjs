@@ -486,6 +486,46 @@ try {
   check('combat names current and next units', await page.locator('#turn-focus-banner:not(.hidden)').count() === 1 && (await page.locator('#turn-focus-banner').textContent())?.includes('→'));
   check('current hero card has a turn chip', await page.locator('.hero-card.active .hero-turn-chip').count() === 1);
 
+  // Мёртвое нажатие по врагу вне дальности: новичок первым делом жмёт по тому,
+  // кого хочет ударить. Раньше обработчик в этом случае заканчивался молча, и
+  // это читалось как «игра не реагирует».
+  const deadClick = await page.evaluate(() => {
+    const b = GameState.currentBattle;
+    const hero = b.units.find(unit => unit.isHero && unit.hp > 0);
+    const enemy = b.units.find(unit => !unit.isHero && unit.hp > 0);
+    if (!hero || !enemy) return { skipped: true };
+    /* Ставим врага гарантированно дальше дальности героя и не даём ходить, */
+    /* чтобы проверялся именно отказ, а не шаг навстречу. */
+    enemy.x = Math.min(GRID_W - 1, hero.x + hero.range + 3);
+    enemy.y = hero.y;
+    b.activeIndex = Math.max(0, b.order.indexOf(b.units.indexOf(hero)));
+    b.heroActionDone = false;
+    b.heroMoved = true;
+    b.pendingSkill = null;
+    b.mode = 'attack';
+    b.phase = 'combat';
+    const logBefore = (document.getElementById('battle-log')?.textContent || '').length;
+    const rect = canvasContentRect();
+    const canvasX = BattleView.offsetX + (enemy.x + 0.5) * CELL * BattleView.zoom;
+    const canvasY = BattleView.offsetY + (enemy.y + 0.5) * CELL * BattleView.zoom;
+    document.getElementById('battle-canvas').dispatchEvent(new MouseEvent('click', {
+      clientX: rect.left + canvasX * (rect.width / CANVAS_W),
+      clientY: rect.top + canvasY * (rect.height / CANVAS_H),
+      bubbles: true
+    }));
+    const strip = document.querySelector('.battle-tactical-strip');
+    return {
+      hint: b.deniedHint ? b.deniedHint.main + ' / ' + b.deniedHint.sub : null,
+      stripText: (strip?.textContent || '').replace(/s+/g, ' ').trim(),
+      stripTone: strip ? strip.className : '',
+      logGrew: (document.getElementById('battle-log')?.textContent || '').length > logBefore,
+      enemyHp: enemy.hp
+    };
+  });
+  check('dead click on an out-of-range enemy explains itself',
+    deadClick.skipped || (!!deadClick.hint && deadClick.logGrew && /bad/.test(deadClick.stripTone)
+      && deadClick.stripText.includes(deadClick.hint.split(' / ')[0])), JSON.stringify(deadClick));
+
   // Заклинание по области целится в клетку, а не в тело: смысл площадного удара
   // в том, чтобы встать между двумя монстрами. Раньше клик по пустой клетке
   // отсекался общей проверкой «под курсором должен быть враг».

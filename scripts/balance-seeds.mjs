@@ -415,10 +415,20 @@ if (!goldMultiplier || !bossGold || !finalGold || !xpBase || !itemPool.length) {
     return sum + (budget.mission + budget.arena) * base + budget.dungeon * (base + 20) +
       budget.boss * (base + 70) + budget.final * (base + 120);
   }, 0);
-  // Level 8 costs 50+100+...+350 = 1400 experience.
-  console.log(`Campaign experience ${totalXp} against 1400 needed for the level cap`);
-  if (totalXp < 1400) {
-    console.error(`FAIL campaign grants ${totalXp} experience, below the 1400 needed to cap`);
+  /* Требование берётся из самой игры, а не из числа в комментарии. Проверка
+     осталась с времён, когда потолок был 8 уровней: 1400 опыта. Потолок давно
+     10 — это 2250, — и прогон продолжал зеленеть, даже если бы последние два
+     уровня стали недостижимы. Мёртвое число врёт тише, чем мёртвый код. */
+  const levelCap = Number((index.match(/const HERO_LEVEL_CAP = (\d+)/) || [])[1]);
+  if (!levelCap) {
+    console.error('FAIL cannot read HERO_LEVEL_CAP from the game source');
+    process.exitCode = 1;
+  }
+  const xpToCap = Array.from({ length: Math.max(0, levelCap - 1) }, (_, i) => (i + 1) * 50)
+    .reduce((sum, step) => sum + step, 0);
+  console.log(`Campaign experience ${totalXp} against ${xpToCap} needed for level ${levelCap}`);
+  if (totalXp < xpToCap) {
+    console.error(`FAIL campaign grants ${totalXp} experience, below the ${xpToCap} needed to reach level ${levelCap}`);
     process.exitCode = 1;
   }
   if (!summaryOnly) console.table(economyRows);

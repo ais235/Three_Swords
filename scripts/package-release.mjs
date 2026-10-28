@@ -18,6 +18,20 @@ const forItch = process.argv.includes('--itch');
 const output = resolve(root, 'dist', forItch ? 'three-blades-itch' : 'three-blades');
 const index = readFileSync(resolve(root, 'index.html'), 'utf8');
 
+/* Версия сборки видна игроку строкой в настройках, и она же — ответ на вопрос
+ * «что вы тестировали». Два места, где она записана, разойдутся молча, поэтому
+ * упаковщик сверяет их и падает: лучше не собрать, чем выпустить сборку,
+ * которая называет себя чужим номером. */
+const declaredVersion = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).version;
+const shownVersion = (readFileSync(resolve(root, 'src/game-core.js'), 'utf8')
+  .match(/const GAME_VERSION = '([^']+)'/) || [])[1];
+if (!shownVersion) {
+  throw new Error('В src/game-core.js не найдено GAME_VERSION — игроку нечего показать');
+}
+if (shownVersion !== declaredVersion) {
+  throw new Error(`Версии расходятся: package.json ${declaredVersion}, GAME_VERSION ${shownVersion}`);
+}
+
 rmSync(output, { recursive: true, force: true });
 mkdirSync(output, { recursive: true });
 
@@ -137,5 +151,5 @@ writeFileSync(resolve(output, 'runtime-assets.json'), `${JSON.stringify({
   assets: manifest
 }, null, 2)}\n`);
 
-console.log(`Release ready (${forItch ? 'itch.io' : 'Яндекс Игры'}): ${output}`);
+console.log(`Release ready (${forItch ? 'itch.io' : 'Яндекс Игры'}) версия ${declaredVersion}: ${output}`);
 console.log(`Files: ${manifest.length}; unpacked: ${(totalBytes / 1024 / 1024).toFixed(1)} MB`);

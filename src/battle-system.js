@@ -4431,6 +4431,46 @@
     }
   }
 
+  /**
+   * Мёртвое нажатие по врагу — самое частое первое действие новичка: он жмёт
+   * по тому, кого хочет ударить, а не по кнопке. До этого клик по врагу вне
+   * дальности не делал ничего и ничего не говорил, и игрок считал игру
+   * сломанной. Отказ теперь объясняет себя: строка в тактической полосе на
+   * 2.5 с, запись в журнале боя и звук отказа.
+   */
+  const DENY_HINT_MS = 2500;
+  function denyHeroAction(b, u, target) {
+    if (!b || !u) return;
+    let main = translateKey('attackOut');
+    let sub = translateKey('denyMoveCloser') + ': ' + (u.range || 1);
+    if (b.heroActionDone) {
+      main = translateKey('turnDone');
+      sub = translateKey('denyActionDone');
+    } else if (u.activeStatuses && u.activeStatuses.find(st => st.type === STATUS.BLIND)) {
+      main = translateKey('attackBlocked');
+      sub = translateKey('denyBlind');
+    } else if (target) {
+      const preview = heroDamagePreview(b, u, target);
+      if (preview && preview.blocked === translateKey('blockedLine')) {
+        main = translateKey('attackBlocked');
+        sub = translateKey('denyFindLine');
+      } else {
+        const dist = unitDistance(u, target);
+        sub = translateKey('denyMoveCloser') + ': ' + (u.range || 1) + ' / ' + dist;
+      }
+    }
+    b.deniedHint = { main, sub, at: Date.now() };
+    pushBattleLog(main + ' — ' + sub, 'status');
+    if (typeof BattleSfx !== 'undefined' && BattleSfx.denied) BattleSfx.denied();
+    updateBattleUI();
+    setTimeout(() => {
+      if (GameState.currentBattle === b && b.deniedHint && Date.now() - b.deniedHint.at >= DENY_HINT_MS) {
+        b.deniedHint = null;
+        updateBattleUI();
+      }
+    }, DENY_HINT_MS + 50);
+  }
+
   function battleActionHintHtml(b, u) {
     if (!b || !u || !u.isHero || b.phase !== 'combat') return '';
     const summary = heroAttackSummary(b, u);
@@ -4438,7 +4478,11 @@
     let main = translateKey('noTargets');
     let sub = translateKey('skipOrMove');
 
-    if (b.heroActionDone) {
+    if (b.deniedHint && Date.now() - b.deniedHint.at < DENY_HINT_MS) {
+      tone = 'bad';
+      main = b.deniedHint.main;
+      sub = b.deniedHint.sub;
+    } else if (b.heroActionDone) {
       tone = 'good';
       main = translateKey('turnDone');
       sub = translateKey('enemyTurn');
@@ -4849,14 +4893,10 @@
           performHeroAttack(u, clickedUnit);
           return;
         }
-        // Enemy out of range but hero can still move — try to move closer
-        if (!b.heroMoved && !blind) {
-          const reach = floodReachable(b, u);
-          if (reach[gx + ',' + gy] !== undefined) {
-            // Moving onto enemy cell is not valid, but we can move adjacent
-            // fallthrough to movement below
-          }
-        }
+        // Враг вне дальности: встать на его клетку нельзя, и дальше
+        // обработчик молча заканчивался. Объясняем отказ вместо тишины.
+        denyHeroAction(b, u, clickedUnit);
+        return;
       }
       // Click on empty reachable cell => move
       if (isEmpty && !b.heroMoved && !blind) {
@@ -4876,8 +4916,11 @@
           return;
         }
       }
-      // Click on empty cell when already moved => do nothing
-      if (isEmpty && b.heroMoved) return;
+      // Ослеплённый герой: нажатие по врагу тоже заканчивалось тишиной.
+      if (isEnemy && blind) { denyHeroAction(b, u, clickedUnit); return; }
+      // Пустая клетка, когда герой уже ходил, или клетка вне хода: отказ
+      // объясняет, почему шаг не случился.
+      if (isEmpty && (b.heroMoved || blind)) { denyHeroAction(b, u, null); return; }
     }
 
     if (b.mode === 'move' && !b.heroMoved && !blind) {
