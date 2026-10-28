@@ -32,7 +32,7 @@ mkdirSync(outDir, { recursive: true });
 /** Кадры карточки: что именно продаёт игру. Порядок — порядок в галерее. */
 const SHOTS = [
   { state: 'battle-combat', name: '1-battle', note: 'тактический бой на сетке' },
-  { state: 'map-selected', name: '2-map', note: 'карта похода и выбор маршрута' },
+  { state: 'map-selected', name: '2-map', note: 'карта похода и выбор маршрута', midRun: true },
   { state: 'city-trader-buy', name: '3-city', note: 'город, торговец, снаряжение' },
   { state: 'perk-modal', name: '4-perks', note: 'ветки развития героя' },
   { state: 'victory', name: '5-victory', note: 'добыча и рост после боя' }
@@ -69,6 +69,21 @@ if (wantShots) {
       document.querySelectorAll('#battle-coach-overlay, .onboarding-tip, #onboarding-modal')
         .forEach(el => el.classList.add('hidden'));
     });
+    /* Кадр карты снимался с полностью снятым туманом, и девять десятых сетки
+       были пустыми тёмными клетками: снимок читался как незагрузившийся экран,
+       а не как карта похода. Игрок столько сразу не видит никогда. Возвращаем
+       туман на дальнюю часть региона и отмечаем пройденное — это середина
+       похода, то состояние, ради которого карту и показывают. */
+    if (shot.midRun) {
+      await page.evaluate(() => {
+        const open = GameState.mapGrid.filter(cell => cell.region === 1 && cell.y <= 1);
+        GameState.mapFogVisited = [];
+        open.forEach(cell => mapFogVisitedAdd(cell.y, cell.x));
+        open.slice(0, Math.ceil(open.length / 2)).forEach(cell => { cell.visited = true; cell.completed = true; });
+        renderMap();
+      });
+      await page.waitForTimeout(300);
+    }
     await page.waitForTimeout(300);
     await page.screenshot({ path: resolve(outDir, `${shot.name}.png`) });
     console.log(`снимок  ${shot.name}.png  — ${shot.note}`);
