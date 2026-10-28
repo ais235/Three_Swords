@@ -35,6 +35,7 @@
     "audio:compress": "node scripts/compress-audio.mjs",
     "images:compress": "node scripts/compress-images.mjs",
     "cover": "node scripts/make-itch-cover.mjs",
+    "media:itch": "node scripts/make-itch-media.mjs",
     "test:tap": "node scripts/test-tap-targets.mjs",
     "test:tap:langs": "node scripts/test-tap-langs.mjs",
     "music": "node scripts/make-music.mjs",
