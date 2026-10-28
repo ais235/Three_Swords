@@ -37,7 +37,8 @@
     "cover": "node scripts/make-itch-cover.mjs",
     "test:tap": "node scripts/test-tap-targets.mjs",
     "test:tap:langs": "node scripts/test-tap-langs.mjs",
-    "music": "node scripts/make-music.mjs"
+    "music": "node scripts/make-music.mjs",
+    "zip:itch": "node scripts/pack-itch-zip.mjs"
   },
   "keywords": [],
   "author": "",

@@ -26,12 +26,17 @@ const chromePath = process.env.CHROME_PATH || String.raw`C:\Program Files\Google
 const args = process.argv.slice(2);
 const wantShots = !args.includes('--video');
 const wantVideo = !args.includes('--shots');
+/* Язык кадров. Карточка площадки английская, поэтому по умолчанию английский:
+   скриншот на чужом языке читается как «игра не для меня». PROMO_LANG=ru даёт
+   русские кадры для своих разборов. */
+const promoLang = process.env.PROMO_LANG || 'en';
+const promoLocale = promoLang === 'ru' ? 'ru-RU' : promoLang === 'es' ? 'es-ES' : 'en-US';
 const outDir = resolve(root, 'artifacts/promo');
 mkdirSync(outDir, { recursive: true });
 
 /** Кадры карточки: что именно продаёт игру. Порядок — порядок в галерее. */
 const SHOTS = [
-  { state: 'battle-combat', name: '1-battle', note: 'тактический бой на сетке' },
+  { state: 'battle-combat', name: '1-battle', note: 'тактический бой на сетке', battleStaged: true },
   { state: 'map-selected', name: '2-map', note: 'карта похода и выбор маршрута', midRun: true },
   { state: 'city-trader-buy', name: '3-city', note: 'город, торговец, снаряжение' },
   { state: 'perk-modal', name: '4-perks', note: 'ветки развития героя' },
@@ -57,7 +62,7 @@ if (wantShots) {
     const context = await browser.newContext({
       viewport: { width: 1360, height: 765 },
       deviceScaleFactor: 1920 / 1360,
-      locale: 'ru-RU'
+      locale: promoLocale
     });
     const page = await context.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -74,6 +79,34 @@ if (wantShots) {
        а не как карта похода. Игрок столько сразу не видит никогда. Возвращаем
        туман на дальнюю часть региона и отмечаем пройденное — это середина
        похода, то состояние, ради которого карту и показывают. */
+    if (shot.battleStaged) {
+      await page.evaluate(() => {
+        const b = GameState.currentBattle;
+        if (!b) return;
+        const heroes = b.units.filter(u => u.isHero && u.hp > 0);
+        const enemies = b.units.filter(u => !u.isHero && u.hp > 0);
+        /* Воин впереди, лучница и маг уступом позади — читаемый строй. */
+        const spots = [[4, 3], [2, 2], [2, 5]];
+        heroes.forEach((hero, i) => {
+          const spot = spots[i] || spots[0];
+          hero.x = spot[0];
+          hero.y = spot[1];
+        });
+        /* Враги — напротив, на расстоянии удара и выстрела. */
+        const enemySpots = [[5, 3], [6, 2], [6, 5], [7, 4]];
+        enemies.slice(0, 4).forEach((enemy, i) => {
+          enemy.x = enemySpots[i][0];
+          enemy.y = enemySpots[i][1];
+        });
+        b.activeIndex = Math.max(0, b.order.indexOf(b.units.indexOf(heroes[0])));
+        b.heroActionDone = false;
+        b.heroMoved = true;
+        b.mode = 'skill';
+        b.pendingSkill = 'shieldBash';
+        updateBattleUI();
+      });
+      await page.waitForTimeout(400);
+    }
     if (shot.midRun) {
       await page.evaluate(() => {
         const open = GameState.mapGrid.filter(cell => cell.region === 1 && cell.y <= 1);
@@ -99,7 +132,7 @@ if (wantVideo) {
   const browser = await launch();
   const context = await browser.newContext({
     viewport: { width: 1280, height: 720 },
-    locale: 'ru-RU',
+    locale: promoLocale,
     recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } }
   });
   const page = await context.newPage();
