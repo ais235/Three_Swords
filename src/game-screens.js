@@ -61,7 +61,7 @@
     const lang = currentLanguage();
     if (lang === 'en') return [
       {
-        icon: '🗺️', title: 'THE ROAD OF THREE BLADES', subtitle: 'The path is yours now',
+        icon: '🗺️', title: 'THE ROAD AHEAD', subtitle: 'The path is yours now',
         text: 'The first blood has been spilled. From here, choose one of the neighboring trails: each may lead to battle, shelter, treasure, or trouble.',
         tips: [['Follow the marks', 'Select one of the available neighboring locations to advance.'], ['Prepare', 'Towns offer healing, equipment, and supplies before harder battles.']]
       },
@@ -73,7 +73,7 @@
     ];
     if (lang === 'es') return [
       {
-        icon: '🗺️', title: 'LA SENDA DE LAS TRES ESPADAS', subtitle: 'Ahora el camino es tuyo',
+        icon: '🗺️', title: 'EL CAMINO POR DELANTE', subtitle: 'Ahora el camino es tuyo',
         text: 'La primera sangre ya se ha derramado. Desde aquí, elige una senda cercana: puede llevar a una batalla, un refugio, un tesoro o un peligro.',
         tips: [['Sigue las señales', 'Elige una ubicación cercana disponible para avanzar.'], ['Prepárate', 'En las ciudades puedes curarte y comprar equipo y provisiones.']]
       },
@@ -85,7 +85,7 @@
     ];
     return [
       {
-        icon: '🗺️', title: 'ТРОПА ТРЁХ КЛИНКОВ', subtitle: 'Теперь путь выбираете вы',
+        icon: '🗺️', title: 'ДОРОГА ВПЕРЁД', subtitle: 'Теперь путь выбираете вы',
         text: 'Первая кровь пролита. Отныне выбирайте одну из соседних троп: за ней может ждать битва, приют, добыча или беда.',
         tips: [['Следуйте знакам', 'Чтобы продолжить поход, выберите одну из доступных соседних точек.'], ['Готовьтесь', 'В городах можно вылечиться, купить снаряжение и пополнить припасы.']]
       },
@@ -132,7 +132,7 @@
           ]
         },
         finale: {
-          kicker: 'ЭПИЛОГ', title: 'Рассвет трёх клинков',
+          kicker: 'ЭПИЛОГ', title: 'Рассвет после войны',
           lines: [
             ['garet', 'Гарет', 'Тёмный Лорд повержен. Его крепость рушится — пора уходить, пока камни не погребли нашу победу.'],
             ['seris', 'Сэрис', 'Магия печатей исчезла. Лес, глубины и руины больше не связаны его волей. Мир снова принадлежит живым.'],
@@ -154,7 +154,7 @@
           ['seris','Seris','The ruins have released us. Three seals are broken, and the Dark Lord\'s fortress is taking shape beyond the mist.'],
           ['alira','Alira','There is no road back. But for the first time, our enemy fears us more than we fear him.'],
           ['garet','Garet','Three blades have reached the end of the road. Check your gear—we finish this war now.'] ] },
-        finale: { kicker:'EPILOGUE', title:'Dawn of the Three Blades', lines:[
+        finale: { kicker:'EPILOGUE', title:'Dawn After the War', lines:[
           ['garet','Garet','The Dark Lord is defeated. His fortress is collapsing—move, before the stones bury our victory.'],
           ['seris','Seris','The seals are gone. Forest, depths, and ruins are no longer bound to his will. The world belongs to the living again.'],
           ['alira','Alira','Then let us return home as people, not legends. Though I would keep one good song about the three blades.'],
@@ -173,7 +173,7 @@
           ['seris','Seris','Las ruinas nos han liberado. Los tres sellos están rotos y la fortaleza del Señor Oscuro aparece entre la niebla.'],
           ['alira','Alira','Ya no hay vuelta atrás. Pero por primera vez el enemigo nos teme más de lo que nosotros le tememos.'],
           ['garet','Garet','Las tres espadas llegaron al final del camino. Revisad el equipo: hoy terminamos esta guerra.'] ] },
-        finale: { kicker:'EPÍLOGO', title:'El alba de las tres espadas', lines:[
+        finale: { kicker:'EPÍLOGO', title:'El alba tras la guerra', lines:[
           ['garet','Garet','El Señor Oscuro ha caído. Su fortaleza se derrumba; salgamos antes de que las piedras entierren la victoria.'],
           ['seris','Seris','Los sellos desaparecieron. El bosque, las profundidades y las ruinas ya no obedecen su voluntad.'],
           ['alira','Alira','Volvamos a casa como personas, no como leyendas. Aunque conservaría una buena canción sobre las tres espadas.'],

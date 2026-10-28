@@ -130,7 +130,10 @@ h1 { font-size: 1.1rem; color: var(--accent-gold); margin: 0 0 var(--space-4); d
 .bar-fill-mp { background: var(--accent-blue); height: 100%; border-radius: var(--radius); transition: width .2s; }
 .hero-mini-stats { font-size: var(--font-xs); color: var(--text-dim); margin: 3px 0 var(--space-1); letter-spacing: 0.5px; }
 .skills-row { display: flex; gap: 3px; margin-top: var(--space-2); flex-wrap: wrap; }
-.skill-btn { width: 22px; height: 22px; border-radius: var(--radius); border: var(--surface-border); font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--surface-bg); padding: 0; }
+/* Значок готовности умения в карточке героя. Не кнопка: обработчика у него
+   нет, нажимают умения в правой панели боя. Курсор-руку убрали — она обещала
+   нажатие, которого не происходит. */
+.skill-btn { width: 22px; height: 22px; border-radius: var(--radius); border: var(--surface-border); font-size: 11px; display: flex; align-items: center; justify-content: center; cursor: default; background: var(--surface-bg); padding: 0; }
 .skill-btn.ready { border-color: var(--accent-blue); }
 .skill-btn.used { opacity: 0.3; }
 

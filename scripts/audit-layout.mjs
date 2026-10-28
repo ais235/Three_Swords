@@ -235,6 +235,58 @@ function enemyBehaviorSnippetsPresent() {
   return snippets.every(snippet => index.includes(snippet));
 }
 
+/**
+ * Названия игры в заголовках интерфейса нет.
+ *
+ * Имя утверждается последним и меняется не по нашей воле: переименование
+ * тянет за собой код, словарь перевода, скриншоты и промо. Поэтому оно живёт
+ * только в <title> страницы и в карточке площадки. 28.10.2026 живой прогон
+ * нашёл его в трёх местах, которых не проверял никто: заголовок обучения,
+ * вступление к карте и заголовок эпилога — на всех трёх языках.
+ *
+ * Проверяются только ЗАГОЛОВКИ (title, kicker, subtitle, ключи *Title).
+ * Реплики героев не проверяются: «три клинка дошли до конца пути» — это про
+ * них самих, а не вывеска, и переписывать прозу под правило нельзя.
+ */
+function gameNameIsAbsentFromLabels() {
+  const core = readFileSync(resolve(root, 'src/game-core.js'), 'utf8');
+  const pageTitle = core.match(/pageTitle:\s*\{([^}]*)\}/);
+  if (!pageTitle) {
+    console.error('  в src/game-core.js не найден ключ pageTitle — не из чего строить проверку');
+    return false;
+  }
+  /* Отличительный корень имени на каждом языке — самое длинное слово названия,
+     обрезанное до пяти букв: так «клинка», «клинков» и «клинки» ловятся
+     одинаково. Берём именно его, а не все слова: «три», «three» и «tres» —
+     обычные слова, и «Три роли» названием игры не являются. */
+  const roots = [...pageTitle[1].matchAll(/'([^']+)'/g)]
+    .map(match => match[1].toLowerCase().split(/\s+/)
+      .reduce((longest, word) => (word.length > longest.length ? word : longest), ''))
+    .filter(word => word.length >= 5)
+    .map(word => word.slice(0, 5));
+  if (!roots.length) {
+    console.error('  не удалось разобрать pageTitle на слова');
+    return false;
+  }
+  const found = [];
+  for (const file of ['src/game-core.js', 'src/game-screens.js', 'src/battle-system.js', 'index.html']) {
+    const text = readFileSync(resolve(root, file), 'utf8');
+    const labels = [
+      ...text.matchAll(/\b(?:title|kicker|subtitle)\s*:\s*'([^']{3,120})'/g),
+      ...text.matchAll(/\b\w*Title\d?\s*:\s*\{([^}]{3,400})\}/g)
+    ];
+    for (const label of labels) {
+      if (/pagetitle/.test(label[0].toLowerCase())) continue;
+      const value = label[1].toLowerCase();
+      if (roots.some(rootWord => value.includes(rootWord))) {
+        found.push(`${file}: «${label[1].trim().slice(0, 70)}»`);
+      }
+    }
+  }
+  found.forEach(item => console.error(`  название игры в заголовке интерфейса — ${item}`));
+  return found.length === 0;
+}
+
 const checks = [
   ['index.html exists', () => existsSync(indexPath)],
   ['runtime is split into ordered subsystem scripts', () => runtimeScriptPaths.every(existsSync) && runtimeScriptPaths.length === GAME_RUNTIME_SCRIPTS.length],
@@ -348,6 +400,7 @@ const checks = [
   ,['long press does not open the system callout', longPressCalloutIsBlocked]
   ,['regional story scenes and epilogue are present', () => index.includes("region1: {") && index.includes("region2: {") && index.includes("region3: {") && index.includes("finale: {") && index.includes('showStoryScene')]
   ,['story dialogue uses packaged hero portraits', () => storyPortraitPaths.every(imageExists) && imageReferenced(index, 'assets/portraits/garet-dialog.png') && index.includes('story-portrait')]
+  ,['название игры не попало в заголовки интерфейса', gameNameIsAbsentFromLabels]
   ,['full campaign release test is present', () => existsSync(fullCampaignTestPath) && readFileSync(resolve(root, 'package.json'), 'utf8').includes('test:campaign')]
 ];
 

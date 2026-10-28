@@ -53,7 +53,16 @@
  * 26 px, это было незаметно; на 44 px ряд умений уехал за карточку, и внизу
  * окна 1280x720 кнопки оказались вне экрана. Высоту отдаёт боковая панель,
  * которая умеет прокручиваться, а карточка растёт под содержимое. */
-#battle-screen .battle-left .hero-card { flex: 0 0 auto; overflow: visible; }
+#battle-screen .battle-left .hero-card {
+  /* 1 1 auto с min-height:min-content: карточки делят колонку поровну, пока
+     места хватает (полосы прокрутки не появляется), и растут под содержимое,
+     когда ряд умений в них не влезает — тогда прокручивается колонка. При
+     flex:1 1 0 карточка клипала свои же кнопки, при 0 0 auto полоса
+     прокрутки появлялась всегда. */
+  flex: 1 1 auto;
+  min-height: min-content;
+  overflow: visible;
+}
 
 /* Правая панель боя прокручивалась только в компактных окнах. В 1280x720 —
  * том самом окне, в котором игра едет на itch, — «Ждать» уходила на 16 px за
@@ -109,12 +118,6 @@
     box-sizing: border-box;
   }
 
-  /* Кнопка умения — квадрат: полом ей нужны обе стороны. */
-  .skill-btn {
-    min-width: 44px;
-    min-height: 44px;
-    box-sizing: border-box;
-  }
 
   /* Зазор между соседними действиями: 8 px, чтобы палец не задевал оба.
      Селекторы с идентификатором — потому что раскладка задаёт свои зазоры
@@ -194,7 +197,6 @@
     min-height: 36px !important;
     box-sizing: border-box;
   }
-  .skill-btn { min-width: 36px; min-height: 36px; box-sizing: border-box; }
   #main-menu .menu-pixel-frame-inner,
   #main-menu .menu-diff-row,
   #main-menu .menu-contract-row,

@@ -600,13 +600,53 @@ try {
     b.heroActionDone = false;
     updateBattleUI();
   });
+  /**
+   * Дождаться тишины в бою.
+   *
+   * Предыдущий блок заканчивает ход героя, и ответ врагов доигрывает сам —
+   * с задержками и перерисовкой панели действий. Нажатие, пришедшееся на
+   * такую перерисовку, пропадает: браузер засчитывает click, только если
+   * mousedown и mouseup попали в один элемент. Проверка падала примерно
+   * раз из двух, и это была её собственная нерасторопность, а не дефект
+   * игры: она судила сцену, которая ещё не устоялась.
+   */
+  const awaitBattleIdle = async () => {
+    await page.waitForFunction(() => {
+      const panel = document.getElementById('action-buttons');
+      if (!panel) return false;
+      const now = panel.innerHTML;
+      const stable = window.__idleProbe && window.__idleProbe.html === now
+        && performance.now() - window.__idleProbe.at > 400;
+      if (!window.__idleProbe || window.__idleProbe.html !== now) {
+        window.__idleProbe = { html: now, at: performance.now() };
+      }
+      return stable;
+    }, null, { timeout: 15000 });
+    await page.evaluate(() => { delete window.__idleProbe; });
+  };
+  await awaitBattleIdle();
+  await page.evaluate(() => {
+    const b = GameState.currentBattle;
+    const garet = b.units.find(unit => unit.isHero && unit.heroId === 'garet');
+    b.order = [b.units.indexOf(garet)];
+    b.activeIndex = 0;
+    b.phase = 'combat';
+    b.selected = garet;
+    b.mode = 'attack';
+    b.pendingSkill = null;
+    b.heroActionDone = false;
+    updateBattleUI();
+  });
+  await awaitBattleIdle();
   const shieldSkill = page.locator('#sk-shield');
   await shieldSkill.click();
+  await awaitBattleIdle();
   const selectedSkill = await page.evaluate(() => {
     const b = GameState.currentBattle;
     return { pending: b.pendingSkill, mode: b.mode, selected: document.querySelector('#sk-shield')?.classList.contains('is-selected') };
   });
   await page.locator('#sk-shield').click();
+  await awaitBattleIdle();
   const cancelledSkill = await page.evaluate(() => {
     const b = GameState.currentBattle;
     return { pending: b.pendingSkill, mode: b.mode, actionDone: b.heroActionDone, cooldown: getActiveUnit().cds.shieldBash, selected: document.querySelector('#sk-shield')?.classList.contains('is-selected') };

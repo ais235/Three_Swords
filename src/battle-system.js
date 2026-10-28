@@ -4442,7 +4442,7 @@
   function denyHeroAction(b, u, target) {
     if (!b || !u) return;
     let main = translateKey('attackOut');
-    let sub = translateKey('denyMoveCloser') + ': ' + (u.range || 1);
+    let sub = translateKey('denyMoveCloser') + ' ' + (u.range || 1);
     if (b.heroActionDone) {
       main = translateKey('turnDone');
       sub = translateKey('denyActionDone');
@@ -4456,7 +4456,7 @@
         sub = translateKey('denyFindLine');
       } else {
         const dist = unitDistance(u, target);
-        sub = translateKey('denyMoveCloser') + ': ' + (u.range || 1) + ' / ' + dist;
+        sub = translateKey('denyMoveCloser') + ' ' + (u.range || 1) + ', ' + translateKey('denyOf') + ' ' + dist;
       }
     }
     b.deniedHint = { main, sub, at: Date.now() };
@@ -4464,10 +4464,18 @@
     if (typeof BattleSfx !== 'undefined' && BattleSfx.denied) BattleSfx.denied();
     updateBattleUI();
     setTimeout(() => {
-      if (GameState.currentBattle === b && b.deniedHint && Date.now() - b.deniedHint.at >= DENY_HINT_MS) {
-        b.deniedHint = null;
-        updateBattleUI();
-      }
+      if (GameState.currentBattle !== b || !b.deniedHint) return;
+      if (Date.now() - b.deniedHint.at < DENY_HINT_MS) return;
+      b.deniedHint = null;
+      /* Гасим подсказку точечно, а не через updateBattleUI: тот переписывает
+         панель действий целиком, и нажатие, которое игрок делает ровно в этот
+         момент, пропадает — браузер засчитывает click, только если mousedown и
+         mouseup пришлись на один элемент. Проверка «второе нажатие возвращает
+         обычную атаку» падала из-за этого примерно раз из двух: таймер от
+         предыдущего отказа срабатывал посреди следующих нажатий. */
+      const strip = document.querySelector('.battle-tactical-strip');
+      const unit = getActiveUnit();
+      if (strip && unit) strip.outerHTML = battleActionHintHtml(b, unit);
     }, DENY_HINT_MS + 50);
   }
 
@@ -4535,6 +4543,7 @@
    * записанной строкой делает перерисовку холостой, когда менять нечего.
    * Кэш обновляют ВСЕ места, которые пишут в панель, иначе он разойдётся с DOM. */
   let lastActionsHtml = null;
+
   function setActionsHtml(actions, html) {
     if (!actions) return;
     // Пустая панель при непустой разметке означает, что DOM тронули мимо кэша:
