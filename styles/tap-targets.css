@@ -138,6 +138,18 @@
      решения о партии, промах между ними заметят только после первого боя. */
   #main-menu .menu-diff-sep { width: 8px; min-width: 8px; }
 
+  /* Строка сложности не вмещала название кнопки: подпись и две кнопки стояли
+     в один ряд, и «Хардкор» обрезался на 3 px, Hardcore — на 22, Difícil —
+     на 9. Подпись уходит на свою строку, как в блоке контракта ниже, и
+     кнопки делят всю ширину — места хватает на любом из трёх языков. */
+  #main-menu .menu-diff-row { flex-wrap: wrap; }
+  #main-menu .menu-diff-label {
+    flex: 1 0 100%;
+    border-right: 0;
+    padding-bottom: 0;
+  }
+  #main-menu .menu-diff-btn { flex: 1 1 0; min-width: 0; }
+
   /* Вкладка героя в инвентаре была 42 px по ширине. */
   #inventory-screen .inv-tab { min-width: 44px; }
   /* «Закрыть» стояла в 5 px от «Надеть» и «Убрать». */
@@ -244,4 +256,46 @@
   #story-modal .story-speaker,
   #story-modal #story-kicker,
   #story-modal #story-progress { font-size: 10px !important; }
+}
+
+/* --------------------------------------------------------------------------
+ * 5. Длинное слово в узкой колонке.
+ *
+ * Плитка перка на 1024x640 даёт тексту 53 px ширины, а английское
+ * «Permanent:» просит 72. Перенос был запрещён (`overflow-wrap: normal`,
+ * `hyphens: none`), и слово просто печаталось поверх соседней плитки — на
+ * русском этого не видно, потому что слова короче. Разрешаем перенос, но
+ * только вместе с переносом по слогам: без него «ОБСИДИАНОВЫЕ» рвётся на
+ * «ОБСИДИАНОВ/ЫЕ» и читается как поломка, а с ним получается типографика.
+ *
+ * Именно break-word, а не anywhere: anywhere разрешает колонке сжаться до
+ * ширины одной буквы, и тогда рвутся даже те слова, которые помещались —
+ * «Критический» превращался в «Критически/й» на русском, где до правки
+ * обрезки не было вовсе.
+ * Язык для расстановки переносов берётся из `html lang`, который ставит
+ * localizeUI при каждой смене языка.
+ * ------------------------------------------------------------------------ */
+#perk-modal .perk-skill-name,
+#perk-modal .perk-skill-summary,
+#city-screen .card-stat,
+#city-screen .card-desc,
+#city-screen .card-footer,
+#city-screen .card-body {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Подписи кнопок в самых узких окнах: «Покупка» просит 77 px при колонке в 62,
+ * «Cancelar» — на 8 px больше кнопки. Надпись переносится и, если нужно, рвётся
+ * по слогам, вместо того чтобы печататься за краем кнопки. */
+@media (orientation: landscape) and (max-height: 430px) {
+  #city-screen .trader-mode-tab,
+  #city-screen .npc-tab,
+  .game-dialog-btns .btn,
+  #game-prompt-modal .btn {
+    white-space: normal;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.2;
+  }
 }

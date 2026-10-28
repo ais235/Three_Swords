@@ -170,7 +170,29 @@ const MEASURE = ({ minTap, minGap, minFont, minSelect, selectOnly }) => {
     if (size < minFont - 0.01) tiny.push(`${label(el)} ${size.toFixed(0)}px`);
   }
 
-  /* 4. За краем и докрутить нельзя. */
+  /* 4. Обрезанный текст: надпись шире своей коробки.
+
+     Проверка раскладки по рамкам этого не видит — коробка на месте, а буквы
+     из неё вылезли. И ловится это только на том языке, на котором гоняют:
+     «Хардкор» обрезался на 3 px, Hardcore — на 22, Difícil — на 9, а прогон
+     шёл по-русски. Намеренные усечения (ellipsis, line-clamp) исключены,
+     порог 4 px — иначе хвостовой межбуквенный интервал даёт шум. */
+  const clipped = [];
+  for (const el of document.querySelectorAll('button, a, span, div, p, small, strong, h1, h2, h3, h4, li, td')) {
+    if (el.children.length || hiddenScreen(el) || !visible(el)) continue;
+    const text = (el.textContent || "").trim();
+    if (!/[A-Za-zА-Яа-яЁё0-9]/.test(text)) continue;
+    const style = getComputedStyle(el);
+    if (style.textOverflow === 'ellipsis' || style.webkitLineClamp !== 'none') continue;
+    if (/(auto|scroll)/.test(style.overflowX + style.overflowY)) continue;
+    const overflowX = el.scrollWidth - el.clientWidth;
+    const overflowY = el.scrollHeight - el.clientHeight;
+    if (overflowX > 4 || overflowY > 4) {
+      clipped.push(`${label(el)} ${overflowX > 4 ? "по ширине +" + overflowX : "по высоте +" + overflowY}px`);
+    }
+  }
+
+  /* 5. За краем и докрутить нельзя. */
   const scrollableAncestor = el => {
     let node = el.parentElement;
     while (node && node !== document.body) {
@@ -193,6 +215,7 @@ const MEASURE = ({ minTap, minGap, minFont, minSelect, selectOnly }) => {
     small: unique(small),
     gaps: unique(gaps),
     tiny: unique(tiny),
+    clipped: unique(clipped),
     unreachable: unique(unreachable)
   };
 };
@@ -245,6 +268,7 @@ try {
       check(`${tag} ${state}: нажимаемое не мельче ${windowTap}px`, found.small.length === 0, found.small.join('; '));
       check(`${tag} ${state}: зазор не меньше ${MIN_GAP}px`, found.gaps.length === 0, found.gaps.slice(0, 8).join('; '));
       check(`${tag} ${state}: текст не мельче ${MIN_FONT}px`, found.tiny.length === 0, found.tiny.join('; '));
+      check(`${tag} ${state}: текст не обрезан`, found.clipped.length === 0, found.clipped.slice(0, 8).join('; '));
       check(`${tag} ${state}: всё нажимаемое достижимо`, found.unreachable.length === 0, found.unreachable.join('; '));
     }
     await context.close();

@@ -35,7 +35,8 @@
     "audio:compress": "node scripts/compress-audio.mjs",
     "images:compress": "node scripts/compress-images.mjs",
     "cover": "node scripts/make-itch-cover.mjs",
-    "test:tap": "node scripts/test-tap-targets.mjs"
+    "test:tap": "node scripts/test-tap-targets.mjs",
+    "test:tap:langs": "node scripts/test-tap-langs.mjs"
   },
   "keywords": [],
   "author": "",
