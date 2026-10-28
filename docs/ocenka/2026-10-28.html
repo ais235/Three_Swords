@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Готовность «Три клинка / Three Blades»</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Лист техосмотра: вердикт и узкое место сверху, карта 40 клеток, приоритеты, разбор по блокам. */
+:root {
+  --bg: #eef1f3; --surface: #ffffff; --ink: #17212a; --muted: #586674; --line: #d5dce2; --accent: #0f6b70;
+  --s-none: #e3e8ec; --s0: #c63f2c; --s1: #d9822b; --s2: #c5a020; --s3: #4f9a47; --s4: #1d7558;
+  --on-score: #ffffff; --on-pale: #17212a;
+  --f-display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --f-body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12171c; --surface: #1a2128; --ink: #e4e9ee; --muted: #93a1ae; --line: #2c3640; --accent: #4fb3b8;
+  --s-none: #26303a; --s0: #d8573f; --s1: #e0923e; --s2: #cdae3a; --s3: #5fae56; --s4: #2f9873;
+  --on-score: #0f1418; --on-pale: #e4e9ee; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12171c; --surface: #1a2128; --ink: #e4e9ee; --muted: #93a1ae; --line: #2c3640; --accent: #4fb3b8;
+  --s-none: #26303a; --s0: #d8573f; --s1: #e0923e; --s2: #cdae3a; --s3: #5fae56; --s4: #2f9873;
+  --on-score: #0f1418; --on-pale: #e4e9ee; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+h2 { font: 600 13px/1.2 var(--f-body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* шапка */
+.head { display: grid; gap: 6px; }
+.eyebrow { font: 600 12px/1.2 var(--f-data); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.head h1 { font: 700 clamp(30px, 5vw, 48px)/1.05 var(--f-display); letter-spacing: -.01em; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-size: 14px; }
+.meta b { color: var(--ink); font-weight: 500; }
+.summary { max-width: 68ch; font-size: 17px; margin: 6px 0 0; }
+
+/* вердикт */
+.verdict { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; }
+.big { display: flex; align-items: baseline; gap: 10px; }
+.big .num { font: 700 64px/1 var(--f-display); }
+.big .of { font: 500 20px/1 var(--f-data); color: var(--muted); }
+.ruler { position: relative; margin: 18px 0 6px; height: 12px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--s0) 0 30%, var(--s1) 30% 50%, var(--s2) 50% 70%, var(--s3) 70% 90%, var(--s4) 90%); }
+.ruler .mark { position: absolute; top: -6px; width: 4px; height: 24px; margin-left: -2px; border-radius: 2px; background: var(--ink); }
+.ticks { display: flex; justify-content: space-between; font: 11px/1 var(--f-data); color: var(--muted); }
+.neck { margin-top: 14px; font-size: 15px; }
+.neck b { font-weight: 600; }
+.side { display: grid; gap: 14px; align-content: start; }
+.kv { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.kv .v { font: 700 28px/1 var(--f-display); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+/* карта 40 клеток */
+.map { display: grid; gap: 10px; }
+.mrow { display: grid; grid-template-columns: 170px minmax(0, 1fr) 44px; gap: 12px; align-items: center; }
+.mrow .bn { font-weight: 600; font-size: 14px; }
+.mrow .bavg { font: 600 15px/1 var(--f-data); text-align: right; }
+.cells { display: flex; flex-wrap: wrap; gap: 5px; }
+.cell { width: 36px; height: 36px; border-radius: 6px; border: 0; display: grid; place-items: center;
+  font: 600 13px/1 var(--f-data); color: var(--on-score); cursor: pointer; position: relative; text-decoration: none; }
+.cell.crit::after { content: ""; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: var(--on-score); }
+.cell.pale { color: var(--on-pale); }
+
+/* приоритеты */
+.prio { display: grid; gap: 10px; counter-reset: p; margin: 0; padding: 0; list-style: none; }
+.prio li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: start;
+  padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.prio li::before { counter-increment: p; content: counter(p); font: 700 20px/1.1 var(--f-display); color: var(--accent); }
+.prio .t { font-weight: 600; }
+.prio .g { font: 13px/1.4 var(--f-data); color: var(--muted); text-align: right; max-width: 30ch; }
+
+/* фильтр */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { font: 500 14px/1 var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 999px; padding: 9px 14px; cursor: pointer; min-height: 38px; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* разбор */
+.block { display: grid; gap: 10px; }
+.block > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 6px; }
+.block h3 { font: 600 20px/1.2 var(--f-display); }
+.item { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 16px; padding: 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; scroll-margin-top: 16px; }
+.item:target { outline: 2px solid var(--accent); }
+.score { width: 56px; height: 56px; border-radius: 8px; display: grid; place-items: center; font: 700 22px/1 var(--f-display); color: var(--on-score); }
+.score.pale { color: var(--on-pale); }
+.ititle { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.ititle h4 { margin: 0; font-size: 17px; font-weight: 600; }
+.chip { font: 600 11px/1 var(--f-data); letter-spacing: .06em; text-transform: uppercase; padding: 5px 7px; border-radius: 4px;
+  border: 1px solid var(--line); color: var(--muted); }
+.chip.crit { border-color: var(--ink); color: var(--ink); }
+.chip.warn { border-color: var(--s1); color: var(--s1); }
+.chip.up { border-color: var(--s3); color: var(--s3); }
+.chip.down { border-color: var(--s0); color: var(--s0); }
+.what { color: var(--muted); font-size: 14px; margin: 2px 0 8px; }
+.rows { display: grid; gap: 6px; margin: 0; }
+.rows div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; }
+.rows dt { font: 600 12px/1.6 var(--f-data); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.rows dd { margin: 0; overflow-wrap: anywhere; }
+.bar { display: flex; gap: 3px; margin-top: 10px; }
+.bar span { flex: 1; height: 5px; border-radius: 2px; background: var(--s-none); }
+.foot { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 760px) {
+  .verdict { grid-template-columns: minmax(0, 1fr); }
+  .mrow { grid-template-columns: minmax(0, 1fr) 44px; }
+  .mrow .cells { grid-column: 1 / -1; grid-row: 2; }
+  .item { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; }
+  .score { width: 44px; height: 44px; font-size: 18px; }
+  .rows div { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .prio li { grid-template-columns: 26px minmax(0, 1fr); }
+  .prio .g { grid-column: 2; text-align: left; white-space: normal; }
+  .big .num { font-size: 52px; }
+}
+@media (prefers-reduced-motion: no-preference) { .cell { transition: transform .12s; } .cell:hover { transform: translateY(-2px); } }
+</style>
+
+<main class="wrap" id="app">
+  <noscript>Страница строится скриптом — включите JavaScript.</noscript>
+</main>
+
+<script type="application/json" id="spec">{"version":1,"blocks":[{"id":"core","name":"Суть","about":"За что в игру играют"},{"id":"content","name":"Содержание","about":"Кто и что есть в игре"},{"id":"presentation","name":"Подача","about":"Как игра выглядит и звучит"},{"id":"experience","name":"Опыт игрока","about":"Как игра ощущается от первой минуты до последней"},{"id":"tech","name":"Техника","about":"Работает ли игра везде и всегда"},{"id":"release","name":"Выход к игрокам","about":"Как игра доходит до людей и живёт после выхода"}],"items":[{"id":"hook","block":"core","name":"Замысел и крючок","critical":false,"what":"За что игру выбирают среди похожих.","questions":["Объясняется ли игра одной фразой?","Чем она отличается от трёх ближайших аналогов?","Есть ли образ, который хочется показать другу?"],"evidence":"Фраза из описания, список аналогов с отличиями, реакция незнакомых людей на скриншот или ролик."},{"id":"loop","block":"core","name":"Игровая петля","critical":true,"what":"Что игрок делает каждую минуту и что тянет сделать ещё круг.","questions":["Можно ли нарисовать петлю в 3–5 шагов?","Есть ли награда в конце каждого круга?","Хочется ли начать следующий круг сразу?"],"evidence":"Схема петли, время одного круга (замер), доля игроков, начавших второй круг (аналитика)."},{"id":"controls","block":"core","name":"Управление и отклик","critical":true,"what":"Мышь, клавиатура, касание; отдача на каждое действие.","questions":["Работают ли все способы ввода целевых устройств?","Есть ли у удара, нажатия, подбора отклик — звук, вспышка, пауза, тряска?","Не теряются ли нажатия?"],"evidence":"Прогон на ПК и на касании, видео удара, список откликов на ключевые действия."},{"id":"heroes","block":"content","name":"Главные герои","critical":false,"what":"Классы, персонажи игрока, их различие.","questions":["Сколько героев и чем отличается игра за каждого?","Читается ли герой силуэтом?","Есть ли причина выбрать каждого?"],"evidence":"Список героев с уникальными механиками, доля выбора каждого (аналитика), листы персонажей.","na":"В игре нет управляемого персонажа (головоломка, карточная без героя)."},{"id":"enemies","block":"content","name":"Враги","critical":false,"what":"Разнообразие противников, их поведение и роль.","questions":["Сколько видов и сколько разных поведений?","Требует ли каждый вид своей тактики?","Хватает ли видов на длину игры?"],"evidence":"Бестиарий с числом видов и поведений, пулы врагов по зонам.","na":"В игре нет противников."},{"id":"bosses","block":"content","name":"Боссы","critical":false,"what":"Ключевые бои: фазы, приёмы, запоминаемость.","questions":["У каждого босса свой приём, которому надо научиться?","Есть ли фазы и предупреждения перед сильными атаками?","Победа ощущается событием?"],"evidence":"Список боссов с фазами, процент побед бота или игроков с первой попытки.","na":"Жанр без боссов."},{"id":"npc","block":"content","name":"НПС","critical":false,"what":"Жители мира: торговцы, квестодатели, спутники.","questions":["У каждого НПС есть функция в игре?","Узнаются ли они внешне и по речи?","Меняются ли они по ходу сюжета?"],"evidence":"Список НПС с функциями, реплики, портреты.","na":"В игре нет персонажей, кроме игрока."},{"id":"world","block":"content","name":"Мир и уровни","critical":false,"what":"Карта, размеры, зоны, концепция пространства.","questions":["Сколько зон и чем они различаются?","Хватает ли пространства на заявленную длину игры?","Видно ли, куда идти, без стрелки?"],"evidence":"Атлас зон с размерами, время прохождения зоны (замер), план сверху."},{"id":"map_objects","block":"content","name":"Предметы на карте","critical":false,"what":"Сундуки, тайники, ловушки, интерактив в мире.","questions":["Есть ли ради чего сходить с основного пути?","Отличаются ли интерактивные предметы от декора?","Нет ли пустых зон?"],"evidence":"Список видов интерактива, плотность на зону.","na":"Игра без пространства (меню, карты, доска)."},{"id":"loot","block":"content","name":"Оружие и лут","critical":false,"what":"Добыча, предметы, их разнообразие и ценность.","questions":["Хочется ли подбирать и сравнивать?","Хватает ли тиров на всю игру?","Есть ли редкие находки, которыми гордятся?"],"evidence":"Число баз, аффиксов, уникальных; кривая уровня предметов по игре.","na":"Жанр без добычи."},{"id":"progression","block":"content","name":"Прокачка","critical":false,"what":"Уровни, характеристики, дерево умений, рост силы.","questions":["Есть ли выбор, который меняет стиль игры?","Ощущается ли рост силы?","Не кончается ли прокачка раньше игры?"],"evidence":"Дерево умений, кривая силы по уровням, уровень героя на этапах (прогон бота).","na":"Игра без развития персонажа."},{"id":"economy","block":"content","name":"Экономика","critical":false,"what":"Валюты, цены, на что игрок копит и тратит.","questions":["Есть ли на что тратить на каждом этапе?","Не копятся ли деньги без смысла?","Нет ли тупика «не на что купить нужное»?"],"evidence":"Таблица доходов и цен по этапам, баланс кошелька у бота.","na":"В игре нет ресурсов и обмена."},{"id":"quests","block":"content","name":"Сюжет, квесты, диалоги","critical":false,"what":"Что игрок делает в мире и зачем; тексты.","questions":["Понятно ли, зачем идти дальше?","Цели читаются без перечитывания журнала?","Тексты короткие и в одном голосе?"],"evidence":"Список заданий, длина реплик, процент игроков, понявших цель (плейтест).","na":"Игра без сюжета и заданий."},{"id":"lore","block":"content","name":"Лор","critical":false,"what":"История и устройство мира.","questions":["Мир последователен?","Лор поддерживает механики, а не просто висит текстом?","Есть ли что открывать любопытному игроку?"],"evidence":"Документ лора, где он проявляется в игре (имена, предметы, места).","na":"Абстрактная игра без мира."},{"id":"extra","block":"content","name":"Особые механики","critical":false,"what":"Фирменные системы сверх ядра (горн, крафт, питомцы и т.п.).","questions":["Механика добавляет решение, а не клик?","Встроена ли она в петлю?","Понятна ли без объяснения?"],"evidence":"Список механик, частота использования (аналитика или бот).","na":"Сверх ядра ничего не задумано."},{"id":"art_style","block":"presentation","name":"Визуальный стиль","critical":false,"what":"Единство и уровень картинки.","questions":["Все элементы из одного мира?","Не выглядит ли «дёшево» рядом с аналогами?","Читается ли важное на фоне?"],"evidence":"Скриншоты рядом с аналогами и с референсом стиля, отзывы о картинке."},{"id":"animation","block":"presentation","name":"Анимация","critical":false,"what":"Движение персонажей и мира.","questions":["У всех действий есть анимация?","Видно ли замах до удара?","Мир живёт, когда игрок стоит?"],"evidence":"Список клипов на персонажа, видео основных действий.","na":"Статичная игра, где движение не нужно."},{"id":"vfx","block":"presentation","name":"Визуальные эффекты","critical":false,"what":"Вспышки, частицы, следы, свечение.","questions":["Эффекты подсказывают, что произошло?","Не закрывают ли они важное?","Различаются ли эффекты стихий и умений?"],"evidence":"Видео боя, список эффектов на умения и попадания."},{"id":"sfx","block":"presentation","name":"Звуковые эффекты","critical":false,"what":"Звук действий, интерфейса, мира.","questions":["У каждого важного действия свой звук?","Звук подсказывает без взгляда (попадание, опасность)?","Нет ли раздражающих повторов?"],"evidence":"Список звуков на события, прослушка 5 минут игры."},{"id":"music","block":"presentation","name":"Музыка","critical":false,"what":"Саундтрек и его смена по ситуациям.","questions":["Музыка в стиле игры?","Меняется ли по зонам и в бою?","Не надоедает ли за час?"],"evidence":"Список треков по местам, их длина, отзывы."},{"id":"ui","block":"presentation","name":"Интерфейс","critical":true,"what":"Экраны, меню, HUD, читаемость, кнопки.","questions":["Кегль на десктопе не меньше 11–12 px, кнопки на касании не меньше 44 px с зазором?","Все экраны проверены, а не только игровой?","Важное видно с первого взгляда?"],"evidence":"Замер кеглей и размеров кнопок по всем экранам в матрице окон, скриншоты."},{"id":"camera","block":"presentation","name":"Камера","critical":false,"what":"Обзор, масштаб, следование.","questions":["Видно ли угрозу заранее?","Не закрывают ли героя предметы?","Удобен ли масштаб на телефоне и на мониторе?"],"evidence":"Скриншоты в узком и широком окне, замер видимой дистанции.","na":"Неподвижный экран (доска, меню, карты)."},{"id":"onboarding","block":"experience","name":"Обучение","critical":true,"what":"Первые минуты: можно ли разобраться, ничего не читая.","questions":["Заклей все подсказки — игрок дойдёт до конца обучения?","Каждый шаг продвигается действием, а не кнопкой «Далее»?","Первое действие — самое вкусное в игре?"],"evidence":"Автотест, проходящий обучение ботом «тащи и тапай в подсвеченное»; запись первого запуска живого игрока."},{"id":"difficulty","block":"experience","name":"Баланс и сложность","critical":false,"what":"Кривая сложности и честность.","questions":["Процент побед бота на каждом этапе известен?","Первый бой выигрывается почти всегда?","Нет ли стены, где резко растёт сложность?"],"evidence":"Прогоны бота (20+ раз) с процентом побед и смертями по этапам."},{"id":"pacing","block":"experience","name":"Темп и длина","critical":false,"what":"Длина сессии и всей игры, ритм событий.","questions":["Сколько длится сессия и вся игра (замер)?","Нет ли отрезков без нового — врага, места, награды?","Длина соответствует замыслу?"],"evidence":"Время прохождения ботом и людьми, хронология новых событий."},{"id":"replay","block":"experience","name":"Реиграбельность","critical":false,"what":"Зачем играть после финала или ещё раз.","questions":["Есть ли сложности, новые классы, случайность, рекорды?","Второй забег отличается от первого?","Есть ли долгие цели?"],"evidence":"Список систем повторной игры, доля вернувшихся игроков (аналитика).","na":"Короткая сюжетная игра на один проход по замыслу."},{"id":"saves","block":"experience","name":"Сохранения и состояния","critical":false,"what":"Сохранение прогресса и выход из любого состояния.","questions":["Закрыл вкладку посреди боя — после перезапуска есть легальный ход?","Сохранение переживает обновление игры?","Можно ли потерять прогресс?"],"evidence":"Тест «выход из каждого экрана и перезапуск», тест миграции старого сохранения."},{"id":"performance","block":"tech","name":"Производительность","critical":false,"what":"Кадры в секунду, время загрузки, вес сборки.","questions":["Сколько fps на слабом ноутбуке и телефоне?","Сколько секунд до первого кадра?","Сколько весит сборка?"],"evidence":"Замер fps на встроенной видеокарте и телефоне, время загрузки, размер dist."},{"id":"stability","block":"tech","name":"Стабильность","critical":true,"what":"Ошибки, зависания, известные баги.","questions":["Чистая ли консоль за полный прогон?","Сколько открытых известных багов?","Были ли падения у игроков?"],"evidence":"Консоль за прогон бота, список багов, отчёты об ошибках игроков."},{"id":"devices","block":"tech","name":"Устройства и окна","critical":true,"what":"ПК и мобильные, вся матрица окон.","questions":["Проверена ли матрица от 320×430 и 568×260 до 1920×1080?","Работает ли касание и мышь?","Экран помещается или прокручивается внутри рамки?"],"evidence":"Прогон раскладки по матрице окон с порогами, скриншоты крайних размеров."},{"id":"settings","block":"tech","name":"Настройки и доступность","critical":false,"what":"Звук, язык, размер текста, управление, цвет.","questions":["Можно ли выключить звук и музыку раздельно?","Есть ли выбор языка?","Читается ли игра при дальтонизме?"],"evidence":"Список настроек, проверка игры в оттенках серого."},{"id":"localization","block":"tech","name":"Локализация","critical":false,"what":"Языки и их качество.","questions":["Сколько языков и все ли строки переведены?","Влезают ли длинные переводы?","Загрузчик тоже на нужном языке?"],"evidence":"Проверка на отсутствие непереведённых строк, прогон раскладки на каждом языке.","na":"Игра без текста."},{"id":"tests","block":"tech","name":"Автопроверки","critical":false,"what":"Что ловится тестами, а не руками.","questions":["Сколько проверок и что они покрывают?","Последний прогон зелёный?","Падает ли проверка на строгом пороге — то есть умеет ли она падать?"],"evidence":"Вывод последнего прогона, список проверок, прогон со строгими порогами."},{"id":"platform","block":"release","name":"Площадка","critical":false,"what":"Где выходит игра и выполнены ли её требования.","questions":["Площадка выбрана?","Требования площадки проверены (чекер, правила модерации)?","Сборка собирается одной командой?"],"evidence":"Название площадки, отчёт чекера, команда сборки."},{"id":"monetization","block":"release","name":"Монетизация","critical":false,"what":"Цена, реклама, покупки.","questions":["Модель выбрана и встроена?","Не ломает ли она игру и не раздражает?","Реклама за награду называет себя словами?"],"evidence":"Описание модели, тест рекламного сценария на заглушке площадки.","na":"Бесплатная игра без дохода по замыслу."},{"id":"analytics","block":"release","name":"Аналитика","critical":false,"what":"Видно ли, что делают игроки.","questions":["Знаем ли, где игроки бросают?","Собирается ли длина сессий и возвраты?","Можно ли посмотреть данные без программиста?"],"evidence":"Список событий, дашборд или отчёт с реальными данными."},{"id":"storefront","block":"release","name":"Витрина","critical":false,"what":"Название, иконка, скриншоты, ролик, описание.","questions":["Название свободно и не живёт в интерфейсе?","Есть ли скриншоты и ролик, снятые в окне игры?","Описание продаёт игру за 2 строки?"],"evidence":"Страница игры или комплект материалов."},{"id":"legal","block":"release","name":"Права","critical":false,"what":"Лицензии на шрифты, музыку, модели, сгенерированное.","questions":["У каждого чужого файла известна лицензия?","Разрешено ли коммерческое использование?","Указаны ли авторы, где требуется?"],"evidence":"Список ассетов с лицензиями, файлы LICENSE рядом с ассетами."},{"id":"playtests","block":"release","name":"Плейтесты","critical":false,"what":"Живые игроки и их отзывы.","questions":["Сколько незнакомых людей играло?","Что они сказали и что сделано по отзывам?","Отзывы разобраны по механизму, а не по формулировке?"],"evidence":"Список плейтестов с датами и числом людей, разбор отзывов."},{"id":"support","block":"release","name":"Поддержка","critical":false,"what":"Версия, обновления, обратная связь.","questions":["Номер версии виден игроку?","Есть ли план обновлений?","Есть ли канал, куда игрок пишет об ошибке?"],"evidence":"Строка версии в игре, журнал изменений, ссылка на канал."}]}</script>
+<script type="application/json" id="data">{"game":"Три клинка / Three Blades","build":"коммит ff552c2, dist/three-blades-itch — 252 файла, 25.1 МБ (архив 24.1 МБ)","date":"2026-10-28","genre":"пошаговая тактика на сетке с роглайт-походом","platform":"браузер (itch.io), ПК; телефон только поперёк","stage":"релиз на itch.io","assessor":"Claude по скиллу game-readiness — оценка собственной работы, поэтому все критичные пункты закрыты замерами и прогонами, а не впечатлением","summary":"Игра собрана целиком: кампания до финала, 39 врагов, 4 босса, три языка, сборка открывается за четверть секунды и держит 58 fps. Всё, что мешает выпуску, лежит в одном месте — в размерах под палец: на телефоне поперёк 33 нажимаемых элемента мельче 44 px (худшие — кнопки шапки в 20 px), 14 пар без зазора и 18 надписей мельче 10 px. На ПК, то есть во встраивании itch 1280x720, таких дефектов нет: ничего не уезжает за край, кегли не ниже 12 px. Второй разрыв — вне кода: в игру не играл ни один незнакомый человек, и на музыку с эффектами нет записанных лицензий.","items":{"hook":{"score":6,"critical":false,"people":false,"evidence":"docs/ITCH_PAGE.md — описание страницы; обложка artifacts/store/cover-630x500.png; сравнение с аналогами нигде не записано","why":"Игра объясняется одной фразой, и обложка даёт образ. Но чем она отличается от соседей по жанру — не сформулировано, и ни один посторонний на материалы не реагировал.","advice":"Две строки «что здесь делают иначе» (наведение по области на пустую клетку, вершины веток меняют роль героя) в начало описания и показать обложку пяти незнакомым — 6 → 7."},"loop":{"score":7,"critical":true,"people":false,"evidence":"сыграно 28.10 в сборке itch: бой → добыча и опыт → карта → город → бой; scripts/test-full-campaign.mjs проходит кампанию до финала","why":"Петля замкнута и каждый круг кончается наградой: золото, опыт, вещь. Длину круга живым игроком не мерили, данных о возвратах нет.","advice":"Замерить на трёх живых игроках время от входа на узел до следующего выбора на карте; если круг длиннее 8 минут — сокращать бой, а не карту — 7 → 8."},"controls":{"score":6,"critical":true,"people":false,"evidence":"сыграно мышью 28.10: ход, перемещение, атака, умение по цели; tmp-замер на 812x375 — 33 нажимаемых элемента мельче 44 px; клик по врагу вне досягаемости не даёт никакого ответа","why":"Мышью играется чисто, отклик на удар есть — звук, анимация, число урона. На касании половина кнопок меньше пальца, а промах по недосягаемому врагу молчит: новичок жмёт по врагу первым делом.","advice":"Ответ на клик по врагу вне досягаемости («далеко: 3 клетки») и размеры под палец — 6 → 7."},"heroes":{"score":7,"critical":false,"people":false,"evidence":"src/game-data.js:1156 HERO_SKILLS — три героя по 3–4 умения; три ветки перков на героя с вершинами; scripts/test-hero-perks.mjs","why":"Герои различаются не статами, а ролью, и вершина ветки меняет роль целиком. Проверено тестами, но не игроками.","advice":"Собрать статистику выбора веток после первых игроков — 7 → 8."},"enemies":{"score":7,"critical":false,"people":false,"evidence":"ENEMY_BESTIARY_DATA — 39 видов с тактикой и слабостью у каждого; аудит allEnemiesHaveAbilityText и allEnemiesHaveBestiaryData","why":"Видов много, поведения разные — лекарь, призыватель, взрывающийся, стрелок, танк. Часть поздних врагов отличается числами больше, чем повадкой.","advice":"Двум-трём врагам третьего региона дать свой приём вместо больших чисел — 7 → 8."},"bosses":{"score":7,"critical":false,"people":false,"evidence":"4 босса: Леший (призыв свиты, не ходит), Гидра (головы), Огненный Титан (щит от стражей), Тёмный Владыка (две фазы, телепорт); scripts/test-leshy-boss.mjs","why":"У каждого свой приём, которому надо научиться, и победа читается событием. Процента побед с первой попытки нет.","advice":"Прогнать бота 20 раз на каждом боссе и записать процент побед — 7 → 8."},"npc":{"score":6,"critical":false,"people":false,"evidence":"три NPC с портретами и функциями: торговец Борн, алхимик Рута, разведчица Вейра (index.html, assets/npc/)","why":"Функции разные и узнаются в лицо, но по ходу похода они не меняются и ничего не говорят сверх услуги.","advice":"По реплике на регион у каждого — 6 → 7."},"world":{"score":6,"critical":false,"people":false,"evidence":"три региона, карта 96 узлов, туман войны; снимок artifacts/promo/2-map.png","why":"Пространства хватает, типы узлов различимы. Но карта под туманом читается как незагрузившийся экран — чёрная сетка почти во всю ширину.","advice":"Показывать под туманом силуэт рельефа вместо чёрной клетки — 6 → 7."},"map_objects":{"score":6,"critical":false,"people":false,"evidence":"типы узлов: миссия, подземелье, событие, город, привал, странник, арена, босс; события с выбором (resolveDelayedEvents)","why":"Сходить с прямого пути есть ради чего, интерактив отличается от фона значком.","advice":"Добавить редкую находку, ради которой делают крюк через весь регион — 6 → 7."},"loot":{"score":7,"critical":false,"people":false,"evidence":"ITEM_POOL с четырьмя редкостями и камнем редкости в углу рамки; аудит everyEquipmentItemHasUniqueIcon; снимок города","why":"Предметы хочется сравнивать, у каждого своя иконка, тиры растут по регионам.","advice":"Пара уникальных вещей с собственным правилом, а не с цифрами — 7 → 8."},"progression":{"score":6,"critical":false,"people":false,"evidence":"HERO_LEVEL_CAP = 10; balance:check 28.10 — «Campaign experience 2684 against 1400 needed for the level cap»","why":"Выбор веток меняет стиль, рост силы ощущается. Но опыта за поход вдвое больше, чем нужно до потолка: последняя треть игры идёт без роста.","advice":"Растянуть кривую до 2400–2600 или добавить вершины 11–12 уровня — 6 → 7."},"economy":{"score":6,"critical":false,"people":false,"evidence":"balance:check: доход R1 753 / R2 1357 / R3 2109 против двух дешёвых эпиков 160 / 345 / 1330; проверка падает, если доход перестаёт расти","why":"Тупика «не на что купить» нет, доход растёт по актам. В первом регионе денег заметно больше, чем товара.","advice":"Поднять цены первого региона или дать ранний дорогой предмет — 6 → 7."},"quests":{"score":5,"critical":false,"people":false,"evidence":"цели боя в шапке и в окне перед расстановкой; сюжетные сцены на старте и в финале; системы заданий нет","why":"Зачем идти дальше — понятно (к боссу региона), цель боя видна без журнала. Но заданий как таковых нет, и мир ничего не просит.","advice":"Три контракта-задания на поход с условием и наградой — 5 → 6."},"lore":{"score":5,"critical":false,"people":false,"evidence":"названия мест (MAP_LOCATION_NAMES, ~30), описания врагов в бестиарии, две сюжетные сцены","why":"Мир последователен и держится на именах и бестиарии, но открывать любопытному почти нечего.","advice":"По абзацу на регион в бестиарии, открывается за первую победу в нём — 5 → 6."},"extra":{"score":7,"critical":false,"people":false,"evidence":"контракты похода (3), мутаторы, повтор по seed, разведка, арена, странник; аудит «campaign contracts, mutators and replay are present»","why":"Все эти системы встроены в петлю и дают решение, а не клик.","advice":"Показать влияние контракта прямо на карте значком — 7 → 8."},"art_style":{"score":7,"critical":false,"people":false,"evidence":"скриншоты artifacts/promo/, полотно artifacts/promo/poster.png; рамки из одного набора (CC BY 3.0, Lamoot), палитра пересэмплирована с арта","why":"После переделки интерфейс и арт читаются как один мир, важное видно на фоне. Слабое место — карта похода, она осталась от прежнего оформления.","advice":"Довести экран карты до того же уровня, что город и бой — 7 → 8."},"animation":{"score":6,"critical":false,"people":false,"evidence":"scripts/test-battle-animations.mjs; наблюдение в бою 28.10 — атака, полёт стрелы, убыль HP","why":"У всех боевых действий есть движение и замах читается. Вне боя мир неподвижен: карта и город статичны.","advice":"Лёгкое дыхание героев и дрожь факелов на карте — 6 → 7."},"vfx":{"score":6,"critical":false,"people":false,"evidence":"playBattleAbilityFx, spawnBattleTextFx; эффекты горения, заморозки, взрыва","why":"Эффекты подсказывают, что произошло, и не закрывают поле. Стихии различаются цветом, но не формой.","advice":"Разным стихиям — разную форму вспышки, а не только цвет — 6 → 7."},"sfx":{"score":7,"critical":false,"people":false,"evidence":"замер 28.10: 138 запросов mp3 за прогон боя, у каждого события свой файл; группы common/heroes/enemies/status/ui","why":"Звук есть у каждого важного действия и подсказывает попадание без взгляда. Повторов за пять минут не режет.","advice":"По два варианта на частые звуки (шаг, попадание), чтобы не приедались — 7 → 8."},"music":{"score":7,"critical":false,"people":false,"evidence":"7 треков: меню, три исследования, три боя; переключение по ситуации (BGM_TRACKS в src/game-core.js)","why":"Музыка в стиле игры и меняется по месту. Треков на час игры хватает впритык.","advice":"Ещё один боевой трек и отдельный для босса — 7 → 8."},"ui":{"score":6,"critical":true,"people":false,"evidence":"замер 28.10 на 812x375: 33 нажимаемых мельче 44 px (btn-open-menu 71x20, btn-battle-inventory 60x20), 14 пар с зазором меньше 6 px, 18 надписей мельче 10 px (до 8 px в инвентаре). На 1280x720 и 1440x900 — ничего за краем, кегли не ниже 12 px (scripts/test-readability.mjs, scripts/test-ui-fit.mjs)","why":"На ПК интерфейс собран и читается — это та витрина, которая поедет на itch. На телефоне поперёк он нарушает собственное правило проекта в 33 местах, и это самый крупный измеренный дефект игры.","advice":"Поднять нажимаемое до 44 px с зазором 6 px и кегль до 10–11 px на 812x375, закрыть проверкой с переопределяемым порогом MIN_TAP — 6 → 8."},"camera":{"score":null,"na":"Поле боя и карта помещаются в окно целиком, камеры как системы нет."},"onboarding":{"score":7,"critical":true,"people":false,"evidence":"сыграно 28.10: подсказка ведёт по одному действию и меняется под героя («Гарет — держи линию», «Алира — фокус цели»); проверки «field coaching is visible», «recommended signature skill is highlighted», «map introduction appears after the first victory»","why":"Каждый шаг продвигается действием, нужное умение подсвечено, первый бой подведён к победе. Но бота, проходящего обучение вслепую, нет, и ни один живой новичок его не проходил.","advice":"Автотест «тащи и тапай в подсвеченное», проходящий обучение без чтения текстов — 7 → 8."},"difficulty":{"score":6,"critical":false,"people":false,"evidence":"balance:check 28.10: пики угрозы 271 → 557 → 673 по актам, проверка падает при регрессе порядка; процента побед бота нет","why":"Кривая растёт ровно и защищена проверкой, стены нет. Но сложность меряется угрозой расстановки, а не тем, выигрывает ли кто-нибудь.","advice":"Бот, играющий лучший ход, 20 прогонов на акт; записать процент побед — 6 → 8."},"pacing":{"score":6,"critical":false,"people":false,"evidence":"scripts/test-full-campaign.mjs проходит кампанию целиком; экран финала показывает время прохождения","why":"Ритм задан картой: бой, событие, город. Живыми замерами длина сессии и похода не подтверждена.","advice":"Записать время похода у трёх живых игроков и сверить с замыслом — 6 → 7."},"replay":{"score":7,"critical":false,"people":false,"evidence":"seed похода с повтором, три контракта, мутаторы, две сложности, история прошлых походов","why":"Второй забег отличается картой, контрактом и ветками. Долгой цели поверх походов нет.","advice":"Сквозная цель между походами — открываемые контракты или герои — 7 → 8."},"saves":{"score":7,"critical":false,"people":false,"evidence":"замер 28.10: перезагрузка посреди боя → «Продолжить» возвращает в расстановку того же боя, ход есть; проверки «exit without saving restores the last durable checkpoint» и «F5 followed by Continue restores the saved campaign»","why":"Из состояния, в котором игрока застали, всегда есть легальный ход, прогресс не теряется.","advice":"Тест миграции сохранения прошлой версии — 7 → 8."},"performance":{"score":7,"critical":false,"people":false,"evidence":"замер 28.10 на сборке itch: первый кадр 116 мс, игра готова 266 мс, за первые 1.5 с — 3.9 МБ; 58 fps в бою на 1280x720 с выключенным GPU; архив 25.1 МБ против 81 МБ неделю назад","why":"Загрузка и кадры с запасом, вес втрое меньше прежнего. Не проверено на реальном слабом телефоне.","advice":"Замер на живом телефоне среднего уровня и проверка, которая падает при росте архива — 7 → 8."},"stability":{"score":8,"critical":true,"people":false,"evidence":"npm test 28.10 — 557 PASS, 0 FAIL; npm run test:itch — чистая консоль и ни одного 404 на 36 экранах в трёх языках; ручной прогон без ошибок","why":"Пустая консоль закреплена проверками, которые умеют падать: на этой неделе они нашли битые иконки и 404 и упали на них.","advice":"Отчёт об ошибках от игроков (window.onerror в журнал) — 8 → 9."},"devices":{"score":6,"critical":true,"people":false,"evidence":"матрица 28.10 от 1920x1080 до 568x260 — ничего за краем, портрет показывает экран поворота; но автопроверки раскладки ходят только по 1440x900 и 812x375, размеры под палец не проверяет никто","why":"Окна выдерживаются, поворот обработан честно. Матрица держится на разовом замере, а не на проверке, и пальцевые размеры вне её поля зрения.","advice":"Прогон раскладки по всей матрице окон с порогами MIN_TAP/MIN_FONT в составе npm test — 6 → 8."},"settings":{"score":7,"critical":false,"people":false,"evidence":"index.html: музыка и звуки раздельно с громкостями, язык из трёх, сложность, скорость боя в меню паузы","why":"Всё нужное для браузерной игры есть. Для дальтоников и для крупного текста ничего нет.","advice":"Проверить игру в оттенках серого и развести важные цвета формой — 7 → 8."},"localization":{"score":8,"critical":false,"people":false,"evidence":"608 троек ru/en/es; scripts/test-i18n.mjs ищет утечки в обе стороны и обрезанные подписи на 36 экранах; проверка доказана обратным прогоном 27.10","why":"Три языка полны, смешения языков не осталось, длинные переводы не режутся. Живой носитель испанского текст не читал.","advice":"Вычитка испанского носителем — 8 → 9."},"tests":{"score":7,"critical":false,"people":false,"evidence":"13 наборов, 557 проверок, последний прогон 28.10 зелёный; у части проверок доказано падение на старом коде (иконки, перевод)","why":"Покрытие широкое и проверки ловят настоящие дефекты. Но пороги не вынесены наружу, и строгим значением прогон не гоняли.","advice":"Переопределяемые пороги (MIN_TAP, MIN_FONT) и прогон со строгими значениями — 7 → 8."},"platform":{"score":7,"critical":false,"people":false,"evidence":"npm run package:itch собирает архив одной командой; npm run test:itch проверяет сборку; для Яндекса отдельная сборка с 0 FAIL чекера","why":"Площадка выбрана, сборка одной командой, требования проверяются автоматически. Страница на itch ещё не создана.","advice":"Создать страницу и прогнать по списку docs/ITCH_PAGE.md — 7 → 8."},"monetization":{"score":null,"na":"Бесплатная игра на itch без рекламы и покупок по замыслу; рекламный код остался только в сборке для Яндекса."},"analytics":{"score":1,"critical":false,"people":false,"evidence":"поиск по исходникам: ни счётчика, ни событий; доступна только статистика просмотров itch","why":"Где игроки бросают — узнать неоткуда. После выкладки это главный источник правды.","advice":"Пять событий в localStorage и отправка в бесплатный счётчик: запуск, конец обучения, конец первого боя, смерть, финал — 1 → 5."},"storefront":{"score":6,"critical":false,"people":false,"evidence":"artifacts/store/cover-630x500.png, banner-960x350.png, 5 скриншотов и ролик в artifacts/promo/, текст в docs/ITCH_PAGE.md; название «ТРИ КЛИНКА» стоит в главном меню игры","why":"Комплект материалов собран и описание продаёт игру за две строки. Но название живёт в интерфейсе — против собственного правила проекта: переименование потянет за собой скриншоты и ролик.","advice":"Убрать название из меню, проверить занятость имени на itch, переснять кадры — 6 → 8."},"legal":{"score":5,"critical":false,"people":false,"evidence":"assets/ui/kit/README.md с текстом CC BY 3.0 и перечнем изменений, assets/ui/icons/README.md, assets/fonts/PressStart2P-OFL.txt, титры в настройках; на 7 музыкальных треков и ~40 эффектов записей о лицензии нет","why":"По рисованному интерфейсу, иконкам и шрифту всё закрыто и проверяется аудитом. По звуку — ничего: в архив едет 19 МБ аудио неизвестного происхождения.","advice":"Записать источник и лицензию каждого трека и набора эффектов в assets/audio/README.md и добавить это в аудит — 5 → 8."},"playtests":{"score":0,"critical":false,"people":false,"evidence":"в документации проекта нет ни одного плейтеста; в игру не играл никто, кроме автора","why":"Ни один незнакомый человек игру не открывал. Это же причина, по которой ни один критичный пункт не может подняться выше 7.","advice":"Три-пять незнакомых людей, запись первых десяти минут, разбор по механизму — 0 → 5 и потолок остальных пунктов вверх."},"support":{"score":2,"critical":false,"people":false,"evidence":"номера версии в интерфейсе нет (поиск по index.html и src/); журнала изменений нет; канал обратной связи — только комментарии на itch","why":"Когда придёт первый отзыв, будет неизвестно, какую сборку человек играл. Это ровно та археология, которой стоило избегать.","advice":"Строка версии в настройках, CHANGELOG.md и просьба писать в комментарии — 2 → 6."}},"priorities":[{"id":"ui","action":"Размеры под палец на 812x375: нажимаемое не меньше 44 px, зазор 6 px, кегль не ниже 10 px. Начать с шапки боя (20 px) и кнопок меню (42 px)","cost":"1–2 дня","gain":"ui 6 → 7, controls 6 → 7, devices 6 → 7, готовность 6 → 7"},{"id":"devices","action":"Прогон раскладки по всей матрице окон (320x430 … 1920x1080) с переопределяемыми порогами MIN_TAP и MIN_FONT, в составе npm test","cost":"1 день","gain":"devices 6 → 8, tests 7 → 8; закрывает слепую зону, из-за которой пальцевые размеры никто не мерил"},{"id":"legal","action":"Записать источник и лицензию на 7 музыкальных треков и наборы эффектов, добавить проверку в аудит","cost":"2–4 часа","gain":"legal 5 → 8; без этого публикация — риск, который не виден до претензии"},{"id":"storefront","action":"Убрать название игры из главного меню и показать номер версии в настройках","cost":"1–2 часа","gain":"storefront 6 → 7, support 2 → 4"},{"id":"playtests","action":"Дать игру трём-пяти незнакомым людям, записать первые десять минут, разобрать по механизму","cost":"неделя календарно","gain":"playtests 0 → 5 и снимает потолок «не проверено людьми» со всех критичных пунктов"},{"id":"analytics","action":"Пять событий: запуск, конец обучения, первый бой, смерть, финал","cost":"полдня","gain":"analytics 1 → 5; после выкладки это единственный способ узнать, где бросают"}]}</script>
+<script>
+(function () {
+  const spec = JSON.parse(document.getElementById('spec').textContent);
+  const d = JSON.parse(document.getElementById('data').textContent);
+  const items = d.items || {};
+  const prev = (d.previous && d.previous.scores) || {};
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const tone = (s) => s == null ? 'var(--s-none)' : s <= 2 ? 'var(--s0)' : s <= 4 ? 'var(--s1)' : s <= 6 ? 'var(--s2)' : s <= 8 ? 'var(--s3)' : 'var(--s4)';
+  const fmt = (x) => x == null ? '—' : (Math.round(x * 10) / 10).toString().replace('.', ',');
+
+  // пункт = описание из списка + оценка
+  const rows = spec.items.map((it) => {
+    const a = items[it.id];
+    const r = { ...it, a, rated: !!a, na: a && a.score == null, score: a ? a.score : null };
+    r.crit = a && typeof a.critical === 'boolean' ? a.critical : it.critical;
+    r.warn = [];
+    if (a && a.score != null) {
+      if (a.score > 4 && !String(a.evidence || '').trim()) r.warn.push('нет доказательства — потолок 4');
+      if (a.score >= 8 && !a.people) r.warn.push('8+ без живых игроков');
+    }
+    r.delta = (a && a.score != null && prev[it.id] != null) ? a.score - prev[it.id] : null;
+    return r;
+  });
+  const scored = rows.filter((r) => r.score != null);
+  const crit = scored.filter((r) => r.crit);
+  const rest = scored.filter((r) => !r.crit);
+  const mean = (xs) => xs.length ? xs.reduce((s, r) => s + r.score, 0) / xs.length : null;
+  const readiness = crit.length ? Math.min(...crit.map((r) => r.score)) : null;
+  const necks = crit.filter((r) => r.score === readiness);
+  const fullness = mean(rest);
+  const unrated = rows.filter((r) => !r.rated);
+  const critUnrated = unrated.filter((r) => r.crit);
+
+  const app = document.getElementById('app');
+  const meta = [['Сборка', d.build], ['Дата', d.date], ['Жанр', d.genre], ['Площадка', d.platform], ['Этап', d.stage]]
+    .filter(([, v]) => v).map(([k, v]) => `<span>${k}: <b>${esc(v)}</b></span>`).join('');
+
+  const markPos = readiness == null ? 0 : readiness * 10;
+  const neckText = readiness == null ? 'Критичные пункты не оценены.'
+    : `Упирается в: ${necks.map((r) => `<a href="#${r.id}"><b>${esc(r.name)}</b></a>`).join(', ')}` +
+      (critUnrated.length ? `. Не оценены критичные: ${critUnrated.map((r) => esc(r.name)).join(', ')}.` : '.');
+  const blocks = spec.blocks.map((b) => {
+    const rs = rows.filter((r) => r.block === b.id);
+    return { ...b, rs, avg: mean(rs.filter((r) => r.score != null)) };
+  });
+
+  const cell = (r) => {
+    const pale = r.score == null;
+    const label = r.na ? '—' : r.score == null ? '?' : r.score;
+    const tip = `${r.name}: ${r.na ? 'неприменимо' : r.score == null ? 'не оценено' : r.score + ' из 10'}${r.crit ? ', критичный' : ''}`;
+    return `<a class="cell${r.crit ? ' crit' : ''}${pale ? ' pale' : ''}" href="#${r.id}" style="background:${tone(r.score)}" title="${esc(tip)}" aria-label="${esc(tip)}">${label}</a>`;
+  };
+
+  const prioHtml = (d.priorities || []).map((p) => {
+    const r = rows.find((x) => x.id === p.id);
+    return `<li><div><div class="t">${esc(p.action)}</div><div class="muted">${r ? `<a href="#${r.id}">${esc(r.name)}</a>` : ''}${p.why ? ' — ' + esc(p.why) : ''}</div></div>
+      <div class="g">${p.gain ? esc(p.gain) : ''}${p.cost ? '<br>' + esc(p.cost) : ''}</div></li>`;
+  }).join('');
+
+  const itemHtml = (r) => {
+    const a = r.a || {};
+    const chips = [];
+    if (r.crit) chips.push('<span class="chip crit">критичный</span>');
+    if (r.na) chips.push('<span class="chip">неприменимо</span>');
+    if (!r.rated) chips.push('<span class="chip warn">не оценено</span>');
+    if (a.people) chips.push('<span class="chip up">проверено игроками</span>');
+    if (r.delta) chips.push(`<span class="chip ${r.delta > 0 ? 'up' : 'down'}">${r.delta > 0 ? '▲ +' : '▼ '}${r.delta} к прошлой</span>`);
+    for (const w of r.warn) chips.push(`<span class="chip warn">${esc(w)}</span>`);
+    const dl = r.na ? [['Почему «—»', a.na]] : [['Доказано', a.evidence], ['Почему', a.why], ['Совет', a.advice]];
+    const bar = Array.from({ length: 10 }, (_, i) => `<span style="${r.score != null && i < r.score ? 'background:' + tone(r.score) : ''}"></span>`).join('');
+    return `<article class="item" id="${r.id}" data-crit="${r.crit ? 1 : 0}" data-low="${r.score != null && r.score < 5 ? 1 : 0}" data-unrated="${r.rated ? 0 : 1}">
+      <div class="score${r.score == null ? ' pale' : ''}" style="background:${tone(r.score)}">${r.na ? '—' : r.score ?? '?'}</div>
+      <div style="min-width:0">
+        <div class="ititle"><h4>${esc(r.name)}</h4>${chips.join('')}</div>
+        <p class="what">${esc(r.what)}</p>
+        ${r.rated ? `<dl class="rows">${dl.filter(([, v]) => v).map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`
+          : `<p class="muted" style="margin:0">Вопросы: ${esc(r.questions.join(' '))}</p>`}
+        ${r.na || !r.rated ? '' : `<div class="bar" aria-hidden="true">${bar}</div>`}
+      </div></article>`;
+  };
+
+  app.innerHTML = `
+    <header class="head">
+      <div class="eyebrow">Готовность игры</div>
+      <h1>${esc(d.game)}</h1>
+      <div class="meta">${meta}</div>
+      ${d.summary ? `<p class="summary">${esc(d.summary)}</p>` : ''}
+    </header>
+
+    <section class="verdict" aria-label="Итог">
+      <div class="panel">
+        <h2>Готовность — самый слабый критичный пункт</h2>
+        <div class="big" style="margin-top:12px"><span class="num mono">${fmt(readiness)}</span><span class="of">из 10</span></div>
+        <div class="ruler" role="img" aria-label="Готовность ${fmt(readiness)} из 10"><div class="mark" style="left:${markPos}%"></div></div>
+        <div class="ticks" aria-hidden="true">${Array.from({ length: 11 }, (_, i) => `<span>${i}</span>`).join('')}</div>
+        <p class="neck">${neckText}</p>
+      </div>
+      <div class="panel side">
+        <div class="kv"><h2>Насыщенность</h2><span class="v mono">${fmt(fullness)}</span></div>
+        <p class="muted" style="margin:0;font-size:14px">Среднее по некритичным пунктам: сколько в игре всего сверх обязательного.</p>
+        <div class="kv"><span class="muted">Оценено</span><span class="mono">${scored.length + rows.filter((r) => r.na).length} из ${rows.length}</span></div>
+        ${d.previous && d.previous.date ? `<div class="kv"><span class="muted">Прошлая оценка</span><span class="mono">${esc(d.previous.date)}</span></div>` : ''}
+        <div class="legend"><span><i style="background:var(--s0)"></i>0–2</span><span><i style="background:var(--s1)"></i>3–4</span><span><i style="background:var(--s2)"></i>5–6</span><span><i style="background:var(--s3)"></i>7–8</span><span><i style="background:var(--s4)"></i>9–10</span><span>● критичный</span></div>
+      </div>
+    </section>
+
+    <section class="map" aria-label="Карта пунктов">
+      <h2>Карта: ${rows.length} направлений</h2>
+      ${blocks.map((b) => `<div class="mrow"><div class="bn">${esc(b.name)}</div><div class="cells">${b.rs.map(cell).join('')}</div><div class="bavg">${fmt(b.avg)}</div></div>`).join('')}
+    </section>
+
+    ${prioHtml ? `<section style="display:grid;gap:12px"><h2>Что делать в первую очередь</h2><ol class="prio">${prioHtml}</ol></section>` : ''}
+
+    <section style="display:grid;gap:16px" aria-label="Разбор">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+        <h2>Разбор по пунктам</h2>
+        <div class="filters" role="group" aria-label="Показать">
+          <button type="button" id="f-all" data-f="all" aria-pressed="true">Все</button>
+          <button type="button" id="f-crit" data-f="crit" aria-pressed="false">Критичные</button>
+          <button type="button" id="f-low" data-f="low" aria-pressed="false">Ниже 5</button>
+          <button type="button" id="f-unrated" data-f="unrated" aria-pressed="false">Не оценено</button>
+        </div>
+      </div>
+      ${blocks.map((b) => `<section class="block" data-block="${b.id}"><header><h3>${esc(b.name)}</h3><span class="muted">${esc(b.about)} · <span class="mono">${fmt(b.avg)}</span></span></header>${b.rs.map(itemHtml).join('')}</section>`).join('')}
+    </section>
+
+    <footer class="foot">Шкала: 0 нет · 1–2 заглушка · 3–4 начерно · 5–6 есть, слабее аналогов · 7 не стыдно показать · 8 проверено игроками · 9 сильная сторона · 10 лучшие в жанре.
+      Без доказательства — не выше 4; 8 и выше — только после живых игроков. ${d.assessor ? 'Оценивал: ' + esc(d.assessor) + '.' : ''}</footer>`;
+
+  const btns = app.querySelectorAll('.filters button');
+  const apply = (f) => {
+    btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.f === f)));
+    app.querySelectorAll('.item').forEach((el) => { el.hidden = f !== 'all' && el.dataset[f] !== '1'; });
+    app.querySelectorAll('.block').forEach((s) => { s.hidden = ![...s.querySelectorAll('.item')].some((el) => !el.hidden); });
+    try { localStorage.setItem('gr-filter', f); } catch (e) { /* хранилище недоступно */ }
+  };
+  btns.forEach((b) => b.addEventListener('click', () => apply(b.dataset.f)));
+  let saved = 'all';
+  try { saved = localStorage.getItem('gr-filter') || 'all'; } catch (e) { /* хранилище недоступно */ }
+  if (location.hash) saved = 'all';
+  apply(saved);
+})();
+</script>
+
+</body>
+</html>
