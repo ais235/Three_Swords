@@ -1,6 +1,6 @@
 {
   "name": "three-blades",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -36,7 +36,8 @@
     "images:compress": "node scripts/compress-images.mjs",
     "cover": "node scripts/make-itch-cover.mjs",
     "test:tap": "node scripts/test-tap-targets.mjs",
-    "test:tap:langs": "node scripts/test-tap-langs.mjs"
+    "test:tap:langs": "node scripts/test-tap-langs.mjs",
+    "music": "node scripts/make-music.mjs"
   },
   "keywords": [],
   "author": "",

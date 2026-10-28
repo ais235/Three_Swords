@@ -1,6 +1,6 @@
 # Страница игры на itch.io
 
-Дата: 28 октября 2026, сборка **1.1.0**. Всё, что нужно для публикации веб-сборки на
+Дата: 28 октября 2026, сборка **1.2.0**. Всё, что нужно для публикации веб-сборки на
 https://ais235.itch.io/ — текст страницы, настройки и список файлов.
 
 Загружает владелец вручную; этот файл — заготовка, а не инструкция для робота.
@@ -24,8 +24,8 @@ https://ais235.itch.io/ — текст страницы, настройки и �
 Compress-Archive -Path 'dist\three-blades-itch\*' -DestinationPath 'dist\three-blades-itch.zip' -CompressionLevel Optimal
 ```
 
-Сборка — 25.1 МБ (архив 24.1 МБ), 253 файла. Лимит itch на загрузку — 1 ГБ, так что запас большой;
-25 МБ важны не для лимита, а потому что их скачивают при открытии страницы.
+Сборка — 17.5 МБ (архив 16.6 МБ), 253 файла. Лимит itch на загрузку — 1 ГБ, так что запас большой;
+вес важен не для лимита, а потому что его скачивают при открытии страницы.
 
 ### Настройки проекта
 
@@ -87,11 +87,14 @@ Compress-Archive -Path 'dist\three-blades-itch\*' -DestinationPath 'dist\three-b
 > ### About this project
 >
 > Made by one person with Claude (Anthropic) as a coding partner: the code,
-> balance passes and the test suite were written in that pair. Art is generated
-> and hand-picked; the interface frames are *RPG GUI construction kit* by **Lamoot**
-> (CC BY 3.0, modified), icons from **game-icons.net** by Lorc, Delapouite and
-> sbed (CC BY 3.0, modified), and the display face is **Press Start 2P** by
-> CodeMan38 (SIL OFL 1.1). Sound effects come from free RPG sound packs.
+> balance passes and the test suite were written in that pair. The soundtrack is
+> written by the game itself — a small synthesiser and seven scores live in the
+> repository, and every track is rendered from them, so the music is as much a
+> part of the source as the combat rules. Art is generated and hand-picked; the
+> interface frames are *RPG GUI construction kit* by **Lamoot** (CC BY 3.0,
+> modified), icons from **game-icons.net** by Lorc, Delapouite and sbed
+> (CC BY 3.0, modified), and the display face is **Press Start 2P** by CodeMan38
+> (SIL OFL 1.1). Sound effects come from free RPG sound packs.
 >
 > Feedback is the reason this is here — if something reads as broken or unfair,
 > say so in the comments.
@@ -142,11 +145,15 @@ Compress-Archive -Path 'dist\three-blades-itch\*' -DestinationPath 'dist\three-b
 
 ## 5. Что остаётся открытым
 
-- **Происхождение музыки не записано нигде** — семь треков, 17 МБ из 25.
-  Разбор и варианты: [AUDIO_LICENSES.md](AUDIO_LICENSES.md). Это единственный
-  пункт списка к выпуску, который нельзя закрыть изнутри проекта: решение
-  (вспомнить источник, заменить на треки с известной лицензией или выпустить
-  без музыки) принимает владелец. До него публикация идёт с открытым риском.
+- **Лицензия звуковых эффектов проверена не вся.** Происхождение всех 68
+  файлов записано, но лицензия доказана файлом у одного набора из шести —
+  остальные опознаны по именам архивов. Разбор и что сделать:
+  [AUDIO_LICENSES.md](AUDIO_LICENSES.md). Музыка этот вопрос уже не держит:
+  она своя, собирается кодом репозитория.
+- **Музыку никто не слышал, кроме генератора.** Я свёл её по числам и
+  спектрограмме: уровни ровные, перегруза нет, форма на месте. Нравится ли
+  она на слух — вопрос к живому человеку; правка дешёвая, партитуры лежат
+  в `scripts/music/tracks.mjs`.
 - **В игру не играл ни один незнакомый человек.** Выкладка на itch — и есть
   способ это закрыть; трёх-пяти живых прохождений хватит, чтобы увидеть то,
   чего не видит ни одна проверка.
@@ -155,7 +162,11 @@ Compress-Archive -Path 'dist\three-blades-itch\*' -DestinationPath 'dist\three-b
 - Ролик `gameplay.webm` itch в галерею не встроит — его место на YouTube,
   если понадобится.
 
-## 6. Что починено к 1.1.0
+## 6. Что починено к 1.2.0
+
+- Своя музыка: семь треков собираются кодом репозитория
+  (`npm run music`). Прежние были неизвестного происхождения; заодно сборка
+  похудела с 25.1 до 17.5 МБ.
 
 - Размеры нажимаемого: 44 px и зазор 6 px на всех окнах выше 360 px высоты,
   36 px в низких окнах браузера. Было 33 кнопки мельче 44 px на 812x375.

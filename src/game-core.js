@@ -20,7 +20,7 @@
    * scripts/package-release.mjs сверяет значение с package.json и падает при
    * расхождении.
    */
-  const GAME_VERSION = '1.1.0';
+  const GAME_VERSION = '1.2.0';
   const SAVE_KEY = 'threeHeroesSave';
   const LEGACY_SAVE_KEY = 'save';
   const RECORDS_KEY = 'threeBladesRecordsV1';
