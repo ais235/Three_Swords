@@ -14,7 +14,7 @@
 |---|---|---|
 | Сборка | `dist/three-blades-itch/` → zip | `npm run package:itch`; **index.html в корне архива**, не в подпапке |
 | Обложка 630×500 | `artifacts/store/cover-630x500.png` | `npm run cover` |
-| Баннер 960×350 | `artifacts/store/banner-960x350.png` | необязателен, но держит первый экран |
+| Баннер 960×230 | `artifacts/store/banner-960x230.png` | необязателен, но держит первый экран |
 | Скриншоты | `artifacts/promo/*.png` | `npm run promo`, 5 кадров 1920×1080, по умолчанию английские (`PROMO_LANG=ru` для русских) |
 | GIF механики | `artifacts/store/mechanic.gif` | `npm run media:itch` (после `package:itch`); первым скриншотом и в начало описания |
 | Вставки в описание | `artifacts/store/desc-*.png` | `npm run media:itch`; заглушки в `artifacts/store/description.html`, шаги — `artifacts/store/itch-page-update.md` |
@@ -218,7 +218,7 @@ npm run zip:itch
 До этого страница стояла на теме itch по умолчанию (серый фон, белая колонка,
 без баннера), хотя всё ниже было готово.
 
-- Баннер — `artifacts/store/banner-960x350.png`, по центру.
+- Баннер — `artifacts/store/banner-960x230.png` (`node scripts/make-itch-cover.mjs banner`), по центру. Ниже 240 px — иначе при окне 1280×720 Run game уходит за первый экран ноутбука (645 px); сейчас 635.
 - Фон — `artifacts/store/page-bg-1920.jpg`: `assets/ui/fon.webp`, растянутый до
   1920 px, яркость 55 %, нижние 45 % плавно уходят в `#0a0806`. Повтор — нет.
 - Цвета — таблица из раздела 3. Шрифт заголовков — Pixel (как в игре).
