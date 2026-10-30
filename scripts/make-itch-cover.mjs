@@ -1,5 +1,5 @@
 /**
- * Картинки карточки на itch.io: обложка 630×500 и баннер 960×350.
+ * Картинки карточки на itch.io: обложка 630×500 и баннер 960×BANNER_H.
  *
  * Обложка — то, что видно в списках и в поиске; itch показывает её вдвое меньше
  * (315×250), поэтому на ней три вещи: название, отряд и одна строка жанра. Текст
@@ -7,14 +7,18 @@
  *
  * Баннер — первое, что видит зашедший на страницу. Он полосой, а не ключевым
  * артом 16:9: высокая картинка занимает весь первый экран, и описание с кнопкой
- * уходят под сгиб. 350 px — середина диапазона живых страниц (248–456).
+ * уходят под сгиб. Ширина строго 960, высота — константа BANNER_H: низ кнопки
+ * Run game = баннер + 20 + окно встраивания/2 + 25, и она должна стоять на первом
+ * экране ноутбука (≤645 px от верха). Прежние 350 туда не влезали — теперь 230.
+ * Старый banner-960x350.png остаётся рядом как был.
  *
  * Рисуется в браузере поверх арта самой игры: шрифт — тот же woff2, что в игре,
  * поэтому надпись не разъезжается и её не нужно сверять по буквам, как бывает с
  * надписями, вшитыми в сгенерированную картинку.
  *
- *   node scripts/make-itch-cover.mjs      artifacts/store/cover-630x500.png
- *                                         artifacts/store/banner-960x350.png
+ *   node scripts/make-itch-cover.mjs          artifacts/store/cover-630x500.png
+ *                                             artifacts/store/banner-960x230.png
+ *   node scripts/make-itch-cover.mjs banner   только баннер (cover — только обложка)
  */
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -31,6 +35,11 @@ mkdirSync(outDir, { recursive: true });
  * строкой, потому что утверждается последним и может смениться. */
 const TITLE = 'THREE BLADES';
 const TAGLINE = 'Turn-based tactics roguelite';
+
+const BANNER_W = 960;
+const BANNER_H = 230;
+/* Отряд по высоте полосы с полями, но не крупнее прежних 300 px. */
+const PARTY = Math.min(300, BANNER_H - 24);
 
 const FONTS = `
   @font-face {
@@ -64,14 +73,14 @@ const COVER = `<!doctype html><html lang="en"><head><meta charset="utf-8"><style
 </body></html>`;
 
 const BANNER = `<!doctype html><html lang="en"><head><meta charset="utf-8"><style>${FONTS}
-  body { width: 960px; height: 350px; position: relative; overflow: hidden; }
+  body { width: ${BANNER_W}px; height: ${BANNER_H}px; position: relative; overflow: hidden; }
   .veil { position: absolute; inset: 0;
           background: linear-gradient(90deg, rgba(10,8,6,.92) 0%, rgba(10,8,6,.72) 52%, rgba(10,8,6,.18) 100%); }
-  .party { right: 48px; top: 50%; transform: translateY(-50%); width: 300px; height: 300px; }
+  .party { right: 48px; top: 50%; transform: translateY(-50%); width: ${PARTY}px; height: ${PARTY}px; }
   .words { position: absolute; left: 56px; top: 50%; transform: translateY(-50%); }
   h1 { font-size: 46px; line-height: 1.3; }
-  .tag { margin-top: 22px; font-size: 14px; line-height: 1.9; }
-  .meta { margin-top: 18px; font-size: 11px; line-height: 2; color: #b8ab97; }
+  .tag { margin-top: ${BANNER_H >= 300 ? 22 : 14}px; font-size: 14px; line-height: 1.9; }
+  .meta { margin-top: ${BANNER_H >= 300 ? 18 : 10}px; font-size: 11px; line-height: 2; color: #b8ab97; }
 </style></head><body>
   <div class="art"></div><div class="veil"></div>
   <div class="words">
@@ -87,10 +96,11 @@ await new Promise((done, fail) => { server.once('error', fail); server.listen(0,
 const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({ executablePath: chromePath, headless: true, args: ['--disable-gpu'] });
 
+const only = process.argv[2];   // 'cover' | 'banner' | ничего — оба
 for (const [name, html, width, height] of [
   ['cover-630x500', COVER, 630, 500],
-  ['banner-960x350', BANNER, 960, 350]
-]) {
+  [`banner-${BANNER_W}x${BANNER_H}`, BANNER, BANNER_W, BANNER_H]
+].filter(([name]) => !only || name.startsWith(only))) {
   const pagePath = resolve(root, `artifacts/store/_${name}.html`);
   writeFileSync(pagePath, html, 'utf8');
   const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1 });
